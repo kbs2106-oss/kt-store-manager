@@ -2188,6 +2188,10 @@
   /* 설치 버튼이 없을 때(아이폰·PC 크롬 직접 설치 등) 안내 */
   function installGuide() {
     if (startInstall()) return;
+    if (location.protocol === 'file:') {
+      say('지금은 파일로 열려 있어 앱 설치가 안 됩니다. 웹 주소(https)로 열면 홈 화면에 설치할 수 있습니다.', 6500);
+      return;
+    }
     var ua = navigator.userAgent || '';
     if (/iPhone|iPad|iPod/i.test(ua)) {
       say('사파리 하단 공유 버튼 → “홈 화면에 추가”를 누르면 설치됩니다.', 6000);
