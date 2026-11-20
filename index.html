@@ -1,0 +1,2278 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0284c7">
+<meta name="color-scheme" content="light">
+<meta name="description" content="KT 텔나라네트웍 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
+<title>KT 텔나라네트웍 칠금점 · 개통 관리 장부</title>
+
+<!-- PWA : 홈 화면 설치 -->
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="./icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KT개통장부">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>
+  *,*::before,*::after{box-sizing:border-box}
+  :root{
+    --blue-800:#083A8C;
+    --blue-700:#0A45A8;
+    --blue-600:#0B57D0;
+    --blue-500:#2F7BE5;
+    --blue-100:#D9E7FF;
+    --blue-50:#EEF4FF;
+    --ink:#0F172A;
+    --slate-700:#334155;
+    --slate-600:#475569;
+    --slate-500:#64748B;
+    --slate-400:#94A3B8;
+    --line:#E4EAF2;
+    --line-strong:#D3DDEA;
+    --bg:#F4F7FB;
+    --card:#FFFFFF;
+    --green:#0E7C5A;
+    --green-bg:#E6F6EF;
+    --amber:#9A5B00;
+    --amber-bg:#FFF3DC;
+    --red:#B42318;
+    --red-bg:#FDECE9;
+    --violet:#5B3FC4;
+    --violet-bg:#EFEBFF;
+    --teal:#0F766E;
+    --teal-bg:#E6F5F3;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(15,23,42,.05), 0 12px 28px -22px rgba(15,23,42,.45);
+    --shadow-lg:0 24px 60px -24px rgba(15,23,42,.35);
+  }
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(1100px 420px at 50% -200px,#E4EEFF 0%,rgba(228,238,255,0) 72%),
+      var(--bg);
+    background-attachment:fixed;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    font-size:15px;
+    line-height:1.5;
+  }
+  button,input,select,textarea{font:inherit;color:inherit}
+  button{cursor:pointer}
+  h1,h2,h3,p{margin:0}
+  .num{font-variant-numeric:tabular-nums}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    position:sticky;top:0;z-index:40;
+    background:rgba(255,255,255,.86);
+    backdrop-filter:saturate(180%) blur(14px);
+    -webkit-backdrop-filter:saturate(180%) blur(14px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:1280px;margin:0 auto;padding:12px 22px;
+    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  }
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand-mark{
+    width:40px;height:40px;border-radius:12px;flex:none;
+    background:linear-gradient(145deg,#0B57D0,#0A3E96);
+    color:#fff;font-weight:800;font-size:14px;letter-spacing:.02em;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 6px 16px -8px rgba(11,87,208,.85);
+  }
+  .brand-text h1{font-size:16px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-text p{font-size:12px;color:var(--slate-500);font-weight:500;margin-top:1px}
+  .topbar-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--line-strong);
+    background:#fff;color:var(--slate-700);font-size:13.5px;font-weight:600;
+    white-space:nowrap;transition:background .15s,border-color .15s,box-shadow .15s,transform .06s;
+  }
+  .btn:hover{background:#F8FAFD;border-color:#C3D1E3}
+  .btn:active{transform:translateY(1px)}
+  .btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(11,87,208,.22)}
+  .btn-primary{background:var(--blue-600);border-color:var(--blue-600);color:#fff;box-shadow:0 6px 16px -10px rgba(11,87,208,.9)}
+  .btn-primary:hover{background:var(--blue-700);border-color:var(--blue-700)}
+  .btn-ghost{background:#fff}
+  .btn-danger{background:#fff;border-color:#F3C9C2;color:var(--red)}
+  .btn-danger:hover{background:var(--red-bg)}
+  .btn.sm{height:32px;padding:0 10px;font-size:12.5px;border-radius:9px}
+  .btn svg{width:15px;height:15px;flex:none}
+
+  /* ---------- menu ---------- */
+  .menu{position:relative}
+  .menu>summary{list-style:none}
+  .menu>summary::-webkit-details-marker{display:none}
+  .menu[open]>summary{background:#F1F5FB;border-color:#C3D1E3}
+  .menu-panel{
+    position:absolute;right:0;top:calc(100% + 8px);z-index:60;
+    min-width:196px;padding:6px;border-radius:14px;border:1px solid var(--line);
+    background:#fff;box-shadow:var(--shadow-lg);
+  }
+  .menu-item{
+    display:block;width:100%;text-align:left;border:0;background:transparent;
+    padding:9px 11px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--slate-700);
+  }
+  .menu-item:hover{background:#F4F7FB}
+  .menu-item.danger{color:var(--red)}
+  .menu-item.danger:hover{background:var(--red-bg)}
+  .menu-sep{height:1px;background:var(--line);margin:6px 4px}
+
+  /* ---------- layout ---------- */
+  .app{max-width:1280px;margin:0 auto;padding:22px 22px 56px}
+  .card{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);
+  }
+  section{margin-bottom:16px}
+
+  /* ---------- KPI ---------- */
+  .section-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+  .month-control{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .month-control label{font-size:12.5px;font-weight:700;color:var(--slate-500);letter-spacing:.02em}
+  .month-control input[type=month]{
+    height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--line-strong);
+    background:#fff;font-size:13.5px;font-weight:600;color:var(--slate-700);
+  }
+  .month-control input[type=month]:focus{outline:none;box-shadow:0 0 0 3px rgba(11,87,208,.18);border-color:#9DBDF0}
+  .chip-btn{
+    height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--line-strong);
+    background:#fff;font-size:12.5px;font-weight:600;color:var(--slate-600);
+  }
+  .chip-btn:hover{background:#F4F7FB}
+  .chip-btn.on{background:var(--blue-50);border-color:var(--blue-100);color:var(--blue-700)}
+  .save-state{margin-left:auto;font-size:12px;color:var(--slate-400);display:flex;align-items:center;gap:6px}
+  .dot{width:6px;height:6px;border-radius:50%;background:#22A06B;display:inline-block}
+
+  .kpi-grid{display:grid;grid-template-columns:1.15fr 1fr 1.35fr;gap:14px}
+  @media (max-width:1080px){.kpi-grid{grid-template-columns:1fr 1fr}.kpi-due{grid-column:1/-1}}
+  @media (max-width:640px){.kpi-grid{grid-template-columns:1fr}.kpi-due{grid-column:auto}}
+  .kpi{padding:18px 20px 16px;position:relative;overflow:hidden}
+  .kpi-label{font-size:12.5px;font-weight:700;color:var(--slate-500);letter-spacing:.01em;display:flex;align-items:center;gap:6px}
+  .kpi-value{display:flex;align-items:baseline;gap:5px;margin-top:8px;font-weight:800;letter-spacing:-.03em}
+  .kpi-value .num{font-size:34px;line-height:1.05}
+  .kpi-value .unit{font-size:14px;font-weight:700;color:var(--slate-500);letter-spacing:0}
+  .kpi-sub{font-size:12.5px;color:var(--slate-500);margin-top:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .chip{
+    display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;
+    padding:4px 9px;border-radius:999px;font-size:12px;font-weight:700;
+    background:#F1F5F9;color:var(--slate-600);
+  }
+  button.chip{cursor:pointer}
+  button.chip:hover{filter:brightness(.97)}
+  .chip b{font-weight:800}
+  .chip.on{box-shadow:0 0 0 2px rgba(11,87,208,.18) inset}
+
+  .t-move{background:var(--blue-50);color:var(--blue-700)}
+  .t-change{background:var(--violet-bg);color:var(--violet)}
+  .t-new{background:var(--green-bg);color:var(--green)}
+  .t-net{background:var(--amber-bg);color:var(--amber)}
+  .t-kids{background:var(--teal-bg);color:var(--teal)}
+  .t-etc{background:#F1F5F9;color:var(--slate-600)}
+
+  .due-stats{display:flex;gap:8px;margin-top:10px}
+  .due-stat{
+    flex:1;text-align:left;border:1px solid var(--line);background:#FBFCFE;
+    border-radius:12px;padding:9px 12px;display:flex;align-items:baseline;gap:7px;transition:background .15s,border-color .15s;
+  }
+  .due-stat:hover{background:#F4F7FB;border-color:#C3D1E3}
+  .due-stat .due-num{font-size:21px;font-weight:800;letter-spacing:-.02em}
+  .due-stat .due-cap{font-size:12px;font-weight:600;color:var(--slate-500)}
+  .due-stat.overdue .due-num{color:var(--red)}
+  .due-stat.soon .due-num{color:var(--amber)}
+  .due-stat.on{border-color:#9DBDF0;background:var(--blue-50)}
+  .due-list{margin-top:10px;display:flex;flex-direction:column;gap:2px;min-height:20px}
+  .due-item{
+    display:flex;align-items:center;gap:8px;width:100%;text-align:left;
+    border:0;background:transparent;padding:6px 8px;border-radius:9px;font-size:13px;
+  }
+  .due-item:hover{background:#F4F7FB}
+  .due-item .due-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .due-item .due-date{margin-left:auto;color:var(--slate-500);font-size:12.5px;font-variant-numeric:tabular-nums}
+  .due-empty{font-size:12.5px;color:var(--slate-400);padding:4px 2px}
+
+  .dd{display:inline-block;padding:1px 6px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
+  .dd-soon{background:var(--amber-bg);color:var(--amber)}
+  .dd-today{background:#FFE8E5;color:var(--red)}
+  .dd-late{background:var(--red-bg);color:var(--red)}
+
+  /* ---------- toolbar ---------- */
+  .toolbar{padding:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .search{position:relative;flex:1 1 260px;min-width:200px;display:flex;align-items:center}
+  .search svg{position:absolute;left:12px;width:16px;height:16px;color:var(--slate-400);pointer-events:none}
+  .search input{
+    width:100%;height:38px;padding:0 34px 0 36px;border-radius:10px;border:1px solid var(--line-strong);
+    background:#FBFCFE;font-size:14px;
+  }
+  .search input:focus{outline:none;background:#fff;border-color:#9DBDF0;box-shadow:0 0 0 3px rgba(11,87,208,.15)}
+  .search .clear{
+    position:absolute;right:6px;width:26px;height:26px;border:0;border-radius:8px;background:transparent;
+    color:var(--slate-400);font-size:16px;line-height:1;display:none;align-items:center;justify-content:center;
+  }
+  .search .clear.show{display:flex}
+  .search .clear:hover{background:#EEF2F8;color:var(--slate-600)}
+  select.filter{
+    height:38px;padding:0 30px 0 12px;border-radius:10px;border:1px solid var(--line-strong);
+    background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%2364748B' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 11px center;
+    -webkit-appearance:none;appearance:none;font-size:13.5px;font-weight:600;color:var(--slate-700);
+  }
+  select.filter:focus{outline:none;border-color:#9DBDF0;box-shadow:0 0 0 3px rgba(11,87,208,.15)}
+  .check{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--slate-600);user-select:none;padding:0 4px;cursor:pointer}
+  .check input{width:16px;height:16px;accent-color:var(--blue-600);cursor:pointer}
+  .result-count{font-size:12.5px;color:var(--slate-500);font-weight:600;margin-left:auto;white-space:nowrap}
+
+  /* ---------- table ---------- */
+  .table-card{overflow:hidden}
+  .table-scroll{max-height:max(380px,calc(100vh - 360px));overflow:auto;overscroll-behavior:contain}
+  table.ledger{width:100%;border-collapse:separate;border-spacing:0;min-width:1220px;font-size:13.5px}
+  table.ledger th{
+    position:sticky;top:0;z-index:2;
+    background:#F7F9FC;text-align:left;font-size:12px;font-weight:700;color:var(--slate-500);
+    letter-spacing:.02em;padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  table.ledger th[data-sort]{cursor:pointer;user-select:none}
+  table.ledger th[data-sort]:hover{background:#EFF4FA;color:var(--slate-700)}
+  table.ledger th .arrow{opacity:.35;margin-left:3px;font-size:10px}
+  table.ledger th.sorted{color:var(--blue-700)}
+  table.ledger th.sorted .arrow{opacity:1}
+  table.ledger td{
+    padding:11px 12px;border-bottom:1px solid #EFF3F8;vertical-align:middle;
+    color:var(--slate-700);max-width:220px;
+  }
+  table.ledger tbody tr:hover td{background:#FAFCFF}
+  table.ledger tbody tr:last-child td{border-bottom:0}
+  table.ledger tbody tr.due-row td{background:#FFFDF6}
+  table.ledger tbody tr.due-row:hover td{background:#FFFAEC}
+  td.nowrap{white-space:nowrap}
+  td .ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .c-name{font-weight:700;color:var(--ink)}
+  .c-date{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .muted{color:var(--slate-400)}
+  .money{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink)}
+  th.money{text-align:right}
+  .actions-col{width:88px;text-align:right}
+  td.actions{text-align:right;white-space:nowrap;padding-right:10px}
+  .icon-btn{
+    width:30px;height:30px;border-radius:8px;border:1px solid transparent;background:transparent;
+    color:var(--slate-400);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
+  }
+  .icon-btn:hover{background:#EEF2F8;color:var(--blue-700)}
+  .icon-btn.del:hover{background:var(--red-bg);color:var(--red)}
+  .icon-btn svg{width:15px;height:15px}
+  .badge{
+    display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;
+  }
+  .empty{padding:54px 24px;text-align:center}
+  .empty[hidden]{display:none}
+  .empty h3{font-size:16px;font-weight:800;margin-bottom:6px}
+  .empty p{font-size:13.5px;color:var(--slate-500);line-height:1.7}
+  .empty .row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+  .empty-illust{width:46px;height:46px;border-radius:14px;background:var(--blue-50);color:var(--blue-600);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+
+  /* ---------- storage warning ---------- */
+  .warn{
+    display:none;align-items:flex-start;gap:9px;padding:11px 14px;margin-bottom:14px;
+    background:var(--amber-bg);border:1px solid #F3DDAE;border-radius:12px;font-size:13px;color:#7A4A00;line-height:1.55;
+  }
+  .warn.show{display:flex}
+  .warn svg{width:16px;height:16px;flex:none;margin-top:1px}
+
+  /* ---------- dialogs ---------- */
+  dialog{
+    border:0;padding:0;border-radius:20px;background:#fff;color:var(--ink);
+    box-shadow:var(--shadow-lg);width:min(720px,calc(100vw - 28px));max-height:calc(100vh - 40px);
+    overflow:visible;
+  }
+  dialog::backdrop{background:rgba(15,23,42,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  dialog[open]{animation:pop .16s ease-out}
+  @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}
+  .dlg-head{display:flex;align-items:flex-start;gap:12px;padding:20px 22px 14px;border-bottom:1px solid var(--line)}
+  .dlg-head h2{font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .dlg-head p{font-size:12.5px;color:var(--slate-500);margin-top:3px}
+  .dlg-close{
+    margin-left:auto;width:32px;height:32px;border-radius:9px;border:0;background:#F4F7FB;
+    color:var(--slate-500);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex:none;
+  }
+  .dlg-close:hover{background:#E9EEF6;color:var(--ink)}
+  .dlg-body{padding:18px 22px 6px;overflow:auto;max-height:calc(100vh - 240px)}
+  .dlg-foot{
+    display:flex;align-items:center;gap:8px;padding:14px 22px 18px;border-top:1px solid var(--line);
+    flex-wrap:wrap;
+  }
+  .dlg-foot .grow{flex:1}
+  .form-error{
+    display:none;margin:2px 22px 8px;padding:9px 12px;border-radius:10px;background:var(--red-bg);
+    color:var(--red);font-size:13px;font-weight:600;
+  }
+  .form-error.show{display:block}
+
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+  @media (max-width:560px){.form-grid{grid-template-columns:1fr}}
+  .field{display:flex;flex-direction:column;gap:5px;min-width:0}
+  .field.span2{grid-column:1/-1}
+  .field label{font-size:12.5px;font-weight:700;color:var(--slate-600);display:flex;align-items:center;gap:4px}
+  .field label .req{color:var(--blue-600);font-weight:800}
+  .field label .opt{color:var(--slate-400);font-weight:600;font-size:11.5px}
+  .field input,.field select,.field textarea{
+    width:100%;height:40px;padding:0 11px;border-radius:10px;border:1px solid var(--line-strong);
+    background:#fff;font-size:14px;transition:border-color .12s,box-shadow .12s;
+  }
+  .field textarea{height:auto;min-height:74px;padding:10px 11px;resize:vertical;line-height:1.55}
+  .field input::placeholder,.field textarea::placeholder{color:#B4C0D0}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#8FB4EE;box-shadow:0 0 0 3px rgba(11,87,208,.14)}
+  .field input.bad,.field select.bad{border-color:#E79A91;background:#FFFBFB}
+  .field .hint{font-size:11.5px;color:var(--slate-400);line-height:1.4}
+  .field input[type=date]{font-variant-numeric:tabular-nums}
+  .field input.money{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  .section-label{
+    grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:4px;
+    font-size:11.5px;font-weight:800;color:var(--slate-400);letter-spacing:.06em;
+  }
+  .section-label::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  .dlg-body.center{text-align:center;padding:24px 24px 8px}
+  .dlg-msg{font-size:14px;color:var(--slate-600);line-height:1.7}
+  .dlg-msg b{color:var(--ink)}
+  .dlg-msg .big{font-size:22px;font-weight:800;color:var(--blue-700)}
+  .dlg-note{margin-top:12px;padding:11px 13px;background:#F7F9FC;border-radius:11px;font-size:12.5px;color:var(--slate-500);line-height:1.6;text-align:left}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);
+    background:#101828;color:#fff;padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;
+    box-shadow:0 18px 40px -18px rgba(15,23,42,.8);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;
+    max-width:min(560px,calc(100vw - 32px));text-align:center;z-index:100;
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  #toast.err{background:#8E1F16}
+
+  footer.foot{
+    margin-top:22px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+    font-size:12px;color:var(--slate-400);line-height:1.6;
+  }
+  footer.foot .sep{width:3px;height:3px;border-radius:50%;background:#CBD5E1}
+
+  /* ---------- mobile: card table ---------- */
+  @media (max-width:900px){
+    .app{padding:16px 14px 48px}
+    .topbar-inner{padding:10px 14px;gap:10px}
+    .brand-text h1{font-size:14.5px;white-space:normal}
+    .topbar-actions{gap:6px}
+    .topbar-actions .btn{padding:0 11px;font-size:13px}
+    .kpi-value .num{font-size:29px}
+    .table-scroll{max-height:none;overflow:visible}
+    table.ledger{min-width:0;display:block}
+    table.ledger thead{display:none}
+    table.ledger tbody{display:block}
+    table.ledger tr{
+      display:block;border:1px solid var(--line);border-radius:14px;margin:10px;padding:10px 12px;background:#fff;
+    }
+    table.ledger tr.due-row{background:#FFFDF6;border-color:#F0E2BE}
+    table.ledger td{
+      display:flex;align-items:flex-start;gap:12px;padding:5px 0;border:0;max-width:none;
+    }
+    table.ledger td::before{
+      content:attr(data-label);flex:none;width:92px;font-size:12px;font-weight:700;color:var(--slate-400);
+      padding-top:1px;
+    }
+    table.ledger td.actions{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;justify-content:flex-end}
+    table.ledger td.actions::before{content:"";display:none}
+    table.ledger td.money{text-align:right}
+    table.ledger td.money::before{margin-right:auto}
+    table.ledger td[data-label="메모"] .ellip{white-space:normal}
+    .actions-col{display:none}
+  }
+  @media (max-width:520px){
+    .btn.sm{padding:0 8px}
+    .save-state{width:100%;margin-left:0}
+    .dlg-foot .grow{display:none}
+  }
+  /* ---------- PWA : 설치 · 홈 화면 앱 모드 · 모바일 편의 ---------- */
+  html{color-scheme:light}
+  .btn[hidden],.fab[hidden]{display:none !important}
+  .btn-install{
+    background:var(--blue-50);border-color:#BBD7FB;color:var(--blue-700);
+    box-shadow:0 6px 16px -16px rgba(11,87,208,.9);
+  }
+  .btn-install:hover{background:#E3EEFF;border-color:#9FC4F8}
+  .btn-install svg{width:15px;height:15px;flex:none}
+  body.standalone .btn-install{display:none !important}
+
+  /* 모바일에서 빠른 등록 (플로팅 버튼) */
+  .fab{
+    position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:45;
+    display:none;align-items:center;gap:7px;height:52px;padding:0 20px 0 16px;
+    border:0;border-radius:999px;background:linear-gradient(160deg,#0B57D0,#0847AB);color:#fff;
+    font-size:14.5px;font-weight:800;letter-spacing:-.01em;
+    box-shadow:0 16px 32px -14px rgba(11,87,208,.8), 0 2px 6px rgba(15,23,42,.14);
+  }
+  .fab:active{transform:translateY(1px)}
+  .fab:focus{outline:none}
+  .fab:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,255,255,.9),0 0 0 6px rgba(11,87,208,.45),0 16px 32px -14px rgba(11,87,208,.8)}
+  .fab svg{width:18px;height:18px}
+  .fab.show{display:inline-flex}
+
+  /* 모바일 전용 메뉴 항목 (좁은 화면에서는 상단 버튼을 메뉴로 옮김) */
+  .menu-mobile-only{display:none !important}
+  @media (max-width:560px){
+    #templateBtn,#importBtn{display:none}
+    .menu-item.menu-mobile-only{display:block !important}
+    .menu-sep.menu-mobile-only{display:block !important}
+  }
+
+  /* 노치·홈 인디케이터 대응 (viewport-fit=cover) */
+  .topbar-inner{padding-top:calc(12px + env(safe-area-inset-top))}
+  .app{padding-bottom:calc(56px + env(safe-area-inset-bottom))}
+  #toast{bottom:calc(26px + env(safe-area-inset-bottom))}
+  @media (max-width:900px){
+    .topbar-inner{padding-top:calc(10px + env(safe-area-inset-top))}
+    #toast{bottom:calc(86px + env(safe-area-inset-bottom))}
+  }
+
+  /* 터치 기기: 버튼·입력 최소 44px */
+  @media (pointer:coarse){
+    .btn{height:44px;padding:0 15px}
+    .btn.sm{height:38px;padding:0 12px}
+    .chip-btn{height:36px}
+    .icon-btn{width:38px;height:38px}
+    .search input,select.filter,.month-control input[type=month]{height:44px}
+    .field input,.field select{height:46px}
+    .due-stat{padding:11px 13px}
+  }
+
+  /* 폰: 입력 시 화면이 확대되지 않도록 16px */
+  @media (max-width:560px){
+    .search input,select.filter,.field input,.field select,.field textarea,.month-control input[type=month]{font-size:16px}
+    .app{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+  }
+
+  /* 폰: 등록/수정 창을 아래에서 올라오는 시트로 */
+  @media (max-width:600px){
+    dialog{
+      position:fixed;inset:auto 0 0 0;margin:0;width:100%;max-width:none;
+      border-radius:22px 22px 0 0;max-height:94vh;max-height:94dvh;
+    }
+    dialog[open]{animation:sheet-up .2s ease-out}
+    @keyframes sheet-up{from{opacity:.6;transform:translateY(24px)}to{opacity:1;transform:none}}
+    .dlg-head{padding:16px 18px 12px}
+    .dlg-body{max-height:calc(94dvh - 210px);padding:16px 18px 4px}
+    .dlg-body.center{padding:22px 20px 8px}
+    .dlg-foot{padding:12px 18px calc(14px + env(safe-area-inset-bottom));gap:7px}
+    .dlg-foot .btn{flex:1 1 auto;min-width:0}
+  }
+
+  /* 카드형 목록: 항목명·수정/삭제 버튼 정돈 */
+  @media (max-width:900px){
+    table.ledger td.money::before{text-align:left}
+    table.ledger td.actions{gap:6px}
+    table.ledger td.actions .icon-btn{background:#F3F7FC;border-color:var(--line);color:var(--slate-500)}
+    table.ledger td.actions .icon-btn.del{color:#C6554A}
+  }
+
+  /* 폰: KPI·월 선택을 압축해 장부 목록이 빨리 보이도록 */
+  @media (max-width:640px){
+    .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
+    .kpi-due{grid-column:1/-1}
+    .kpi{padding:14px 15px 13px}
+    .kpi-label{font-size:11.5px;letter-spacing:0;gap:4px}
+    .kpi-due .kpi-label span{display:none}
+    .kpi-value{margin-top:6px}
+    .kpi-value .num{font-size:24px}
+    .kpi-value .unit{font-size:12.5px}
+    .kpi-sub{font-size:11.5px;margin-top:4px}
+    .chips{margin-top:8px;gap:5px}
+    .due-list{margin-top:8px}
+    .month-control{gap:6px}
+    .month-control label{margin-right:2px}
+    .month-control input[type=month]{flex:1 1 128px;min-width:0;width:auto}
+    .section-head{margin-bottom:10px}
+  }
+
+  @media print{
+    .fab{display:none !important}
+  }
+
+  @media print{
+    .topbar-actions,.toolbar,.section-head,.actions-col,.due-list,.icon-btn,#toast{display:none !important}
+    body{background:#fff}
+    .card{box-shadow:none;border-color:#ddd}
+    .table-scroll{max-height:none;overflow:visible}
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">KT</div>
+      <div class="brand-text">
+        <h1>KT 텔나라네트웍 칠금점 · 개통 관리 장부</h1>
+        <p>충주 · 개통 · 요금제 변경 · 리베이트 관리</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="btn btn-ghost" id="templateBtn" title="빈 엑셀 양식(.xlsx)을 받습니다">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.5h6.5L16 7v10.5H5z"/><path d="M11 2.5V7h5"/><path d="M7.5 11h5M7.5 14h3"/></svg>
+        양식 받기
+      </button>
+      <button class="btn btn-ghost" id="importBtn">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13V3.5"/><path d="M6.5 6.5 10 3l3.5 3.5"/><path d="M4 12v3.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V12"/></svg>
+        엑셀 가져오기
+      </button>
+      <button class="btn btn-primary" id="exportBtn">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9.5"/><path d="M6.5 9.5 10 13l3.5-3.5"/><path d="M4 13v2.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V13"/></svg>
+        엑셀 내보내기
+      </button>
+      <button class="btn btn-install" id="installBtn" type="button" hidden>
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="8" height="15" rx="1.8"/><path d="M9 15h2"/><path d="M10 5v4.5M8 8l2 2 2-2"/></svg>
+        앱 설치
+      </button>
+      <details class="menu" id="moreMenu">
+        <summary class="btn btn-ghost" role="button" aria-haspopup="menu">더보기
+          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
+        </summary>
+        <div class="menu-panel" role="menu">
+          <button class="menu-item" id="jsonBackupBtn" role="menuitem">JSON 백업 저장</button>
+          <button class="menu-item" id="jsonRestoreBtn" role="menuitem">JSON 백업 복원</button>
+          <div class="menu-sep menu-mobile-only"></div>
+          <button class="menu-item menu-mobile-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
+          <button class="menu-item menu-mobile-only" id="importBtnMobile" role="menuitem">엑셀 · CSV 가져오기</button>
+          <div class="menu-sep"></div>
+          <button class="menu-item" id="installHintBtn" role="menuitem">앱 설치 · 홈 화면 추가</button>
+          <div class="menu-sep"></div>
+          <button class="menu-item" id="sampleBtn" role="menuitem">샘플 데이터 넣기</button>
+          <button class="menu-item danger" id="clearBtn" role="menuitem">전체 데이터 삭제</button>
+        </div>
+      </details>
+    </div>
+  </div>
+</header>
+
+<div class="app">
+  <div class="warn" id="storageWarn">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M10 3 2.5 16.5h15z"/><path d="M10 8v3.5M10 14h.01"/></svg>
+    <div>이 브라우저에서 자동 저장(localStorage)이 차단되었습니다. 시크릿 모드이거나 저장 공간이 가득 찼을 수 있습니다.<br>
+      작업한 내용을 잃지 않도록 <b>더보기 → JSON 백업 저장</b>으로 파일을 꼭 받아두세요.</div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <div class="month-control">
+        <label for="monthInput">기준 월</label>
+        <input type="month" id="monthInput">
+        <button class="chip-btn" id="thisMonthBtn">이번 달</button>
+        <button class="chip-btn" id="allMonthBtn">전체 기간</button>
+      </div>
+      <div class="save-state"><span class="dot"></span><span id="saveState">저장됨</span></div>
+    </div>
+
+    <div class="kpi-grid">
+      <article class="card kpi">
+        <div class="kpi-label">총 개통</div>
+        <div class="kpi-value"><span class="num" id="kpiTotal">0</span><span class="unit">건</span></div>
+        <div class="kpi-sub" id="kpiMonthLabel">—</div>
+        <div class="chips" id="kpiBreakdown"></div>
+      </article>
+
+      <article class="card kpi">
+        <div class="kpi-label">리베이트 합계</div>
+        <div class="kpi-value"><span class="num" id="kpiRebate">0</span><span class="unit">원</span></div>
+        <div class="kpi-sub" id="kpiRebateSub">건당 평균 0원</div>
+      </article>
+
+      <article class="card kpi kpi-due">
+        <div class="kpi-label">요금제 변경 예정 <span style="font-weight:600;color:var(--slate-400);font-size:11.5px">· 숫자를 누르면 해당 건만 보기</span></div>
+        <div class="due-stats">
+          <button class="due-stat soon" id="dueSoonStat" title="오늘부터 7일 이내에 요금제 변경일자가 도래하는 건">
+            <span class="due-num num" id="dueSoonCount">0</span><span class="due-cap">7일 이내</span>
+          </button>
+          <button class="due-stat overdue" id="dueOverdueStat" title="요금제변경일자가 지났는데 아직 일자가 남아 있는 건">
+            <span class="due-num num" id="dueOverdueCount">0</span><span class="due-cap">기한 지남</span>
+          </button>
+        </div>
+        <div class="due-list" id="dueList"></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="card toolbar">
+    <div class="search">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13.2 13.2 17 17"/></svg>
+      <input id="searchInput" type="search" placeholder="고객명 · 연락처 · 기종 · 메모 검색" autocomplete="off">
+      <button class="clear" id="clearSearch" title="검색 지우기" aria-label="검색 지우기">×</button>
+    </div>
+    <select class="filter" id="typeFilter" aria-label="개통유형 필터">
+      <option value="">전체 유형</option>
+    </select>
+    <label class="check"><input type="checkbox" id="dueOnly"> 요금제 변경 임박만</label>
+    <button class="btn sm btn-ghost" id="resetFilters">초기화</button>
+    <span class="result-count" id="resultCount">0건</span>
+    <button class="btn btn-primary" id="addBtn">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4.5v11M4.5 10h11"/></svg>
+      개통 등록
+    </button>
+  </section>
+
+  <section class="card table-card">
+    <div class="table-scroll">
+      <table class="ledger" id="ledger">
+        <thead>
+          <tr>
+            <th data-sort="개통일">개통일<span class="arrow">▼</span></th>
+            <th>고객명</th>
+            <th>연락처</th>
+            <th>생년월일</th>
+            <th>개통유형</th>
+            <th>기종</th>
+            <th>요금제</th>
+            <th>변경요금제</th>
+            <th>요금제변경일자</th>
+            <th>중고폰</th>
+            <th class="money" data-sort="리베이트">리베이트<span class="arrow">▼</span></th>
+            <th>메모</th>
+            <th class="actions-col">관리</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="emptyState" hidden></div>
+  </section>
+
+  <footer class="foot">
+    <span>데이터는 이 브라우저(<b>localStorage</b>)에만 저장됩니다.</span>
+    <span class="sep"></span>
+    <span>PC를 바꾸거나 브라우저를 정리하기 전에 JSON 백업을 받아두세요.</span>
+    <span class="sep"></span>
+    <span id="footCount">0건 저장됨</span>
+  </footer>
+</div>
+
+<button class="fab" id="fabAdd" type="button" aria-label="개통 등록">
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4.5v11M4.5 10h11"/></svg>
+  개통 등록
+</button>
+
+<!-- ===================== 등록/수정 ===================== -->
+<dialog id="editDialog">
+  <form id="editForm" novalidate>
+    <div class="dlg-head">
+      <div>
+        <h2 id="dlgTitle">개통 등록</h2>
+        <p>고객명과 개통일만 있으면 저장됩니다. Tab 키로 빠르게 넘겨 입력하세요.</p>
+      </div>
+      <button type="button" class="dlg-close" id="dlgClose" aria-label="닫기">×</button>
+    </div>
+
+    <div class="form-error" id="formError"></div>
+
+    <div class="dlg-body">
+      <div class="form-grid">
+        <div class="field">
+          <label for="f_name">고객명 <span class="req">*</span></label>
+          <input id="f_name" type="text" autocomplete="off" placeholder="예) 김민수">
+        </div>
+        <div class="field">
+          <label for="f_phone">연락처</label>
+          <input id="f_phone" type="tel" inputmode="numeric" autocomplete="off" placeholder="010-1234-5678">
+        </div>
+
+        <div class="field">
+          <label for="f_birth">생년월일 <span class="opt">선택</span></label>
+          <input id="f_birth" type="text" inputmode="numeric" autocomplete="off" placeholder="970114 또는 1997-01-14">
+          <span class="hint">6자리·8자리 모두 그대로 저장됩니다</span>
+        </div>
+        <div class="field">
+          <label for="f_date">개통일 <span class="req">*</span></label>
+          <input id="f_date" type="date">
+        </div>
+
+        <div class="field">
+          <label for="f_type">개통유형</label>
+          <select id="f_type"></select>
+        </div>
+        <div class="field">
+          <label for="f_model">기종</label>
+          <input id="f_model" type="text" autocomplete="off" placeholder="예) 갤럭시 S25 / 아이폰 17">
+        </div>
+
+        <div class="field">
+          <label for="f_plan">요금제</label>
+          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 5G 슬림 55,000">
+        </div>
+        <div class="field">
+          <label for="f_newplan">변경요금제</label>
+          <input id="f_newplan" type="text" autocomplete="off" placeholder="예) 5G 프리미엄 68,000">
+        </div>
+
+        <div class="field">
+          <label for="f_newdate">요금제변경일자 <span class="opt">선택</span></label>
+          <input id="f_newdate" type="date">
+          <span class="hint">오늘 ~ 7일 이내면 알림에 표시됩니다</span>
+        </div>
+        <div class="field">
+          <label for="f_rebate">리베이트 (원)</label>
+          <input id="f_rebate" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+        </div>
+
+        <div class="field span2">
+          <label for="f_used">중고폰 <span class="opt">선택</span></label>
+          <input id="f_used" type="text" autocomplete="off" placeholder="예) 반납 / 매입 15만 / 미사용">
+        </div>
+
+        <div class="field span2">
+          <label for="f_memo">메모 <span class="opt">선택</span></label>
+          <textarea id="f_memo" placeholder="결합·할인·요청사항 등"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-danger" id="deleteBtn" style="display:none">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.5 5.5l.8 10.2a1.3 1.3 0 0 0 1.3 1.2h4.8a1.3 1.3 0 0 0 1.3-1.2l.8-10.2"/></svg>
+        삭제
+      </button>
+      <span class="grow"></span>
+      <button type="button" class="btn" id="saveNextBtn">저장 후 계속 입력</button>
+      <button type="submit" class="btn btn-primary" id="saveBtn">저장</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- ===================== 확인 ===================== -->
+<dialog id="confirmDialog">
+  <div class="dlg-head">
+    <div><h2 id="cTitle">확인</h2></div>
+  </div>
+  <div class="dlg-body center">
+    <p class="dlg-msg" id="cMsg"></p>
+  </div>
+  <div class="dlg-foot">
+    <span class="grow"></span>
+    <button type="button" class="btn" id="cCancel">취소</button>
+    <button type="button" class="btn btn-primary" id="cOk">확인</button>
+  </div>
+</dialog>
+
+<!-- ===================== 가져오기 ===================== -->
+<dialog id="importDialog">
+  <div class="dlg-head">
+    <div>
+      <h2 id="iTitle">엑셀 가져오기</h2>
+      <p id="iSub">기존 장부에 추가하거나, 통째로 교체할 수 있습니다.</p>
+    </div>
+  </div>
+  <div class="dlg-body center">
+    <p class="dlg-msg" id="iMsg"></p>
+    <div class="dlg-note">
+      · <b>추가</b>를 누르면 개통일·고객명·연락처가 같은 기존 행은 건너뜁니다.<br>
+      · <b>전체 교체</b>는 지금 저장된 데이터를 지우고 가져온 파일로 채웁니다.
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <button type="button" class="btn" id="iCancel">취소</button>
+    <span class="grow"></span>
+    <button type="button" class="btn" id="iReplace">전체 교체</button>
+    <button type="button" class="btn btn-primary" id="iAdd">추가</button>
+  </div>
+</dialog>
+
+<input type="file" id="fileInput" accept=".xlsx,.xls,.csv,text/csv" style="display:none">
+<input type="file" id="jsonInput" accept=".json,application/json" style="display:none">
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* =========================================================
+     KT 텔나라네트웍 칠금점 · 개통 관리 장부
+     단일 파일(index.html) 앱. 서버·빌드 없이 브라우저에서 바로 실행.
+     데이터: localStorage 'kt_chilgeum_activations_v1'
+     컬럼(순서 고정): 개통일 고객명 연락처 생년월일 개통유형 기종 요금제
+                      변경요금제 요금제변경일자 중고폰 리베이트 메모
+     ========================================================= */
+
+  var STORAGE_KEY = 'kt_chilgeum_activations_v1';
+
+  // 엑셀/CSV 헤더 순서 — 절대 변경 금지
+  var HEADERS = ['개통일','고객명','연락처','생년월일','개통유형','기종','요금제','변경요금제','요금제변경일자','중고폰','리베이트','메모'];
+
+  var TYPES = ['기기변경','번호이동','신규가입','인터넷+TV','키즈폰','기타'];
+  var TYPE_CLASS = {'기기변경':'t-change','번호이동':'t-move','신규가입':'t-new','인터넷+TV':'t-net','키즈폰':'t-kids','기타':'t-etc'};
+
+  // 엑셀 컬럼 너비
+  var COL_W = {'개통일':12,'고객명':14,'연락처':16,'생년월일':14,'개통유형':12,'기종':20,'요금제':22,'변경요금제':22,'요금제변경일자':16,'중고폰':20,'리베이트':12,'메모':34};
+
+  // 가져오기 헤더 별칭 (정규화된 문자열 기준)
+  var ALIASES = {
+    '개통일': ['개통일','개통일자','개통날짜','날짜','개통'],
+    '고객명': ['고객명','고객','성명','이름','고객이름'],
+    '연락처': ['연락처','전화번호','휴대폰','휴대폰번호','핸드폰','휴대전화','폰번호','번호'],
+    '생년월일': ['생년월일','생일','출생일','생년월일6자리','생년월일8자리'],
+    '개통유형': ['개통유형','개통구분','유형','구분','개통종류'],
+    '기종': ['기종','단말기','단말기명','모델','모델명','기기'],
+    '요금제': ['요금제','현재요금제','요금상품'],
+    '변경요금제': ['변경요금제','변경요금','변경상품'],
+    '요금제변경일자': ['요금제변경일자','변경일자','요금제변경일','변경예정일','요금제변경'],
+    '중고폰': ['중고폰','중고','중고폰정보','중고기기'],
+    '리베이트': ['리베이트','지원금','리베이트금액','리베이드'],
+    '메모': ['메모','비고','특이사항','참고']
+  };
+
+  var state = {
+    records: [],
+    filters: { q: '', month: '', type: '', due: false, dueMode: 'all' },
+    sort: { key: '개통일', dir: 'desc' },
+    editingId: null,
+    pendingRows: null,
+    pendingKind: 'excel'
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var el = {};
+
+  /* ---------------- date helpers ---------------- */
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function todayISO() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+  function currentMonth() { return todayISO().slice(0, 7); }
+  function monthOf(v) { return String(v || '').slice(0, 7); }
+
+  function isoFromYMD(y, m, d) {
+    if (!y || !m || !d) return '';
+    var dt = new Date(y, m - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return '';
+    return y + '-' + pad2(m) + '-' + pad2(d);
+  }
+
+  function excelSerialToISO(n) {
+    var ms = Date.UTC(1899, 11, 30) + Math.round(n) * 86400000;
+    var d = new Date(ms);
+    return d.getUTCFullYear() + '-' + pad2(d.getUTCMonth() + 1) + '-' + pad2(d.getUTCDate());
+  }
+
+  // 각종 표기를 YYYY-MM-DD로. 해석 불가면 원문 유지(데이터 보존).
+  function normalizeDate(v) {
+    if (v === null || v === undefined) return '';
+    if (v instanceof Date && !isNaN(v.getTime())) {
+      return v.getFullYear() + '-' + pad2(v.getMonth() + 1) + '-' + pad2(v.getDate());
+    }
+    if (typeof v === 'number' && isFinite(v) && v > 20000 && v < 80000) return excelSerialToISO(v);
+    var s = String(v).trim();
+    if (!s) return '';
+    var t = s
+      .replace(/년|월/g, '-')
+      .replace(/일/g, '')
+      .replace(/[.\/]/g, '-')
+      .replace(/\s+/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    var m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(t);
+    if (m) { var r = isoFromYMD(+m[1], +m[2], +m[3]); return r || s; }
+    m = /^(\d{4})(\d{2})(\d{2})$/.exec(t.replace(/-/g, ''));
+    if (m) { var r2 = isoFromYMD(+m[1], +m[2], +m[3]); if (r2) return r2; }
+    m = /^(\d{2})-(\d{1,2})-(\d{1,2})$/.exec(t);
+    if (m) {
+      var yy = +m[1];
+      var year = yy <= 40 ? 2000 + yy : 1900 + yy;
+      var r3 = isoFromYMD(year, +m[2], +m[3]);
+      if (r3) return r3;
+    }
+    return s;
+  }
+
+  function daysFromToday(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    if (!m) return null;
+    var target = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    var now = new Date();
+    var today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.round((target - today) / 86400000);
+  }
+
+  function monthLabel(ym) {
+    if (!ym) return '전체 기간';
+    var p = ym.split('-');
+    return p[0] + '년 ' + Number(p[1]) + '월';
+  }
+
+  /* ---------------- format helpers ---------------- */
+  function fmtNum(n) {
+    var v = Number(n) || 0;
+    return v.toLocaleString('ko-KR');
+  }
+
+  function parseNumber(v) {
+    if (typeof v === 'number') return isFinite(v) ? v : 0;
+    var s = String(v == null ? '' : v).replace(/[^0-9.\-]/g, '');
+    if (!s || s === '-' || s === '.') return 0;
+    var n = parseFloat(s);
+    return isFinite(n) ? n : 0;
+  }
+
+  function formatPhone(v) {
+    var raw = String(v == null ? '' : v).trim();
+    if (!raw) return '';
+    var d = raw.replace(/[^0-9]/g, '');
+    if (!d) return raw;
+    if (d.length === 11) return d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
+    if (d.length === 10) {
+      if (d.slice(0, 2) === '02') return d.slice(0, 2) + '-' + d.slice(2, 6) + '-' + d.slice(6);
+      return d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6);
+    }
+    if (d.length === 9 && d.slice(0, 2) === '02') return d.slice(0, 2) + '-' + d.slice(2, 5) + '-' + d.slice(5);
+    if (d.length === 8) return d.slice(0, 4) + '-' + d.slice(4);
+    return raw;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function uid() {
+    return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  /* ---------------- storage ---------------- */
+  function normalizeRecord(r) {
+    var o = { id: (r && r.id) || uid(), createdAt: (r && r.createdAt) || Date.now() };
+    for (var i = 0; i < HEADERS.length; i++) {
+      var h = HEADERS[i];
+      o[h] = r && r[h] != null ? String(r[h]).trim() : '';
+    }
+    o.개통일 = normalizeDate(o.개통일);
+    o.요금제변경일자 = normalizeDate(o.요금제변경일자);
+    o.연락처 = formatPhone(o.연락처);
+    o.리베이트 = parseNumber(o.리베이트);
+    if (!o.개통유형) o.개통유형 = '';
+    return o;
+  }
+
+  function loadRecords() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      var data = JSON.parse(raw);
+      if (!Array.isArray(data)) return [];
+      return data.map(normalizeRecord);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function persist() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
+      el.storageWarn.classList.remove('show');
+      var d = new Date();
+      el.saveState.textContent = '저장됨 · ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+      return true;
+    } catch (e) {
+      el.storageWarn.classList.add('show');
+      el.saveState.textContent = '저장 안 됨';
+      return false;
+    }
+  }
+
+  /* ---------------- filtering / sorting ---------------- */
+  function visibleRecords() {
+    var f = state.filters;
+    var q = f.q.trim().toLowerCase();
+    var month = f.due ? '' : f.month;   // 임박 보기에서는 월 필터를 무시
+    var list = state.records.filter(function (r) {
+      if (month && monthOf(r.개통일) !== month) return false;
+      if (f.type && r.개통유형 !== f.type) return false;
+      if (f.due) {
+        var d = daysFromToday(r.요금제변경일자);
+        if (d === null) return false;
+        if (f.dueMode === 'late') { if (d >= 0) return false; }
+        else if (f.dueMode === 'soon') { if (d < 0 || d > 7) return false; }
+        else if (d > 7) return false;
+      }
+      if (q) {
+        var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.중고폰, r.메모, r.개통유형].join(' ').toLowerCase();
+        if (hay.indexOf(q) < 0) return false;
+      }
+      return true;
+    });
+    var key = state.sort.key;
+    var dir = state.sort.dir === 'asc' ? 1 : -1;
+    list.sort(function (a, b) {
+      var va, vb;
+      if (key === '리베이트') { va = Number(a.리베이트) || 0; vb = Number(b.리베이트) || 0; }
+      else { va = a.개통일 || ''; vb = b.개통일 || ''; }
+      if (va < vb) return -1 * dir;
+      if (va > vb) return 1 * dir;
+      if (key === '개통일' && a.createdAt !== b.createdAt) return a.createdAt < b.createdAt ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }
+
+  function kpiRecords() {
+    var m = state.filters.month;
+    return state.records.filter(function (r) { return !m || monthOf(r.개통일) === m; });
+  }
+
+  /* ---------------- rendering ---------------- */
+  function render() {
+    renderKpis();
+    renderTable();
+    renderFilterUi();
+    el.footCount.textContent = state.records.length + '건 저장됨';
+  }
+
+  function renderKpis() {
+    var list = kpiRecords();
+    var m = state.filters.month;
+
+    el.kpiTotal.textContent = fmtNum(list.length);
+    el.kpiMonthLabel.textContent = monthLabel(m) + (m ? ' 기준' : '');
+
+    // 유형별 건수
+    var counts = {};
+    var i;
+    for (i = 0; i < list.length; i++) {
+      var t = list[i].개통유형 || '미지정';
+      counts[t] = (counts[t] || 0) + 1;
+    }
+    var order = TYPES.concat(['미지정']);
+    var chips = [];
+    for (i = 0; i < order.length; i++) {
+      var name = order[i];
+      if (!counts[name]) continue;
+      var cls = TYPE_CLASS[name] || 't-etc';
+      var on = state.filters.type === name ? ' on' : '';
+      if (name === '미지정') {
+        chips.push('<span class="chip t-etc">미지정 <b>' + counts[name] + '</b></span>');
+      } else {
+        chips.push('<button type="button" class="chip ' + cls + on + '" data-type="' + esc(name) + '">' +
+          esc(name) + ' <b>' + counts[name] + '</b></button>');
+      }
+    }
+    el.kpiBreakdown.innerHTML = chips.length ? chips.join('') : '<span class="chip t-etc">아직 기록 없음</span>';
+
+    // 리베이트
+    var sum = 0;
+    for (i = 0; i < list.length; i++) sum += Number(list[i].리베이트) || 0;
+    el.kpiRebate.textContent = fmtNum(sum);
+    el.kpiRebateSub.textContent = list.length
+      ? '건당 평균 ' + fmtNum(Math.round(sum / list.length)) + '원 · ' + list.length + '건'
+      : '기록을 추가하면 자동으로 합산됩니다';
+
+    // 요금제 변경 알림
+    var soon = 0, late = 0, upcoming = [];
+    for (i = 0; i < state.records.length; i++) {
+      var r = state.records[i];
+      var d = daysFromToday(r.요금제변경일자);
+      if (d === null) continue;
+      if (d < 0) late++;
+      else if (d <= 7) soon++;
+      if (d <= 7) upcoming.push({ r: r, d: d });
+    }
+    el.dueSoonCount.textContent = fmtNum(soon);
+    el.dueOverdueCount.textContent = fmtNum(late);
+    el.dueSoonStat.classList.toggle('on', !!state.filters.due && state.filters.dueMode === 'soon');
+    el.dueOverdueStat.classList.toggle('on', !!state.filters.due && state.filters.dueMode === 'late');
+
+    upcoming.sort(function (a, b) { return a.d - b.d; });
+    if (!upcoming.length) {
+      el.dueList.innerHTML = '<p class="due-empty">예정된 요금제 변경이 없습니다.</p>';
+    } else {
+      var html = '';
+      for (i = 0; i < Math.min(upcoming.length, 4); i++) {
+        var u = upcoming[i];
+        var label = u.d < 0 ? (Math.abs(u.d) + '일 지남') : (u.d === 0 ? 'D-DAY' : 'D-' + u.d);
+        var ddCls = u.d < 0 ? 'dd-late' : (u.d === 0 ? 'dd-today' : 'dd-soon');
+        html += '<button type="button" class="due-item" data-due-item="1">' +
+          '<span class="due-name">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
+          '<span class="due-date">' + esc(u.r.요금제변경일자.slice(5)) + '</span>' +
+          '<span class="dd ' + ddCls + '">' + label + '</span>' +
+          '</button>';
+      }
+      if (upcoming.length > 4) {
+        html += '<button type="button" class="due-item" data-due-item="1" style="color:var(--slate-500)">' +
+          '<span class="due-name">외 ' + (upcoming.length - 4) + '건 더 보기</span></button>';
+      }
+      el.dueList.innerHTML = html;
+    }
+  }
+
+  function changeDateCell(r) {
+    var s = r.요금제변경일자 || '';
+    if (!s) return '<span class="muted">—</span>';
+    var d = daysFromToday(s);
+    var badge = '';
+    if (d !== null && d < 0) badge = ' <span class="dd dd-late">' + Math.abs(d) + '일 지남</span>';
+    else if (d === 0) badge = ' <span class="dd dd-today">D-DAY</span>';
+    else if (d !== null && d <= 7) badge = ' <span class="dd dd-soon">D-' + d + '</span>';
+    return '<span class="c-date">' + esc(s) + '</span>' + badge;
+  }
+
+  function renderTable() {
+    var rows = visibleRecords();
+    var scopeTag = '';
+    if (state.filters.due) {
+      scopeTag = state.filters.dueMode === 'late' ? '기한지남'
+        : (state.filters.dueMode === 'soon' ? '7일이내' : '변경임박');
+    }
+    el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') + rows.length + '건';
+    el.footCount.textContent = state.records.length + '건 저장됨';
+
+    // 정렬 화살표
+    var ths = el.ledger.querySelectorAll('th[data-sort]');
+    for (var k = 0; k < ths.length; k++) {
+      var th = ths[k];
+      var isSorted = th.getAttribute('data-sort') === state.sort.key;
+      th.classList.toggle('sorted', isSorted);
+      var arrow = th.querySelector('.arrow');
+      if (arrow) arrow.textContent = isSorted ? (state.sort.dir === 'asc' ? '▲' : '▼') : '▼';
+    }
+
+    if (!rows.length) {
+      el.tbody.innerHTML = '';
+      el.ledger.style.display = 'none';
+      el.emptyState.hidden = false;
+      if (state.records.length === 0) {
+        el.emptyState.innerHTML =
+          '<div class="empty-illust"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 14h4"/></svg></div>' +
+          '<h3>아직 등록된 개통이 없습니다</h3>' +
+          '<p>오늘 개통 건부터 바로 적어보세요.<br>엑셀로 쓰던 장부가 있으면 그대로 가져올 수 있습니다.</p>' +
+          '<div class="row">' +
+          '<button type="button" class="btn btn-primary" data-empty="add">+ 첫 개통 등록</button>' +
+          '<button type="button" class="btn" data-empty="import">엑셀 가져오기</button>' +
+          '<button type="button" class="btn" data-empty="sample">샘플 데이터로 둘러보기</button>' +
+          '</div>';
+      } else {
+        el.emptyState.innerHTML =
+          '<div class="empty-illust"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8 20 20"/></svg></div>' +
+          '<h3>조건에 맞는 개통이 없습니다</h3>' +
+          '<p>검색어나 필터를 바꿔보세요.</p>' +
+          '<div class="row"><button type="button" class="btn" data-empty="reset">필터 초기화</button></div>';
+      }
+      return;
+    }
+
+    el.emptyState.hidden = true;
+    el.ledger.style.display = '';
+    var html = '';
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var d = daysFromToday(r.요금제변경일자);
+      var rowCls = (d !== null && d <= 7) ? ' class="due-row"' : '';
+      var typeCls = TYPE_CLASS[r.개통유형] || 't-etc';
+      html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
+        '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
+        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span></td>' +
+        '<td data-label="연락처" class="nowrap">' + (r.연락처 ? esc(r.연락처) : '<span class="muted">—</span>') + '</td>' +
+        '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
+        '<td data-label="개통유형">' + (r.개통유형 ? '<span class="badge ' + typeCls + '">' + esc(r.개통유형) + '</span>' : '<span class="muted">—</span>') + '</td>' +
+        '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="변경요금제"><span class="ellip" title="' + esc(r.변경요금제) + '">' + (r.변경요금제 ? esc(r.변경요금제) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="요금제변경일자" class="nowrap">' + changeDateCell(r) + '</td>' +
+        '<td data-label="중고폰"><span class="ellip" title="' + esc(r.중고폰) + '">' + (r.중고폰 ? esc(r.중고폰) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="리베이트" class="money">' + fmtNum(r.리베이트) + '</td>' +
+        '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td class="actions">' +
+          '<button type="button" class="icon-btn" data-act="edit" data-id="' + esc(r.id) + '" title="수정" aria-label="수정">' +
+            '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 3.6a1.7 1.7 0 0 1 2.4 2.4L7 14.8l-3.4.8.8-3.4z"/><path d="M12 5l3 3"/></svg>' +
+          '</button>' +
+          '<button type="button" class="icon-btn del" data-act="del" data-id="' + esc(r.id) + '" title="삭제" aria-label="삭제">' +
+            '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.5 5.5l.8 10.2a1.3 1.3 0 0 0 1.3 1.2h4.8a1.3 1.3 0 0 0 1.3-1.2l.8-10.2"/></svg>' +
+          '</button>' +
+        '</td>' +
+      '</tr>';
+    }
+    el.tbody.innerHTML = html;
+  }
+
+  function renderFilterUi() {
+    el.monthInput.value = state.filters.month;
+    el.typeFilter.value = state.filters.type;
+    el.dueOnly.checked = state.filters.due;
+    el.searchInput.value = state.filters.q;
+    el.clearSearch.classList.toggle('show', !!state.filters.q);
+    el.thisMonthBtn.classList.toggle('on', state.filters.month === currentMonth());
+    el.allMonthBtn.classList.toggle('on', !state.filters.month);
+  }
+
+  /* ---------------- toast ---------------- */
+  var toastTimer = null;
+  function toast(msg, isErr) {
+    el.toast.textContent = msg;
+    el.toast.classList.toggle('err', !!isErr);
+    el.toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.toast.classList.remove('show'); }, 2800);
+  }
+
+  /* ---------------- confirm dialog ---------------- */
+  var confirmResolve = null;
+  function askConfirm(title, msgHtml, okLabel, danger) {
+    el.cTitle.textContent = title;
+    el.cMsg.innerHTML = msgHtml;
+    el.cOk.textContent = okLabel || '확인';
+    el.cOk.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+    el.confirmDialog.showModal();
+    return new Promise(function (resolve) { confirmResolve = resolve; });
+  }
+  function closeConfirm(v) {
+    el.confirmDialog.close();
+    if (confirmResolve) { var f = confirmResolve; confirmResolve = null; f(v); }
+  }
+
+  /* ---------------- editor ---------------- */
+  function typeOptions(selected) {
+    var html = '<option value="">선택 안 함</option>';
+    var found = false;
+    for (var i = 0; i < TYPES.length; i++) {
+      if (TYPES[i] === selected) found = true;
+      html += '<option value="' + esc(TYPES[i]) + '"' + (TYPES[i] === selected ? ' selected' : '') + '>' + esc(TYPES[i]) + '</option>';
+    }
+    if (selected && !found) {
+      // 과거 데이터에 목록에 없는 유형이 있으면 그대로 보여준다.
+      html += '<option value="' + esc(selected) + '" selected>' + esc(selected) + ' (직접 입력)</option>';
+    }
+    return html;
+  }
+
+  function openEditor(rec) {
+    state.editingId = rec ? rec.id : null;
+    el.dlgTitle.textContent = rec ? '개통 수정' : '개통 등록';
+    el.deleteBtn.style.display = rec ? 'inline-flex' : 'none';
+    el.formError.classList.remove('show');
+
+    var r = rec || { 개통일: todayISO(), 개통유형: '' };
+    $('f_date').value = normalizeDate(r.개통일) || todayISO();
+    $('f_name').value = r.고객명 || '';
+    $('f_phone').value = r.연락처 || '';
+    $('f_birth').value = r.생년월일 || '';
+    $('f_type').innerHTML = typeOptions(r.개통유형 || '');
+    $('f_model').value = r.기종 || '';
+    $('f_plan').value = r.요금제 || '';
+    $('f_newplan').value = r.변경요금제 || '';
+    $('f_newdate').value = normalizeDate(r.요금제변경일자) || '';
+    $('f_used').value = r.중고폰 || '';
+    $('f_rebate').value = r.리베이트 ? fmtNum(r.리베이트) : '';
+    $('f_memo').value = r.메모 || '';
+
+    clearInvalid();
+    if (el.editDialog.open) el.editDialog.close();
+    el.editDialog.showModal();
+    setTimeout(function () { $('f_name').focus(); }, 30);
+  }
+
+  function clearInvalid() {
+    var bads = el.editDialog.querySelectorAll('.bad');
+    for (var i = 0; i < bads.length; i++) bads[i].classList.remove('bad');
+  }
+
+  function collectForm() {
+    var name = $('f_name').value.trim();
+    var date = $('f_date').value;
+    clearInvalid();
+    if (!name || !date) {
+      el.formError.textContent = !name
+        ? '고객명을 입력해 주세요.'
+        : '개통일을 입력해 주세요.';
+      el.formError.classList.add('show');
+      var target = !name ? $('f_name') : $('f_date');
+      target.classList.add('bad');
+      target.focus();
+      return null;
+    }
+    el.formError.classList.remove('show');
+    return {
+      개통일: normalizeDate(date),
+      고객명: name,
+      연락처: formatPhone($('f_phone').value.trim()),
+      생년월일: $('f_birth').value.trim(),
+      개통유형: $('f_type').value,
+      기종: $('f_model').value.trim(),
+      요금제: $('f_plan').value.trim(),
+      변경요금제: $('f_newplan').value.trim(),
+      요금제변경일자: normalizeDate($('f_newdate').value),
+      중고폰: $('f_used').value.trim(),
+      리베이트: parseNumber($('f_rebate').value),
+      메모: $('f_memo').value.trim()
+    };
+  }
+
+  function saveForm(keepOpen) {
+    var data = collectForm();
+    if (!data) return;
+
+    if (state.editingId) {
+      var idx = -1;
+      for (var i = 0; i < state.records.length; i++) {
+        if (state.records[i].id === state.editingId) { idx = i; break; }
+      }
+      if (idx >= 0) {
+        data.id = state.records[idx].id;
+        data.createdAt = state.records[idx].createdAt;
+        state.records[idx] = normalizeRecord(data);
+        persist();
+        render();
+        toast('수정했습니다.');
+        el.editDialog.close();
+        state.editingId = null;
+      }
+      return;
+    }
+
+    var rec = normalizeRecord(data);
+    state.records.push(rec);
+    persist();
+    render();
+    toast(rec.고객명 + ' 고객 개통을 저장했습니다.');
+
+    if (keepOpen) {
+      // 날짜·유형은 유지하고 나머지만 비워 연속 입력
+      $('f_name').value = '';
+      $('f_phone').value = '';
+      $('f_birth').value = '';
+      $('f_model').value = '';
+      $('f_plan').value = '';
+      $('f_newplan').value = '';
+      $('f_newdate').value = '';
+      $('f_used').value = '';
+      $('f_rebate').value = '';
+      $('f_memo').value = '';
+      $('f_name').focus();
+    } else {
+      el.editDialog.close();
+    }
+  }
+
+  function deleteRecord(id) {
+    var rec = null, idx = -1;
+    for (var i = 0; i < state.records.length; i++) {
+      if (state.records[i].id === id) { rec = state.records[i]; idx = i; break; }
+    }
+    if (!rec) return;
+    state.records.splice(idx, 1);
+    persist();
+    render();
+    toast(rec.고객명 + ' 고객 기록을 삭제했습니다.');
+  }
+
+  /* ---------------- CSV ---------------- */
+  function csvCell(v) {
+    var s = v == null ? '' : String(v);
+    if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function buildCsv(rows) {
+    var lines = [HEADERS.map(csvCell).join(',')];
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var line = [];
+      for (var j = 0; j < HEADERS.length; j++) {
+        var h = HEADERS[j];
+        line.push(csvCell(h === '리베이트' ? (Number(r[h]) || 0) : r[h]));
+      }
+      lines.push(line.join(','));
+    }
+    return '\uFEFF' + lines.join('\r\n');
+  }
+
+  function downloadBlob(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 1200);
+  }
+
+  function exportCsv(rows, filename) {
+    downloadBlob(new Blob([buildCsv(rows)], { type: 'text/csv;charset=utf-8;' }), filename);
+  }
+
+  // 헤더만 있는 CSV 파서 (따옴표·줄바꿈 처리)
+  function parseCsv(text, delimiter) {
+    var d = delimiter || ',';
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+    var rows = [], row = [], field = '', inQ = false, c;
+    for (var i = 0; i < text.length; i++) {
+      c = text.charAt(i);
+      if (inQ) {
+        if (c === '"') {
+          if (text.charAt(i + 1) === '"') { field += '"'; i++; }
+          else inQ = false;
+        } else field += c;
+      } else if (c === '"') {
+        inQ = true;
+      } else if (c === d) {
+        row.push(field); field = '';
+      } else if (c === '\n') {
+        row.push(field); field = ''; rows.push(row); row = [];
+      } else if (c === '\r') {
+        /* skip */
+      } else {
+        field += c;
+      }
+    }
+    if (field !== '' || row.length) { row.push(field); rows.push(row); }
+    return rows;
+  }
+
+  function detectDelimiter(text) {
+    var head = text.slice(0, 2000);
+    var commas = (head.match(/,/g) || []).length;
+    var tabs = (head.match(/\t/g) || []).length;
+    return tabs > commas ? '\t' : ',';
+  }
+
+  function decodeBytes(buffer) {
+    var bytes = new Uint8Array(buffer);
+    try {
+      return new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    } catch (e) {
+      try { return new TextDecoder('euc-kr').decode(bytes); }
+      catch (e2) { return new TextDecoder('utf-8').decode(bytes); }
+    }
+  }
+
+  /* ---------------- import mapping ---------------- */
+  function normHeader(s) {
+    return String(s == null ? '' : s)
+      .replace(/\([^)]*\)/g, '')
+      .replace(/[\s\u00a0]/g, '')
+      .replace(/[:：·.,_-]/g, '')
+      .toLowerCase();
+  }
+
+  function buildHeaderMap(row) {
+    var map = {}, found = 0;
+    for (var i = 0; i < row.length; i++) {
+      var n = normHeader(row[i]);
+      if (!n) continue;
+      for (var key in ALIASES) {
+        if (!ALIASES.hasOwnProperty(key)) continue;
+        if (map[key] !== undefined) continue;
+        var list = ALIASES[key];
+        for (var j = 0; j < list.length; j++) {
+          if (normHeader(list[j]) === n) { map[key] = i; found++; break; }
+        }
+        if (map[key] !== undefined) break;
+      }
+    }
+    map.__count = found;
+    return map;
+  }
+
+  function normalizeType(v) {
+    var s = String(v == null ? '' : v).trim();
+    if (!s) return '';
+    var n = s.replace(/\s/g, '');
+    if (/번호이동|번이/.test(n)) return '번호이동';
+    if (/기기변경|기변/.test(n)) return '기기변경';
+    if (/신규/.test(n)) return '신규가입';
+    if (/인터넷|TV|티비|iptv/i.test(n)) return '인터넷+TV';
+    if (/키즈/.test(n)) return '키즈폰';
+    for (var i = 0; i < TYPES.length; i++) if (TYPES[i] === s) return s;
+    return s; // 알 수 없는 값은 원문 유지
+  }
+
+  function aoaToRecords(aoa) {
+    if (!aoa || !aoa.length) throw new Error('파일이 비어 있습니다.');
+
+    var headerIdx = -1, map = null;
+    var maxScan = Math.min(aoa.length, 12);
+    for (var i = 0; i < maxScan; i++) {
+      var m = buildHeaderMap(aoa[i]);
+      if (m.__count >= 3) { headerIdx = i; map = m; break; }
+    }
+    if (headerIdx < 0) {
+      throw new Error('헤더(개통일·고객명·연락처 …)를 찾지 못했습니다. 첫 줄에 컬럼명이 있는지 확인해 주세요.');
+    }
+
+    var out = [];
+    for (var r = headerIdx + 1; r < aoa.length; r++) {
+      var row = aoa[r] || [];
+      var rec = {};
+      var any = false;
+      for (var key in map) {
+        if (!map.hasOwnProperty(key) || key === '__count') continue;
+        var v = row[map[key]];
+        rec[key] = v == null ? '' : v;
+        if (String(v == null ? '' : v).trim()) any = true;
+      }
+      if (!any) continue;
+      if (!String(rec.고객명 == null ? '' : rec.고객명).trim() &&
+          !String(rec.연락처 == null ? '' : rec.연락처).trim()) continue;
+
+      rec.개통유형 = normalizeType(rec.개통유형);
+      rec.생년월일 = String(rec.생년월일 == null ? '' : rec.생년월일).trim();
+      // 생년월일이 엑셀 날짜로 들어온 경우
+      if (rec.생년월일 instanceof Date) {
+        var bd = rec.생년월일;
+        rec.생년월일 = bd.getFullYear() + '-' + pad2(bd.getMonth() + 1) + '-' + pad2(bd.getDate());
+      } else if (typeof rec.생년월일 === 'number' && rec.생년월일 > 20000 && rec.생년월일 < 80000) {
+        rec.생년월일 = excelSerialToISO(rec.생년월일);
+      } else if (typeof rec.생년월일 === 'number' && rec.생년월일 > 0 && rec.생년월일 < 100000) {
+        // 010105 처럼 앞자리 0이 날아간 6자리 생년월일 복원
+        var bdStr = String(rec.생년월일);
+        while (bdStr.length < 6) bdStr = '0' + bdStr;
+        rec.생년월일 = bdStr;
+      }
+      rec.개통일 = normalizeDate(rec.개통일);
+      rec.요금제변경일자 = normalizeDate(rec.요금제변경일자);
+      rec.리베이트 = parseNumber(rec.리베이트);
+      out.push(normalizeRecord(rec));
+    }
+    if (!out.length) throw new Error('가져올 데이터 행이 없습니다.');
+    return out;
+  }
+
+  /* ---------------- export ---------------- */
+  function hasXLSX() { return typeof XLSX !== 'undefined' && XLSX && XLSX.utils; }
+
+  function exportExcel() {
+    var rows = visibleRecords();
+    if (!rows.length) { toast('내보낼 데이터가 없습니다.', true); return; }
+
+    var monthTag = state.filters.due
+      ? (state.filters.dueMode === 'late' ? '기한지남' : (state.filters.dueMode === 'soon' ? '7일이내' : '변경임박'))
+      : (state.filters.month || '전체');
+    var base = 'KT개통장부_' + monthTag + '_' + todayISO().replace(/-/g, '') + '_' + rows.length + '건';
+    var scopeLabel = state.filters.due
+      ? (state.filters.dueMode === 'late' ? '기한 지난' : (state.filters.dueMode === 'soon' ? '7일 이내' : '변경임박'))
+      : monthLabel(state.filters.month);
+
+    if (!hasXLSX()) {
+      exportCsv(rows, base + '.csv');
+      toast(scopeLabel + ' ' + rows.length + '건을 CSV로 저장했습니다. 엑셀에서 바로 열 수 있습니다.');
+      return;
+    }
+
+    var aoa = [HEADERS.slice()];
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i], line = [];
+      for (var j = 0; j < HEADERS.length; j++) {
+        var h = HEADERS[j];
+        if (h === '리베이트') line.push(Number(r[h]) || 0);
+        else line.push(r[h] == null ? '' : String(r[h]));
+      }
+      aoa.push(line);
+    }
+
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols'] = HEADERS.map(function (h) { return { wch: COL_W[h] || 14 }; });
+
+    var rebateCol = HEADERS.indexOf('리베이트');
+    var range = XLSX.utils.decode_range(ws['!ref']);
+    for (var R = 1; R <= range.e.r; R++) {
+      var addr = XLSX.utils.encode_cell({ r: R, c: rebateCol });
+      if (ws[addr] && ws[addr].t === 'n') ws[addr].z = '#,##0';
+    }
+
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '개통장부');
+    XLSX.writeFile(wb, base + '.xlsx');
+    toast(scopeLabel + ' ' + rows.length + '건을 엑셀로 내보냈습니다.');
+  }
+
+  function downloadTemplate() {
+    if (!hasXLSX()) {
+      exportCsv([], 'KT개통장부_양식.csv');
+      toast('CSV 양식을 받았습니다. 엑셀에서 열어 작성하세요.');
+      return;
+    }
+    var ws = XLSX.utils.aoa_to_sheet([HEADERS.slice()]);
+    ws['!cols'] = HEADERS.map(function (h) { return { wch: COL_W[h] || 14 }; });
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '개통장부');
+    XLSX.writeFile(wb, 'KT개통장부_양식.xlsx');
+    toast('엑셀 양식을 받았습니다.');
+  }
+
+  /* ---------------- import ---------------- */
+  function handleFile(file) {
+    if (!file) return;
+    var name = file.name || '';
+    var lower = name.toLowerCase();
+    var reader = new FileReader();
+
+    reader.onerror = function () { toast('파일을 읽지 못했습니다.', true); };
+
+    if (/\.(xlsx|xls)$/.test(lower)) {
+      if (!hasXLSX()) {
+        toast('엑셀 파일을 읽으려면 인터넷 연결이 필요합니다. CSV로 저장해 가져와 주세요.', true);
+        return;
+      }
+      reader.onload = function (e) {
+        try {
+          var wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array', cellDates: true });
+          var ws = wb.Sheets[wb.SheetNames[0]];
+          var aoa = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: '', blankrows: false });
+          var recs = aoaToRecords(aoa);
+          openImportDialog(recs, '엑셀 파일');
+        } catch (err) {
+          toast(err.message || '엑셀을 읽지 못했습니다.', true);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      return;
+    }
+
+    // CSV / TXT
+    reader.onload = function (e) {
+      try {
+        var text = decodeBytes(e.target.result);
+        var rows = parseCsv(text, detectDelimiter(text));
+        var recs = aoaToRecords(rows);
+        openImportDialog(recs, 'CSV 파일');
+      } catch (err) {
+        toast(err.message || 'CSV를 읽지 못했습니다.', true);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function openImportDialog(records, sourceLabel) {
+    state.pendingRows = records;
+    state.pendingKind = 'excel';
+    $('iTitle').textContent = '가져오기 확인';
+    $('iSub').textContent = '기존 장부에 추가하거나, 통째로 교체할 수 있습니다.';
+    $('iMsg').innerHTML = sourceLabel + '에서 <b>' + records.length + '건</b>을 읽었습니다.<br>' +
+      '현재 장부에는 <b>' + state.records.length + '건</b>이 저장되어 있습니다.';
+    $('iAdd').textContent = '추가';
+    $('iReplace').style.display = '';
+    el.importDialog.showModal();
+  }
+
+  function applyImport(mode) {
+    var rows = state.pendingRows || [];
+    if (!rows.length) { el.importDialog.close(); return; }
+
+    if (mode === 'replace') {
+      state.records = rows.map(function (r) { return normalizeRecord(r); });
+      resetViewFilters();         // 가져온 데이터가 바로 보이도록
+      persist();
+      render();
+      el.importDialog.close();
+      state.pendingRows = null;
+      toast(rows.length + '건으로 교체했습니다.');
+      return;
+    }
+
+    var seen = {};
+    for (var i = 0; i < state.records.length; i++) {
+      var r = state.records[i];
+      seen[(r.개통일 || '') + '|' + (r.고객명 || '') + '|' + (r.연락처 || '')] = true;
+    }
+    var added = 0, skipped = 0;
+    for (var j = 0; j < rows.length; j++) {
+      var n = normalizeRecord(rows[j]);
+      var key = (n.개통일 || '') + '|' + (n.고객명 || '') + '|' + (n.연락처 || '');
+      if (seen[key]) { skipped++; continue; }
+      seen[key] = true;
+      state.records.push(n);
+      added++;
+    }
+    state.filters.month = '';     // 가져온 데이터가 바로 보이도록 전체 기간으로
+    state.filters.q = '';
+    state.filters.type = '';
+    persist();
+    render();
+    el.importDialog.close();
+    state.pendingRows = null;
+    toast(added + '건을 추가했습니다.' + (skipped ? ' (중복 ' + skipped + '건 건너뜀)' : ''));
+  }
+
+  /* ---------------- JSON backup ---------------- */
+  function jsonBackup() {
+    if (!state.records.length) { toast('백업할 데이터가 없습니다.', true); return; }
+    var payload = {
+      app: 'kt-store-manager',
+      version: 1,
+      store: 'KT 텔나라네트웍 칠금점',
+      exportedAt: new Date().toISOString(),
+      count: state.records.length,
+      records: state.records
+    };
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
+    downloadBlob(blob, 'KT개통장부_백업_' + todayISO() + '.json');
+    toast(state.records.length + '건을 백업 파일로 저장했습니다.');
+  }
+
+  function jsonRestore(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        var data = JSON.parse(String(e.target.result));
+        var arr = Array.isArray(data) ? data : (data && Array.isArray(data.records) ? data.records : null);
+        if (!arr) throw new Error('백업 파일 형식이 아닙니다.');
+        var recs = arr.map(normalizeRecord);
+        if (!recs.length) throw new Error('백업 파일에 데이터가 없습니다.');
+        state.pendingRows = recs;
+        $('iTitle').textContent = '백업 복원';
+        $('iSub').textContent = '백업에 들어 있는 기록으로 장부를 채웁니다.';
+        $('iMsg').innerHTML = '백업 파일에서 <b>' + recs.length + '건</b>을 찾았습니다.<br>' +
+          '현재 장부에는 <b>' + state.records.length + '건</b>이 저장되어 있습니다.';
+        $('iAdd').textContent = '기존에 추가';
+        $('iReplace').style.display = '';
+        el.importDialog.showModal();
+      } catch (err) {
+        toast(err.message || '백업 파일을 읽지 못했습니다.', true);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  /* ---------------- sample data ---------------- */
+  function sampleRecords() {
+    var now = new Date();
+    var y = now.getFullYear(), m = now.getMonth();
+    function day(n) {
+      var dt = new Date(y, m, Math.min(n, now.getDate()));
+      return dt.getFullYear() + '-' + pad2(dt.getMonth() + 1) + '-' + pad2(dt.getDate());
+    }
+    function rel(n) {
+      var dt = new Date(y, m, now.getDate() + n);
+      return dt.getFullYear() + '-' + pad2(dt.getMonth() + 1) + '-' + pad2(dt.getDate());
+    }
+    var base = [
+      { 개통일: day(2), 고객명: '김민수', 연락처: '010-2345-6789', 생년월일: '880312', 개통유형: '번호이동', 기종: '갤럭시 S25', 요금제: '5G 슬림 55,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 리베이트: 350000, 메모: 'SKT에서 이동 · 가족결합' },
+      { 개통일: day(3), 고객명: '이서연', 연락처: '010-3456-7890', 생년월일: '1995-07-21', 개통유형: '기기변경', 기종: '아이폰 17 프로', 요금제: '5G 프리미엄 68,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '반납', 리베이트: 420000, 메모: '기존 회선 유지' },
+      { 개통일: day(5), 고객명: '박준호', 연락처: '010-4567-8901', 생년월일: '011105', 개통유형: '신규가입', 기종: '갤럭시 A56', 요금제: '5G 베이직 33,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '미사용', 리베이트: 250000, 메모: '학생 · 첫 개통' },
+      { 개통일: day(7), 고객명: '최유진', 연락처: '010-5678-9012', 생년월일: '790420', 개통유형: '인터넷+TV', 기종: '인터넷 에센스 + TV 베이직', 요금제: '인터넷+TV 38,500', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 리베이트: 300000, 메모: '설치 완료 · 약정 3년' },
+      { 개통일: day(9), 고객명: '정하늘', 연락처: '010-6789-0123', 생년월일: '140902', 개통유형: '키즈폰', 기종: '갤럭시 키즈폰', 요금제: '키즈 15,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 리베이트: 120000, 메모: '부모님 동반 방문' },
+      { 개통일: day(11), 고객명: '한지우', 연락처: '010-7890-1234', 생년월일: '1992-11-02', 개통유형: '번호이동', 기종: '아이폰 16', 요금제: '5G 스탠다드 48,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(5), 중고폰: '매입 15만', 리베이트: 380000, 메모: '한 달 뒤 요금제 상향 예정' },
+      { 개통일: day(13), 고객명: '오세훈', 연락처: '010-8901-2345', 생년월일: '850618', 개통유형: '기기변경', 기종: '갤럭시 S24', 요금제: '5G 슬림 55,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(3), 중고폰: '반납', 리베이트: 330000, 메모: '' },
+      { 개통일: day(15), 고객명: '윤가은', 연락처: '010-9012-3456', 생년월일: '990227', 개통유형: '신규가입', 기종: '갤럭시 A36', 요금제: '5G 베이직 33,000', 변경요금제: '5G 슬림 55,000', 요금제변경일자: rel(-2), 중고폰: '', 리베이트: 240000, 메모: '요금제 변경 상담 필요' },
+      { 개통일: day(17), 고객명: '서도윤', 연락처: '010-1234-5678', 생년월일: '730810', 개통유형: '기타', 기종: '갤럭시 S23 (중고)', 요금제: '5G 슬림 45,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '매입 15만', 리베이트: 180000, 메모: '중고 기기 개통' }
+    ];
+    return base.map(function (r) { return normalizeRecord(r); });
+  }
+
+  /* ---------------- events ---------------- */
+  function bindEvents() {
+    // 검색
+    var searchTimer = null;
+    el.searchInput.addEventListener('input', function () {
+      var v = this.value;
+      el.clearSearch.classList.toggle('show', !!v);
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        state.filters.q = v;
+        renderTable();
+      }, 120);
+    });
+    el.clearSearch.addEventListener('click', function () {
+      el.searchInput.value = '';
+      state.filters.q = '';
+      el.clearSearch.classList.remove('show');
+      renderTable();
+      el.searchInput.focus();
+    });
+
+    // 월
+    el.monthInput.addEventListener('change', function () {
+      state.filters.month = this.value;
+      render();
+    });
+    el.thisMonthBtn.addEventListener('click', function () {
+      state.filters.month = currentMonth();
+      render();
+    });
+    el.allMonthBtn.addEventListener('click', function () {
+      state.filters.month = '';
+      render();
+    });
+
+    // 유형 / 임박
+    el.typeFilter.addEventListener('change', function () {
+      state.filters.type = this.value;
+      render();
+    });
+    el.dueOnly.addEventListener('change', function () {
+      state.filters.due = this.checked;
+      state.filters.dueMode = 'all';
+      render();
+    });
+    el.resetFilters.addEventListener('click', function () {
+      state.filters = { q: '', month: currentMonth(), type: '', due: false, dueMode: 'all' };
+      el.searchInput.value = '';
+      el.clearSearch.classList.remove('show');
+      render();
+    });
+
+    // KPI 칩 → 유형 필터
+    el.kpiBreakdown.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-type]') : null;
+      if (!b) return;
+      var t = b.getAttribute('data-type');
+      state.filters.type = state.filters.type === t ? '' : t;
+      render();
+    });
+
+    // 임박 카드
+    function toggleDue(mode) {
+      var m = mode || 'all';
+      if (state.filters.due && state.filters.dueMode === m) {
+        state.filters.due = false;
+      } else {
+        state.filters.due = true;
+        state.filters.dueMode = m;
+      }
+      render();
+      if (state.filters.due) {
+        var y = el.tbody.getBoundingClientRect().top + window.pageYOffset - 90;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    }
+    el.dueSoonStat.addEventListener('click', function () { toggleDue('soon'); });
+    el.dueOverdueStat.addEventListener('click', function () { toggleDue('late'); });
+    el.dueList.addEventListener('click', function (e) {
+      if (e.target.closest && e.target.closest('[data-due-item]')) toggleDue('all');
+    });
+
+    // 표 정렬
+    var sortThs = el.ledger.querySelectorAll('th[data-sort]');
+    for (var i = 0; i < sortThs.length; i++) {
+      sortThs[i].addEventListener('click', function () {
+        var key = this.getAttribute('data-sort');
+        if (state.sort.key === key) state.sort.dir = state.sort.dir === 'desc' ? 'asc' : 'desc';
+        else { state.sort.key = key; state.sort.dir = key === '리베이트' ? 'desc' : 'desc'; }
+        renderTable();
+      });
+    }
+
+    // 표 안 버튼
+    el.tbody.addEventListener('click', function (e) {
+      var btn = e.target.closest ? e.target.closest('button[data-act]') : null;
+      if (!btn) return;
+      var id = btn.getAttribute('data-id');
+      var rec = null;
+      for (var i = 0; i < state.records.length; i++) if (state.records[i].id === id) { rec = state.records[i]; break; }
+      if (!rec) return;
+      if (btn.getAttribute('data-act') === 'edit') {
+        openEditor(rec);
+      } else {
+        askConfirm('기록 삭제', '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' +
+          esc(rec.개통일 || '') + ' 개통 기록을 삭제할까요?<br>삭제한 기록은 되돌릴 수 없습니다.',
+          '삭제', true).then(function (ok) { if (ok) deleteRecord(id); });
+      }
+    });
+
+    // 빈 상태 버튼
+    el.emptyState.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-empty]') : null;
+      if (!b) return;
+      var act = b.getAttribute('data-empty');
+      if (act === 'add') openEditor(null);
+      else if (act === 'import') el.fileInput.click();
+      else if (act === 'sample') insertSample();
+      else if (act === 'reset') el.resetFilters.click();
+    });
+
+    // 등록 / 수정
+    el.addBtn.addEventListener('click', function () { openEditor(null); });
+    el.dlgClose.addEventListener('click', function () { el.editDialog.close(); });
+    el.editForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      saveForm(false);
+    });
+    el.saveNextBtn.addEventListener('click', function () { saveForm(true); });
+    el.deleteBtn.addEventListener('click', function () {
+      var id = state.editingId;
+      if (!id) return;
+      el.editDialog.close();
+      askConfirm('기록 삭제', '이 개통 기록을 삭제할까요?<br>삭제한 기록은 되돌릴 수 없습니다.', '삭제', true)
+        .then(function (ok) { if (ok) deleteRecord(id); });
+    });
+
+    // 전화번호 자동 포맷
+    $('f_phone').addEventListener('input', function () {
+      var v = this.value;
+      if (!/^[0-9-]*$/.test(v)) return;
+      var d = v.replace(/[^0-9]/g, '');
+      if (d.length === 10 || d.length === 11) {
+        var f = formatPhone(d);
+        if (f !== v) {
+          this.value = f;
+          try { this.setSelectionRange(f.length, f.length); } catch (err) {}
+        }
+      }
+    });
+
+    // 리베이트 콤마 포맷
+    $('f_rebate').addEventListener('input', function () {
+      var neg = /^-/.test(this.value);
+      var d = this.value.replace(/[^0-9]/g, '');
+      if (!d) { this.value = neg ? '-' : ''; return; }
+      this.value = (neg ? '-' : '') + Number(d).toLocaleString('ko-KR');
+    });
+
+    // 생년월일: 숫자/하이픈만 허용 (자유 입력 유지)
+    $('f_birth').addEventListener('input', function () {
+      this.value = this.value.replace(/[^0-9-]/g, '').slice(0, 10);
+    });
+
+    // 다이얼로그 닫기 처리
+    el.editDialog.addEventListener('cancel', function () { state.editingId = null; });
+    el.editDialog.addEventListener('click', function (e) {
+      if (e.target === el.editDialog) el.editDialog.close();
+    });
+
+    el.confirmDialog.addEventListener('cancel', function (e) {
+      e.preventDefault();
+      closeConfirm(false);
+    });
+    el.cOk.addEventListener('click', function () { closeConfirm(true); });
+    el.cCancel.addEventListener('click', function () { closeConfirm(false); });
+    el.confirmDialog.addEventListener('click', function (e) {
+      if (e.target === el.confirmDialog) closeConfirm(false);
+    });
+
+    el.importDialog.addEventListener('cancel', function () { state.pendingRows = null; });
+    el.importDialog.addEventListener('click', function (e) {
+      if (e.target === el.importDialog) { el.importDialog.close(); state.pendingRows = null; }
+    });
+    $('iCancel').addEventListener('click', function () { el.importDialog.close(); state.pendingRows = null; });
+    $('iAdd').addEventListener('click', function () { applyImport('add'); });
+    $('iReplace').addEventListener('click', function () { applyImport('replace'); });
+
+    // 엑셀 / CSV / JSON
+    el.exportBtn.addEventListener('click', exportExcel);
+    el.templateBtn.addEventListener('click', downloadTemplate);
+    el.importBtn.addEventListener('click', function () { el.fileInput.value = ''; el.fileInput.click(); });
+    el.fileInput.addEventListener('change', function () {
+      handleFile(this.files && this.files[0]);
+    });
+    el.jsonBackupBtn.addEventListener('click', function () { closeMenu(); jsonBackup(); });
+    el.jsonRestoreBtn.addEventListener('click', function () { closeMenu(); el.jsonInput.value = ''; el.jsonInput.click(); });
+    el.jsonInput.addEventListener('change', function () {
+      jsonRestore(this.files && this.files[0]);
+    });
+    el.sampleBtn.addEventListener('click', function () { closeMenu(); insertSample(); });
+    el.clearBtn.addEventListener('click', function () {
+      closeMenu();
+      if (!state.records.length) { toast('삭제할 데이터가 없습니다.'); return; }
+      askConfirm('전체 데이터 삭제',
+        '저장된 <b>' + state.records.length + '건</b>을 모두 지웁니다.<br>되돌릴 수 없으니 먼저 JSON 백업을 받아두세요.',
+        '전체 삭제', true).then(function (ok) {
+          if (!ok) return;
+          state.records = [];
+          persist();
+          render();
+          toast('전체 데이터를 삭제했습니다.');
+        });
+    });
+
+    // 단축키
+    document.addEventListener('keydown', function (e) {
+      var tag = (e.target && e.target.tagName || '').toLowerCase();
+      var typing = tag === 'input' || tag === 'textarea' || tag === 'select';
+      var anyDialog = el.editDialog.open || el.confirmDialog.open || el.importDialog.open;
+
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && el.editDialog.open) {
+        e.preventDefault();
+        saveForm(false);
+        return;
+      }
+      if (anyDialog) return;
+
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        el.searchInput.focus();
+        el.searchInput.select();
+        return;
+      }
+      if (!typing && (e.key === 'n' || e.key === 'N')) {
+        e.preventDefault();
+        openEditor(null);
+      }
+    });
+  }
+
+  function closeMenu() {
+    var m = $('moreMenu');
+    if (m) m.open = false;
+  }
+
+  function insertSample() {
+    if (state.records.length) {
+      askConfirm('샘플 데이터', '지금 장부에 샘플 9건을 추가할까요?<br>실제 데이터와 섞이니 확인 후 삭제해 주세요.', '추가')
+        .then(function (ok) {
+          if (!ok) return;
+          doInsertSample();
+        });
+    } else {
+      doInsertSample();
+    }
+  }
+
+  function doInsertSample() {
+    var rows = sampleRecords();
+    for (var i = 0; i < rows.length; i++) state.records.push(rows[i]);
+    persist();
+    resetViewFilters();
+    render();
+    toast(rows.length + '건의 샘플 데이터를 넣었습니다.');
+  }
+
+  // 임시 필터(검색·유형·임박)를 풀고 전체 기간으로
+  function resetViewFilters() {
+    state.filters.q = '';
+    state.filters.type = '';
+    state.filters.due = false;
+    state.filters.dueMode = 'all';
+    state.filters.month = '';
+  }
+
+  /* ---------------- init ---------------- */
+  function init() {
+    el = {
+      monthInput: $('monthInput'),
+      thisMonthBtn: $('thisMonthBtn'),
+      allMonthBtn: $('allMonthBtn'),
+      saveState: $('saveState'),
+      footCount: $('footCount'),
+      storageWarn: $('storageWarn'),
+      kpiTotal: $('kpiTotal'),
+      kpiMonthLabel: $('kpiMonthLabel'),
+      kpiBreakdown: $('kpiBreakdown'),
+      kpiRebate: $('kpiRebate'),
+      kpiRebateSub: $('kpiRebateSub'),
+      dueSoonCount: $('dueSoonCount'),
+      dueOverdueCount: $('dueOverdueCount'),
+      dueSoonStat: $('dueSoonStat'),
+      dueOverdueStat: $('dueOverdueStat'),
+      dueList: $('dueList'),
+      searchInput: $('searchInput'),
+      clearSearch: $('clearSearch'),
+      typeFilter: $('typeFilter'),
+      dueOnly: $('dueOnly'),
+      resetFilters: $('resetFilters'),
+      resultCount: $('resultCount'),
+      addBtn: $('addBtn'),
+      ledger: $('ledger'),
+      tbody: $('tbody'),
+      emptyState: $('emptyState'),
+      editDialog: $('editDialog'),
+      editForm: $('editForm'),
+      dlgTitle: $('dlgTitle'),
+      dlgClose: $('dlgClose'),
+      formError: $('formError'),
+      saveNextBtn: $('saveNextBtn'),
+      deleteBtn: $('deleteBtn'),
+      confirmDialog: $('confirmDialog'),
+      cTitle: $('cTitle'),
+      cMsg: $('cMsg'),
+      cOk: $('cOk'),
+      cCancel: $('cCancel'),
+      importDialog: $('importDialog'),
+      importBtn: $('importBtn'),
+      exportBtn: $('exportBtn'),
+      templateBtn: $('templateBtn'),
+      fileInput: $('fileInput'),
+      jsonInput: $('jsonInput'),
+      jsonBackupBtn: $('jsonBackupBtn'),
+      jsonRestoreBtn: $('jsonRestoreBtn'),
+      sampleBtn: $('sampleBtn'),
+      clearBtn: $('clearBtn'),
+      toast: $('toast')
+    };
+
+    state.records = loadRecords();
+    state.filters.month = currentMonth();
+
+    // 유형 필터 옵션
+    var opts = '<option value="">전체 유형</option>';
+    for (var i = 0; i < TYPES.length; i++) {
+      opts += '<option value="' + esc(TYPES[i]) + '">' + esc(TYPES[i]) + '</option>';
+    }
+    el.typeFilter.innerHTML = opts;
+
+    bindEvents();
+    render();
+
+    // 첫 방문 안내 (데이터 없을 때만)
+    if (!state.records.length) {
+      el.saveState.textContent = '새 장부';
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+
+<!-- ===================== PWA : 설치 · 오프라인 ===================== -->
+<script>
+(function () {
+  'use strict';
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* 앱이 홈 화면에서(standalone) 실행 중인지 */
+  var isStandalone =
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    window.navigator.standalone === true;
+  if (isStandalone) document.body.classList.add('standalone');
+
+  /* ---------- 작은 안내 메시지 (본 앱 토스트 재사용) ---------- */
+  var msgTimer = null;
+  function say(msg, ms) {
+    var t = $('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.remove('err');
+    t.classList.add('show');
+    clearTimeout(msgTimer);
+    msgTimer = setTimeout(function () { t.classList.remove('show'); }, ms || 3200);
+  }
+
+  /* ---------- 설치 버튼 (beforeinstallprompt) ---------- */
+  var installBtn = $('installBtn');
+  var deferred = null;
+
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    deferred = e;
+    if (installBtn && !isStandalone) installBtn.hidden = false;
+  });
+
+  window.addEventListener('appinstalled', function () {
+    deferred = null;
+    if (installBtn) installBtn.hidden = true;
+    say('홈 화면에 설치했습니다. 이제 앱처럼 열 수 있습니다.', 4000);
+  });
+
+  function startInstall() {
+    if (!deferred) return false;
+    var p = deferred;
+    deferred = null;
+    if (installBtn) installBtn.hidden = true;
+    try { p.prompt(); } catch (err) { return false; }
+    if (p.userChoice && p.userChoice.then) {
+      p.userChoice.then(function (choice) {
+        if (choice && choice.outcome === 'accepted') say('설치를 진행합니다…', 3000);
+      });
+    }
+    return true;
+  }
+
+  /* 설치 버튼이 없을 때(아이폰·PC 크롬 직접 설치 등) 안내 */
+  function installGuide() {
+    if (startInstall()) return;
+    var ua = navigator.userAgent || '';
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      say('사파리 하단 공유 버튼 → “홈 화면에 추가”를 누르면 설치됩니다.', 6000);
+    } else if (/Android/i.test(ua)) {
+      say('크롬 오른쪽 위 ⋮ → “앱 설치” 또는 “홈 화면에 추가”를 누르세요.', 6000);
+    } else {
+      say('주소창 오른쪽의 설치 아이콘을 누르거나, 메뉴 → “앱 설치”를 선택하세요.', 6000);
+    }
+  }
+
+  if (installBtn) installBtn.addEventListener('click', installGuide);
+  var hintBtn = $('installHintBtn');
+  if (hintBtn) hintBtn.addEventListener('click', function () {
+    closeMenu();
+    installGuide();
+  });
+
+  /* ---------- 모바일 전용 메뉴 항목 / 플로팅 등록 버튼 ---------- */
+  function closeMenu() {
+    var m = $('moreMenu');
+    if (m) m.open = false;
+  }
+
+  var tplM = $('templateBtnMobile');
+  if (tplM) tplM.addEventListener('click', function () {
+    closeMenu();
+    var b = $('templateBtn');
+    if (b) b.click();
+  });
+
+  var impM = $('importBtnMobile');
+  if (impM) impM.addEventListener('click', function () {
+    closeMenu();
+    var b = $('importBtn');
+    if (b) b.click();
+  });
+
+  var fab = $('fabAdd');
+  if (fab) {
+    fab.addEventListener('click', function () {
+      var b = $('addBtn');
+      if (b) b.click();
+    });
+
+    /* 툴바의 “개통 등록” 버튼이 화면 밖(위)으로 사라졌을 때만 떠서 중복을 만들지 않음 */
+    var addBtnEl = $('addBtn');
+    var narrow = window.matchMedia('(max-width:900px)');
+    var syncFab = function () {
+      if (!addBtnEl) return;
+      var box = addBtnEl.getBoundingClientRect();
+      var pastToolbar = box.bottom < 0;
+      fab.classList.toggle('show', narrow.matches && pastToolbar);
+    };
+    window.addEventListener('scroll', syncFab, { passive: true });
+    window.addEventListener('resize', syncFab);
+    if (narrow.addEventListener) narrow.addEventListener('change', syncFab);
+    syncFab();
+  }
+
+  /* ---------- 서비스 워커 (오프라인 · 빠른 실행) ---------- */
+  if ('serviceWorker' in navigator) {
+    var secure = location.protocol === 'https:' ||
+      location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    if (!secure) {
+      /* file:// 로 열었을 때는 등록 불가 — 앱은 그대로 동작 */
+    } else {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('./sw.js').then(function (reg) {
+          /* 새 버전이 준비되면 즉시 적용 */
+          reg.addEventListener('updatefound', function () {
+            var sw = reg.installing;
+            if (!sw) return;
+            sw.addEventListener('statechange', function () {
+              if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+                say('새 버전을 준비했습니다. 다음에 열 때 최신 화면으로 뜹니다.', 4200);
+              }
+            });
+          });
+        }).catch(function (err) {
+          console.warn('[PWA] 서비스 워커 등록 실패:', err && err.message ? err.message : err);
+        });
+      });
+    }
+  }
+})();
+</script>
+</body>
+</html>
