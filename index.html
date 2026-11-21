@@ -198,6 +198,8 @@
   .t-wired2{background:#E8EEF7;color:#3A5372}
   .t-kids{background:var(--teal-bg);color:var(--teal)}
   .t-etc{background:#F1F5F9;color:var(--slate-600)}
+  /* 복합 개통유형(무선 + 유선)은 배지 두 개를 나란히 */
+  .type-badges{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;vertical-align:middle;max-width:100%}
 
   /* 요약 스트립: 무선/유선 리베이트가 늘어난 만큼 좁은 화면에서 줄인다 */
   @media (max-width:1180px){
@@ -431,6 +433,10 @@
   .field .hint{font-size:11.5px;color:var(--slate-400);line-height:1.4}
   .field input[type=date]{font-variant-numeric:tabular-nums}
   .field input.money{text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+  /* 무선 + 유선 동시 개통이면 리베이트 두 칸을 살짝 강조 */
+  .field.hl input{border-color:#9DBDF0;background:#F8FBFF;box-shadow:0 0 0 3px rgba(11,87,208,.10)}
+  .field.hl label{color:var(--blue-700)}
+  #typeHint.both{color:var(--blue-700);font-weight:700}
   .section-label{
     grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:4px;
     font-size:11.5px;font-weight:800;color:var(--slate-400);letter-spacing:.06em;
@@ -1028,10 +1034,10 @@
         <div class="section-label">개통 정보</div>
 
         <div class="field span2">
-          <label id="f_typeLabel">개통유형 <span class="opt">선택</span></label>
+          <label id="f_typeLabel">개통유형 <span class="opt">선택 · 무선·유선 각 1개</span></label>
           <input id="f_type" type="hidden" value="">
           <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
-          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입, 유선은 인터넷·TV 항목에서 고릅니다.</span>
+          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
         <div class="field">
           <label for="f_model">기종 <span class="opt">선택</span></label>
@@ -1445,9 +1451,57 @@
 
   /* ---------------- storage ---------------- */
 
+  /* ---------------- 개통유형 (무선 1개 + 유선 1개 동시 선택) ----------------
+     저장은 '개통유형' 문자열 한 칸에 '번호이동 + 인터넷+TV 신규가입' 처럼 잇는다.
+     컬럼을 늘리지 않으므로 이미 배포한 Google 시트(Code.gs)와 그대로 호환된다. */
+  var TYPE_SEP = ' + ';
+
+  // 저장 값 → 조각 배열. '인터넷+TV' 처럼 붙여 쓴 유형명은 + 양옆에 공백이 없어 쪼개지지 않는다.
+  function typeParts(v) {
+    var s = String(v == null ? '' : v).trim();
+    if (!s) return [];
+    var bits = s.split(/\s+\+\s+/), out = [], i;
+    for (i = 0; i < bits.length; i++) {
+      var b = bits[i].trim();
+      if (b) out.push(b);
+    }
+    return out.length ? out : [s];
+  }
+
+  function joinTypeParts(w, l) {
+    if (w && l) return w + TYPE_SEP + l;
+    return w || l || '';
+  }
+
+  // 조각을 무선 칸(w) / 유선 칸(l)으로 나눈다 — 각 칸에는 최대 1개
+  function typeSlots(v) {
+    var parts = typeParts(v), out = { w: '', l: '' }, i;
+    for (i = 0; i < parts.length; i++) {
+      var p = parts[i];
+      if (isWiredType(p)) { if (!out.l) out.l = p; }
+      else if (!out.w) out.w = p;
+    }
+    return out;
+  }
+
+  // 유형 배지 — 복합이면 무선·유선 배지 두 개를 나란히, 없으면 ''
+  function typeBadgesHtml(v) {
+    var parts = typeParts(v);
+    if (!parts.length) return '';
+    var multi = parts.length > 1;
+    var html = '<span class="type-badges"' + (multi ? ' title="' + esc(parts.join(TYPE_SEP)) + '"' : '') + '>';
+    for (var i = 0; i < parts.length; i++) {
+      html += '<span class="badge ' + (TYPE_CLASS[parts[i]] || 't-etc') + '">' + esc(parts[i]) + '</span>';
+    }
+    return html + '</span>';
+  }
+
   // 유선(인터넷·TV) 개통인가? (예전 '인터넷+TV' 포함)
+  // 복합 값('번호이동 + 인터넷+TV 신규가입')은 조각 단위로 판정한다.
   function isWiredType(t) {
-    var s = String(t == null ? '' : t).replace(/\s/g, '');
+    var parts = typeParts(t);
+    if (parts.length !== 1) return false;
+    var s = String(parts[0]).replace(/\s/g, '');
     if (!s) return false;
     for (var i = 0; i < WIRED_TYPES.length; i++) {
       if (WIRED_TYPES[i].replace(/\s/g, '') === s) return true;
@@ -1932,7 +1986,7 @@
     var month = f.due ? '' : f.month;   // 임박 보기에서는 월 필터를 무시
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
-      if (f.type && r.개통유형 !== f.type) return false;
+      if (f.type && typeParts(r.개통유형).indexOf(f.type) < 0) return false;
       if (f.staff && (r.담당자 || '') !== f.staff) return false;
       if (f.due) {
         var ds = [];
@@ -2001,17 +2055,18 @@
     if (el.kpiMonthLabel) el.kpiMonthLabel.textContent = m ? monthLabel(m) : '전체 기간';
     if (el.kpiTotalSub) el.kpiTotalSub.textContent = m ? '이번 달 개통 건수' : '전체 기간 개통 건수';
 
-    // 유형별 건수 (예전 유형이 남아 있으면 그것도 함께 보여 준다)
+    // 유형별 건수 — 복합(무선 + 유선)은 들어 있는 유형마다 하나씩 센다
     var counts = {};
-    var i;
-    for (i = 0; i < list.length; i++) {
-      var t = list[i].개통유형 || '미지정';
-      counts[t] = (counts[t] || 0) + 1;
-    }
+    var i, j;
     var legacy = [];
     for (i = 0; i < list.length; i++) {
-      var lt = list[i].개통유형;
-      if (lt && TYPES.indexOf(lt) < 0 && legacy.indexOf(lt) < 0) legacy.push(lt);
+      var parts = typeParts(list[i].개통유형);
+      if (!parts.length) { counts['미지정'] = (counts['미지정'] || 0) + 1; continue; }
+      for (j = 0; j < parts.length; j++) {
+        var pt = parts[j];
+        counts[pt] = (counts[pt] || 0) + 1;
+        if (TYPES.indexOf(pt) < 0 && legacy.indexOf(pt) < 0) legacy.push(pt);
+      }
     }
     legacy.sort();
     var order = TYPES.concat(legacy).concat(['미지정']);
@@ -2196,12 +2251,11 @@
     if (ad !== null && ad < 0) ddBadge += '<span class="dd dd-late">부가 ' + Math.abs(ad) + '일 지남</span>';
     else if (ad === 0) ddBadge += '<span class="dd dd-today">부가 D-DAY</span>';
     else if (ad !== null && ad <= 7) ddBadge += '<span class="dd dd-soon">부가 D-' + ad + '</span>';
-    var typeCls = TYPE_CLASS[r.개통유형] || 't-etc';
     return '<div class="mcard' + ((d !== null && d <= 7) || (ad !== null && ad <= 7) ? ' due' : '') + '" data-id="' + esc(r.id) + '">' +
       '<div class="mcard-main" data-mtoggle="1">' +
         '<div class="m-line1">' +
           '<span class="m-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
-          (r.개통유형 ? '<span class="badge ' + typeCls + '">' + esc(r.개통유형) + '</span>' : '') +
+          typeBadgesHtml(r.개통유형) +
           ddBadge +
           '<span class="m-caret">▾</span>' +
         '</div>' +
@@ -2308,7 +2362,6 @@
       var d = daysFromToday(r.요금제변경일자);
       var ad0 = daysFromToday(r.부가서비스해지일자);
       var rowCls = ((d !== null && d <= 7) || (ad0 !== null && ad0 <= 7)) ? ' class="due-row"' : '';
-      var typeCls = TYPE_CLASS[r.개통유형] || 't-etc';
 
       if (groupByDate) {
         gk = r.개통일 || '';
@@ -2326,7 +2379,7 @@
         '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span></td>' +
         '<td data-label="연락처" class="nowrap">' + (r.연락처 ? esc(r.연락처) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
-        '<td data-label="개통유형">' + (r.개통유형 ? '<span class="badge ' + typeCls + '">' + esc(r.개통유형) + '</span>' : '<span class="muted">—</span>') + '</td>' +
+        '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
         '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="변경요금제"><span class="ellip" title="' + esc(r.변경요금제) + '">' + (r.변경요금제 ? esc(r.변경요금제) : '<span class="muted">—</span>') + '</span></td>' +
@@ -2373,10 +2426,13 @@
   // 유형 필터 — 무선 / 유선(인터넷·TV) / (예전 유형) 으로 묶어서
   function renderTypeFilter() {
     if (!el.typeFilter) return;
-    var seen = {}, i, t;
+    var seen = {}, i, j, t;
     for (i = 0; i < state.records.length; i++) {
-      t = state.records[i].개통유형;
-      if (t && TYPES.indexOf(t) < 0) seen[t] = true;
+      var parts = typeParts(state.records[i].개통유형);
+      for (j = 0; j < parts.length; j++) {
+        t = parts[j];
+        if (t && TYPES.indexOf(t) < 0) seen[t] = true;
+      }
     }
     var legacy = Object.keys(seen).sort();
     var html = '<option value="">전체 유형</option>';
@@ -2624,37 +2680,56 @@
   }
 
   /* ---------------- editor ---------------- */
-  // 개통유형 칩 — 무선 한 줄 / 유선(인터넷·TV) 한 줄
+  // 개통유형 칩 — 무선 한 줄 / 유선(인터넷·TV) 한 줄, 각 줄에서 최대 1개(무선+유선 동시 가능)
   function renderTypeChips(selected) {
     var box = el.typeChips;
     if (!box) return;
-    var sel = String(selected || '');
-    var legacy = (sel && TYPES.indexOf(sel) < 0) ? sel : '';
+    // 예전 단일 값(키즈폰·기타·인터넷+TV)도 고르지는 못하지만 지우지 않고 그 줄에 보여 준다
+    var slots = typeSlots(selected);
+    var w = slots.w, l = slots.l;
+    var value = joinTypeParts(w, l);
     function chip(t) {
+      var on = (t === w || t === l);
       var cls = TYPE_CLASS[t] || 't-etc';
-      return '<button type="button" class="type-chip ' + cls + (t === sel ? ' on' : '') +
+      return '<button type="button" class="type-chip ' + cls + (on ? ' on' : '') +
         (TYPES.indexOf(t) < 0 ? ' legacy' : '') + '" data-type="' + esc(t) + '" aria-pressed="' +
-        (t === sel ? 'true' : 'false') + '">' + esc(t) + '</button>';
+        (on ? 'true' : 'false') + '">' + esc(t) + '</button>';
     }
     var i;
     var html = '<div class="type-row"><span class="type-row-label w">무선 개통</span><div class="type-chip-wrap">';
     for (i = 0; i < WIRELESS_TYPES.length; i++) html += chip(WIRELESS_TYPES[i]);
-    if (legacy && !isWiredType(legacy)) html += chip(legacy);
+    if (w && TYPES.indexOf(w) < 0) html += chip(w);
     html += '</div></div><div class="type-row"><span class="type-row-label l">유선 <small>인터넷·TV</small></span><div class="type-chip-wrap">';
     for (i = 0; i < WIRED_TYPES.length; i++) html += chip(WIRED_TYPES[i]);
-    if (legacy && isWiredType(legacy)) html += chip(legacy);
+    if (l && TYPES.indexOf(l) < 0) html += chip(l);
     html += '</div></div>';
     box.innerHTML = html;
-    $('f_type').value = sel;
+    $('f_type').value = value;
+  }
+
+  // 칩을 누르면 그 줄(무선/유선)에서만 최대 1개 — 같은 칩을 다시 누르면 해제, 다른 칩을 누르면 교재
+  function toggleTypeChip(t) {
+    if (!t) return;
+    var slots = typeSlots($('f_type').value);
+    if (isWiredType(t)) slots.l = (slots.l === t) ? '' : t;
+    else slots.w = (slots.w === t) ? '' : t;
+    renderTypeChips(joinTypeParts(slots.w, slots.l));
   }
 
   function applyTypeHint() {
     var hint = $('typeHint');
     if (!hint) return;
-    var t = $('f_type').value;
-    if (isWiredType(t)) hint.textContent = '유선(인터넷·TV) 개통입니다. 요금제 칸에는 상품명을 적어 주세요.';
-    else if (t) hint.textContent = '무선 개통입니다. 요금제 변경은 바꿀 때만 입력하면 됩니다.';
-    else hint.textContent = '무선은 기기변경·번호이동·신규가입, 유선은 인터넷·TV 항목에서 고릅니다.';
+    var slots = typeSlots($('f_type').value);
+    var both = !!(slots.w && slots.l);
+    if (both) hint.innerHTML = '무선 + 유선 동시 개통입니다. <b>무선·유선 리베이트를 각각</b> 입력해 주세요.';
+    else if (slots.l) hint.textContent = '유선(인터넷·TV) 개통입니다. 요금제 칸에는 상품명을 적어 주세요.';
+    else if (slots.w) hint.textContent = '무선 개통입니다. 요금제 변경은 바꿀 때만 입력하면 됩니다.';
+    else hint.textContent = '무선은 최대 1개, 유선은 최대 1개 — 두 줄을 함께 골라 한 건으로 저장할 수 있습니다.';
+    hint.classList.toggle('both', both);
+    // 동시 개통이면 무선·유선 리베이트 두 칸을 살짝 강조
+    var fw = $('f_rebate_w'), fl = $('f_rebate_l');
+    if (fw && fw.parentNode) fw.parentNode.classList.toggle('hl', both);
+    if (fl && fl.parentNode) fl.parentNode.classList.toggle('hl', both);
   }
 
   function openEditor(rec) {
@@ -2947,7 +3022,8 @@
     return map;
   }
 
-  function normalizeType(v) {
+  // 개통유형 표기 정리 — 복합('번호이동 + 인터넷+TV 신규가입')은 조각마다 정리해 다시 잇는다
+  function normalizeTypePart(v) {
     var s = String(v == null ? '' : v).trim();
     if (!s) return '';
     var n = s.replace(/\s/g, '');
@@ -2968,6 +3044,50 @@
     if (/기기변경|기변/.test(n)) return '기기변경';
     if (/신규/.test(n)) return '신규가입';
     return s; // 키즈폰·기타 등 예전 값은 원문 유지
+  }
+
+  function normalizeType(v) {
+    var s = String(v == null ? '' : v).trim();
+    if (!s) return '';
+    var bits = s.split(/\s+\+\s+/), out = [], i;
+    for (i = 0; i < bits.length; i++) {
+      var p = normalizeTypePart(bits[i]);
+      if (p) out.push(p);
+    }
+    var h, at, from, key, clash;
+    if (out.length > 1) {
+      var slots = typeSlots(out.join(TYPE_SEP));
+      return joinTypeParts(slots.w, slots.l) || out[0];
+    }
+    var only = out[0] || '';
+    if (!only) return '';
+    // 한 덩어리인데 +가 들어 있으면 붙여 쓴 복합일 수 있으니 아래에서 한 번 더 살핀다
+    var mayBeCompound = s.indexOf('+') >= 0;
+    if (!mayBeCompound && TYPES.indexOf(only) >= 0) return only;
+    // '번호이동+인터넷+TV' 처럼 붙여 쓴 복합은 알려진 유형을 긴 것부터 찾아 나눈다
+    var compact = s.replace(/\s/g, '');
+    var byLen = TYPES.slice().sort(function (a, b) { return b.length - a.length; });
+    var hits = [];
+    for (i = 0; i < byLen.length; i++) {
+      key = byLen[i].replace(/\s/g, '');
+      from = 0;
+      while ((at = compact.indexOf(key, from)) >= 0) {
+        clash = false;
+        for (h = 0; h < hits.length; h++) {
+          if (at < hits[h].end && at + key.length > hits[h].at) { clash = true; break; }
+        }
+        if (!clash) hits.push({ at: at, end: at + key.length, name: byLen[i] });
+        from = at + 1;
+      }
+    }
+    if (hits.length > 1) {
+      hits.sort(function (a, b) { return a.at - b.at; });
+      var names = [];
+      for (i = 0; i < hits.length; i++) names.push(hits[i].name);
+      var found = typeSlots(names.join(TYPE_SEP));
+      return joinTypeParts(found.w, found.l) || only;
+    }
+    return only;
   }
 
   function aoaToRecords(aoa) {
@@ -3256,6 +3376,7 @@
       { 개통일: day(2), 고객명: '김민수', 담당자: '김태양', 연락처: '010-2345-6789', 생년월일: '880312', 개통유형: '번호이동', 기종: '갤럭시 S25', 요금제: '5G 슬림 55,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 무선리베이트: 350000, 메모: 'SKT에서 이동 · 가족결합' },
       { 개통일: day(3), 고객명: '이서연', 담당자: '김설화', 연락처: '010-3456-7890', 생년월일: '1995-07-21', 개통유형: '기기변경', 기종: '아이폰 17 프로', 요금제: '5G 프리미엄 68,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '반납', 중고폰금액: 0, 무선리베이트: 420000, 메모: '기존 회선 유지' },
       { 개통일: day(5), 고객명: '박준호', 담당자: '이건엽', 연락처: '010-4567-8901', 생년월일: '011105', 개통유형: '신규가입', 기종: '갤럭시 A56', 요금제: '5G 베이직 33,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '미사용', 무선리베이트: 250000, 메모: '학생 · 첫 개통' },
+      { 개통일: day(6), 고객명: '강민서', 담당자: '김태양', 연락처: '010-2468-1357', 생년월일: '910523', 개통유형: '번호이동 + 인터넷+TV 신규가입', 기종: '갤럭시 S25 + 인터넷 에센스', 요금제: '5G 슬림 55,000 / 인터넷+TV 38,500', 무선리베이트: 350000, 유선리베이트: 280000, 메모: '무선 + 유선 동시 개통' },
       { 개통일: day(7), 고객명: '최유진', 담당자: '권영한', 연락처: '010-5678-9012', 생년월일: '790420', 개통유형: '인터넷+TV 신규가입', 기종: '인터넷 에센스 + TV 베이직', 요금제: '인터넷+TV 38,500', 유선리베이트: 300000, 메모: '설치 완료 · 약정 3년' },
       { 개통일: day(9), 고객명: '정하늘', 담당자: '김태양', 연락처: '010-6789-0123', 생년월일: '140902', 개통유형: '인터넷+TV 약정갱신', 기종: '인터넷 에센스 + TV 베이직', 요금제: '인터넷+TV 38,500', 유선리베이트: 120000, 메모: '약정 만료 갱신' },
       { 개통일: day(11), 고객명: '한지우', 담당자: '김설화', 연락처: '010-7890-1234', 생년월일: '1992-11-02', 개통유형: '번호이동', 기종: '아이폰 16', 요금제: '5G 스탠다드 48,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(5), 중고폰: '매입 15만', 중고폰금액: 150000, 무선리베이트: 380000, 메모: '한 달 뒤 요금제 상향 예정' },
@@ -3459,12 +3580,12 @@
         .then(function (ok) { if (ok) deleteRecord(id); });
     });
 
-    // 개통유형 칩 (무선 / 유선)
+    // 개통유형 칩 (무선 / 유선) — 무선 1개 + 유선 1개까지 동시 선택
     if (el.typeChips) {
       el.typeChips.addEventListener('click', function (e) {
         var b = e.target.closest ? e.target.closest('button[data-type]') : null;
         if (!b) return;
-        renderTypeChips(b.getAttribute('data-type'));
+        toggleTypeChip(b.getAttribute('data-type'));
         el.typeChips.classList.remove('bad');
         applyTypeHint();
       });
