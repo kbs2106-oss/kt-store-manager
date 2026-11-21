@@ -201,6 +201,26 @@
   /* 복합 개통유형(무선 + 유선)은 배지 두 개를 나란히 */
   .type-badges{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;vertical-align:middle;max-width:100%}
 
+  /* 오늘 · 이번 달 직원별 개통 건수 스트립 (요약 카드의 아래 줄) */
+  .sum-overview{grid-column:1/-1;display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;
+    padding:6px 14px;border-top:1px solid var(--line);background:#FBFCFE}
+  .so-part{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+  .so-title{flex:none;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:7px;
+    background:var(--blue-50);border:1px solid #DCE9FB;color:var(--blue-800);
+    font-size:11.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+  .so-title .so-date{color:var(--blue-700);font-weight:800;font-variant-numeric:tabular-nums}
+  .so-total{flex:none;font-size:11.5px;font-weight:700;color:var(--slate-500);white-space:nowrap}
+  .so-total b{font-size:14px;font-weight:800;color:var(--ink);letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums;margin:0 1px}
+  .so-chip{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;
+    background:#EEF2F8;color:#475569;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .so-chips{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-width:0}
+  .so-chip b{font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+  .so-chip.zero{background:#F6F8FB;color:#B4BFCE}
+  .so-chip.zero b{color:#B4BFCE}
+  .so-empty{font-size:11.5px;font-weight:700;color:var(--slate-400)}
+  .so-div{width:1px;align-self:stretch;min-height:14px;background:#E4EBF4;flex:none}
+
   /* 요약 스트립: 무선/유선 리베이트가 늘어난 만큼 좁은 화면에서 줄인다 */
   @media (max-width:1180px){
     .sum-cell{padding:8px 10px}
@@ -213,6 +233,9 @@
   @media (max-width:640px){
     /* 합계를 맨 앞에 크게, 나머지는 아래 두 줄로 */
     .sum-cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .sum-overview{padding:6px 10px;gap:5px 10px}
+    .so-total b{font-size:13px}
+    .so-div{display:none}
     .sum-cell{padding:7px 10px}
     .sum-cell:nth-child(2){border-right:0}
     .sum-cell:nth-child(3),.sum-cell:nth-child(4){border-top:1px solid var(--line)}
@@ -360,8 +383,8 @@
   table.ledger tbody tr.due-row td{background:#FFFDF6}
   table.ledger tbody tr.due-row:hover td{background:#FFFAEC}
   td.nowrap{white-space:nowrap}
-  /* 담당자 칸은 이름이 잘리지 않게 최소 폭을 준다 */
-  table.ledger td[data-label="담당자"]{min-width:62px}
+  /* 담당자 칸은 이름이 잘리지 않게 최소 폭을 준다 + 오른쪽 고정된 관리 열과 글자가 붙지 않게 여백 */
+  table.ledger td[data-label="담당자"]{min-width:62px;padding-right:16px}
   /* 긴 글 칸은 말줄임으로 폭을 묶어, 넓은 화면에서 19열이 한 번에 보이게 */
   table.ledger td[data-label="기종"],table.ledger td[data-label="요금제"],
   table.ledger td[data-label="변경요금제"],table.ledger td[data-label="부가서비스"]{max-width:118px}
@@ -381,11 +404,12 @@
     box-shadow:-10px 0 14px -12px rgba(15,23,42,.4)}
   table.ledger tbody tr:hover td.actions{background:#F7FAFF}
   table.ledger tbody tr.due-row td.actions{background:#FFFDF6}
-  /* 장부가 화면보다 넓을 때만 관리 열을 띠로 살짝 띄운다(넓은 화면에서 옆 칸을 가리지 않게) */
-  body.ledger-overflow table.ledger th.actions-col{box-shadow:-16px 0 0 0 #F6F9FD, -20px 0 14px -12px rgba(15,23,42,.45)}
-  body.ledger-overflow table.ledger td.actions{box-shadow:-16px 0 0 0 #fff, -20px 0 14px -12px rgba(15,23,42,.35)}
-  body.ledger-overflow table.ledger tbody tr:hover td.actions{box-shadow:-16px 0 0 0 #F7FAFF, -20px 0 14px -12px rgba(15,23,42,.35)}
-  body.ledger-overflow table.ledger tbody tr.due-row td.actions{box-shadow:-16px 0 0 0 #FFFDF6, -20px 0 14px -12px rgba(15,23,42,.35)}
+  /* 가로로 스크롤할 때 관리 열을 띄우는 경계 — 단색 덮개 대신 열 경계에서 바로 사라지는 그림자만 써서
+     왼쪽 칸(메모·담당자)의 글자를 덮지 않는다 */
+  body.ledger-overflow table.ledger th.actions-col{box-shadow:-1px 0 0 0 #E3EAF3, -9px 0 10px -8px rgba(15,23,42,.30)}
+  body.ledger-overflow table.ledger td.actions{box-shadow:-1px 0 0 0 #E9EFF7, -9px 0 10px -8px rgba(15,23,42,.22)}
+  body.ledger-overflow table.ledger tbody tr:hover td.actions{box-shadow:-1px 0 0 0 #E9EFF7, -9px 0 10px -8px rgba(15,23,42,.22)}
+  body.ledger-overflow table.ledger tbody tr.due-row td.actions{box-shadow:-1px 0 0 0 #F0E6CE, -9px 0 10px -8px rgba(15,23,42,.22)}
   .icon-btn{
     width:30px;height:30px;border-radius:8px;border:1px solid transparent;background:transparent;
     color:var(--slate-400);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
@@ -743,6 +767,7 @@
     letter-spacing:.01em;
   }
   tr.group-row .g-count{margin-left:8px;color:var(--slate-500);font-weight:700;font-size:11.5px}
+  tr.group-row .g-staff{margin-left:10px;color:#475569;font-weight:700;font-size:11.5px;letter-spacing:0}
   tr.group-row .g-dow{color:var(--slate-500);font-weight:700}
 
   .view-compact table.ledger{font-size:13px}
@@ -755,8 +780,9 @@
 
   /* 모바일 간단히 보기 카드 */
   .mlist{display:none}
-  .mgroup-head{display:flex;align-items:center;gap:8px;padding:14px 16px 7px;font-size:12px;font-weight:800;color:var(--blue-800)}
+  .mgroup-head{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;padding:14px 16px 7px;font-size:12px;font-weight:800;color:var(--blue-800)}
   .mgroup-head .g-count{margin-left:auto;color:var(--slate-500);font-weight:700}
+  .mgroup-head .mgroup-staff{flex:1 0 100%;font-size:11.5px;font-weight:700;color:#475569;margin-top:-2px}
   .mcard{border:1px solid var(--line);border-radius:14px;margin:0 12px 10px;background:#fff;overflow:hidden;
     box-shadow:0 1px 2px rgba(15,23,42,.05)}
   .mcard.due{border-color:#F0E2BE;background:#FFFDF6}
@@ -1108,6 +1134,21 @@
         <span class="sum-label">리베이트 합계</span>
         <span class="sum-value"><b class="num" id="kpiRebate">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiRebateSub">무선 + 유선</span>
+      </div>
+    </div>
+
+    <!-- 오늘 · 이번 달 직원별 개통 건수 (리베이트 금액은 표시하지 않음) -->
+    <div class="sum-overview" id="sumOverview">
+      <div class="so-part">
+        <span class="so-title">오늘 개통 <span class="so-date" id="soTodayDate">—</span></span>
+        <span class="so-total">총 <b id="soTodayTotal">0</b>건</span>
+        <div class="so-chips" id="soTodayStaff"></div>
+      </div>
+      <span class="so-div" aria-hidden="true"></span>
+      <div class="so-part">
+        <span class="so-title" id="soMonthTitle">이번 달</span>
+        <span class="so-total">총 <b id="soMonthTotal">0</b>건</span>
+        <div class="so-chips" id="soMonthStaff"></div>
       </div>
     </div>
 
@@ -3283,10 +3324,102 @@
   /* ---------------- rendering ---------------- */
   function render() {
     renderKpis();
+    renderOverview();
     renderTable();
     renderFilterUi();
     el.footCount.textContent = state.records.length + '건 저장됨';
     renderSyncUi();
+  }
+
+  /* ---------------- 오늘 · 이번 달 직원별 개통 건수 ----------------
+     담당자별로 몇 건 개통했는지 센다. **리베이트 금액은 절대 넣지 않는다.**
+     · 오늘: 매장 전체 기준(기준 월·직원 필터와 무관) · 0건 직원은 숨김
+     · 이번 달: 기준 월(요약 KPI와 같은 범위) — 매장 명단 5명을 0건까지 보이고,
+       0건은 흐리게 `.so-chip.zero` 로 표시한다(숨김 토글 없음). */
+  function staffTally(list, dateKey) {
+    var map = {}, seen = [], i;
+    for (i = 0; i < list.length; i++) {
+      var r = list[i];
+      if (dateKey && (r.개통일 || '') !== dateKey) continue;
+      var n = String(r.담당자 == null ? '' : r.담당자).trim() || '미지정';
+      if (!map[n]) { map[n] = 0; seen.push(n); }
+      map[n]++;
+    }
+    return { map: map, names: staffOrder(seen) };
+  }
+
+  // 직원 순서 = 매장 명단(STAFF_LIST) 순서 → 장부에만 있는 이름은 뒤에
+  function staffOrder(seen) {
+    var out = STAFF_LIST.slice(), i;
+    for (i = 0; i < seen.length; i++) {
+      if (out.indexOf(seen[i]) < 0) out.push(seen[i]);
+    }
+    return out;
+  }
+
+  // 직원별 칩 — 건수 많은 순(같은 건수면 명단 순서). onlyFilled면 0건 직원은 빼고 그린다.
+  function staffChipsHtml(tally, onlyFilled) {
+    var items = [], i;
+    for (i = 0; i < tally.names.length; i++) {
+      var n = tally.names[i], c = tally.map[n] || 0;
+      if (onlyFilled && !c) continue;
+      items.push({ n: n, c: c, i: i });
+    }
+    items.sort(function (a, b) { return b.c - a.c || a.i - b.i; });
+    var html = '';
+    for (i = 0; i < items.length; i++) {
+      html += '<span class="so-chip' + (items[i].c ? '' : ' zero') + '">' +
+        esc(items[i].n) + ' <b>' + fmtNum(items[i].c) + '</b></span>';
+    }
+    return html;
+  }
+
+  // 날짜 그룹 머리글에 붙는 한 줄 요약 — '김태양 2 · 김설화 1'
+  function staffLineText(map) {
+    var src = map || {}, items = [], i;
+    var names = staffOrder(Object.keys(src));
+    for (i = 0; i < names.length; i++) {
+      var c = src[names[i]] || 0;
+      if (c) items.push({ n: names[i], c: c, i: i });
+    }
+    items.sort(function (a, b) { return b.c - a.c || a.i - b.i; });
+    var out = [];
+    for (i = 0; i < items.length; i++) out.push(items[i].n + ' ' + fmtNum(items[i].c));
+    return out.join(' · ');
+  }
+
+  function renderOverview() {
+    if (!el.sumOverview) return;
+    var today = todayISO(), k;
+
+    // 오늘 — 매장 전체
+    var tTally = staffTally(state.records, today);
+    var tTotal = 0;
+    for (k in tTally.map) if (Object.prototype.hasOwnProperty.call(tTally.map, k)) tTotal += tTally.map[k];
+    if (el.soTodayDate) {
+      el.soTodayDate.textContent = today.slice(5) + (weekdayKo(today) ? ' (' + weekdayKo(today) + ')' : '');
+    }
+    if (el.soTodayTotal) el.soTodayTotal.textContent = fmtNum(tTotal);
+    if (el.soTodayStaff) {
+      el.soTodayStaff.innerHTML = tTotal
+        ? staffChipsHtml(tTally, true)
+        : '<span class="so-empty">아직 기록 없음</span>';
+    }
+
+    // 이번 달(기준 월) — 요약 KPI와 같은 범위
+    var m = state.filters.month;
+    var monthList = kpiRecords();
+    var mTally = staffTally(monthList, null);
+    var mLabel = !m ? '전체 기간'
+      : (m === currentMonth() ? '이번 달'
+        : (m.slice(0, 4) === today.slice(0, 4) ? Number(m.slice(5, 7)) + '월' : monthLabel(m)));
+    if (el.soMonthTitle) el.soMonthTitle.textContent = mLabel;
+    if (el.soMonthTotal) el.soMonthTotal.textContent = fmtNum(monthList.length);
+    if (el.soMonthStaff) {
+      el.soMonthStaff.innerHTML = monthList.length
+        ? staffChipsHtml(mTally, false)
+        : '<span class="so-empty">아직 기록 없음</span>';
+    }
   }
 
   function renderKpis() {
@@ -3480,12 +3613,15 @@
     return '일월화수목금토'.charAt(d.getDay());
   }
 
-  function groupRowHtml(key, count) {
+  function groupRowHtml(key, count, staffMap) {
     var label = key
       ? esc(key) + (weekdayKo(key) ? ' <span class="g-dow">(' + weekdayKo(key) + ')</span>' : '')
       : '날짜 없음';
+    var line = staffLineText(staffMap);
     return '<tr class="group-row"><td colspan="19"><span class="g-date">' + label +
-      '</span><span class="g-count">' + count + '건</span></td></tr>';
+      '</span><span class="g-count">총 ' + count + '건</span>' +
+      (line ? '<span class="g-staff">' + esc(line) + '</span>' : '') +
+      '</td></tr>';
   }
 
   function mRow(label, val) {
@@ -3644,13 +3780,16 @@
     el.emptyState.hidden = true;
     el.ledger.style.display = '';
 
-    // 날짜별 그룹 (개통일 정렬일 때만)
+    // 날짜별 그룹 (개통일 정렬일 때만) — 날짜별 총 건수 + 직원별 건수
     var groupByDate = state.sort.key === '개통일';
-    var counts = {}, i, gk;
+    var counts = {}, groupStaff = {}, i, gk;
     if (groupByDate) {
       for (i = 0; i < rows.length; i++) {
         gk = rows[i].개통일 || '';
         counts[gk] = (counts[gk] || 0) + 1;
+        var gn = String(rows[i].담당자 == null ? '' : rows[i].담당자).trim() || '미지정';
+        groupStaff[gk] = groupStaff[gk] || {};
+        groupStaff[gk][gn] = (groupStaff[gk][gn] || 0) + 1;
       }
     }
 
@@ -3667,10 +3806,12 @@
         gk = r.개통일 || '';
         if (gk !== lastGroup) {
           lastGroup = gk;
-          html += groupRowHtml(gk, counts[gk]);
+          var gLine = staffLineText(groupStaff[gk]);
+          html += groupRowHtml(gk, counts[gk], groupStaff[gk]);
           mhtml += '<div class="mgroup-head"><span class="g-date">' +
             (gk ? esc(gk) + (weekdayKo(gk) ? ' <span class="g-dow">(' + weekdayKo(gk) + ')</span>' : '') : '날짜 없음') +
-            '</span><span class="g-count">' + counts[gk] + '건</span></div>';
+            '</span><span class="g-count">총 ' + counts[gk] + '건</span>' +
+            (gLine ? '<span class="mgroup-staff">' + esc(gLine) + '</span>' : '') + '</div>';
         }
       }
 
@@ -5211,6 +5352,13 @@
       kpiMonthLabel: $('kpiMonthLabel'),
       kpiTotalSub: $('kpiTotalSub'),
       kpiBreakdown: $('kpiBreakdown'),
+      sumOverview: $('sumOverview'),
+      soTodayDate: $('soTodayDate'),
+      soTodayTotal: $('soTodayTotal'),
+      soTodayStaff: $('soTodayStaff'),
+      soMonthTitle: $('soMonthTitle'),
+      soMonthTotal: $('soMonthTotal'),
+      soMonthStaff: $('soMonthStaff'),
       kpiRebate: $('kpiRebate'),
       kpiRebateSub: $('kpiRebateSub'),
       kpiRebateW: $('kpiRebateW'),
