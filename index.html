@@ -211,6 +211,7 @@
   .t-used{background:#FFE9C7;color:#8A4B00}
   .t-used2{background:#FFE0D6;color:#9A3412}
   .t-etc{background:#E7EDF6;color:#44536B}
+  .t-second{background:#DFF1FF;color:#075985}
   /* 복합 개통유형(무선 + 유선)은 배지 두 개를 나란히 */
   .type-badges{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;vertical-align:middle;max-width:100%}
 
@@ -1544,7 +1545,7 @@
           <label id="f_typeLabel">개통유형 <span class="opt">선택 · 무선·유선 각 1개</span></label>
           <input id="f_type" type="hidden" value="">
           <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
-          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
+          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP·2ND, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
 
         <div class="field span2">
@@ -1676,7 +1677,8 @@
         <div class="field" style="display:none">
           <input id="f_rebate_w" type="hidden" value="">
         </div>
-        <div class="field">
+        <!-- v18: 유선 리베이트는 관리자만 입력(직원 모드에서는 숨김) · 기존 저장값은 그대로 보존 -->
+        <div class="field admin-only">
           <label for="f_rebate_l">유선 리베이트 (원) <span class="opt">선택</span></label>
           <input id="f_rebate_l" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
           <span class="hint">인터넷+TV · 인터넷 약정갱신</span>
@@ -2070,16 +2072,17 @@
   var RISK_12 = /12\s*개월|약정\s*12|십이\s*개월/;
   var RISK_SEG = /스쿨잼|스쿨\s*잼|SEG|세그|하향/i;
 
-  // 개통유형 — 무선 5개(중고신규·중고 MNP 포함) / 유선(인터넷·TV) 3개
+  // 개통유형 — 무선 6개(중고신규·중고 MNP·2ND 포함) / 유선(인터넷·TV) 3개
   //  · 중고신규 · 중고 MNP 는 무선 줄에서 바로 고른다(v16). 고르면 MBA-02 후불 정책과 도도매 차감이 자동 적용된다.
-  var WIRELESS_TYPES = ['기기변경', '번호이동', '신규가입', '중고신규', '중고MNP'];
+  //  · 2ND(세컨드 디바이스: 워치·패드)는 v18 추가 — MRA 기본 리베이트 대상이 아니고 포인트만 010 기준 0.2P
+  var WIRELESS_TYPES = ['기기변경', '번호이동', '신규가입', '중고신규', '중고MNP', '2ND'];
   var MRA_WIRELESS_TYPES = ['기기변경', '번호이동', '신규가입'];   // MRA(기본·모델·활력) 대상 무선 유형
   var USED_TYPES = ['중고신규', '중고MNP'];                        // 중고·자급제 개통
   var WIRED_TYPES = ['인터넷+TV 신규가입', '인터넷+TV 약정갱신', '인터넷 약정갱신'];
   var TYPES = WIRELESS_TYPES.concat(WIRED_TYPES);
   var TYPE_CLASS = {
     '기기변경':'t-change', '번호이동':'t-move', '신규가입':'t-new',
-    '중고신규':'t-used', '중고MNP':'t-used2',
+    '중고신규':'t-used', '중고MNP':'t-used2', '2ND':'t-second',
     '인터넷+TV 신규가입':'t-net', '인터넷+TV 약정갱신':'t-wired', '인터넷 약정갱신':'t-wired2',
     // 예전 장부에 남아 있는 유형 (고르지는 못하지만 색·필터는 유지)
     '인터넷+TV':'t-net', '키즈폰':'t-kids', '기타':'t-etc'
@@ -3381,6 +3384,7 @@
         ] }
     ],
     points: {
+      second: 0.2,
       base: { '120K': 2.0, '110K': 1.5, '90K': 1.2, '61K': 0.8, '37K': 0.5 },
       bonus: {
         school: 1.0, flag010: 1.0, flagMove: 1.0, airMnp: 2.0, airMove: 2.0, mnp: 1.0,
@@ -3641,7 +3645,10 @@
       out.items.push({ label: label, p: v, detail: detail || '' });
       out.total += v;
     }
-    if (WIRELESS_TYPES.indexOf(wtype) >= 0 && plan >= 37000) {
+    if (wtype === '2ND') {
+      // 2ND(세컨드 디바이스) — MRA-00-01 포인트만 010 기준으로 인정 (요금제 구간과 무관)
+      add('MRA-00-01 2ND(010 기준)', polPoint('second', P.second), '세컨드 디바이스 · 010 기준');
+    } else if (WIRELESS_TYPES.indexOf(wtype) >= 0 && plan >= 37000) {
       var segKey = segFor(plan, ['120K', '110K', '90K', '61K', '37K']);
       out.seg = plan; out.segKey = segKey;
       add('무선 상품 기본', polPoint('base|' + segKey, P.base[segKey] || 0), segKey + ' 이상 · ' + wtype);
@@ -3750,6 +3757,11 @@
     res.segKey = pt.segKey;
     res.seg = pt.seg;
     if (WIRELESS_TYPES.indexOf(wtype) < 0) return res;
+    // 2ND(세컨드 디바이스) — MRA 기본·모델·활력 리베이트 대상이 아니다 (MRA-00-01 포인트만 010 기준 0.2P)
+    if (wtype === '2ND') {
+      res.notes.push('2ND(세컨드 디바이스)는 MRA 기본·모델·활력 리베이트 대상이 아닙니다. 무선 리베이트를 쓰면 직접 입력하세요.');
+      return res;
+    }
     var plan = planForPolicy(rec);
     if (plan < 37000) {
       if (!plan) res.notes.push('요금제 월정액을 읽지 못해 무선 정책을 계산하지 못했습니다.');
@@ -3987,6 +3999,8 @@
       html += '<tr><td class="pd-dev">' + baseKeys[i] + ' 이상</td><td>' +
         ptInputHtml('PT|base|' + baseKeys[i], polPoint('base|' + baseKeys[i], P.base[baseKeys[i]])) + ' P</td></tr>';
     }
+    html += '<tr><td class="pd-dev">2ND (세컨드 디바이스) · 010 기준</td><td>' +
+      ptInputHtml('PT|second', polPoint('second', P.second)) + ' P</td></tr>';
     html += '</tbody></table></div>';
 
     html += '<div class="pol-sec-head"><span class="pol-sec-title">무선 가점 포인트</span>' +
@@ -6053,7 +6067,9 @@
     if (!hint) return;
     var slots = typeSlots($('f_type').value);
     var both = !!(slots.w && slots.l);
-    if (both) hint.innerHTML = '무선 + 유선 동시 개통입니다. <b>무선·유선 리베이트를 각각</b> 입력해 주세요.';
+    if (both) hint.innerHTML = document.body.classList.contains('role-staff')
+      ? '무선 + 유선 동시 개통입니다. 유선 상품명은 요금제 칸에 적어 주세요.'
+      : '무선 + 유선 동시 개통입니다. <b>무선·유선 리베이트를 각각</b> 입력해 주세요.';
     else if (slots.l) hint.textContent = '유선(인터넷·TV) 개통입니다. 요금제 칸에는 상품명을 적어 주세요.';
     else if (slots.w) hint.textContent = '무선 개통입니다. 요금제 변경은 바꿀 때만 입력하면 됩니다.';
     else hint.textContent = '무선은 최대 1개, 유선은 최대 1개 — 두 줄을 함께 골라 한 건으로 저장할 수 있습니다.';
@@ -6469,6 +6485,7 @@
       if (hasTv) return '인터넷+TV 신규가입';
       return s; // '인터넷' 처럼 애매한 표기는 원문 유지
     }
+    if (/^2nd$|세컨드|second/i.test(n)) return '2ND';
     if (/중고|자급제/.test(n)) return /번호이동|번이|mnp/i.test(n) ? '중고MNP' : '중고신규';
     if (/번호이동|번이/.test(n)) return '번호이동';
     if (/기기변경|기변/.test(n)) return '기기변경';
