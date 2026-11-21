@@ -459,6 +459,45 @@
   /* 단말 보험 가입 — 목록·카드에서 바로 눈에 띄는 초록 배지 */
   .badge.ins-on{background:var(--green-bg);color:#0B5F45;border:1px solid #BFE3D3}
   .badge.card-on{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE}
+  /* ---------- v25 — 권매·쉬움 전용 색 (앰버) ----------
+     모달 1탭 체크 · 목록 필터 알약 · 카드/표 배지가 같은 색으로 이어진다 */
+  .badge.easy-on{background:#FFEFC2;color:#8A4B00;border:1px solid #F0B429;font-weight:900}
+  .easy-badge{
+    display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:900;line-height:1;
+    padding:4px 7px;border-radius:999px;white-space:nowrap;
+    background:linear-gradient(180deg,#FFC24B 0%,#F59E0B 100%);color:#5C3200;border:1px solid #E08A00;
+  }
+  .easy-filter{
+    display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:999px;
+    border:1.5px solid #F0B429;background:#FFF8E1;color:#8A4B00;cursor:pointer;
+    font-size:12.5px;font-weight:800;white-space:nowrap;line-height:1;
+  }
+  .easy-filter:hover{background:#FFEFC7;border-color:#DE9B0C}
+  .easy-filter .ef-star{font-size:12px;color:#E08E00}
+  .easy-filter .ef-count{background:#FDE8A8;color:#7A4200;border-radius:999px;padding:2px 6px;font-size:11px;font-weight:900}
+  .easy-filter.zero{opacity:.6}
+  .easy-filter.on{
+    background:linear-gradient(180deg,#FFB020 0%,#F08C00 100%);border-color:#D97706;color:#fff;
+    box-shadow:0 2px 8px rgba(217,119,6,.35);opacity:1;
+  }
+  .easy-filter.on .ef-star{color:#FFF3C4}
+  .easy-filter.on .ef-count{background:rgba(255,255,255,.92);color:#8A4B00}
+  .easy-filter:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
+  .easy-check-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .easy-chip{
+    display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:10px;
+    border:1.5px solid #E3C27A;background:#FFFBF0;color:#8A4B00;
+    font-size:13px;font-weight:800;white-space:nowrap;cursor:pointer;
+  }
+  .easy-chip:hover{background:#FFF4D8;border-color:#DE9B0C}
+  .easy-chip .ec-tick{font-size:12px;font-weight:900;color:#C47F00}
+  .easy-chip.on{
+    background:linear-gradient(180deg,#FFB020 0%,#F08C00 100%);border-color:#D97706;color:#fff;
+    box-shadow:0 2px 10px rgba(217,119,6,.32);
+  }
+  .easy-chip.on .ec-tick{color:#FFF8E1}
+  .easy-chip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
+  .field .hint b.nw{white-space:nowrap}
   .empty{padding:54px 24px;text-align:center}
   .empty[hidden]{display:none}
   .empty h3{font-size:16px;font-weight:800;margin-bottom:6px}
@@ -1568,6 +1607,10 @@
       <option value="">전체 담당자</option>
     </select>
     <label class="check" title="오늘(D-DAY) · 기한 지남 알림 대상만 보기"><input type="checkbox" id="dueOnly"> 알림만</label>
+    <!-- v25 — ⭐ 권매·쉬움만 보기 (눈에 띄는 앰버 알약 버튼 · 건수는 지금 월/필터 기준) -->
+    <button type="button" class="easy-filter" id="easyFilter" aria-pressed="false" title="권매·쉬움 체크된 고객만 보기">
+      <span class="ef-star" aria-hidden="true">★</span><span>권매·쉬움만</span><span class="ef-count" id="easyFilterCount">0건</span>
+    </button>
     <button class="btn sm btn-ghost" id="resetFilters">초기화</button>
     <button class="chip-btn" id="viewToggle" title="목록 보기 방식을 바꿉니다">한눈에 보기</button>
     <span class="result-count" id="resultCount">0건</span>
@@ -1920,6 +1963,19 @@
           <span class="hint">이름을 누르면 바로 입력됩니다. 비워두면 설정한 내 이름으로 저장돼요.</span>
         </div>
 
+        <!-- v25 — 메모 바로 위 [✓ 권매·쉬움] 1탭 토글 (한 묶음 1개) · 시트에는 [권매쉬움] 메모 표기로만 나간다 -->
+        <div class="field span2">
+          <label id="f_easyLabel">유형 체크 <span class="opt">선택</span></label>
+          <input id="f_easy" type="hidden" value="">
+          <div class="easy-check-row" id="easyChips" role="group" aria-labelledby="f_easyLabel">
+            <button type="button" class="easy-chip" id="easyChip" data-easy="1" aria-pressed="false"
+                    title="권매·쉬움 고객이면 한 번 눌러 주세요 — 목록 위 ⭐ 권매·쉬움만 으로 모아 볼 수 있습니다">
+              <span class="ec-tick" aria-hidden="true">✓</span>권매·쉬움
+            </button>
+          </div>
+          <span class="hint">한 번 누르면 체크, 다시 누르면 해제 · 공용 시트에는 <b class="nw">[권매쉬움]</b> 표기로 나갑니다.</span>
+        </div>
+
         <div class="field span2">
           <label for="f_memo">메모 <span class="opt">선택</span></label>
           <textarea id="f_memo" placeholder="결합·할인·요청사항 등"></textarea>
@@ -2247,6 +2303,10 @@
      · 시트 : 메모 칸 앞에 [요금완료] / [부가완료] */
   var PLAN_DONE_MARK = '[요금완료]';
   var ADDON_DONE_MARK = '[부가완료]';
+  /* v25 — 권매·쉬움 (한 묶음 1개 체크) · 앱 전용 항목(시트 20컬럼 그대로)
+     · 앱 안 : 권매쉬움 = '권매쉬움' | ''
+     · 시트   : 메모 칸 앞에 [권매쉬움] */
+  var EASY_MARK = '[권매쉬움]';
 
   /* 할인 유형(지원금 유형) · 정책 특수 조건 — 단말보험과 같은 방식(시트 메모 표기)으로 공유한다
      · 앱 안 : 할인유형 = '단말할인' | '요금할인' | ''
@@ -2512,7 +2572,7 @@
 
   var state = {
     records: [],
-    filters: { q: '', month: '', type: '', staff: '', due: false, dueMode: 'all' },
+    filters: { q: '', month: '', type: '', staff: '', due: false, dueMode: 'all', easy: false },
     sort: { key: '개통일', dir: 'desc' },
     view: 'compact',
     role: 'staff',
@@ -2633,11 +2693,15 @@
     return String(v == null ? '' : v).replace(/[^0-9]/g, '');
   }
 
-  /* v24 — 고객명과 연락처가 '동시에' 같은 기존 기록을 찾는다 (수정 중인 자기 자신은 제외).
-     같은 이름 + 다른 번호(가족·다회선) 나 다른 이름 + 같은 번호는 중복이 아니다. */
-  function findDuplicateRecord(name, phone) {
+  /* v24 · v25 — 고객명과 연락처가 '동시에' 같은 기존 기록을 찾는다 (수정 중인 자기 자신은 제외).
+     같은 이름 + 다른 번호(가족·다회선) 나 다른 이름 + 같은 번호는 중복이 아니다.
+     v25 — **같은 개통 월(YYYY-MM) 안에서만** 막는다 : 지난달·작년에 개통한 같은 고객이 다시 개통하는 건 정상이라 통과.
+     openDate(입력한 개통일)가 비어 달을 알 수 없으면 막지 않는다. */
+  function findDuplicateRecord(name, phone, openDate) {
     var n = normName(name), d = digitsOf(phone);
     if (!n || !d) return null;
+    var month = String(normalizeDate(openDate) || openDate || '').slice(0, 7);
+    if (!month) return null;
     var list = state.records || [];
     for (var i = 0; i < list.length; i++) {
       var r = list[i];
@@ -2645,6 +2709,7 @@
       if (state.editingId && r.id === state.editingId) continue;
       if (normName(r.고객명) !== n) continue;
       if (digitsOf(r.연락처) !== d) continue;
+      if (String(normalizeDate(r.개통일) || r.개통일 || '').slice(0, 7) !== month) continue;
       return r;
     }
     return null;
@@ -2805,6 +2870,14 @@
 
   function isForeign(v) { return normalizeForeign(v) === '외국인'; }
 
+  // 권매·쉬움 — '권매쉬움' | '' (한 묶음 1개 체크)
+  function normalizeEasy(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '').toLowerCase();
+    if (!s) return '';
+    return /권매|쉬움|easy|^y$|^yes$|^true$|^1$/.test(s) ? '권매쉬움' : '';
+  }
+  function isEasy(v) { return normalizeEasy(v) === '권매쉬움'; }
+
   // 성별 — '남' | '여' | ''
   function normalizeGender(v) {
     var s = String(v == null ? '' : v).replace(/\s/g, '').toLowerCase();
@@ -2851,8 +2924,8 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '' };
-    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign']];
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false };
+    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
       if (s.indexOf(tags[i][0]) < 0) continue;
@@ -2934,6 +3007,7 @@
     var card = normalizeCard(rec.제휴카드);
     if (card) head.push(CARD_TAG + card + ']');
     if (isForeign(rec.외국인)) head.push(FOREIGN_MARK);
+    if (isEasy(rec.권매쉬움)) head.push(EASY_MARK);
     var gift = normalizeWiredGift(rec.유선혜택) || t.wiredGift;
     if (gift) head.push(WIRED_GIFT_TAG + gift + ']');
     var gender = normalizeGender(rec.성별) || t.gender;
@@ -2973,6 +3047,8 @@
     o.메모 = tags.memo;
     o.단말보험 = tags.ins ? normalizeIns(tags.ins) : normalizeIns(o.단말보험);
     o.외국인 = tags.foreign ? '외국인' : normalizeForeign(r && r.외국인);
+    // v25 — 권매·쉬움: 시트 메모 표기([권매쉬움]) → 상태로 복원
+    o.권매쉬움 = tags.easy ? '권매쉬움' : normalizeEasy(r && r.권매쉬움);
     o.성별 = tags.gender || normalizeGender(r && r.성별) || (tags.rrn ? (tags.rrn % 2 ? '남' : '여') : '');
     o.제휴카드 = tags.card ? normalizeCard(tags.card) : normalizeCard(r && r.제휴카드);
     o.유선혜택 = normalizeWiredGift(tags.wiredGift || (r && r.유선혜택));
@@ -3345,6 +3421,8 @@
     snap.외국인 = normalizeForeign(rec.외국인);
     snap.성별 = normalizeGender(rec.성별);
     snap.유선혜택 = normalizeWiredGift(rec.유선혜택);
+    // v25 — 권매·쉬움도 스냅샷에 담는다 (빠뜨리면 서버 왕복 뒤 [권매쉬움] 표기가 풀린다)
+    snap.권매쉬움 = normalizeEasy(rec.권매쉬움);
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
@@ -4780,6 +4858,21 @@
     renderRrnDigit();
   }
 
+  /* ---------- 권매·쉬움 (v25) — 메모 바로 위 1탭 토글 · 한 묶음 1개 ---------- */
+  function easyOn() {
+    return isEasy($('f_easy') && $('f_easy').value);
+  }
+
+  function setEasyChip(on) {
+    var input = $('f_easy');
+    if (input) input.value = on ? '권매쉬움' : '';
+    var chip = $('easyChip');
+    if (chip) {
+      chip.classList.toggle('on', !!on);
+      chip.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
   /* ---------- 성별 · 주민번호 뒷자리 첫 번호 (v21) ---------- */
   function genderOn() {
     return normalizeGender($('f_gender') && $('f_gender').value);
@@ -4812,6 +4905,15 @@
 
   function foreignTagHtml(v) {
     return isForeign(v) ? '<span class="badge foreign-on">외국인</span>' : '';
+  }
+
+  // 권매·쉬움 전용 배지 — 체크된 고객만 앰버색으로 눈에 띄게
+  //   폰 카드(.m-line1)는 그라데이션 알약, 표의 고객명 칸은 일반 배지 모양
+  function easyBadgeHtml(r) {
+    return isEasy(r && r.권매쉬움) ? '<span class="easy-badge" title="권매·쉬움 체크">★ 권매·쉬움</span>' : '';
+  }
+  function easyCellBadgeHtml(r) {
+    return isEasy(r && r.권매쉬움) ? '<span class="badge easy-on" title="권매·쉬움 체크">★ 권매·쉬움</span>' : '';
   }
 
   /* ---------------- 요금제 빠른 선택 (숫자 검색 + 칩 선택창) ----------------
@@ -5509,7 +5611,7 @@
   }
 
   /* ---------------- filtering / sorting ---------------- */
-  function visibleRecords() {
+  function visibleRecords(ignoreEasy) {
     var f = state.filters;
     var q = f.q.trim().toLowerCase();
     var month = f.due ? '' : f.month;   // 임박 보기에서는 월 필터를 무시
@@ -5532,9 +5634,12 @@
         }
         if (!hit) return false;
       }
+      // v25 — ⭐ 권매·쉬움만 : 체크된 고객만 (건수 계산할 때는 ignoreEasy 로 이 조건만 건너뛴다)
+      if (!ignoreEasy && f.easy && !isEasy(r.권매쉬움)) return false;
       if (q) {
         var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.부가서비스, r.중고폰, r.메모, r.개통유형, r.담당자].join(' ').toLowerCase();
         if (normalizeIns(r.단말보험) === '가입') hay += ' 단말보험 보험가입 가입';
+        if (isEasy(r.권매쉬움)) hay += ' 권매쉬움 권매 쉬움';
         if (hay.indexOf(q) < 0) return false;
       }
       return true;
@@ -5551,6 +5656,29 @@
       return 0;
     });
     return list;
+  }
+
+  /* v25 — ⭐ 권매·쉬움 건수 : 지금 걸린 월·검색·유형·담당자·알림 필터 기준
+     (권매·쉬움 필터 자신은 빼고 센다 → 켜 두어도 버튼에 전체 건수가 보인다) */
+  function easySaleCount() {
+    var base = visibleRecords(true);
+    var n = 0;
+    for (var i = 0; i < base.length; i++) if (isEasy(base[i].권매쉬움)) n++;
+    return n;
+  }
+
+  // 필터 버튼의 건수·켜짐·색 상태를 한곳에서 맞춘다
+  function renderEasyFilter() {
+    if (!el.easyFilter) return;
+    var n = easySaleCount();
+    var on = !!state.filters.easy;
+    if (el.easyFilterCount) el.easyFilterCount.textContent = n + '건';
+    el.easyFilter.classList.toggle('on', on);
+    el.easyFilter.classList.toggle('zero', n === 0 && !on);
+    el.easyFilter.setAttribute('aria-pressed', on ? 'true' : 'false');
+    el.easyFilter.title = on
+      ? '⭕ 권매·쉬움 필터 켜짐 — 다시 누르면 전체 목록'
+      : '⭐ 권매·쉬움 체크된 고객만 보기 (현재 ' + n + '건)';
   }
 
   function kpiRecords() {
@@ -6145,6 +6273,7 @@
       '<div class="mcard-main" data-mtoggle="1">' +
         '<div class="m-line1">' +
           '<span class="m-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
+          easyBadgeHtml(r) +
           foreignTagHtml(r.외국인) +
           typeBadgesHtml(r.개통유형) +
           ddBadge +
@@ -6207,6 +6336,9 @@
       scopeTag = state.filters.dueMode === 'late' ? '기한지남'
         : (state.filters.dueMode === 'soon' ? '오늘' : '알림대상');
     }
+    // v25 — ⭐ 권매·쉬움 필터 버튼의 건수·켜짐 색을 목록을 다시 그릴 때마다 맞춘다
+    renderEasyFilter();
+    if (state.filters.easy) scopeTag = scopeTag ? scopeTag + ' · 권매·쉬움' : '권매·쉬움';
     el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') + rows.length + '건';
     el.footCount.textContent = state.records.length + '건 저장됨';
 
@@ -6289,7 +6421,7 @@
 
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
-        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + '</td>' +
+        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + '</td>' +
         '<td data-label="연락처" class="nowrap">' + (r.연락처 ? esc(r.연락처) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
@@ -6827,6 +6959,7 @@
     markModelChips($('f_model').value);
     setInsChips(r.단말보험);
     setForeignChip(isForeign(r.외국인));
+    setEasyChip(isEasy(r.권매쉬움));
     setGenderChips(r.성별 || '');
     setCardChips(r.제휴카드 || '');
     $('f_plan_none').value = '';
@@ -6954,18 +7087,20 @@
       return null;
     }
 
-    // v24 — 동일 명의 + 동일 연락처(하이픈 무관) 중복 등록 차단. 수정 중인 자기 자신은 통과.
-    var dup = findDuplicateRecord(name, phone);
+    // v24 · v25 — 같은 개통 월(YYYY-MM) 안에서만 동일 명의 + 동일 연락처(하이픈 무관) 중복 차단.
+    //   다른 달(지난달·작년)에 개통한 같은 고객이 다시 개통하는 건 정상이라 통과. 수정 중인 자기 자신도 통과.
+    var dup = findDuplicateRecord(name, phone, date);
     if (dup) {
       var dupDate = normalizeDate(dup.개통일) || String(dup.개통일 || '').trim() || '날짜 미상';
       var dupPhone = formatPhone(dup.연락처) || String(dup.연락처 || '').trim();
       var dupStaff = String(dup.담당자 || '').trim();
       var dupInfo = dupDate + ' · ' + normName(dup.고객명) + ' · ' + dupPhone + ' · 담당자 ' + (dupStaff || '미기입');
+      var dupMonth = monthLabel(String(normalizeDate(date) || date || '').slice(0, 7));
       $('f_name').classList.add('bad');
       $('f_phone').classList.add('bad');
-      el.formError.innerHTML = '⚠️ 이미 등록된 고객명·연락처입니다 (' + esc(dupInfo) + ').<br>'
-        + '중복 입력을 막기 위해 저장할 수 없습니다.'
-        + '<br><span class="fe-sub">기존 건을 수정하거나 고객명·연락처를 확인해 주세요.</span>';
+      el.formError.innerHTML = '⚠️ 이번 달(' + esc(dupMonth) + ')에 이미 등록된 고객명·연락처입니다 (' + esc(dupInfo) + ').<br>'
+        + '이번 달 중복 입력을 막기 위해 저장할 수 없습니다.'
+        + '<br><span class="fe-sub">같은 달에 같은 고객이 두 번 들어갔는지 확인해 주세요 — 다른 달(지난달·작년) 개통 건은 그대로 다시 등록할 수 있습니다.</span>';
       dupGuardOn = true;
       el.formError.classList.add('show');
       try {
@@ -7005,6 +7140,8 @@
       페이백카드: parseNumber($('f_paycard').value),
       페이백입금: parseNumber($('f_paybank').value),
       유선혜택: wiredGiftOn(),
+      // v25 — 메모 위 [권매·쉬움] 1탭 토글
+      권매쉬움: easyOn() ? '권매쉬움' : '',
       메모: $('f_memo').value.trim(),
       담당자: $('f_staff').value.trim()
     };
@@ -7085,6 +7222,7 @@
       $('f_cond').value = '';
       setForeignChip(false);
       setGenderChips('');
+      setEasyChip(false);
       if ($('pvYDum')) $('pvYDum').checked = false;
       $('f_name').focus();
       refreshPolicy(true); updateFormRisk();
@@ -7646,8 +7784,13 @@
       state.filters.dueMode = 'all';
       render();
     });
+    // v25 — ⭐ 권매·쉬움만 (1탭 토글)
+    if (el.easyFilter) el.easyFilter.addEventListener('click', function () {
+      state.filters.easy = !state.filters.easy;
+      render();
+    });
     el.resetFilters.addEventListener('click', function () {
-      state.filters = { q: '', month: currentMonth(), type: '', staff: '', due: false, dueMode: 'all' };
+      state.filters = { q: '', month: currentMonth(), type: '', staff: '', due: false, dueMode: 'all', easy: false };
       el.searchInput.value = '';
       el.clearSearch.classList.remove('show');
       render();
@@ -8067,17 +8210,22 @@
       if (!el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
     });
 
-    // v24 — 이름·연락처를 고쳐 중복이 풀리면 '이미 등록된…' 안내를 바로 내린다
-    el.editForm.addEventListener('input', function (e) {
+    // v24 · v25 — 이름·연락처·개통일(월)을 고쳐 중복이 풀리면 '이번 달에 이미 등록된…' 안내를 바로 내린다
+    function clearDupGuardIfFree() {
       if (!dupGuardOn) return;
-      var t = e.target;
-      if (!t || (t.id !== 'f_name' && t.id !== 'f_phone')) return;
-      if (findDuplicateRecord($('f_name').value, $('f_phone').value)) return;
+      if (findDuplicateRecord($('f_name').value, $('f_phone').value, $('f_date').value)) return;
       dupGuardOn = false;
       $('f_name').classList.remove('bad');
       $('f_phone').classList.remove('bad');
       el.formError.classList.remove('show');
+    }
+    el.editForm.addEventListener('input', function (e) {
+      var t = e.target;
+      if (!t || (t.id !== 'f_name' && t.id !== 'f_phone')) return;
+      clearDupGuardIfFree();
     });
+    // 개통일을 다른 달로 바꾸면 당월 중복이 아니게 될 수 있다
+    if ($('f_date')) $('f_date').addEventListener('change', clearDupGuardIfFree);
 
     // 다이얼로그 닫기 처리
     el.editDialog.addEventListener('cancel', function () { state.editingId = null; hidePlanSuggest(); });
@@ -8227,6 +8375,8 @@
       clearSearch: $('clearSearch'),
       typeFilter: $('typeFilter'),
       dueOnly: $('dueOnly'),
+      easyFilter: $('easyFilter'),
+      easyFilterCount: $('easyFilterCount'),
       resetFilters: $('resetFilters'),
       resultCount: $('resultCount'),
       addBtn: $('addBtn'),
@@ -8365,6 +8515,9 @@
     setCardChips('');
     setForeignChip(false);
     setGenderChips('');
+    setEasyChip(false);
+    var easyBox = $('easyChip');
+    if (easyBox) easyBox.addEventListener('click', function () { setEasyChip(!easyOn()); });
     var foreignBox = $('foreignChips');
     if (foreignBox) foreignBox.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('button[data-foreign]') : null;

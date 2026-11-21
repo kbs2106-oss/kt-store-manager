@@ -128,6 +128,24 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     이름·연락처를 고쳐 **중복이 풀리면**(`findDuplicateRecord` 가 `null`) 이름·연락처 칸의 `.bad` 를 지우고 배너를 **바로** 내린다 —
     이 배너가 중복 안내인지 표시하는 `dupGuardOn` 플래그를 두어, **필수칸 안내·다른 경고는 건드리지 않는다**(모달을 열 때·다른 문구를 띄울 때 플래그를 끈다).
   - 테스트 `qa-kt/v24_duplicate_guard_test.py` · 스크린샷 `downloads/개통장부-v24-중복차단.png`.
+- **v25 — `권매·쉬움` 1탭 체크 버튼 + 전용 필터·배지** (한 묶음 1개, `권매`·`쉬움`을 따로 나누지 않는다):
+  - **모달(`메모` 바로 위)**: `#f_easy`(hidden) + `#easyChips` 안의 버튼 **1개** `#easyChip`(`✓ 권매·쉬움`). 라벨은 `유형 체크`.
+    `easyOn()` / `setEasyChip(on)` — 누를 때마다 켜고 끄는 토글(`aria-pressed`), 켜지면 앰버 그라데이션(`.easy-chip.on`)으로 선명하게 바뀐다.
+  - **저장·복원**: 앱 필드 `권매쉬움 = '권매쉬움' | ''`(`normalizeEasy()`·`isEasy()`).
+    시트 20컬럼은 그대로 — `sheetMemo()` 가 메모 앞에 **`[권매쉬움]`** 을 붙이고, `queueUpsert()` 스냅샤에 `권매쉬움` 을 담고,
+    `splitMemoTags()`(`out.easy`) → `normalizeRecord()` 가 복원한다. 서버를 왕복해도 체크가 유지된다.
+  - **목록 필터**: 툴바 `알림만` 바로 옆 **`.easy-filter` 알약 버튼 `#easyFilter`** — `★ 권매·쉬움만` + 건수 알약 `#easyFilterCount`(`N건`).
+    `state.filters.easy` 로 켜고 끄며, `visibleRecords()` 는 `f.easy` 면 `isEasy(r.권매쉬움)` 인 기록만 남긴다(인자 없이 부르면 지금까지와 같다).
+    건수는 **`easySaleCount()`** — `visibleRecords(true)`(권매·쉬움 조건만 뺀 지금 월·검색·유형·담당자·알림 필터) 중 체크된 건수.
+    켜지면 알약이 앰버로 채워지고(`.easy-filter.on`), 0건이면 흐려지며(`.zero`), `#resultCount` 에 `권매·쉬움` 이 함께 뜨고 `초기화` 로도 꺼진다.
+  - **목록 배지**: `easyBadgeHtml()` — 폰 카드는 `.mcard .m-line1`(고객명 오른쪽), 표는 **`고객명` 칸**. 둘 다 앰버 `★ 권매·쉬움`(`.easy-badge` / `.badge.easy-on`).
+    검색어 `권매`·`쉬움` 으로도 해당 고객이 잡힌다.
+  - **중복 차단은 \"당월(같은 개통 월 `YYYY-MM`) 기준\"으로 좁혔다** (`findDuplicateRecord(name, phone, openDate)`):
+    입력한 개통일의 앞 7자리와 기존 기록 `개통일` 의 앞 7자리가 같을 때만 차단 — 지난달·작년에 개통한 같은 고객이 다시 개통하는 건 정상이라 **통과**.
+    차단 문구도 `⚠️ 이번 달(2026년 11월)에 이미 등록된 고객명·연락처입니다 (…)` / `이번 달 중복 입력을 막기 위해 저장할 수 없습니다.` 로 당월 기준임을 명시.
+    이름·연락처뿐 아니라 **개통일을 다른 달로 바꿔도** 배너가 바로 내려간다(`clearDupGuardIfFree`).
+  - 테스트 `qa-kt/v25_easy_sale_test.py` · 스크린샷 `downloads/개통장부-v25-권매쉬움-모달.png` · `downloads/개통장부-v25-권매쉬움-필터목록.png`.
+  - 중복 차단 당월 기준 테스트는 `qa-kt/v24_duplicate_guard_test.py` 의 **G** 구역(같은 달 차단 / 다른 달 통과).
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
 ---
@@ -321,7 +339,9 @@ kt-store-manager/
 | `staffLineText(map)` | 날짜 그룹 머리글용 한 줄 요약 `'김태양 2 · 김설화 1'` |
 | `renderTable()` | 날짜 그룹 머리글 + 표 + 폰용 카드(`#mlist`) 렌더 |
 | `renderTypeFilter()` | 유형 필터를 무선 / 유선 / (예전 유형) 묶음으로 다시 그린다 |
-| `visibleRecords()` | 검색·월·유형·담당자·알림 필터 + 정렬 |
+| `visibleRecords()` | 검색·월·유형·담당자·알림 필터 + 정렬. v25: `visibleRecords(true)` 면 `권매·쉬움` 조건만 건너뜀(건수 계산용) |
+| `easySaleCount()` / `renderEasyFilter()` / `easyBadgeHtml()` | v25 — `⭐ 권매·쉬움만` 건수·켜짐 상태 · 폰카드/표 배지 |
+| `easyOn()` / `setEasyChip()` | v25 모달 `메모` 위 `✓ 권매·쉬움` 1탭 토글 |
 | `mcardHtml(r)` | 폰 카드 2줄 요약 + 펼침 상세 |
 | `openEditor(rec)` | 등록/수정 다이얼로그 (유형 칩·기간 칩 상태 복원 포함) |
 | `renderTypeChips()` / `toggleTypeChip()` / `applyTypeHint()` | 개통유형 칩(무선 1개 + 유선 1개) 그리기·토글·힌트 |
@@ -329,7 +349,7 @@ kt-store-manager/
 | `typeBadgesHtml()` | 복합 유형을 배지 2개로 그린다(표·폰 카드 공통) |
 | `isWiredType(t)` | 유선(인터넷·TV) 유형인지 판별 (예전 '인터넷+TV' 포함, 복합 값은 조각 단위로) |
 | `collectForm()` / `saveForm()` | 입력 수집·필수 검사·저장 (+동기화 큐). v19: 추지·페이백·중고폰 `미기입/미반납` · 유선 요금제 검증 · v24: 명의+번호 중복 차단 |
-| `normName()` / `digitsOf()` / `findDuplicateRecord()` | v24 — 고객명 공백 정리·연락처 숫자만 비교, 같은 명의+같은 번호의 기존 기록 찾기(수정 중 자기 자신 제외) |
+| `normName()` / `digitsOf()` / `findDuplicateRecord()` | v24 — 고객명 공백 정리·연락처 숫자만 비교, 같은 명의+같은 번호의 기존 기록 찾기(수정 중 자기 자신 제외) · v25: **같은 개통 월(YYYY-MM)** 일 때만 |
 | `payNoneOn()/setPayNone()/paintPayNone()/togglePayNone()` | v19 추지·페이백·중고폰 `미기입`/`미반납` 칩 상태·모양 |
 | `syncWiredPlanField()/planPartsForType()` | v19 유선 개통유형일 때만 유선 요금제 칸 열기 · 저장값을 무선/유선 칸으로 분해 |
 | `foreignOn()/setForeignChip()/foreignTagHtml()` | v19 외국인 고객 칩 · 외국인 전용(웰컴) 요금제 열기 · 배지 |
@@ -341,7 +361,7 @@ kt-store-manager/
 | `planPending(r)` / `addonPending(r)` | 완료 표시된 항목은 `null` (알림·강조에서 제외) — 둘은 서로 따로 |
 | `dueStatusHtml(r, kind)` / `mDueRow(label, kind, r)` | 표 칸 / 폰카드 상세의 날짜·D-Day·`완료` 버튼 (kind = `plan`·`addon`) |
 | `handleDoneClick()` / `applyDone(id, kind, done)` | `변경 완료`·`해지 완료` 확인·되돌리기 (확인 → 저장 → 동기화) |
-| `splitMemoTags()` / `sheetMemo()` / `sheetRecord()` | 시트 메모 표기(`[단말보험]`·`[요금완료]`·`[부가완료]`) 직렬화·복원 |
+| `splitMemoTags()` / `sheetMemo()` / `sheetRecord()` | 시트 메모 표기(`[단말보험]`·`[요금완료]`·`[부가완료]`·`[권매쉬움]`) 직렬화·복원 |
 | `deleteRecord(id)` | 행 삭제 (관리자 전용, 확인 후) |
 | `applyRole()/tryUnlockAdmin()` | 관리자/직원 모드 전환 |
 | `runSync()/flushPending()/applyServerList()` | 공용 장부 업로드·병합 |
@@ -526,6 +546,10 @@ kt-store-manager/
     관리자 모드에서 **비어 있던 건까지 표·KPI·정산 요약에 정책 금액으로 보이는지**, `도도매 차감(신규 -40,000 / 번이·기변 -30,000)`이
     내역에 찍히는지, 개통일을 `11/10`↔`11/18`로 바꾸면 **MRA-02 S25 엣지 120/250 · MRA-04 0/100**로 갈리는지,
     중고신규·중고MNP가 **MBA-02만** 인정되고 512G·중고결합이 반영되는지, 정책표 숫자를 고쳐 저장하면 계산에 반영되고 `초기화`로 기본값이 돌아오는지
+18. **`권매·쉬움`(v25)**: 모달 `메모` 바로 위 **`✓ 권매·쉬움` 1개**가 한 번 누르면 앰버로 켜지고 다시 누르면 해제되는지,
+    저장 → 시트 메모에 `[권매쉬움]` 이 붙고(20컬럼 그대로) 새로고침·시트 왕복 뒤에도 체크가 살아 있는지,
+    툴바 **`★ 권매·쉬움만 N건`** 을 누르면 체크된 고객만 남고(건수는 월·검색·담당자 필터 기준) 다시 누르면 전체로 돌아오는지,
+    폰 카드(`.m-line1`)·표 `고객명` 칸에만 `★ 권매·쉬움` 배지가 뜨고, `초기화` 로 필터가 꺼지는지
 
 ---
 
