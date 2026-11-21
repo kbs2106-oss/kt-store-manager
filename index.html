@@ -324,11 +324,13 @@
   td.actions{text-align:right;white-space:nowrap;padding-right:10px}
   /* 관리(수정·삭제) 열은 오른쪽에 고정 — 가로로 넓은 장부에서도 항상 보이게 */
   table.ledger th.actions-col{position:sticky;right:0;z-index:3;background:#F6F9FD;
-    box-shadow:-10px 0 12px -12px rgba(15,23,42,.45)}
+    box-shadow:-16px 0 0 0 #F6F9FD, -20px 0 14px -12px rgba(15,23,42,.45)}
   table.ledger td.actions{position:sticky;right:0;z-index:1;background:#fff;
-    box-shadow:-10px 0 12px -12px rgba(15,23,42,.35)}
-  table.ledger tbody tr:hover td.actions{background:#F7FAFF}
-  table.ledger tbody tr.due-row td.actions{background:#FFFDF6}
+    box-shadow:-16px 0 0 0 #fff, -20px 0 14px -12px rgba(15,23,42,.35)}
+  table.ledger tbody tr:hover td.actions{background:#F7FAFF;
+    box-shadow:-16px 0 0 0 #F7FAFF, -20px 0 14px -12px rgba(15,23,42,.35)}
+  table.ledger tbody tr.due-row td.actions{background:#FFFDF6;
+    box-shadow:-16px 0 0 0 #FFFDF6, -20px 0 14px -12px rgba(15,23,42,.35)}
   .icon-btn{
     width:30px;height:30px;border-radius:8px;border:1px solid transparent;background:transparent;
     color:var(--slate-400);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
