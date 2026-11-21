@@ -1148,6 +1148,22 @@
     box-shadow:0 12px 26px rgba(15,23,42,.12);-webkit-overflow-scrolling:touch;
   }
   .plan-suggest.show{display:block}
+  /* v38 — 기종 입력칸도 같은 목록 모양 · 칸 오른쪽에 ▾ 표시(포커스가 와도 유지) */
+  #f_model{
+    padding-right:32px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%2364748B' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 11px center;
+  }
+  /* v38 — 기종 목록은 칸 아래에 '떠 있는' 목록이다(칸 아래 내용을 밀지 않는다).
+     아래 칸을 밀면 목록이 닫히는 순간 손가락 밑의 칸이 바뀌어 엉뚱한 칸이 눌린다. */
+  #sug_f_model{
+    position:fixed;left:0;top:0;margin:0;max-height:none;z-index:80;
+  }
+  .model-suggest .ps-item.is-act{background:#F1F7FF}
+  .model-suggest .ms-on{
+    margin-left:auto;flex:none;padding:2px 7px;border-radius:999px;
+    background:#E5F0FF;color:#0B4AA2;font-size:10.5px;font-weight:800;white-space:nowrap;
+  }
   .ps-item{
     display:flex;align-items:center;gap:8px;width:100%;min-height:38px;padding:7px 10px;
     border:0;border-bottom:1px solid var(--line);border-radius:0;background:#fff;
@@ -2341,7 +2357,12 @@
 
         <div class="field span2">
           <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
-          <input id="f_model" type="text" autocomplete="off" list="modelList" placeholder="예) 갤럭시 S26 / 아이폰 17 프로">
+          <!-- v38 — list="modelList"(datalist) 는 안드로이드에서 탭해도 값이 안 바뀌어서 뺐다.
+               이제 바로 아래 커스텀 목록(#sug_f_model)에서 한 번 탭하면 바뀐다.
+               #modelList 는 예전 화면·테스트 호환용으로 22종을 그대로 채워 둔다(화면에는 안 뜬다). -->
+          <input id="f_model" type="text" autocomplete="off" placeholder="예) 갤럭시 S26 / 아이폰 17 프로"
+                 aria-haspopup="listbox" aria-controls="sug_f_model" aria-expanded="false">
+          <div class="plan-suggest model-suggest" id="sug_f_model" role="listbox" aria-label="기종 목록"></div>
           <datalist id="modelList"></datalist>
           <div class="staff-chips model-chips" id="modelChips"></div>
         </div>
@@ -5126,7 +5147,7 @@
     if (dl) {
       var opts = '';
       for (var j = 0; j < KT_DEVICES.length; j++) opts += '<option value="' + esc(KT_DEVICES[j]) + '"></option>';
-      dl.innerHTML = opts;   // 직접 입력·자동완성은 22종 전체 그대로
+      dl.innerHTML = opts;   // v38: 화면에는 안 뜨지만 #modelList 22종은 그대로 둔다(예전 화면·테스트 호환)
     }
     box.onclick = function (e) {
       var bb = e.target && e.target.closest ? e.target.closest('button[data-brand]') : null;
@@ -5135,14 +5156,17 @@
         modelOpenBrand = (modelOpenBrand === k) ? '' : k;
         paintModelBrandPanel();
         markModelChips($('f_model') ? $('f_model').value : '', true);
+        hideModelSuggest();   // v38 — 칩을 눌러 고르면 위 목록은 닫는다
         return;
       }
       var b = e.target && e.target.closest ? e.target.closest('button[data-model]') : null;
       if (!b) return;
       toggleModel(b.getAttribute('data-model'));
+      hideModelSuggest();
     };
     var input = $('f_model');
     if (input) input.addEventListener('input', function () { markModelChips(input.value); refreshPolicy(false); updateFormRisk(); });
+    bindModelSuggest();   // v38 — 칸을 누르면 22종 목록이 열리고 한 번 탭으로 바뀐다
     markModelChips(input ? input.value : '');
   }
 
@@ -5179,6 +5203,178 @@
     for (var i = 0; i < chips.length; i++) {
       chips[i].classList.toggle('on', parts.indexOf(chips[i].getAttribute('data-model')) >= 0);
     }
+  }
+
+  /* ---------------- v38 — 기종 드롭다운 (#sug_f_model) ----------------
+     · 문제: 예전 `<input list="modelList">`(datalist) 는 안드로이드 삼성 인터넷·크롬에서
+       목록을 눌러도 값이 안 바뀌거나, 이미 값이 있을 때 다른 기종으로 바뀌지 않았다.
+     · 그래서 요금제 검색창과 같은 커스텀 목록으로 바꿨다. 칸을 누르면 바로 목록이 열리고
+       항목을 한 번 탭하면 값이 즉시 바뀐 뒤 정책·주의 배지를 다시 계산한다.
+     · 칸이 비었거나 이미 기종명이 들어 있으면 22종 전체, 타이핑 중이면 그 글자에 맞는 것만. */
+  var modelSug = { list: [], active: 0, open: false };
+
+  function modelQueryList(q) {
+    var needle = String(q == null ? '' : q).replace(/\s/g, '').toLowerCase();
+    var out = [];
+    if (!needle) return KT_DEVICES.slice();
+    for (var i = 0; i < KT_DEVICES.length; i++) {
+      if (KT_DEVICES[i].replace(/\s/g, '').toLowerCase().indexOf(needle) >= 0) out.push(KT_DEVICES[i]);
+    }
+    return out;
+  }
+
+  // 칸에 이미 기종명이 들어 있는가 (예: '갤럭시 S26' · '갤럭시 S26 + 인터넷 에센스')
+  function modelValueHasDevice(v) {
+    var parts = modelParts(v);
+    for (var i = 0; i < parts.length; i++) if (KT_DEVICES.indexOf(parts[i]) >= 0) return true;
+    return false;
+  }
+
+  // 지금 칸 상태에서 보여 줄 목록
+  function modelSuggestList() {
+    var input = $('f_model');
+    var raw = input ? String(input.value || '').trim() : '';
+    if (!raw || modelValueHasDevice(raw)) return KT_DEVICES.slice();   // 비었거나 이미 고른 기종 → 22종 전체
+    var hit = modelQueryList(raw);
+    return hit.length ? hit : KT_DEVICES.slice();                      // 맞는 게 없으면 막다른 길 대신 22종
+  }
+
+  function renderModelSuggest() {
+    var box = $('sug_f_model'), input = $('f_model');
+    if (!box || !input || !modelSug.list.length) { hideModelSuggest(); return; }
+    var cur = modelParts(input.value);
+    var html = '';
+    for (var i = 0; i < modelSug.list.length; i++) {
+      var name = modelSug.list[i];
+      var brand = modelBrandByKey(modelBrandOf(name));
+      var on = cur.indexOf(name) >= 0;
+      html += '<button type="button" class="ps-item' + (on ? ' on' : '') + (i === modelSug.active ? ' is-act' : '') +
+        '" data-ms="' + i + '" role="option" aria-selected="' + (on ? 'true' : 'false') + '">' +
+        '<span class="ps-cat ' + (brand && brand.key === 'iphone' ? 'w' : 'm') + '">' +
+        esc(brand ? brand.label : '기타') + '</span>' +
+        '<span class="ps-name">' + esc(name) + '</span>' +
+        (on ? '<span class="ms-on">선택됨</span>' : '') + '</button>';
+    }
+    box.innerHTML = html;
+    box.classList.add('show');
+    input.setAttribute('aria-expanded', 'true');
+    // 지금 고른 기종이 있으면 그 줄이 가운데 오게, 없으면 목록 맨 위(갤럭시 S26)부터 보여 준다
+    var onEl = box.querySelector('.ps-item.on');
+    if (onEl) {
+      var or1 = onEl.getBoundingClientRect(), ob2 = box.getBoundingClientRect();
+      box.scrollTop += (or1.top - ob2.top) - (box.clientHeight - or1.height) / 2;
+    } else {
+      box.scrollTop = 0;
+    }
+    positionModelSuggest();
+  }
+
+  // 목록을 기종 칸 바로 아래에 띄운다 — 저장 버튼·화면 밖으로 넘어가면 위로 올리거나 높이를 줄인다
+  function positionModelSuggest() {
+    var box = $('sug_f_model'), input = $('f_model');
+    if (!box || !input || !modelSug.open) return;
+    var r = input.getBoundingClientRect();
+    var vh = window.innerHeight || document.documentElement.clientHeight;
+    var foot = document.querySelector('#editDialog .dlg-foot');
+    var footTop = foot ? foot.getBoundingClientRect().top : vh;
+    var limit = Math.min(vh - 10, footTop - 10);
+    var left = Math.round(r.left), width = Math.round(r.width);
+    var top = Math.round(r.bottom + 4);
+    box.style.left = left + 'px';
+    box.style.width = width + 'px';
+    if (limit - top >= 200) {
+      box.style.top = top + 'px';
+      box.style.maxHeight = Math.round(Math.min(356, limit - top)) + 'px';
+      return;
+    }
+    // 아래가 좁으면 칸 위로 띄운다
+    var above = Math.min(356, Math.round(r.top - 12));
+    box.style.maxHeight = Math.max(140, above) + 'px';
+    box.style.top = Math.max(6, Math.round(r.top - 4 - box.offsetHeight)) + 'px';
+  }
+
+  function showModelSuggest() {
+    var input = $('f_model'), box = $('sug_f_model');
+    if (!input || !box) return;
+    // 처음에는 어떤 항목도 켜 두지 않는다(바로 고른 것처럼 보이지 않게) — 방향키를 누르면 그때 켜진다
+    modelSug = { list: modelSuggestList(), active: -1, open: true };
+    renderModelSuggest();
+  }
+
+  function hideModelSuggest() {
+    modelSug = { list: [], active: 0, open: false };
+    var box = $('sug_f_model');
+    if (box) { box.classList.remove('show'); box.innerHTML = ''; }
+    var input = $('f_model');
+    if (input) input.setAttribute('aria-expanded', 'false');
+  }
+
+  // 목록에서 한 번 탭 → 기종 칸 값 교체 (이미 있던 기종 자리만 바꾸고 ' + 인터넷 에센스' 같은 나머지는 둔다)
+  function pickModel(name) {
+    var input = $('f_model');
+    if (!input || !name) return;
+    var parts = modelParts(input.value);
+    var at = -1;
+    for (var i = 0; i < parts.length; i++) if (KT_DEVICES.indexOf(parts[i]) >= 0) { at = i; break; }
+    if (at >= 0) parts[at] = name;
+    else parts = [name];
+    input.value = parts.join(' + ');
+    hideModelSuggest();
+    markModelChips(input.value);        // 그 기종 브랜드가 펼쳐지고 칩이 하이라이트된다
+    refreshPolicy(false); updateFormRisk();
+  }
+
+  function bindModelSuggest() {
+    var input = $('f_model'), box = $('sug_f_model');
+    if (!input || !box || input.dataset.msBound) return;
+    input.dataset.msBound = '1';
+    input.addEventListener('focus', function () { showModelSuggest(); });
+    // 이미 포커스가 있는 칸을 다시 눌러도 목록이 열린다
+    input.addEventListener('click', function () { if (!modelSug.open) showModelSuggest(); });
+    input.addEventListener('input', function () { showModelSuggest(); });
+    input.addEventListener('blur', function () {
+      setTimeout(function () { if (document.activeElement !== input) hideModelSuggest(); }, 160);
+    });
+    input.addEventListener('keydown', function (e) {
+      if (!modelSug.open || !modelSug.list.length) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        modelSug.active = (modelSug.active + 1) % modelSug.list.length;
+        renderModelSuggest();
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        modelSug.active = (modelSug.active - 1 + modelSug.list.length) % modelSug.list.length;
+        renderModelSuggest();
+      } else if (e.key === 'Enter') {
+        if (modelSug.active < 0) return;
+        e.preventDefault();
+        pickModel(modelSug.list[modelSug.active]);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        hideModelSuggest();
+      }
+    });
+    // blur 로 목록이 먼저 닫히지 않게 mousedown 기본동작을 막는다 (요금제 검색과 같은 방식)
+    box.addEventListener('mousedown', function (e) { e.preventDefault(); });
+    box.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-ms]') : null;
+      if (!b || !modelSug.open) return;
+      pickModel(modelSug.list[parseInt(b.getAttribute('data-ms'), 10)]);
+    });
+    // 바깥을 누르면 닫힌다 — 목록은 떠 있는 판이라 닫혀도 아래 칸이 움직이지 않는다.
+    // (그래서 이 탭이 다른 칸을 누르는 것도 그대로 살린다)
+    document.addEventListener('pointerdown', function (e) {
+      if (!modelSug.open) return;
+      var t = e.target;
+      if (!t || !t.closest) return;
+      if (t.closest('#f_model') || t.closest('#sug_f_model')) return;
+      hideModelSuggest();
+    }, true);
+    // 등록 창을 스크롤하거나 화면 크기가 바뀌면 칸을 따라간다
+    var body = input.closest('.dlg-body');
+    if (body) body.addEventListener('scroll', function () { if (modelSug.open) positionModelSuggest(); }, { passive: true });
+    window.addEventListener('resize', function () { if (modelSug.open) positionModelSuggest(); });
   }
 
   /* =========================================================
@@ -6691,7 +6887,11 @@
   function hidePlanSuggest() {
     planSug = { input: null, list: [], active: 0 };
     var boxes = document.querySelectorAll('.plan-suggest.show');
-    for (var i = 0; i < boxes.length; i++) boxes[i].classList.remove('show');
+    for (var i = 0; i < boxes.length; i++) {
+      // v38 — 기종 목록(#sug_f_model)은 모양만 빌려 쓴다. 요금제 칸이 흐려졌다고 같이 닫히면 안 된다.
+      if (boxes[i].classList.contains('model-suggest')) continue;
+      boxes[i].classList.remove('show');
+    }
   }
 
   function showPlanSuggest(input) {
@@ -9585,6 +9785,7 @@
 
   function openEditor(rec) {
     hidePlanSuggest();
+    hideModelSuggest();   // v38 — 지난번에 열어 둔 기종 목록은 닫고 연다
     state.editingId = rec ? rec.id : null;
     el.dlgTitle.textContent = rec ? '개통 수정' : '개통 등록';
     el.deleteBtn.style.display = rec ? 'inline-flex' : 'none';
@@ -11179,8 +11380,8 @@
     if ($('f_date')) $('f_date').addEventListener('change', clearDupGuardIfFree);
 
     // 다이얼로그 닫기 처리
-    el.editDialog.addEventListener('cancel', function () { state.editingId = null; hidePlanSuggest(); });
-    el.editDialog.addEventListener('close', hidePlanSuggest);
+    el.editDialog.addEventListener('cancel', function () { state.editingId = null; hidePlanSuggest(); hideModelSuggest(); });
+    el.editDialog.addEventListener('close', function () { hidePlanSuggest(); hideModelSuggest(); });
     el.editDialog.addEventListener('click', function (e) {
       if (e.target === el.editDialog) el.editDialog.close();
     });
