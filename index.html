@@ -188,6 +188,10 @@
   /* 관리자 전용 정산 줄 — 총 순마진 · 추지·페이백 합계 */
   .sum-cells.sum-net{grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);background:#FBFCFE}
   .sum-cells.sum-money{grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid var(--line);background:#FBFCFE}
+  /* v21 — 정책 포인트 줄 (무선 · 유선 · 합계) */
+  .sum-cells.sum-points{grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);background:#FFFDF8}
+  .sum-points .sum-value b{font-size:21px;color:#6B4E00}
+  .sum-points .sum-value i{color:#A98500}
   .sum-money .sum-value b{font-size:21px}
   .sum-cells.sum-net .sum-cell{padding-top:8px;padding-bottom:9px}
   .sum-cells.sum-net .sum-value b{font-size:21px}
@@ -196,7 +200,7 @@
   .sum-net .net-neg b{color:#B42318}
   .sum-label{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:var(--slate-600);letter-spacing:.01em;white-space:nowrap;overflow:hidden}
   .sum-label .tag{font-size:10px;font-weight:800;color:var(--slate-400);background:#EEF2F8;border-radius:5px;padding:0 5px;letter-spacing:0;flex:none}
-  .sum-value{display:flex;align-items:baseline;gap:3px;margin-top:2px;font-weight:800;letter-spacing:-.035em;color:var(--ink)}
+  .sum-value{display:flex;align-items:baseline;gap:3px;margin-top:2px;font-weight:800;letter-spacing:-.035em;color:var(--ink);flex-wrap:nowrap;white-space:nowrap}
   .sum-value b{font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
   .sum-value i{font-style:normal;font-size:12px;font-weight:700;color:var(--slate-400);letter-spacing:0}
   .sum-sub{font-size:11.5px;color:var(--slate-500);margin-top:2px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -258,13 +262,21 @@
   }
   @media (max-width:640px){
     /* 폰: 두 칸씩 쌓아 읽기 쉽게 (리베이트·순마진은 관리자만) */
-    .sum-cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+    .sum-cells,
+    .sum-cells.sum-money,
+    .sum-cells.sum-net,
+    .sum-cells.sum-points{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
     .sum-overview{padding:6px 10px;gap:5px 10px}
     .so-total b{font-size:13px}
     .so-div{display:none}
     .sum-cell{padding:7px 10px;border-top:1px solid var(--line)}
     .sum-cell:nth-child(2n){border-right:0}
     .sum-value b{font-size:17px}
+    /* 금액 칸은 라벨·숫자가 잘리지 않게 살짝 크게 + 여백 */
+    .sum-money .sum-cell,.sum-net .sum-cell{padding:9px 12px}
+    .sum-money .sum-value b,.sum-cells.sum-net .sum-value b,.sum-points .sum-value b{font-size:18px}
+    .sum-label{overflow:visible}
+    #sumPointRow .sum-cell:last-child{grid-column:1/-1}
   }
 
   /* ---------- 요금제·부가서비스 임박 알림 바 (접기/펼치기) ---------- */
@@ -497,6 +509,37 @@
   .field.span2{grid-column:1/-1}
   #planLWrap[hidden]{display:none}
   .field label{font-size:12.5px;font-weight:700;color:var(--slate-600);display:flex;align-items:center;gap:4px}
+  /* v21 — 라벨 줄 안에 작은 체크 칩을 나란히 (세로 공간 0) */
+  .field-head{display:flex;align-items:center;gap:7px;min-width:0}
+  .field-head label{flex:0 0 auto}
+  .foreign-inline{display:inline-flex;flex-wrap:nowrap;gap:0}
+  .field-head .foreign-chip{
+    height:20px;padding:0 8px;border-radius:999px;font-size:10.5px;font-weight:800;line-height:1;
+    color:var(--slate-500);background:#F8FAFC;border:1px solid var(--line);letter-spacing:-.01em;
+  }
+  .field-head .foreign-chip:hover{background:#EEF2FF;border-color:#C7D2FE;color:#3730A3}
+  .field-head .foreign-chip.on{background:#EEF2FF;border-color:#A5B4FC;color:#3730A3;font-weight:900}
+  /* v21 — 성별 남/여 1탭 칩 + 주민번호 뒷자리 첫 번호 뱃지를 생년월일 칸과 한 줄에 */
+  .birth-row{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;min-width:0}
+  .birth-row #f_birth{flex:0 1 128px;width:auto;min-width:86px;max-width:150px;padding:0 9px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .gender-inline{display:inline-flex;flex-wrap:nowrap;gap:4px;flex:0 0 auto}
+  .birth-row .gender-chip{
+    height:28px;padding:0 9px;border-radius:9px;font-size:11.5px;font-weight:800;line-height:1;
+    color:var(--slate-500);background:#F8FAFC;border:1px solid var(--line);letter-spacing:-.01em;
+  }
+  .birth-row .gender-chip:hover{background:#F4F7FB;border-color:var(--line-strong)}
+  .birth-row .gender-chip.on[data-gender="남"]{background:#EEF4FF;border-color:#9DBDF0;color:var(--blue-700);font-weight:900}
+  .birth-row .gender-chip.on[data-gender="여"]{background:#FDF2F8;border-color:#F2B8D6;color:#9D174D;font-weight:900}
+  .birth-row .gender-chip.on::before{content:"✓ ";font-weight:900}
+  .rrn-badge{
+    display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:999px;flex:0 0 auto;
+    font-size:12px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;
+    background:#F1F5F9;color:var(--slate-600);border:1px solid var(--line);letter-spacing:.02em;
+  }
+  .rrn-badge[hidden]{display:none}
+  .rrn-badge.foreign{background:#EEF2FF;border-color:#C7D2FE;color:#3730A3}
+  .rrn-badge[hidden]{display:none}
+  .rrn-badge.foreign{background:#EEF2FF;border-color:#C7D2FE;color:#3730A3}
   .field label .req{color:var(--red);font-weight:800}
   .field label .opt{color:var(--slate-400);font-weight:600;font-size:11.5px}
   .field input,.field select,.field textarea{
@@ -590,7 +633,7 @@
   .pay-cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px;white-space:nowrap}
   .pay-v{font-weight:800;color:#334155;font-variant-numeric:tabular-nums}
   .pay-sub{font-size:10px;font-weight:700;color:var(--slate-500)}
-  .m-net{font-weight:900;color:#0F172A}
+  .m-net{font-weight:900;color:#0F172A;white-space:nowrap;font-variant-numeric:tabular-nums}
   .m-net.neg{color:#B42318}
   /* 주의 배지 — 12개월 약정 · 37K 미만 · SEG 하향 */
   .risk-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
@@ -846,6 +889,21 @@
     background:#F7FAFF;font-size:12.5px;line-height:1.5;color:var(--slate-500);
   }
   .pp-preview b{color:var(--blue-700);font-weight:700}
+  /* v21 — 요금제 선택 창: 본문만 스크롤 · 미리보기·[적용] 버튼은 항상 화면 안에 고정 */
+  #planPicker[open]{
+    display:flex;flex-direction:column;overflow:hidden;
+    max-height:calc(100vh - 40px);max-height:calc(100dvh - 40px);
+  }
+  #planPicker .dlg-head,
+  #planPicker .pp-tabs,
+  #planPicker .pp-preview,
+  #planPicker .dlg-foot{flex:0 0 auto}
+  #planPicker .pp-body{flex:1 1 auto;min-height:0;max-height:none;overflow:auto}
+  /* 미리보기 줄이 길어도 이 박스 안에서만 스크롤 — [적용] 버튼을 밀어내지 못하게 */
+  #planPicker .pp-preview{max-height:52px;overflow-y:auto;padding:8px 12px;font-size:12px;line-height:1.45}
+  @media (max-width:600px){
+    #planPicker[open]{max-height:94vh;max-height:94dvh;border-radius:22px 22px 0 0}
+  }
   @media (pointer:coarse){
     .pp-chip{height:38px;padding:0 12px;font-size:13px}
     .ps-item{min-height:44px}
@@ -892,9 +950,11 @@
   .m-name{font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0B1220}
   .m-caret{margin-left:auto;color:var(--slate-400);font-size:11px;transition:transform .15s}
   .mcard.open .m-caret{transform:rotate(180deg)}
-  .m-line2{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:13px;color:#475569;min-width:0}
-  .m-model{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-weight:600;color:#334155}
-  .m-money{margin-left:auto;font-weight:800;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .m-line2{display:flex;align-items:center;gap:4px 7px;margin-top:5px;font-size:13px;color:#475569;min-width:0;flex-wrap:wrap}
+  .m-model{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:100%;font-weight:600;color:#334155}
+  /* v21 — 금액·담당자는 한 덩어리로(nowrap) — 안 들어가면 통째로 다음 줄 오른쪽에 놓인다 */
+  .m-figs{display:flex;align-items:center;gap:7px;margin-left:auto;flex:0 0 auto;white-space:nowrap}
+  .m-money{font-weight:800;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
   .m-staff{flex:none;color:#475569;font-weight:700;background:#EEF3F9;border-radius:999px;padding:1px 8px;font-size:12px}
   .m-ins{flex:none;color:#0B5F45;font-weight:800;background:var(--green-bg);border:1px solid #BFE3D3;border-radius:999px;padding:1px 8px;font-size:12px;white-space:nowrap}
   .mcard-detail{display:none;border-top:1px solid var(--line);padding:10px 14px 12px;background:#FCFDFF}
@@ -1409,6 +1469,25 @@
       </div>
     </div>
 
+    <!-- 관리자 전용 — 정책 포인트 (무선 · 유선 · 합계) -->
+    <div class="sum-cells sum-points admin-only" id="sumPointRow">
+      <div class="sum-cell">
+        <span class="sum-label">무선 포인트</span>
+        <span class="sum-value"><b class="num" id="kpiPointW">0.0</b><i>P</i></span>
+        <span class="sum-sub" id="kpiPointWSub">MRA 기본·가점 합계</span>
+      </div>
+      <div class="sum-cell">
+        <span class="sum-label">유선 포인트</span>
+        <span class="sum-value"><b class="num" id="kpiPointL">0.0</b><i>P</i></span>
+        <span class="sum-sub" id="kpiPointLSub">인터넷·TV·결합 포인트</span>
+      </div>
+      <div class="sum-cell">
+        <span class="sum-label">포인트 합계</span>
+        <span class="sum-value"><b class="num" id="kpiPointT">0.0</b><i>P</i></span>
+        <span class="sum-sub" id="kpiPointTSub">포인트 있는 건 기준</span>
+      </div>
+    </div>
+
     </div>
 
     <!-- 오늘 · 이번 달 직원별 개통 건수 (리베이트 금액은 표시하지 않음) -->
@@ -1540,18 +1619,15 @@
 
     <div class="dlg-body">
       <div class="form-grid">
-        <!-- v20 — 외국인 고객 (모달 맨 위 · 체크하면 외국인 전용 요금제가 열린다) -->
-        <div class="field span2 foreign-field">
-          <label id="f_foreignLabel">고객 구분 <span class="opt">선택</span></label>
-          <input id="f_foreign" type="hidden" value="">
-          <div class="ins-chips" id="foreignChips" role="group" aria-labelledby="f_foreignLabel">
-            <button type="button" class="ins-chip" data-foreign="1" aria-pressed="false">외국인</button>
-          </div>
-          <span class="hint">외국인 고객이면 눌러 주세요 — 외국인 전용 요금제(웰컴5·웰컴3·웰컴1)가 요금제 목록에 함께 나옵니다.</span>
-        </div>
-
+        <!-- v21 — 외국인 고객: '고객명' 라벨 줄 오른쪽 한 줄 체크 칩 (세로 공간 0) -->
         <div class="field">
-          <label for="f_name">고객명 <span class="req">*</span></label>
+          <div class="field-head">
+            <label for="f_name">고객명 <span class="req">*</span></label>
+            <input id="f_foreign" type="hidden" value="">
+            <div class="ins-chips foreign-inline" id="foreignChips" role="group" aria-label="고객 구분">
+              <button type="button" class="ins-chip foreign-chip" data-foreign="1" aria-pressed="false" title="외국인 고객이면 눌러 주세요 — 외국인 전용 요금제(웰컴5·웰컴3·웰컴1)가 요금제 목록에 함께 나옵니다">외국인</button>
+            </div>
+          </div>
           <input id="f_name" type="text" autocomplete="off" placeholder="예) 김민수">
         </div>
         <div class="field">
@@ -1561,8 +1637,17 @@
 
         <div class="field">
           <label for="f_birth">생년월일 <span class="req">*</span></label>
-          <input id="f_birth" type="text" inputmode="numeric" autocomplete="off" placeholder="970114 또는 1997-01-14">
-          <span class="hint">6자리·8자리 모두 그대로 저장됩니다</span>
+          <input id="f_gender" type="hidden" value="">
+          <!-- v21 — 짧아진 생년월일 칸 + [뒷자리 배지] + [남][여] 를 한 줄에 -->
+          <div class="birth-row">
+            <input id="f_birth" type="text" inputmode="numeric" autocomplete="off" placeholder="970114">
+            <span class="rrn-badge" id="rrnDigit" hidden title="주민번호 뒷자리 첫 번호 — 내국인 1·2(1900년대)/3·4(2000년대), 외국인 5·6(1900년대)/7·8(2000년대)"></span>
+            <div class="ins-chips gender-inline" id="genderChips" role="group" aria-label="성별">
+              <button type="button" class="ins-chip gender-chip" data-gender="남" aria-pressed="false" title="남성 — 주민번호 뒷자리 첫 번호를 자동으로 표시합니다">남</button>
+              <button type="button" class="ins-chip gender-chip" data-gender="여" aria-pressed="false" title="여성 — 주민번호 뒷자리 첫 번호를 자동으로 표시합니다">여</button>
+            </div>
+          </div>
+          <span class="hint">6·8자리 모두 저장 · 성별을 고르면 뒷자리 첫 번호 자동</span>
         </div>
         <div class="field">
           <label for="f_date">개통일 <span class="req">*</span></label>
@@ -2124,6 +2209,12 @@
   var CARD_TAG = '[카드:';
   /* v19 — 외국인 고객 표시(앱 전용) · 시트에는 [외국인] 메모 표기로만 나간다 */
   var FOREIGN_MARK = '[외국인]';
+  /* v21 — 성별(앱 전용) · 시트에는 [성별:남] / [성별:여] 메모 표기로만 나간다
+     · 주민번호 뒷자리 첫 번호는 생년월일 + 성별 + 외국인으로 자동 계산(저장값 아님)
+       내국인 1900년대생 남1·여2 / 2000년대생 남3·여4
+       외국인 1900년대생 남5·여6 / 2000년대생 남7·여8 */
+  var GENDER_TAG = '[성별:';
+  var RRN_TAG = '[뒷자리:';
   /* 요금제 변경 · 부가서비스 해지 '완료 확인' — 같은 방식(시트 메모 표기)으로 공유한다
      · 앱 안: 요금제변경완료 / 부가서비스해지완료 = '완료' | ''
      · 시트 : 메모 칸 앞에 [요금완료] / [부가완료] */
@@ -2293,25 +2384,23 @@
       ['프리미엄플러스', 60500], ['슈퍼프리미엄', 88000]
     ], function (x) { add('wired', '인터넷', x[0], x[1], '인터넷 ' + x[0]); });
 
-    // WiFi 공유기 — 패키지(인터넷 결합) / 기본 / 추가
+    // WiFi 공유기 — v21: GiGA WiFi home · KT WiFi 7D 두 가지입니까 (기본 선택 없음)
     each([
-      ['KT WiFi 7D', 2200, '패키지', '와이파이(KT WiFi 7D)'],
       ['GiGA WiFi home', 1100, '패키지', '와이파이(GiGA WiFi home)'],
-      ['KT WiFi 7D + Buddy ax', 3850, '패키지', '와이파이(KT WiFi 7D+GiGA WiFi Buddy ax)'],
-      ['GiGA WiFi home + Buddy ax', 2750, '패키지', '와이파이(GiGA WiFi home+GiGA WiFi Buddy ax)'],
-      ['KT WiFi 7D', 4950, '기본', 'KT WiFi 7D'],
-      ['GiGA WiFi home', 3300, '기본', 'GiGA WiFi home'],
-      ['GiGA WiFi Buddy ax', 1650, '추가', 'GiGA WiFi Buddy ax']
+      ['KT WiFi 7D', 2200, '패키지', '와이파이(KT WiFi 7D)']
     ], function (x) { add('wired', 'WiFi', x[0], x[1], x[3], x[2]); });
 
-    // 지니 TV — 자주 쓰는 상품부터
+    // 지니 TV — v21: 금액 낮은 순으로 정렬(같은 금액은 자주 쓰는 상품 먼저)해서 칩에 금액까지 보여 준다
+    var tvRows = [];
     each([
       ['에센스', 20240], ['베이직', 14740], ['모든G', 23540],
       ['넷플릭스 초이스UHD', 35480], ['넷플릭스 초이스HD', 31980], ['유튜브 프리미엄 초이스', 33180],
       ['티빙 초이스 프리미엄', 35480], ['티빙 초이스 스탠다드', 31980],
       ['디즈니+ 초이스 프리미엄', 32480], ['디즈니+ 초이스 스탠다드', 29480], ['디즈니+ 모든G', 28100],
       ['라이트', 15840], ['VOD플러스', 23980]
-    ], function (x) { add('wired', '지니 TV', x[0], x[1], '지니 TV ' + x[0]); });
+    ], function (x) { tvRows.push(x); });
+    tvRows.sort(function (a, b) { return a[1] - b[1]; });
+    each(tvRows, function (x) { add('wired', '지니 TV', x[0], x[1], '지니 TV ' + x[0]); });
 
     // 셋탑박스 (기기 — 월 요금 없음)
     each([
@@ -2631,6 +2720,43 @@
 
   function isForeign(v) { return normalizeForeign(v) === '외국인'; }
 
+  // 성별 — '남' | '여' | ''
+  function normalizeGender(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '').toLowerCase();
+    if (!s) return '';
+    if (/^(남|남성|남자|male|m|man)$/.test(s)) return '남';
+    if (/^(여|여성|여자|female|f|woman)$/.test(s)) return '여';
+    return '';
+  }
+
+  /* 생년월일 → 1900년대생인지 (6자리 YYMMDD · 8자리 YYYYMMDD · 하이픈 모두)
+     · 8자리 : 1900~1999 → 1900년대, 2000 이후 → 2000년대
+     · 6자리 : YY 가 올해 끝 2자리(26) 이하면 20YY, 더 크면 19YY */
+  function birthIsOldCentury(v) {
+    var d = String(v == null ? '' : v).replace(/[^0-9]/g, '');
+    if (d.length === 8) {
+      var y = Number(d.slice(0, 4));
+      if (!y) return null;
+      return y <= 1999;
+    }
+    if (d.length === 6) {
+      var yy = Number(d.slice(0, 2));
+      if (isNaN(yy)) return null;
+      var nowYY = Number(String(new Date().getFullYear()).slice(2));
+      return yy > nowYY;
+    }
+    return null;
+  }
+
+  // 주민번호 뒷자리 첫 번호 — 계산할 수 없으면 0
+  function rrnDigitOf(birth, gender, foreign) {
+    var old = birthIsOldCentury(birth);
+    var g = normalizeGender(gender);
+    if (old === null || !g) return 0;
+    var base = old ? (g === '남' ? 1 : 2) : (g === '남' ? 3 : 4);
+    return isForeign(foreign) ? base + 4 : base;
+  }
+
   // 할인유형 표시 이름 — 단말할인(공시) / 요금할인(선약)
   function discountLabel(v) {
     var d = normalizeDiscount(v);
@@ -2640,7 +2766,7 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false };
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0 };
     var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
@@ -2654,6 +2780,11 @@
     s = s.replace(reIns, function (all, v) { hit = true; out.ins = normalizeIns(v); return ' '; });
     var reCard = /\[카드:\s*([^\]]*)\]/g;
     s = s.replace(reCard, function (all, v) { hit = true; out.card = normalizeCard(v); return ' '; });
+    // 성별 [성별:남] · (호환) 뒷자리 표기 [뒷자리:1] — 뒷자리는 홀수 남/짝수 여로만 되살린다
+    var reGender = /\[성별:\s*([^\]]*)\]/g;
+    s = s.replace(reGender, function (all, v) { hit = true; out.gender = normalizeGender(v); return ' '; });
+    var reRrn = /\[뒷자리:\s*([0-9])\]/g;
+    s = s.replace(reRrn, function (all, num) { hit = true; out.rrn = Number(num) || 0; return ' '; });
     // 추가지원금 · 페이백 금액 표기 [추지:150000] → 숫자로 복원
     for (i = 0; i < PAY_TAGS.length; i++) {
       var pk = PAY_TAGS[i].key, pf = PAY_TAGS[i].field;
@@ -2715,6 +2846,8 @@
     var card = normalizeCard(rec.제휴카드);
     if (card) head.push(CARD_TAG + card + ']');
     if (isForeign(rec.외국인)) head.push(FOREIGN_MARK);
+    var gender = normalizeGender(rec.성별) || t.gender;
+    if (gender) head.push(GENDER_TAG + gender + ']');
     if (normalizeDone(rec.요금제변경완료) === '완료') head.push(PLAN_DONE_MARK);
     if (normalizeDone(rec.부가서비스해지완료) === '완료') head.push(ADDON_DONE_MARK);
     var disc = normalizeDiscount(rec.할인유형);
@@ -2750,6 +2883,7 @@
     o.메모 = tags.memo;
     o.단말보험 = tags.ins ? normalizeIns(tags.ins) : normalizeIns(o.단말보험);
     o.외국인 = tags.foreign ? '외국인' : normalizeForeign(r && r.외국인);
+    o.성별 = tags.gender || normalizeGender(r && r.성별) || (tags.rrn ? (tags.rrn % 2 ? '남' : '여') : '');
     o.제휴카드 = tags.card ? normalizeCard(tags.card) : normalizeCard(r && r.제휴카드);
     o.요금제변경완료 = tags.planDone ? '완료' : normalizeDone(r && r.요금제변경완료);
     o.부가서비스해지완료 = tags.addonDone ? '완료' : normalizeDone(r && r.부가서비스해지완료);
@@ -3118,6 +3252,7 @@
     snap.특수조건 = condText(condList(rec.특수조건));
     snap.제휴카드 = normalizeCard(rec.제휴카드);
     snap.외국인 = normalizeForeign(rec.외국인);
+    snap.성별 = normalizeGender(rec.성별);
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
@@ -3936,6 +4071,22 @@
 
   function pText(n) { return (Math.round(Number(n || 0) * 10) / 10).toFixed(1) + 'P'; }
 
+  // 포인트를 무선 / 유선(+TV·결합)으로 나눠 센다 — 합계는 엔진(calcPoints) 그대로
+  function pointSplit(r) {
+    var c = calcPolicy(r);
+    var items = c.pointItems || [], w = 0, l = 0, i;
+    for (i = 0; i < items.length; i++) {
+      var lab = String(items[i].label || '');
+      var p = Number(items[i].p) || 0;
+      if (/^(유선|TV)|결합/.test(lab)) l += p; else w += p;
+    }
+    return {
+      w: Math.round(w * 10) / 10,
+      l: Math.round(l * 10) / 10,
+      total: Math.round((Number(c.points) || 0) * 10) / 10
+    };
+  }
+
   /* =========================================================
      정책 합산 (무선 리베이트)
      · 할인유형 · 기종 · 요금제 · 개통유형 · 특수조건 → 정책별 금액 합계
@@ -4515,6 +4666,38 @@
     // 요금제 목록(선택창 · 검색 후보)도 바로 따라간다
     if (typeof renderPlanPickerBody === 'function') renderPlanPickerBody();
     if (planSug && planSug.input) showPlanSuggest(planSug.input);
+    // 외국인이면 뒷자리 첫 번호가 5·6 / 7·8 로 바뀐다
+    renderRrnDigit();
+  }
+
+  /* ---------- 성별 · 주민번호 뒷자리 첫 번호 (v21) ---------- */
+  function genderOn() {
+    return normalizeGender($('f_gender') && $('f_gender').value);
+  }
+
+  function setGenderChips(g) {
+    var v = normalizeGender(g);
+    var input = $('f_gender');
+    if (input) input.value = v;
+    var chips = document.querySelectorAll('#genderChips button[data-gender]');
+    for (var i = 0; i < chips.length; i++) {
+      var on = chips[i].getAttribute('data-gender') === v;
+      chips[i].classList.toggle('on', on);
+      chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    renderRrnDigit();
+  }
+
+  // 생년월일 · 성별 · 외국인이 바뀔 때마다 즉시 다시 계산해 뱃지에 보여 준다
+  function renderRrnDigit() {
+    var box = $('rrnDigit');
+    var num = rrnDigitOf($('f_birth') ? $('f_birth').value : '', genderOn(), foreignOn());
+    if (!box) return num;
+    box.textContent = num ? '- ' + num : '';
+    box.hidden = !num;
+    box.classList.toggle('foreign', !!num && foreignOn());
+    box.setAttribute('aria-label', num ? '주민번호 뒷자리 첫 번호 ' + num : '주민번호 뒷자리 첫 번호');
+    return num;
   }
 
   function foreignTagHtml(v) {
@@ -4771,10 +4954,10 @@
     if (open) html += '</div></div>';
     el.ppMobile.innerHTML = html;
 
-    // 유선 — 인터넷 / WiFi(패키지·기본·추가) / TV / 셋탑박스
+    // 유선 — 인터넷 / WiFi / TV / 셋탑박스 (v21: WiFi는 두 줄 없이 한 줄, TV는 금액순)
     var rows = [
       { cat: '인터넷', label: '인터넷' },
-      { cat: 'WiFi', label: 'WiFi', subs: ['패키지', '기본', '추가'] },
+      { cat: 'WiFi', label: 'WiFi' },
       { cat: '지니 TV', label: '지니 TV' },
       { cat: '셋탑박스', label: '셋탑' }
     ];
@@ -5260,7 +5443,13 @@
 
   function kpiRecords() {
     var m = state.filters.month;
-    return state.records.filter(function (r) { return !m || monthOf(r.개통일) === m; });
+    var st = state.filters.staff || '';
+    return state.records.filter(function (r) {
+      if (m && monthOf(r.개통일) !== m) return false;
+      // v21 — 담당자 필터를 고르면 상단 KPI·요약도 그 담당자 기록만으로 계산한다
+      if (st && String(r.담당자 == null ? '' : r.담당자).trim() !== st) return false;
+      return true;
+    });
   }
 
   /* 임박 알림 바 펼침 상태 (이 화면에서만 유지) */
@@ -5347,9 +5536,14 @@
   function renderOverview() {
     if (!el.sumOverview) return;
     var today = todayISO(), k;
+    var staffSel = state.filters.staff || '';
 
-    // 오늘 — 매장 전체
-    var tTally = staffTally(state.records, today);
+    // 오늘 — 담당자 필터가 있으면 그 담당자 것만
+    var todayRecs = state.records.filter(function (r) {
+      if ((r.개통일 || '') !== today) return false;
+      return !staffSel || String(r.담당자 == null ? '' : r.담당자).trim() === staffSel;
+    });
+    var tTally = staffTally(todayRecs, null);
     var tTotal = 0;
     for (k in tTally.map) if (Object.prototype.hasOwnProperty.call(tTally.map, k)) tTotal += tTally.map[k];
     if (el.soTodayDate) {
@@ -5384,7 +5578,11 @@
 
     el.kpiTotal.textContent = fmtNum(list.length);
     if (el.kpiMonthLabel) el.kpiMonthLabel.textContent = m ? monthLabel(m) : '전체 기간';
-    if (el.kpiTotalSub) el.kpiTotalSub.textContent = m ? '이번 달 개통 건수' : '전체 기간 개통 건수';
+    if (el.kpiTotalSub) {
+      el.kpiTotalSub.textContent = (state.filters.staff ? state.filters.staff + ' · ' : '') +
+        (m ? '이번 달 개통 건수' : '전체 기간 개통 건수');
+      el.kpiTotalSub.title = state.filters.staff ? state.filters.staff + ' 담당자 기록 기준' : '매장 전체 기록 기준';
+    }
 
     // 실적 건수 4종 — 돈이 아니라 건수만 보여 준다(직원 모드 기본)
     var nWireless = 0, nWiredNew = 0, nWiredRenew = 0, nCard = 0;
@@ -5496,6 +5694,26 @@
           ? '추지 ' + fmtNum(extraSum) + ' · 카드 ' + fmtNum(cardSum) + ' · 입금 ' + fmtNum(bankSum)
           : '추가지원금 + 페이백(카드·입금)';
         el.kpiPaySub.title = el.kpiPaySub.textContent;
+      }
+    }
+
+    // 관리자 전용 — 정책 포인트(무선 · 유선 · 합계) : 같은 달·같은 담당자 범위
+    if (el.kpiPointT) {
+      var pW = 0, pL = 0, pT = 0, pN = 0;
+      for (i = 0; i < list.length; i++) {
+        var ps = pointSplit(list[i]);
+        pW += ps.w; pL += ps.l; pT += ps.total;
+        if (ps.total) pN++;
+      }
+      pW = Math.round(pW * 10) / 10; pL = Math.round(pL * 10) / 10; pT = Math.round(pT * 10) / 10;
+      if (el.kpiPointW) el.kpiPointW.textContent = pW.toFixed(1);
+      if (el.kpiPointL) el.kpiPointL.textContent = pL.toFixed(1);
+      if (el.kpiPointT) el.kpiPointT.textContent = pT.toFixed(1);
+      if (el.kpiPointWSub) el.kpiPointWSub.textContent = pW ? 'MRA 기본·가점 합계' : '무선 포인트 없음';
+      if (el.kpiPointLSub) el.kpiPointLSub.textContent = pL ? '인터넷·TV·결합 포인트' : '유선 포인트 없음';
+      if (el.kpiPointTSub) {
+        el.kpiPointTSub.textContent = pN ? '포인트 있는 ' + pN + '건 · 평균 ' + (Math.round(pT / pN * 10) / 10).toFixed(1) + 'P'
+          : '기록을 추가하면 자동 합산됩니다';
       }
     }
 
@@ -5816,9 +6034,11 @@
           (isInsured(r.단말보험) ? '<span class="m-ins">보험 ' + esc(insLabel(r.단말보험)) + '</span>' : '') +
           (cardBadgeHtml(r.제휴카드) ? '<span class="m-ins">카드 ' + esc(normalizeCard(r.제휴카드)) + '</span>' : '') +
           policyBadgesHtml(r) +
-          '<span class="m-money">' + rebateText(r) + '</span>' +
-          (isAdmin() ? '<span class="m-net' + (netMargin(r).total < 0 ? ' neg' : '') + '">순 ' + netText(r) + '</span>' : '') +
-          (r.담당자 ? '<span class="m-staff">' + esc(r.담당자) + '</span>' : '') +
+          '<span class="m-figs">' +
+            '<span class="m-money">' + rebateText(r) + '</span>' +
+            (isAdmin() ? '<span class="m-net' + (netMargin(r).total < 0 ? ' neg' : '') + '">순 ' + netText(r) + '</span>' : '') +
+            (r.담당자 ? '<span class="m-staff">' + esc(r.담당자) + '</span>' : '') +
+          '</span>' +
         '</div>' +
       '</div>' +
       '<div class="mcard-detail">' +
@@ -6442,6 +6662,7 @@
     markModelChips($('f_model').value);
     setInsChips(r.단말보험);
     setForeignChip(isForeign(r.외국인));
+    setGenderChips(r.성별 || '');
     setCardChips(r.제휴카드 || '');
     $('f_plan_none').value = '';
     $('f_addon_none').value = '';
@@ -6574,6 +6795,7 @@
       기종: $('f_model').value.trim(),
       단말보험: normalizeIns($('f_ins').value),
       외국인: foreignOn() ? '외국인' : '',
+      성별: genderOn(),
       제휴카드: normalizeCard($('f_card').value),
       할인유형: normalizeDiscount($('f_discount').value),
       특수조건: condText(condList($('f_cond').value)),
@@ -6671,6 +6893,7 @@
       renderDiscChips('');
       $('f_cond').value = '';
       setForeignChip(false);
+      setGenderChips('');
       if ($('pvYDum')) $('pvYDum').checked = false;
       $('f_name').focus();
       refreshPolicy(true); updateFormRisk();
@@ -7629,9 +7852,10 @@
       });
     });
 
-    // 생년월일: 숫자/하이픈만 허용 (자유 입력 유지)
+    // 생년월일: 숫자/하이픈만 허용 (자유 입력 유지) + 뒷자리 첫 번호 자동 재계산
     $('f_birth').addEventListener('input', function () {
       this.value = this.value.replace(/[^0-9-]/g, '').slice(0, 10);
+      renderRrnDigit();
     });
 
     // 주의 배지(12개월·37K 미만·SEG) — 입력할 때마다 다시
@@ -7831,6 +8055,12 @@
       kpiCardNSub: $('kpiCardNSub'),
       kpiNet: $('kpiNet'),
       kpiNetSub: $('kpiNetSub'),
+      kpiPointW: $('kpiPointW'),
+      kpiPointWSub: $('kpiPointWSub'),
+      kpiPointL: $('kpiPointL'),
+      kpiPointLSub: $('kpiPointLSub'),
+      kpiPointT: $('kpiPointT'),
+      kpiPointTSub: $('kpiPointTSub'),
       kpiPay: $('kpiPay'),
       kpiPaySub: $('kpiPaySub'),
       sumNetCell: $('sumNetCell'),
@@ -7925,11 +8155,19 @@
     renderCardBrands();
     setCardChips('');
     setForeignChip(false);
+    setGenderChips('');
     var foreignBox = $('foreignChips');
     if (foreignBox) foreignBox.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('button[data-foreign]') : null;
       if (!b) return;
       setForeignChip(!foreignOn());
+    });
+    var genderBox = $('genderChips');
+    if (genderBox) genderBox.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-gender]') : null;
+      if (!b) return;
+      var g = b.getAttribute('data-gender');
+      setGenderChips(genderOn() === g ? '' : g);   // 같은 칩을 다시 누르면 해제
     });
     var cardBox = $('cardChips');
     if (cardBox) cardBox.addEventListener('click', function (e) {
