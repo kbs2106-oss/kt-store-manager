@@ -335,6 +335,10 @@
   table.ledger tbody tr.due-row td{background:#FFFDF6}
   table.ledger tbody tr.due-row:hover td{background:#FFFAEC}
   td.nowrap{white-space:nowrap}
+  /* 긴 글 칸은 말줄임으로 폭을 묶어, 넓은 화면에서 18열이 한 번에 보이게 */
+  table.ledger td[data-label="기종"],table.ledger td[data-label="요금제"],
+  table.ledger td[data-label="변경요금제"],table.ledger td[data-label="부가서비스"]{max-width:150px}
+  table.ledger td[data-label="메모"]{max-width:180px}
   td .ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .c-name{font-weight:800;color:var(--ink);letter-spacing:-.01em}
   .c-date{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
