@@ -221,7 +221,9 @@
   }
 
   /* ---------- 요금제·부가서비스 임박 알림 바 (접기/펼치기) ---------- */
-  .duebar{padding:0;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+  /* 데스크톱 임박 알림 줄: 구분 · 고객(이름/연락처/생년월일) · 항목 · 날짜 · D-Day · 담당자 · 완료 */
+  .duebar{--due-cols:0.6fr minmax(150px,1.5fr) 1.5fr 0.9fr 0.8fr 0.55fr 0.9fr;
+    padding:0;overflow:hidden;transition:border-color .15s,box-shadow .15s}
   .duebar.has-soon{border-color:#F0DFBB}
   .duebar.has-late{border-color:#EFCBC4}
   .duebar-top{display:flex;align-items:center;gap:8px;padding:8px 12px;flex-wrap:wrap}
@@ -251,11 +253,12 @@
   .due-toggle{flex:none;gap:5px;color:var(--slate-600);margin-left:2px}
   .due-toggle .caret{width:13px;height:13px;transition:transform .16s}
   .duebar.open .due-toggle .caret{transform:rotate(180deg)}
-  .due-panel{border-top:1px solid var(--line);background:#FCFDFF;max-height:330px;overflow:auto;overscroll-behavior:contain}
-  .due-head{position:sticky;top:0;z-index:1;display:grid;grid-template-columns:0.7fr 1fr 2.0fr 1fr 0.8fr 0.6fr 0.95fr;gap:8px;
+  .due-panel{border-top:1px solid var(--line);background:#FCFDFF;max-height:420px;overflow:auto;overscroll-behavior:contain}
+  .due-head{position:sticky;top:0;z-index:1;display:grid;grid-template-columns:var(--due-cols);gap:8px;
     padding:7px 14px;background:#F2F6FC;border-bottom:1px solid var(--line);
     font-size:11px;font-weight:800;color:#64748B;letter-spacing:.04em}
-  .duerow{display:grid;grid-template-columns:0.7fr 1fr 2.0fr 1fr 0.8fr 0.6fr 0.95fr;gap:8px;align-items:center;
+  .due-head>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .duerow{display:grid;grid-template-columns:var(--due-cols);gap:8px;align-items:center;
     width:100%;text-align:left;border:0;border-bottom:1px solid #EFF3F8;background:transparent;
     padding:8px 14px;font-size:12.5px;color:var(--slate-700)}
   .duerow:hover{background:#F4F8FF}
@@ -264,7 +267,14 @@
     font-size:10.5px;font-weight:800;white-space:nowrap;justify-self:start}
   .duerow .k-plan{background:var(--violet-bg);color:var(--violet)}
   .duerow .k-addon{background:var(--teal-bg);color:var(--teal)}
-  .duerow .dn{font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* 고객명 아래 2번째 줄에 연락처 · 생년월일 (칸이 좁아져도 잘리지 않게 위아래 2줄) */
+  .duerow .dn{font-weight:800;color:var(--ink);min-width:0}
+  .duerow .dn-name{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .duerow .dn-meta{display:flex;align-items:baseline;gap:6px;margin-top:2px;min-width:0;
+    font-size:11.5px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+  .duerow .dn-ph{color:#1E293B;overflow:hidden;text-overflow:ellipsis}
+  .duerow .dn-bd{color:#5B6B83;flex:none}
+  .duerow .dn-bd::before{content:"·  ";color:#C2CDDC;font-weight:800}
   .duerow .dw{color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
   .duerow .dd2{color:#475569;font-variant-numeric:tabular-nums;font-size:12px}
   .duerow .dds{justify-self:start}
@@ -971,7 +981,8 @@
     .duerow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;
       grid-template-areas:"k n n d" "w w dd s" ". . . b";gap:3px 8px;padding:9px 11px;font-size:12.5px}
     .duerow .dk{grid-area:k}
-    .duerow .dn{grid-area:n;font-size:13.5px}
+    .duerow .dn{grid-area:n;font-size:13.5px;min-width:0}
+    .duerow .dn-meta{font-size:12px;margin-top:1px;overflow:hidden}
     .duerow .dds{grid-area:d;justify-self:end}
     .duerow .dw{grid-area:w;font-size:12px}
     .duerow .dd2{grid-area:dd;font-size:11.5px;justify-self:end}
@@ -1127,7 +1138,7 @@
     </div>
     <div class="due-panel" id="duePanel" hidden>
       <div class="due-head" aria-hidden="true">
-        <span>구분</span><span>고객명</span><span>항목</span><span>날짜</span><span>D-Day</span><span>담당자</span><span></span>
+        <span>구분</span><span>고객명 · 연락처 · 생년월일</span><span>항목</span><span>날짜</span><span>D-Day</span><span>담당자</span><span></span>
       </div>
       <div id="dueList"></div>
     </div>
@@ -3404,9 +3415,16 @@
       var u = upcoming[i];
       var ddCls = u.d < 0 ? 'dd-late' : (u.d === 0 ? 'dd-today' : 'dd-soon');
       var isPlan = u.kind === '요금제';
+      // 고객명 아래 줄에 연락처 · 생년월일을 함께 노출 (임박 알림에서 바로 전화 걸 수 있게)
+      var phone = u.r.연락처 ? String(u.r.연락처).trim() : '';
+      var birth = u.r.생년월일 ? String(u.r.생년월일).trim() : '';
+      var meta = '';
+      if (phone) meta += '<span class="dn-ph">' + esc(phone) + '</span>';
+      if (birth) meta += '<span class="dn-bd">' + esc(birth) + '</span>';
       html += '<div class="duerow" data-due-item="1" role="button" tabindex="0">' +
         '<span class="dk ' + (isPlan ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
-        '<span class="dn">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
+        '<span class="dn"><span class="dn-name">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
+          (meta ? '<span class="dn-meta">' + meta + '</span>' : '') + '</span>' +
         '<span class="dw">' + esc(u.what) + '</span>' +
         '<span class="dd2">' + esc(String(u.date)) + '</span>' +
         '<span class="dds"><span class="dd ' + ddCls + '">' + ddLabel(u.d) + '</span></span>' +
