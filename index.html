@@ -2086,15 +2086,36 @@
     return (plan.tab === 'mobile' && plan.p) ? plan.full + ' ' + fmtNum(plan.p) : plan.full;
   }
 
+  // 유선 상품명으로 시작하는 글인지 — 요금제 칸에서 무선/유선을 나눌 때 쓴다
+  var WIRED_FULLS = (function () {
+    var out = [];
+    for (var i = 0; i < KT_PLANS.length; i++) if (KT_PLANS[i].tab === 'wired') out.push(KT_PLANS[i].full);
+    return out;
+  })();
+
   function isWiredPlanText(t) {
-    return /^(인터넷|와이파이|KT WiFi|GiGA|지니|AI 지니)/.test(String(t || '').trim());
+    var s = String(t || '').trim();
+    if (!s) return false;
+    if (/^(인터넷|와이파이|KT WiFi|GiGA|AI 지니)/.test(s)) return true;
+    for (var i = 0; i < WIRED_FULLS.length; i++) {
+      if (s.indexOf(WIRED_FULLS[i]) === 0) return true;
+    }
+    return false;
   }
 
   function splitPlanValue(v) {
     var s = String(v || '').trim();
-    var i = s.indexOf('/');
-    if (i >= 0) return { w: s.slice(0, i).trim(), l: s.slice(i + 1).trim() };
     if (!s) return { w: '', l: '' };
+    // 구분자는 ' / '(공백 포함) — 상품명 안의 '/' (초이스90 티빙/지니/밀리)와 구분한다
+    var parts = s.split(' / ');
+    if (parts.length > 1) {
+      return { w: parts[0].trim(), l: parts.slice(1).join(' / ').trim() };
+    }
+    // 공백 없이 '/'만 쓴 경우 — 뒤가 유선 상품일 때만 나눈다
+    var i = s.indexOf('/');
+    if (i > 0 && isWiredPlanText(s.slice(i + 1))) {
+      return { w: s.slice(0, i).trim(), l: s.slice(i + 1).trim() };
+    }
     return isWiredPlanText(s) ? { w: '', l: s } : { w: s, l: '' };
   }
 
