@@ -584,23 +584,39 @@
   .easy-filter.on .ef-count{background:rgba(255,255,255,.92);color:#8A4B00}
   .easy-filter:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
 
-  /* ---------- v34 — ⭐ 권매·쉬움 기간 범위 1탭 토글 (이 달만 / 전체 기간) ----------
-     알약 버튼 바로 옆에 붙어 한 덩어리로 보이고, 켜 두었을 때만 나타난다 */
+  /* ---------- v34 → v35 — ⭐ 권매·쉬움 기간 범위: [◀] [2026년 11월 (N건)] [▶] | [전체 기간 (M건)]
+     · 가운데 월을 누르면 연도·월 점프 팝업(연도 선택 + 1~12월)이 열린다
+     · 알약 버튼 바로 옆에 붙어 한 덩어리로 보이고, 켜 두었을 때만 나타난다 */
   .easy-group{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
   .easy-scope{
-    display:inline-flex;align-items:center;gap:2px;height:32px;padding:2px;
-    border-radius:999px;border:1px solid #F0C97A;background:#FFFDF4;
+    display:inline-flex;align-items:center;gap:1px;height:32px;padding:2px;
+    border-radius:999px;border:1.5px solid #E9C173;background:#FFFCF2;
+    box-shadow:0 1px 2px rgba(122,78,0,.06);
   }
   .easy-scope .es-btn{
     display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 9px;border:0;border-radius:999px;
-    background:transparent;color:#8A6A2A;font-family:inherit;font-size:11.5px;font-weight:800;
+    background:transparent;color:#7A5518;font-family:inherit;font-size:11.5px;font-weight:800;
     line-height:1;white-space:nowrap;cursor:pointer;
   }
-  .easy-scope .es-btn:hover{background:#FFF1CF;color:#7A4E00}
-  .easy-scope .es-n{background:rgba(217,119,6,.13);color:#8A4B00;border-radius:999px;padding:2px 6px;font-size:10.5px;font-weight:900}
-  .easy-scope .es-btn.on{background:linear-gradient(180deg,#FFB020 0%,#F08C00 100%);color:#fff;box-shadow:0 1px 5px rgba(217,119,6,.3)}
-  .easy-scope .es-btn.on .es-n{background:rgba(255,255,255,.92);color:#8A4B00}
-  .easy-scope .es-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
+  .easy-scope .es-btn:hover{background:#FFEFC7;color:#6B4000}
+  .easy-scope .es-l{font-variant-numeric:tabular-nums}
+  .easy-scope .es-caret{font-size:9px;line-height:1;color:#B98A2E;margin-left:1px}
+  .easy-scope .es-btn.on .es-caret{color:#FFF0CC}
+  .easy-scope .es-n{background:rgba(217,119,6,.14);color:#7A4200;border-radius:999px;padding:2px 6px;font-size:10.5px;font-weight:900}
+  .easy-scope .es-btn.on{background:linear-gradient(180deg,#F5A623 0%,#E07C00 100%);color:#fff;box-shadow:0 1px 5px rgba(217,119,6,.32)}
+  .easy-scope .es-btn.on .es-n{background:rgba(255,255,255,.94);color:#6B4000}
+  .easy-scope .es-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.32)}
+  /* ◀ ▶ 달 넘기기 버튼 */
+  .easy-scope .es-nav{
+    width:22px;height:24px;flex:none;border:0;border-radius:50%;background:transparent;
+    color:#9A6E1C;font-size:9px;line-height:1;display:inline-flex;align-items:center;justify-content:center;
+    font-family:inherit;cursor:pointer;
+  }
+  .easy-scope .es-nav:hover:not([disabled]){background:#FFE9B8;color:#6B4000}
+  .easy-scope .es-nav:active:not([disabled]){transform:translateY(1px)}
+  .easy-scope .es-nav[disabled]{opacity:.3;cursor:default}
+  .easy-scope .es-nav:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(240,140,0,.45)}
+  .easy-scope .es-div{width:1px;height:16px;flex:none;background:#EBCE95;margin:0 2px}
   .easy-scope.na{opacity:.55}
   .easy-scope.na .es-btn{cursor:not-allowed}
 
@@ -1393,6 +1409,7 @@
     .dstat{height:34px}
     .easy-scope{height:36px}
     .easy-scope .es-btn{height:30px}
+    .easy-scope .es-nav{width:26px;height:28px}
     .btn-add{height:44px}
   }
 
@@ -1652,6 +1669,250 @@
     .card{box-shadow:none;border-color:#ddd}
     .table-scroll{max-height:none;overflow:visible}
   }
+
+  /* ============================================================
+     v35 — 전체 시안성(가독성·대비·여백) 전면 개편
+     · 등록 창: 칸 높이를 줄이고 라벨·테두리를 또렷하게, 6개 섹션을 컬러 바로 구분
+     · 상단 KPI: 핵심 4개(총 건수·리베이트 합계·총 순마진·포인트 합계)만 색으로 강조
+     · 표·폰카드: 머리글·행 구분선·핵심 정보 대비를 올려 1초에 훑히게
+     ============================================================ */
+
+  /* ---------- 1) 글자 대비 ---------- */
+  .sum-label{font-size:12px;font-weight:800;color:#334155;letter-spacing:0}
+  .sum-sub{font-size:11.5px;color:#475569;font-weight:700}
+  .sum-value i{color:#64748B;font-weight:800}
+  .field label{font-size:13px;font-weight:800;color:#0F172A;letter-spacing:-.01em}
+  .field label .opt{color:#64748B;font-weight:700;font-size:11px}
+  .field .hint{font-size:11px;color:#64748B;font-weight:600;line-height:1.45}
+  .field input::placeholder,.field textarea::placeholder{color:#94A3B8;font-weight:500}
+  .muted{color:#A8B3C4}
+  .month-control label,.sum-month label{color:#334155}
+  .result-count{color:#334155;font-weight:800;background:#EDF2F9;border:1px solid #DCE4EF}
+
+  /* ---------- 2) 등록 창 — 컴팩트 & 선명한 칸 ---------- */
+  dialog#editDialog{width:min(880px,calc(100vw - 24px))}
+  #editDialog .dlg-head{padding:13px 16px 9px}
+  #editDialog .dlg-head h2{font-size:17px;letter-spacing:-.02em}
+  #editDialog .dlg-head p{font-size:12px;color:#475569;font-weight:600;margin-top:2px}
+  #editDialog .dlg-close{width:30px;height:30px;font-size:17px;background:#EDF2F9;color:#475569}
+  #editDialog .dlg-close:hover{background:#DCE4EF;color:#0F172A}
+  /* 오류 배너가 떠도 저장 버튼이 화면 밖으로 밀리지 않게: 머리·배너·발은 고정, 본문만 스크롤 */
+  dialog#editDialog{max-height:calc(100vh - 24px)}
+  dialog#editDialog[open]{display:flex;flex-direction:column}
+  #editDialog > form{display:flex;flex-direction:column;min-height:0;flex:1 1 auto}
+  #editDialog .dlg-head,#editDialog .dlg-foot,#editDialog .form-error{flex:none}
+  #editDialog .dlg-body{padding:9px 13px 4px;flex:1 1 auto;min-height:0;max-height:none;overflow:auto}
+  #editDialog .dlg-foot{padding:10px 16px 13px;gap:7px}
+  #editDialog .dlg-foot .btn{height:38px;font-weight:800}
+
+  #editDialog .form-grid{gap:7px}
+  #editDialog .field{gap:3px}
+  .field input,.field select{
+    height:38px;padding:0 10px;border:1px solid #94A3B8;border-radius:9px;
+    font-size:14px;font-weight:600;background:#fff;
+  }
+  .field input:hover,.field select:hover{border-color:#64748B}
+  .field input:focus,.field select:focus,.field textarea:focus{
+    border-color:#2563EB;box-shadow:0 0 0 3px rgba(37,99,235,.16);background:#fff;
+  }
+  .field textarea{border:1px solid #94A3B8;border-radius:9px;font-weight:600;font-size:13.5px;padding:8px 10px;min-height:64px}
+  .field input.bad,.field select.bad{border-color:#DC2626;background:#FFF8F7}
+  .field .hint .nw{white-space:nowrap}
+  /* 생년월일 + 남/여 를 한 줄에 더 촘촘히 */
+  .field .birth-row{gap:4px}
+  .field .birth-row #f_birth{flex:0 1 116px;min-width:80px;padding:0 8px}
+  .field .birth-row .gender-chip{height:26px;padding:0 8px;font-size:11.5px;border-color:#CBD5E1}
+  .field .field-head{gap:6px}
+  .field-head .foreign-chip{height:19px;padding:0 7px;font-size:10px;border-color:#CBD5E1;color:#475569;background:#F1F5F9}
+  .field-head .foreign-chip.on{background:#4338CA;border-color:#4338CA;color:#fff}
+  .field-pick{height:26px;padding:0 9px;font-size:11.5px;font-weight:800;border-color:#9DBDF0;background:#EEF5FF;color:#0B4AA2}
+
+  /* 입력 검증 빨간 안내가 칸 위에 겹치지 않게 */
+  #editDialog .field .hint-bad{font-size:11px}
+
+  /* ---------- 3) 등록 창 섹션 — 좌측 컬러 바 + 뚜렷한 머리글 ---------- */
+  .fsec{
+    grid-column:1/-1;position:relative;border:1px solid #DDE5F0;border-left:3px solid var(--fc,#0B57D0);
+    border-radius:12px;background:#fff;overflow:hidden;
+  }
+  section.fsec{margin-bottom:0}
+  .fsec + .fsec{margin-top:0}
+  .fsec[data-sec="cust"]{--fc:#0B57D0;--fbg:#E9F1FE;--ft:#0B3E8F}
+  .fsec[data-sec="open"]{--fc:#6D28D9;--fbg:#F1ECFE;--ft:#4C1D95}
+  .fsec[data-sec="plan"]{--fc:#0F766E;--fbg:#E6F5F2;--ft:#0B5F58}
+  .fsec[data-sec="addon"]{--fc:#B45309;--fbg:#FFF4E3;--ft:#8A4200}
+  .fsec[data-sec="money"]{--fc:#0B6B4F;--fbg:#E7F7EE;--ft:#0B5F45}
+  .fsec[data-sec="memo"]{--fc:#475569;--fbg:#EFF3F8;--ft:#1E293B}
+  .fsec-head{
+    display:flex;align-items:center;gap:6px;padding:5px 10px;
+    background:var(--fbg,#E9F1FE);border-bottom:1px solid #DDE5F0;
+    font-size:12px;font-weight:900;color:var(--ft,#0B3E8F);letter-spacing:.01em;
+  }
+  .fsec-head .fsec-bar{width:3px;height:11px;border-radius:2px;background:var(--fc,#0B57D0);flex:none}
+  .fsec-head .fsec-note{margin-left:auto;font-size:10.5px;font-weight:700;color:#475569;letter-spacing:0;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fsec-body{padding:8px 10px 9px;display:grid;grid-template-columns:1fr 1fr;gap:7px 11px;align-items:start}
+  /* 넓은 화면: 고객 정보 네 칸을 한 줄에 (이름 칸이 휑하게 넓어지지 않게 폭 비율을 나눈다) */
+  @media (min-width:880px){
+    .fsec-4{grid-template-columns:minmax(0,1.12fr) minmax(0,1fr) minmax(0,1.12fr) minmax(0,.92fr)}
+  }
+  .fsec .field.span2{grid-column:1/-1}
+  /* 정책 자동 계계산 상자와 유선 리베이트는 한 줄을 다 쓴다 (규칙 줄이 길어 반 칸에서는 접힌다) */
+  .fsec-body .pv-box{grid-column:1/-1}
+  .fsec-body .field.admin-only{grid-column:1/-1}
+
+  /* 섹션 안의 작은 박스(요금제 변경·부가서비스·추지·중고폰)는 한 톤 낮춰 */
+  .fsec .form-box{
+    border:1px solid #E2E9F4;border-radius:11px;padding:7px 9px 8px;gap:6px;
+    background:#F9FBFE;
+  }
+  .fsec .form-box-head{gap:6px}
+  .fsec .form-box-head .fb-title{font-size:11.5px;font-weight:900;color:#1E293B}
+  .fsec .form-box-head .fb-note{font-size:10px;padding:1px 7px;background:#fff;color:#0B4AA2;border-color:#CBDCF5}
+  .fsec .form-box .field label{color:#1E293B}
+
+  /* 선택 칩 — 고른 것과 안 고른 것이 한눈에 갈리게 */
+  .type-group{gap:5px;padding:6px 8px;border:1px solid #CBD5E1;border-radius:10px;background:#F8FAFD}
+  .type-chip{height:28px;padding:0 10px;font-size:12px;font-weight:700;color:#334155;border-color:#CBD5E1}
+  .type-chip.on{background:#0B57D0;border-color:#0B57D0;color:#fff;box-shadow:0 1px 4px rgba(11,87,208,.28)}
+  .type-chip.on::before{content:"✓ ";color:#fff;font-weight:900}
+  .type-chip.group-chip{background:#EEF2F8}
+  .type-chip.group-chip.open{background:#E1EDFF;border-color:#8FB8EE;color:#0B3E8F}
+  .type-chip.group-chip.on{background:#0B57D0;border-color:#0B57D0;color:#fff}
+  .type-chip.group-chip.on .gc-sub{color:#D7E5FF}
+  .type-chip.group-chip.on::after{color:#D7E5FF}
+  /* 할인 유형 — 고른 것은 채운 칩으로(단말할인=먹색 · 요금할인=파랑) */
+  .disc-chips .type-chip.on[data-disc="단말할인"]{background:#0F172A;border-color:#0F172A;color:#fff}
+  .disc-chips .type-chip.on[data-disc="요금할인"]{background:#0B57D0;border-color:#0B57D0;color:#fff}
+  .disc-chips .type-chip.on[data-disc]::before{content:"✓ ";color:#fff;font-weight:900}
+  .type-subrow{border:1px dashed #B9CBE4;background:#F7FAFF;padding:6px 8px}
+  .ins-chip{height:30px;padding:0 13px;font-size:12.5px;font-weight:700;color:#334155;border-color:#CBD5E1}
+  .ins-chip.on{background:#0B57D0;border-color:#0B57D0;color:#fff;font-weight:900}
+  .ins-chip.on::before{content:"✓ ";color:#fff}
+  .pchip{height:28px;padding:0 10px;font-size:12px;font-weight:700;color:#334155;border-color:#CBD5E1}
+  .pchip.on{background:#0B57D0;border-color:#0B57D0;color:#fff;font-weight:800}
+  .none-chips .pchip.on{background:#0F172A;border-color:#0F172A;color:#fff}
+  .none-chips .pchip.on::before{content:"✓ ";font-weight:900}
+  .addon-chip{height:27px;font-size:12px}
+  .combo-chips .pchip{border-color:#E0BE79;background:#FFFBEF;color:#7A4A00}
+  .combo-chips .pchip.on[data-used-combo="단독"]{background:#0F172A;border-color:#0F172A;color:#fff}
+  .combo-chips .pchip.on[data-used-combo="결합"]{background:#2563EB;border-color:#1D4ED8;color:#fff}
+  .onestop-chips .pchip{background:#F0FBF4;border-color:#9FD9B4;color:#0B6B3A}
+  .onestop-chips .pchip.on{background:#0B7A43;border-color:#0B6B3A;color:#fff}
+  .addon-chip.on{background:#1D4ED8;border-color:#1E40AF;color:#fff}
+  .easy-chip{height:32px;font-size:12.5px;border-color:#E0BE79}
+  .card-box input{height:30px;border-color:#94A3B8}
+  .pc-add{height:26px}
+  .paycard-line .pc-chips .pchip{height:24px}
+
+  /* ---------- 4) 상단 KPI — 핵심 4개만 색으로 강조 ---------- */
+  .kpi-c-blue{--kc:#0B57D0;--kt:#0A3E8F;--kb1:#F2F7FF;--kb2:#E4EEFE}
+  .kpi-c-violet{--kc:#6D28D9;--kt:#4C1D95;--kb1:#F8F5FF;--kb2:#EDE7FE}
+  .kpi-c-green{--kc:#0B6B4F;--kt:#0B5F45;--kb1:#F3FBF7;--kb2:#E1F5EA}
+  .kpi-c-amber{--kc:#B45309;--kt:#8A5200;--kb1:#FFFAF1;--kb2:#FCEFD5}
+  .sum-cell.kpi-key{
+    background:linear-gradient(180deg,var(--kb1) 0%,var(--kb2) 100%);
+    border-top:3px solid var(--kc);padding-top:7px;
+  }
+  .sum-cell.kpi-key .sum-label{color:var(--kt);font-weight:900}
+  .sum-cell.kpi-key .sum-value b{color:var(--kt)}
+  .sum-cell.kpi-key .sum-sub{color:#475569}
+  .sum-net .net-pos b{color:#0B5F45}
+  .sum-net .net-neg b{color:#B42318}
+  /* 나머지 칸은 한 톤 죽여 핵심 칸이 먼저 눈에 들어오게 */
+  .sum-cell .sum-value b{color:#1E293B}
+  .sum-cell.is-zero .sum-value b{color:#93A0B2}
+  .sum-cell.is-zero .sum-value i{color:#B6C0CE}
+  .sum-cell.is-zero .sum-sub{color:#94A3B8}
+
+  /* ---------- 5) 직원별 실적 표 · 개통 목록 표 ---------- */
+  .sb-table th{
+    background:#E9EFF7;color:#0F172A;font-size:11px;font-weight:900;
+    border-bottom:1.5px solid #CBD5E1;
+  }
+  .sb-table td{border-bottom:1px solid #E4EAF2;font-weight:700;color:#1E293B}
+  .sb-table tbody tr:nth-child(even) td{background:#FAFBFE}
+  .sb-table tbody tr:nth-child(even) td.sb-name{background:#FAFBFE}
+  .sb-table tbody tr:hover td,.sb-table tbody tr:hover td.sb-name{background:#EDF4FF}
+  .sb-table td.sb-name{font-weight:900;color:#0F172A}
+  .sb-zero{color:#B6C0CE}
+
+  table.ledger th{
+    background:#E9EFF7;color:#0F172A;font-size:12px;font-weight:900;letter-spacing:.02em;
+    border-bottom:1.5px solid #CBD5E1;padding:9px;
+  }
+  table.ledger th[data-sort]:hover{background:#DCE6F3}
+  table.ledger th.actions-col{background:#E9EFF7}
+  table.ledger td{border-bottom:1px solid #E4EAF2;color:#1E293B;font-weight:600;padding:8px 10px}
+  /* 은은한 줄무늬 — 짝수 줄을 아주 살짝 낮춰 시선이 줄을 따라가게 */
+  table.ledger tbody tr:nth-child(even) td{background:#FAFBFE}
+  table.ledger tbody tr:nth-child(even) td.actions{background:#FAFBFE}
+  table.ledger tbody tr.due-row td{background:#FFFDF4}
+  table.ledger tbody tr.due-row td.actions{background:#FFFDF4}
+  table.ledger tbody tr:hover td,table.ledger tbody tr:hover td.actions{background:#EBF3FF}
+  table.ledger tbody tr.due-row:hover td,table.ledger tbody tr.due-row:hover td.actions{background:#FFF6DD}
+  .c-name{font-weight:900;color:#0F172A;font-size:13.5px}
+  .c-date{font-weight:800;color:#0F172A}
+  td[data-label="연락처"]{font-weight:800;color:#1E293B}
+  .money{font-weight:800;color:#0F172A}
+  .badge{font-size:11.5px;font-weight:900;padding:2px 7px;border:1px solid transparent}
+  .t-move{border-color:#BBD4F5}
+  .t-change{border-color:#CFC1F7}
+  .t-new{border-color:#A9E2C7}
+  .t-net{border-color:#EFD39A}
+  .t-wired,.t-kids{border-color:#A9DCD8}
+  .t-used{border-color:#EFCD97}
+  .t-used2{border-color:#F3C2B0}
+  .tag-period{font-weight:900}
+  table.ledger td .ellip{color:inherit}
+  /* 빈 값(—)은 한 단계 낮춰 핵심 정보가 먼저 보이게 */
+  table.ledger td .muted{color:#AEB9C8;font-weight:600}
+
+  /* ---------- 6) 폰 카드 목록 — 테두리·고객명/개통유형 대비 ---------- */
+  @media (max-width:900px){
+    table.ledger tr{border:1.5px solid #CBD5E1;background:#fff;padding:10px 12px;
+      box-shadow:0 1px 2px rgba(15,23,42,.06)}
+    table.ledger tr.due-row{border-color:#E3C68C;background:#FFFCF3}
+    table.ledger td{color:#1E293B;font-weight:600}
+    table.ledger td::before{color:#475569;font-weight:800;font-size:12px}
+    table.ledger td[data-label="고객명"]{font-size:15px;padding-top:2px;padding-bottom:7px;
+      border-bottom:1px dashed #DDE5F0;margin-bottom:2px;align-items:center}
+    table.ledger td[data-label="고객명"] .c-name{font-size:15.5px;font-weight:900}
+    table.ledger td[data-label="고객명"]::before{font-size:12px}
+    table.ledger td[data-label="개통유형"]{font-weight:900}
+    table.ledger td[data-label="순마진"] .money,table.ledger td[data-label="순마진"]{font-weight:900}
+    table.ledger td.actions{border-top:1px solid #E4EAF2}
+  }
+
+  /* ---------- 7) 폰 폭에서 입력 글자 확대 방지(16px) · 터치 기기 최소 높이 ---------- */
+  @media (max-width:430px){
+    .easy-group{gap:5px}
+    .easy-scope{padding:1px;gap:0}
+    .easy-scope .es-nav{width:20px;height:26px;font-size:8px}
+    .easy-scope .es-btn{padding:0 7px;font-size:11px}
+    .easy-scope .es-n{font-size:10px;padding:2px 5px}
+    .easy-filter{padding:0 9px;font-size:12px}
+    .easy-filter .ef-count{font-size:10.5px;padding:2px 5px}
+  }
+  @media (max-width:560px){
+    dialog#editDialog{width:100%}
+    .fsec-body{grid-template-columns:1fr}
+    .field input,.field select,.field textarea{font-size:16px;height:40px}
+    .field textarea{height:auto}
+    .fsec-body{gap:6px}
+    .fsec-note{display:none}
+    #editDialog .dlg-body{padding:8px 10px 4px;max-height:calc(94dvh - 176px)}
+    #editDialog .dlg-head{padding:12px 14px 8px}
+    .fsec-head{padding:5px 9px;font-size:11px}
+    .fsec-body{padding:8px 9px 9px}
+  }
+  @media (pointer:coarse){
+    .field input,.field select{height:40px}
+    .type-chip,.pchip{height:32px;padding:0 12px;font-size:12.5px}
+    .ins-chip{height:34px}
+    .field .birth-row .gender-chip{height:30px}
+    #editDialog .dlg-foot .btn{height:44px}
+  }
 </style>
 </head>
 <body>
@@ -1741,7 +2002,7 @@
 
     <div class="sum-rows">
     <div class="sum-cells">
-      <div class="sum-cell">
+      <div class="sum-cell kpi-key kpi-c-blue">
         <span class="sum-label">총 건수 <span class="tag" id="kpiMonthLabel">—</span></span>
         <span class="sum-value"><b class="num" id="kpiTotal">0</b><i>건</i></span>
         <span class="sum-sub" id="kpiTotalSub">이번 달 개통</span>
@@ -1785,7 +2046,7 @@
         <span class="sum-value"><b class="num" id="kpiRebateL">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiRebateLSub">인터넷·TV 가입·약정갱신</span>
       </div>
-      <div class="sum-cell admin-only">
+      <div class="sum-cell admin-only kpi-key kpi-c-violet">
         <span class="sum-label">리베이트 합계</span>
         <span class="sum-value"><b class="num" id="kpiRebate">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiRebateSub">무선 + 유선</span>
@@ -1794,7 +2055,7 @@
 
     <!-- 관리자 전용 — 총 순마진 · 추지·페이백 합계 -->
     <div class="sum-cells sum-net admin-only" id="sumNetRow">
-      <div class="sum-cell" id="sumNetCell">
+      <div class="sum-cell kpi-key kpi-c-green" id="sumNetCell">
         <span class="sum-label">총 순마진 <span class="tag">관리자</span></span>
         <span class="sum-value"><b class="num" id="kpiNet">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiNetSub">리베이트 − 추지·페이백</span>
@@ -1818,7 +2079,7 @@
         <span class="sum-value"><b class="num" id="kpiPointL">0.0</b><i>P</i></span>
         <span class="sum-sub" id="kpiPointLSub">인터넷·TV·결합 포인트</span>
       </div>
-      <div class="sum-cell">
+      <div class="sum-cell kpi-key kpi-c-amber">
         <span class="sum-label">포인트 합계</span>
         <span class="sum-value"><b class="num" id="kpiPointT">0.0</b><i>P</i></span>
         <span class="sum-sub" id="kpiPointTSub">포인트 있는 건 기준</span>
@@ -1923,11 +2184,16 @@
       <button type="button" class="easy-filter" id="easyFilter" aria-pressed="false" title="권매·쉬움 체크된 고객만 보기">
         <span class="ef-star" aria-hidden="true">★</span><span>권매·쉬움만</span><span class="ef-count" id="easyFilterCount">0건</span>
       </button>
+      <!-- v35 — [◀] [2026년 11월 (N건)] [▶] | [전체 기간 (M건)] · 가운데를 누르면 연도·월 점프 팝업 -->
       <div class="easy-scope" id="easyScope" role="group" aria-label="권매·쉬움 기간 범위" hidden>
+        <button type="button" class="es-nav" id="easyScopePrev" aria-label="권매·쉬움 이전 달" title="이전 달 권매·쉬움 보기">◀</button>
         <button type="button" class="es-btn on" id="easyScopeMonth" data-easy-scope="month" aria-pressed="true"
-                title="이 달 기록만 봅니다"><span class="es-l" id="easyScopeMonthLabel">이 달만</span><span class="es-n" id="easyScopeMonthN">0건</span></button>
+                aria-haspopup="dialog" aria-expanded="false"
+                title="이 달 권매·쉬움을 봅니다 — 한 번 더 누르면 연도·월 점프 팝업"><span class="es-l" id="easyScopeMonthLabel">2026년 11월</span><span class="es-n" id="easyScopeMonthN">0건</span><span class="es-caret" aria-hidden="true">▾</span></button>
+        <button type="button" class="es-nav" id="easyScopeNext" aria-label="권매·쉬움 다음 달" title="다음 달 권매·쉬움 보기">▶</button>
+        <span class="es-div" aria-hidden="true"></span>
         <button type="button" class="es-btn" id="easyScopeAll" data-easy-scope="all" aria-pressed="false"
-                title="모든 달 기록에서 봅니다"><span class="es-l">전체 기간</span><span class="es-n" id="easyScopeAllN">0건</span></button>
+                title="모든 달 기록에서 봅니다"><span class="es-l" id="easyScopeAllLabel">전체 기간</span><span class="es-n" id="easyScopeAllN">0건</span></button>
       </div>
     </div>
     <!-- v30 — 관리자 전용 ⚠️ 미기재 확인 (v33: 리베이트·중고폰 금액만 · 추지·페이백 제외) -->
@@ -1994,7 +2260,6 @@
     <div class="dlg-head">
       <div>
         <h2 id="dlgTitle">개통 등록</h2>
-        <p>필수(<b>*</b>) 항목만 채우면 저장됩니다. 요금제 변경·부가서비스는 바꿀 때만 입력하세요.</p>
       </div>
       <button type="button" class="dlg-close" id="dlgClose" aria-label="닫기">×</button>
     </div>
@@ -2003,6 +2268,10 @@
 
     <div class="dlg-body">
       <div class="form-grid">
+        <!-- v35 — ① 고객 정보 (넓은 화면에서는 이름·연락처·생년월일·개통일 네 칸이 한 줄) -->
+        <section class="fsec" data-sec="cust">
+          <div class="fsec-head"><span class="fsec-bar" aria-hidden="true"></span>고객 정보</div>
+          <div class="fsec-body fsec-4">
         <!-- v21 — 외국인 고객: '고객명' 라벨 줄 오른쪽 한 줄 체크 칩 (세로 공간 0) -->
         <div class="field">
           <div class="field-head">
@@ -2027,14 +2296,13 @@
           <input id="f_gender" type="hidden" value="">
           <!-- v21 — 짧아진 생년월일 칸 + [뒷자리 배지] + [남][여] 를 한 줄에 -->
           <div class="birth-row">
-            <input id="f_birth" type="text" inputmode="numeric" autocomplete="off" placeholder="970114">
+            <input id="f_birth" type="text" inputmode="numeric" autocomplete="off" placeholder="970114" title="6자리(970114)·8자리 모두 저장됩니다. 성별을 고르면 주민번호 뒷자리 첫 번호가 자동으로 표시됩니다.">
             <span class="rrn-badge" id="rrnDigit" hidden title="주민번호 뒷자리 첫 번호 — 내국인 1·2(1900년대)/3·4(2000년대), 외국인 5·6(1900년대)/7·8(2000년대)"></span>
             <div class="ins-chips gender-inline" id="genderChips" role="group" aria-label="성별">
               <button type="button" class="ins-chip gender-chip" data-gender="남" aria-pressed="false" title="남성 — 주민번호 뒷자리 첫 번호를 자동으로 표시합니다">남</button>
               <button type="button" class="ins-chip gender-chip" data-gender="여" aria-pressed="false" title="여성 — 주민번호 뒷자리 첫 번호를 자동으로 표시합니다">여</button>
             </div>
           </div>
-          <span class="hint">6·8자리 모두 저장 · 성별을 고르면 뒷자리 첫 번호 자동</span>
           <span class="hint hint-bad" id="birthHint" hidden></span>
         </div>
         <div class="field">
@@ -2042,13 +2310,18 @@
           <input id="f_date" type="date">
         </div>
 
-        <div class="section-label">개통 정보</div>
+        </div>
+        </section>
+
+        <!-- v35 — ② 개통 정보 -->
+        <section class="fsec" data-sec="open">
+          <div class="fsec-head"><span class="fsec-bar" aria-hidden="true"></span>개통 정보</div>
+          <div class="fsec-body">
 
         <div class="field span2">
           <label id="f_typeLabel">개통유형 <span class="opt">선택 · 무선·유선 각 1개</span></label>
           <input id="f_type" type="hidden" value="">
           <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
-          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP·2ND, 유선은 <b>신규</b>·<b>약갱</b> 그룹에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
 
         <!-- v27 · v31 — 번호이동·신규가입·중고신규·중고MNP 를 골랐을 때: 결합 여부 (필수) -->
@@ -2061,7 +2334,7 @@
             <button type="button" class="pchip" data-used-combo="결합" aria-pressed="false"
                     title="결합 조건으로 저장합니다 — 시트에는 메모 [중고결합] 으로 나갑니다">결합 적용</button>
           </div>
-          <span class="hint" id="usedComboHint">번호이동·신규가입·중고 개통은 결합 여부를 반드시 골라야 저장됩니다.</span>
+          <span class="hint" id="usedComboHint">번호이동·신규가입·중고 개통은 결합 여부를 골라야 저장됩니다.</span>
         </div>
 
         <div class="field span2">
@@ -2069,18 +2342,23 @@
           <input id="f_model" type="text" autocomplete="off" list="modelList" placeholder="예) 갤럭시 S26 / 아이폰 17 프로">
           <datalist id="modelList"></datalist>
           <div class="staff-chips model-chips" id="modelChips"></div>
-          <span class="hint">단말기를 누르면 바로 들어갑니다. 다시 누르면 빠지고, 인터넷·TV 상품은 직접 입력해도 됩니다.</span>
         </div>
 
         <div class="field span2">
-          <label id="f_discLabel">할인 유형 <span class="opt">선택 · 정책 인정이 갈립니다</span></label>
+          <label id="f_discLabel">할인 유형 <span class="opt">선택</span></label>
           <input id="f_discount" type="hidden" value="">
           <div class="type-group disc-chips" id="discChips" role="group" aria-labelledby="f_discLabel"></div>
-          <span class="hint">공시지원금으로 개통했으면 <b>단말할인</b>, 선택약정이면 <b>요금할인</b>. 요금할인만 인정되는 정책(MRA-02-01·MRA-04·MBA-02)이 있습니다.</span>
         </div>
 
         <!-- v16: 정책 특수 조건 줄은 없앴다. 예전 기록의 특수조건(중고결합·장기기변·512G)은 읽기 호환만 유지 -->
         <input id="f_cond" type="hidden" value="">
+          </div>
+        </section>
+
+        <!-- v35 — ③ 요금제 · 보험 · 카드 -->
+        <section class="fsec" data-sec="plan">
+          <div class="fsec-head"><span class="fsec-bar" aria-hidden="true"></span>요금제 · 보험 · 카드</div>
+          <div class="fsec-body">
 
         <div class="field span2">
           <div class="field-head">
@@ -2100,7 +2378,6 @@
           </div>
           <input id="f_plan_l" type="text" autocomplete="off" placeholder="예) 인터넷 베이직 + 지니 TV 에센스">
           <div class="plan-suggest" id="sug_f_plan_l" role="listbox" aria-label="유선 요금제 검색 결과"></div>
-          <span class="hint">유선 개통유형을 고르면 열립니다. <b>인터넷 신규 단품·인터넷 약정갱신</b>이면 인터넷·WiFi만, <b>TV 단품</b>이면 지니 TV·셋탑만, <b>인티 신규·인티 약갱</b>이면 넷 다 고를 수 있고, 고른 조합이 그대로 들어갑니다.</span>
         </div>
 
         <!-- v30 — 원스톱 체크: 유선 신규(인티 신규 · 인터넷 신규 단품 · TV 단품)를 골랐을 때만 열린다 -->
@@ -2111,7 +2388,6 @@
             <button type="button" class="pchip" data-onestop="1" aria-pressed="false"
                     title="원스톱 결합 개통이면 눌러 주세요 — +10만원 · +1.0P 가 자동으로 붙습니다">원스톱 체크 <span class="mc">+10만원 · +1.0P</span></button>
           </div>
-          <span class="hint admin-only" id="onestopHint">원스톱이면 유선 리베이트 <b>+100,000원</b> · 유선 포인트 <b>+1.0P</b> 가 자동으로 붙습니다. 시트에는 메모 <b>[원스톱]</b> 표기로 나갑니다.</span>
         </div>
 
         <div class="field span2 ins-field">
@@ -2122,7 +2398,6 @@
             <button type="button" class="ins-chip" data-ins="파손" aria-pressed="false">파손</button>
             <button type="button" class="ins-chip" data-ins="분실+파손" aria-pressed="false">분실+파손</button>
           </div>
-          <span class="hint">셋 중 하나를 골라야 저장됩니다. 시트에는 메모 표기([보험:파손])로 함께 나갑니다.</span>
         </div>
 
         <div class="field span2 card-field">
@@ -2136,8 +2411,14 @@
             <div class="staff-chips card-chips" id="cardBrandChips"></div>
             <input id="f_cardname" type="text" autocomplete="off" placeholder="카드명 (예: 우리카드 카드의정석)">
           </div>
-          <span class="hint">제휴카드를 판매했으면 카드사를 고르세요. 시트에는 [카드:우리] 처럼 저장됩니다.</span>
         </div>
+          </div>
+        </section>
+
+        <!-- v35 — ④ 부가 · 변경 (바꿀 때만) -->
+        <section class="fsec fsec-opt" data-sec="addon">
+          <div class="fsec-head"><span class="fsec-bar" aria-hidden="true"></span>부가 · 변경<span class="fsec-note">바꿀 때만 입력</span></div>
+          <div class="fsec-body">
 
         <!-- 바꿀 때만 쓰는 영역 — 요금제 변경 -->
         <div class="form-box" id="planBox">
@@ -2172,8 +2453,7 @@
               <input id="f_newdate" type="date">
               <span class="expect-badge" id="planExpect" hidden></span>
             </div>
-            <span class="hint">4개월 = 개통일 +124일 · 6개월 = 개통일 +184일 · 당일부터 알림 · 미완료 시 계속 유지</span>
-          </div>
+            </div>
         </div>
 
         <!-- 바꿀 때만 쓰는 영역 — 부가서비스 -->
@@ -2212,11 +2492,16 @@
               <input id="f_addondate" type="date">
               <span class="expect-badge" id="addonExpect" hidden></span>
             </div>
-            <span class="hint">유지기간을 누르면 개통일 기준으로 해지일자가 자동 계산됩니다 (4개월 +124일 · 6개월 +184일)</span>
           </div>
         </div>
 
-        <div class="section-label">리베이트 · 중고폰</div>
+          </div>
+        </section>
+
+        <!-- v35 — ⑤ 리베이트 · 추지 · 중고폰 -->
+        <section class="fsec" data-sec="money">
+          <div class="fsec-head"><span class="fsec-bar" aria-hidden="true"></span>리베이트 · 추지 · 중고폰<span class="fsec-note">금액은 원 단위</span></div>
+          <div class="fsec-body">
 
         <!-- 정책 자동 계산 (관리자 전용 — 직원 모드에서는 통째로 숨김) -->
         <div class="field pv-box admin-only" id="pvBox" hidden>
@@ -2235,7 +2520,6 @@
           <label for="f_rebate_l">유선 리베이트 (원) <span class="opt">선택</span></label>
           <input id="f_rebate_l" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
           <span class="hint hint-auto" id="rebateLHint" hidden></span>
-          <span class="hint">인티 신규 · 인터넷 신규 단품 · TV 단품 · 인티 약갱 · 인터넷 약정갱신</span>
         </div>
 
         <!-- v19 — 추지·페이백은 [미기입] 칩을 누르거나 금액을 입력해야 저장된다 -->
@@ -2254,7 +2538,6 @@
                   <button type="button" class="pchip" data-pay-none="extra" aria-pressed="false">미기입</button>
                 </div>
               </div>
-              <span class="hint">순마진에서 빠지는 금액</span>
             </div>
             <div class="field paycard-field">
               <label for="f_paycard">페이백 (카드결제) <span class="req">*</span></label>
@@ -2282,7 +2565,6 @@
               </div>
               <span class="hint hint-auto" id="paycardTotal" hidden></span>
               <div class="pc-foot">
-                <span class="hint">카드로 돌려준 금액 · 할부금·위약금을 나눠 적으세요</span>
                 <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
               </div>
             </div>
@@ -2295,7 +2577,6 @@
                   <button type="button" class="pchip" data-pay-none="paybank" aria-pressed="false">미기입</button>
                 </div>
               </div>
-              <span class="hint">계좌로 입금한 금액</span>
             </div>
           </div>
           <!-- v22 — 유선(인터넷·TV) 개통일 때만: 유선 사은품 처리 (단일 선택 · 다시 누르면 해제) -->
@@ -2306,7 +2587,6 @@
               <button type="button" class="pchip" data-wired-gift="상품권 지급" aria-pressed="false">상품권 고객 지급</button>
               <button type="button" class="pchip" data-wired-gift="단말할인쿠폰" aria-pressed="false">단말할인쿠폰 결제</button>
             </div>
-            <span class="hint">유선(인터넷·TV) 개통에서 고객에게 준 사은품입니다. 시트에는 메모 <b>[유선혜택:…]</b> 표기로 나갑니다.</span>
           </div>
         </div>
 
@@ -2330,17 +2610,21 @@
               <label for="f_usedprice">중고폰금액 <span class="opt">선택</span></label>
               <input id="f_usedprice" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="예) 22 · 50/20">
               <span class="hint hint-auto" id="usedPriceHint" hidden></span>
-              <span class="hint">만 원 단위로 적으면 원으로 바뀝니다 — <b>22</b> = 22만원 · <b>50/20</b> = 70만원</span>
             </div>
           </div>
-          <span class="hint">중고폰을 받지 않았으면 위 <b>미반납</b>을 누르세요.</span>
         </div>
+          </div>
+        </section>
+
+        <!-- v35 — ⑥ 담당자 · 메모 -->
+        <section class="fsec" data-sec="memo">
+          <div class="fsec-head"><span class="fsec-bar" aria-hidden="true"></span>담당자 · 메모</div>
+          <div class="fsec-body">
 
         <div class="field span2">
           <label for="f_staff">담당자 <span class="opt">선택</span></label>
           <input id="f_staff" type="text" autocomplete="off" placeholder="예) 김태양">
           <div class="staff-chips" id="staffChips"></div>
-          <span class="hint">이름을 누르면 바로 입력됩니다. 비워두면 설정한 내 이름으로 저장돼요.</span>
         </div>
 
         <!-- v25 — 메모 바로 위 [✓ 권매·쉬움] 1탭 토글 (한 묶음 1개) · 시트에는 [권매쉬움] 메모 표기로만 나간다 -->
@@ -2353,13 +2637,14 @@
               <span class="ec-tick" aria-hidden="true">✓</span>권매·쉬움
             </button>
           </div>
-          <span class="hint">한 번 누르면 체크, 다시 누르면 해제 · 공용 시트에는 <b class="nw">[권매쉬움]</b> 표기로 나갑니다.</span>
         </div>
 
         <div class="field span2">
           <label for="f_memo">메모 <span class="opt">선택</span></label>
           <textarea id="f_memo" placeholder="결합·할인·요청사항 등"></textarea>
         </div>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -7139,6 +7424,17 @@
   }
 
   // 필터 버튼의 건수·켜짐·색 상태를 한곳에서 맞춘다
+  // v35 — 값이 0(또는 0.0)인 KPI 칸은 숫자를 옅게 (빈 칸이 눈을 잡아끌지 않게)
+  function paintKpiZeros() {
+    var cells = document.querySelectorAll('.sum-cell');
+    for (var i = 0; i < cells.length; i++) {
+      var b = cells[i].querySelector('.sum-value b');
+      if (!b) continue;
+      var t = String(b.textContent || '').trim();
+      cells[i].classList.toggle('is-zero', t === '0' || t === '0.0');
+    }
+  }
+
   function renderEasyFilter() {
     if (!el.easyFilter) return;
     var n = easySaleCount();
@@ -7149,9 +7445,9 @@
     el.easyFilter.classList.toggle('zero', n === 0 && !on);
     el.easyFilter.setAttribute('aria-pressed', on ? 'true' : 'false');
     el.easyFilter.title = on
-      ? '⭕ 권매·쉬움 켜짐 — ' + (scopeAll ? '전체 기간' : monthLabel(state.filters.month)) +
+      ? '⭕ 권매·쉬움 켜짐 — ' + (scopeAll ? '전체 기간' : monthLabel(easyMonthKey())) +
         ' ' + n + '건을 보는 중 · 다시 누르면 전체 목록'
-      : '⭐ 권매·쉬움 체크된 고객만 보기 (현재 ' + (scopeAll ? '전체 기간' : monthLabel(state.filters.month)) + ' ' + n + '건)';
+      : '⭐ 권매·쉬움 체크된 고객만 보기 (현재 ' + (scopeAll ? '전체 기간' : monthLabel(easyMonthKey())) + ' ' + n + '건)';
   }
 
   /* v34 — ⭐ 켜 두었을 때 옆에 붙는 [이 달만 (N건)] / [전체 기간 (M건)] 1탭 토글
@@ -7162,32 +7458,57 @@
     var f = state.filters;
     var on = !!f.easy;
     el.easyScope.hidden = !on;
-    if (!on) return;
+    if (!on) { if (mjpState.open && mjpState.scope === 'easy') mjpClose(); return; }
     var c = easyScopeCounts();
     var scope = easyScopeNow();
     var mk = easyMonthKey();
-    var isCur = mk === currentMonth();
+    // 폰 폭에서는 '2026년 11월' 대신 '11월' 로 줄여 한 줄에 들어오게 (연도는 팝업·툴팁에 그대로)
+    var narrow = (window.innerWidth || 999) <= 560;
     if (el.easyScopeMonthLabel) {
-      el.easyScopeMonthLabel.textContent = isCur ? '이 달만' : (Number(mk.slice(5, 7)) + '월만');
+      el.easyScopeMonthLabel.textContent = narrow ? (Number(mk.slice(5, 7)) + '월') : monthLabel(mk);
     }
     if (el.easyScopeMonthN) el.easyScopeMonthN.textContent = c.month + '건';
     if (el.easyScopeAllN) el.easyScopeAllN.textContent = c.all + '건';
+    if (el.easyScopeAllLabel) el.easyScopeAllLabel.textContent = (window.innerWidth || 999) <= 430 ? '전체' : '전체 기간';
     el.easyScopeMonth.classList.toggle('on', scope === 'month');
     el.easyScopeAll.classList.toggle('on', scope === 'all');
     el.easyScopeMonth.setAttribute('aria-pressed', scope === 'month' ? 'true' : 'false');
     el.easyScopeAll.setAttribute('aria-pressed', scope === 'all' ? 'true' : 'false');
+    el.easyScopeMonth.setAttribute('aria-expanded', (mjpState.open && mjpState.scope === 'easy') ? 'true' : 'false');
     var qNow = String(f.q || '').trim();
     var na = !!f.due || !!qNow;
     el.easyScope.classList.toggle('na', na);
     el.easyScopeMonth.disabled = na;
     el.easyScopeAll.disabled = na;
+    if (el.easyScopePrev) el.easyScopePrev.disabled = na;
+    if (el.easyScopeNext) el.easyScopeNext.disabled = na;
     var naWhy = f.due
       ? '‘알림만’ 보기에서는 기간 구분 없이 모입니다 — 알림만을 꺼면 달별로 볼 수 있습니다'
       : '검색 중에는 기준 월과 상관없이 전체 기간에서 찾습니다 — 검색어를 지우면 달별로 볼 수 있습니다';
     el.easyScopeMonth.title = na ? naWhy
-      : monthLabel(mk) + ' 기록 중 권매·쉬움 ' + c.month + '건만 봅니다';
+      : monthLabel(mk) + ' 권매·쉬움 ' + c.month + '건만 봅니다 — 한 번 더 누르면 연도·월 점프 팝업';
     el.easyScopeAll.title = na ? naWhy
       : '모든 달 기록 중 권매·쉬움 ' + c.all + '건을 봅니다 (상단 기준 월과 상관없이)';
+    if (el.easyScopePrev) el.easyScopePrev.title = na ? naWhy : monthLabel(shiftMonthKey(mk, -1)) + ' 권매·쉬움 보기';
+    if (el.easyScopeNext) el.easyScopeNext.title = na ? naWhy : monthLabel(shiftMonthKey(mk, 1)) + ' 권매·쉬움 보기';
+  }
+
+  // v35 — '2026-11' 에서 ±n 달 (연도를 넘어가도 계산)
+  function shiftMonthKey(ym, delta) {
+    var y = Number(String(ym || '').slice(0, 4));
+    var m = Number(String(ym || '').slice(5, 7));
+    if (!y || !m) { var d0 = new Date(); y = d0.getFullYear(); m = d0.getMonth() + 1; }
+    var t = y * 12 + (m - 1) + delta;
+    return Math.floor(t / 12) + '-' + pad2((t % 12 + 12) % 12 + 1);
+  }
+
+  // v35 — ◀ ▶ 로 권매·쉬움 달을 한 칸 넘긴다 (상단 기준 월도 함께 따라간다)
+  function easyShiftMonth(delta) {
+    var f = state.filters;
+    if (f.due || String(f.q || '').trim()) { render(); return; }
+    var ym = shiftMonthKey(easyMonthKey(), delta);
+    f.easyScope = 'month';
+    setMonthFilter(ym);
   }
 
   /* ---------- v30 — 미기재 확인 (관리자 전용) · v33 사양 ----------
@@ -7497,7 +7818,11 @@
         if (nm.total < 0) negN++;
       }
       el.kpiNet.textContent = (netSum < 0 ? '−' : '') + fmtNum(Math.abs(netSum));
-      if (el.sumNetCell) el.sumNetCell.className = 'sum-cell ' + (netSum < 0 ? 'net-neg' : 'net-pos');
+      if (el.sumNetCell) {
+        // v35 — 순마진 칸의 핵심 강조(kpi-key · kpi-c-green)를 지우지 않고 부호 클래스만 바꾼다
+        el.sumNetCell.classList.remove('net-neg', 'net-pos');
+        el.sumNetCell.classList.add(netSum < 0 ? 'net-neg' : 'net-pos');
+      }
       if (el.kpiNetSub) {
         el.kpiNetSub.textContent = list.length
           ? '리베이트 ' + fmtNum(sumAll + usedSum) + ' − 추지·페이백 ' + fmtNum(paySum) + (negN ? ' · 마이너스 ' + negN + '건' : '')
@@ -7531,6 +7856,9 @@
           : '기록을 추가하면 자동 합산됩니다';
       }
     }
+
+    // v35 — 0 인 KPI 숫자는 한 톤 낮춰 핵심 숫자가 먼저 보이게
+    paintKpiZeros();
 
     // 요금제 변경 · 부가서비스 해지 알림 (전 직원 공용)
     // 기준: 당일(D-DAY, d === 0)부터 — D-1·그 이후 예정 건은 띄우지 않고,
@@ -8042,7 +8370,7 @@
     // 필터가 켜져 있을 때는 목록과 버튼 건수가 반드시 같아야 한다 (같은 rows 를 쓴다)
     if (state.filters.missing && el.missingCount && isAdmin()) el.missingCount.textContent = rows.length + '건';
     if (state.filters.easy) {
-      var easyTag = '권매·쉬움' + (easyScopeNow() === 'all' ? ' · 전체 기간' : '');
+      var easyTag = '권매·쉬움' + (easyScopeNow() === 'all' ? ' · 전체 기간' : ' · ' + monthLabel(easyMonthKey()));
       scopeTag = scopeTag ? scopeTag + ' · ' + easyTag : easyTag;
     }
     // v26 — 전체 기간 검색 중이라는 것을 건수 자리에 분명히 적는다 (상단 KPI 는 기준 월 그대로)
@@ -8195,7 +8523,8 @@
      · 검색어가 있으면 기준 월과 상관없이 전체 기간을 찾고, 지우면 기준 월로 복귀(visibleRecords).
   */
   var searchTimer = null;
-  var mjpState = { open: false, year: 0 };
+  // v35 — scope: 'top' = 상단 기준 월 버튼에서 연 팝업 · 'easy' = 권매·쉬움 범위 바의 월 버튼에서 연 팝업
+  var mjpState = { open: false, year: 0, scope: 'top' };
 
   // 검색어가 기준 월을 넘어 전체 기간을 찾고 있음을 알리는 작은 안내 줄
   function updateSearchScopeHint() {
@@ -8234,6 +8563,10 @@
   }
 
   // 연도 범위 = 데이터에 있는 가장 오랜 연도 ~ 올해 + 1 (기록이 없으면 올해-2 ~ 올해+1)
+  function mjpSelectedMonth() {
+    return mjpState.scope === 'easy' ? easyMonthKey() : state.filters.month;
+  }
+
   function mjpYears() {
     var cy = new Date().getFullYear();
     var min = cy - 2, max = cy + 1, i, y;
@@ -8242,7 +8575,7 @@
       if (y && y < min) min = y;
       if (y && y > max) max = y;
     }
-    var sel = state.filters.month ? Number(state.filters.month.slice(0, 4)) : 0;
+    var sel = mjpSelectedMonth() ? Number(mjpSelectedMonth().slice(0, 4)) : 0;
     if (sel) { if (sel < min) min = sel; if (sel > max) max = sel; }
     var out = [];
     for (y = min; y <= max; y++) out.push(y);
@@ -8250,8 +8583,17 @@
   }
 
   // 그 해 달별 건수 — 어떤 달에 기록이 있는지 팝업에서 바로 보이게
+  //   v35 — 권매·쉬움 범위에서 열면 그 달의 '권매·쉬움 건수'를 센다 (다른 필터는 그대로 반영)
   function mjpMonthCounts(year) {
     var map = {}, i, d;
+    if (mjpState.scope === 'easy') {
+      for (var m = 1; m <= 12; m++) {
+        var ym = year + '-' + pad2(m);
+        var n = countEasy(visibleRecords(true, false, ym));
+        if (n) map[pad2(m)] = n;
+      }
+      return map;
+    }
     for (i = 0; i < state.records.length; i++) {
       d = String(state.records[i].개통일 || '');
       if (Number(d.slice(0, 4)) !== year) continue;
@@ -8266,7 +8608,7 @@
     if (!pop) return;
     var years = mjpYears();
     if (years.indexOf(mjpState.year) < 0) {
-      mjpState.year = state.filters.month ? Number(state.filters.month.slice(0, 4)) : new Date().getFullYear();
+      mjpState.year = mjpSelectedMonth() ? Number(mjpSelectedMonth().slice(0, 4)) : new Date().getFullYear();
       if (years.indexOf(mjpState.year) < 0) mjpState.year = years[years.length - 1];
     }
     var i;
@@ -8282,7 +8624,7 @@
     if (el.mjpYears) el.mjpYears.innerHTML = html;
 
     var counts = mjpMonthCounts(mjpState.year);
-    var sel = state.filters.month;
+    var sel = mjpSelectedMonth();
     var cur = currentMonth();
     html = '';
     for (var m = 1; m <= 12; m++) {
@@ -8298,7 +8640,8 @@
   }
 
   function mjpPosition() {
-    var pop = el.monthJumpPop, btn = el.monthShow;
+    var pop = el.monthJumpPop;
+    var btn = mjpState.scope === 'easy' ? el.easyScopeMonth : el.monthShow;
     if (!pop || !btn) return;
     var r = btn.getBoundingClientRect();
     var w = pop.offsetWidth || 304, h = pop.offsetHeight || 320;
@@ -8310,25 +8653,31 @@
     pop.style.top = Math.round(top) + 'px';
   }
 
-  function mjpOpen() {
+  function mjpOpen(scope) {
     var pop = el.monthJumpPop;
     if (!pop) return;
-    mjpState.year = state.filters.month ? Number(state.filters.month.slice(0, 4)) : new Date().getFullYear();
+    mjpState.scope = scope === 'easy' ? 'easy' : 'top';
+    mjpState.year = mjpSelectedMonth() ? Number(mjpSelectedMonth().slice(0, 4)) : new Date().getFullYear();
     mjpRender();
     pop.hidden = false;
     mjpState.open = true;
-    if (el.monthShow) el.monthShow.setAttribute('aria-expanded', 'true');
+    if (el.monthShow && mjpState.scope === 'top') el.monthShow.setAttribute('aria-expanded', 'true');
+    if (el.easyScopeMonth && mjpState.scope === 'easy') el.easyScopeMonth.setAttribute('aria-expanded', 'true');
+    pop.setAttribute('aria-label', mjpState.scope === 'easy' ? '권매·쉬움 연도·월 바로 가기' : '연도·월 바로 가기');
     mjpPosition();
   }
 
   function mjpClose(focusBack) {
     var pop = el.monthJumpPop;
     if (!pop || pop.hidden) return;
+    var wasScope = mjpState.scope;
     pop.hidden = true;
     mjpState.open = false;
-    if (el.monthShow) {
-      el.monthShow.setAttribute('aria-expanded', 'false');
-      if (focusBack) { try { el.monthShow.focus(); } catch (e) {} }
+    if (el.monthShow) el.monthShow.setAttribute('aria-expanded', 'false');
+    if (el.easyScopeMonth) el.easyScopeMonth.setAttribute('aria-expanded', 'false');
+    if (focusBack) {
+      var back = wasScope === 'easy' ? el.easyScopeMonth : el.monthShow;
+      if (back) { try { back.focus(); } catch (e) {} }
     }
   }
 
@@ -8869,18 +9218,19 @@
   }
 
   function applyTypeHint() {
-    var hint = $('typeHint');
-    if (!hint) return;
     var slots = typeSlots($('f_type').value);
     var both = !!(slots.w && slots.l);
-    if (both) hint.innerHTML = document.body.classList.contains('role-staff')
-      ? '무선 + 유선 동시 개통입니다. 유선 상품은 아래 <b>유선 요금제</b> 칸에 적어 주세요.'
-      : '무선 + 유선 동시 개통입니다. 유선 상품은 아래 <b>유선 요금제</b> 칸에, <b>무선·유선 리베이트는 각각</b> 입력해 주세요.';
-    else if (slots.l) hint.textContent = '유선(인터넷·TV) 개통입니다. 아래 유선 요금제 칸에 상품명을 적어 주세요.';
-    else if (slots.w) hint.textContent = '무선 개통입니다. 요금제 변경은 바꿀 때만 입력하면 됩니다.';
-    else hint.textContent = '무선은 최대 1개, 유선은 최대 1개 — 두 줄을 함께 골라 한 건으로 저장할 수 있습니다.';
-    hint.classList.toggle('both', both);
-    // 동시 개통이면 유선 리베이트 칸을 살짝 강조 (무선은 정책이 자동 계산)
+    // v35 — 회색 안내 줄(#typeHint)은 없앴다. 칩의 ✓ 만으로 충분하다.
+    //        다만 동시 개통이면 유선 리베이트 칸을 살짝 강조한다 (무선은 정책이 자동 계산).
+    var hint = $('typeHint');
+    if (hint) {
+      if (both) hint.innerHTML = document.body.classList.contains('role-staff')
+        ? '무선 + 유선 동시 개통 — 유선 상품은 아래 <b>유선 요금제</b> 칸에 적어 주세요.'
+        : '무선 + 유선 동시 개통 — 유선 요금제 칸에 상품을, <b>무선·유선 리베이트는 각각</b> 입력해 주세요.';
+      else if (slots.l) hint.textContent = '유선(인터넷·TV) 개통 — 아래 유선 요금제 칸에 상품명을 적어 주세요.';
+      else if (slots.w) hint.textContent = '무선 개통 — 요금제 변경은 바꿀 때만 입력합니다.';
+      hint.classList.toggle('both', both);
+    }
     var fl = $('f_rebate_l');
     if (fl && fl.parentNode) fl.parentNode.classList.toggle('hl', both);
   }
@@ -10108,12 +10458,13 @@
       setMonthFilter('');
     });
 
-    // v26 — `2026년 11월` 버튼 → 연도·월 1탭 점프 팝업
+    // v26 — `2026년 11월` 버튼 → 연도·월 1탭 점프 팝업 · v35 권매·쉬움 월 버튼도 같은 팝업
     if (el.monthShow) {
       el.monthShow.addEventListener('click', function (e) {
         e.preventDefault();
         e.stopPropagation();
-        if (mjpState.open) mjpClose(); else mjpOpen();
+        if (mjpState.open && mjpState.scope === 'top') mjpClose();
+        else { if (mjpState.open) mjpClose(); mjpOpen('top'); }
       });
     }
     if (el.monthJumpPop) {
@@ -10129,8 +10480,16 @@
         if (b.hasAttribute('data-mjp-month')) {
           var mo = Number(b.getAttribute('data-mjp-month'));
           var ym = mjpState.year + '-' + pad2(mo);
+          var wasEasy = mjpState.scope === 'easy';
           mjpClose();
           setMonthFilter(ym);
+          // v35 — 권매·쉬움 범위에서 달을 골랐으면 몇 건인지 바로 알려 준다
+          if (wasEasy) {
+            state.filters.easyScope = 'month';
+            render();
+            toast(monthLabel(ym) + ' 권매·쉬움 ' +
+              countEasy(visibleRecords(true, false, ym)) + '건을 봅니다.');
+          }
           return;
         }
         if (b.id === 'mjpYearPrev' || b.id === 'mjpYearNext') {
@@ -10148,6 +10507,7 @@
       if (!mjpState.open) return;
       if (el.monthJumpPop && el.monthJumpPop.contains(e.target)) return;
       if (el.monthShow && el.monthShow.contains(e.target)) return;
+      if (el.easyScopeMonth && el.easyScopeMonth.contains(e.target)) return;
       mjpClose();
     });
     document.addEventListener('keydown', function (e) {
@@ -10155,7 +10515,11 @@
       if (e.key === 'Escape') { mjpClose(true); }
     });
     window.addEventListener('scroll', function () { if (mjpState.open) mjpClose(); }, true);
-    window.addEventListener('resize', function () { if (mjpState.open) mjpPosition(); });
+    window.addEventListener('resize', function () {
+      if (mjpState.open) mjpPosition();
+      // v35 — 폰 폭에서는 월 이름을 '11월' 로 줄이므로 폭이 바뀌면 범위 바를 다시 그린다
+      renderEasyScope();
+    });
 
     // 유형 / 임박
     el.typeFilter.addEventListener('change', function () {
@@ -10176,26 +10540,32 @@
       }
       render();
     });
-    // v34 — ⭐ 옆 [이 달만] / [전체 기간] 1탭 전환
+    // v34 → v35 — ⭐ 옆 범위 바: [◀] [2026년 11월 N건] [▶] | [전체 기간 M건]
     if (el.easyScope) el.easyScope.addEventListener('click', function (e) {
-      var b = e.target && e.target.closest ? e.target.closest('button[data-easy-scope]') : null;
+      var b = e.target && e.target.closest ? e.target.closest('button') : null;
       if (!b || b.disabled) return;
+      // ◀ ▶ 달 넘기기 — 그 자리에서 앞/뒤 달 권매·쉬움으로 (상단 기준 월도 따라간다)
+      if (b === el.easyScopePrev) { e.preventDefault(); easyShiftMonth(-1); return; }
+      if (b === el.easyScopeNext) { e.preventDefault(); easyShiftMonth(1); return; }
       var sc = b.getAttribute('data-easy-scope');
       if (sc === 'all') {
+        if (mjpState.open) mjpClose();
         state.filters.easyScope = 'all';
         render();
         return;
       }
-      // 이 달만 — 기준 월이 '전체 기간'이면 마지막으로 보던 달로 이동해 보여 준다
-      if (!state.filters.month) {
-        var ym = easyMonthKey();
-        state.filters.easyScope = 'month';
-        setMonthFilter(ym);
-        toast(monthLabel(ym) + ' 권매·쉬움만 보기로 이동했습니다.');
+      if (sc !== 'month') return;
+      // 월 버튼 — '전체 기간' 을 보는 중이면 그 달로 돌아오고, 이미 그 달을 보는 중이면 연도·월 점프 팝업
+      if (easyScopeNow() === 'month' && state.filters.month === easyMonthKey()) {
+        e.preventDefault();
+        if (mjpState.open && mjpState.scope === 'easy') mjpClose(true); else mjpOpen('easy');
         return;
       }
+      e.preventDefault();
+      var ym = easyMonthKey();
       state.filters.easyScope = 'month';
-      render();
+      setMonthFilter(ym);
+      toast(monthLabel(ym) + ' 권매·쉬움만 보기로 이동했습니다.');
     });
     // v30 — ⚠️ 미기재 확인 (관리자 전용 · 1탭 토글)
     if (el.missingFilter) el.missingFilter.addEventListener('click', function () {
@@ -10923,10 +11293,13 @@
       easyFilter: $('easyFilter'),
       easyFilterCount: $('easyFilterCount'),
       easyScope: $('easyScope'),
+      easyScopePrev: $('easyScopePrev'),
+      easyScopeNext: $('easyScopeNext'),
       easyScopeMonth: $('easyScopeMonth'),
       easyScopeMonthLabel: $('easyScopeMonthLabel'),
       easyScopeMonthN: $('easyScopeMonthN'),
       easyScopeAll: $('easyScopeAll'),
+      easyScopeAllLabel: $('easyScopeAllLabel'),
       easyScopeAllN: $('easyScopeAllN'),
       missingFilter: $('missingFilter'),
       missingCount: $('missingCount'),
