@@ -1162,13 +1162,13 @@
       </span>
       <div class="duebar-main">
         <div class="duebar-title">요금제 변경 · 부가서비스 해지 예정 <span class="tag">전 직원 공용</span></div>
-        <div class="duebar-sub" id="dueHint">예정된 요금제 변경 · 부가서비스 해지가 없습니다</div>
+        <div class="duebar-sub" id="dueHint">오늘 변경 · 해지할 요금제 · 부가서비스가 없습니다</div>
       </div>
       <div class="due-acts">
-        <button type="button" class="dstat soon" id="dueSoonStat" title="7일 이내 임박 건만 보기">
-          <b class="num" id="dueSoonCount">0</b><span>7일 이내</span>
+        <button type="button" class="dstat soon" id="dueSoonStat" title="오늘(D-DAY) 변경 · 해지 예정 건만 보기">
+          <b class="num" id="dueSoonCount">0</b><span>오늘(D-DAY)</span>
         </button>
-        <button type="button" class="dstat late" id="dueOverdueStat" title="기한이 지난 건만 보기">
+        <button type="button" class="dstat late" id="dueOverdueStat" title="완료하지 않은 기한 지난 건만 보기">
           <b class="num" id="dueOverdueCount">0</b><span>기한 지남</span>
         </button>
         <button type="button" class="btn btn-ghost sm due-toggle" id="dueToggle" aria-expanded="false" aria-controls="duePanel" title="전 직원의 변경·해지 예정 전체 보기">
@@ -1197,7 +1197,7 @@
     <select class="filter" id="staffFilter" aria-label="담당자 필터">
       <option value="">전체 담당자</option>
     </select>
-    <label class="check"><input type="checkbox" id="dueOnly"> 임박만</label>
+    <label class="check" title="오늘(D-DAY) · 기한 지남 알림 대상만 보기"><input type="checkbox" id="dueOnly"> 알림만</label>
     <button class="btn sm btn-ghost" id="resetFilters">초기화</button>
     <button class="chip-btn" id="viewToggle" title="목록 보기 방식을 바꿉니다">한눈에 보기</button>
     <span class="result-count" id="resultCount">0건</span>
@@ -1348,7 +1348,7 @@
               <input id="f_newdate" type="date">
               <span class="expect-badge" id="planExpect" hidden></span>
             </div>
-            <span class="hint">4개월 = 개통일 +124일 · 6개월 = 개통일 +184일 · 7일 이내면 알림</span>
+            <span class="hint">4개월 = 개통일 +124일 · 6개월 = 개통일 +184일 · 당일부터 알림 · 미완료 시 계속 유지</span>
           </div>
         </div>
 
@@ -3280,8 +3280,8 @@
         var hit = false;
         for (var di = 0; di < ds.length; di++) {
           if (f.dueMode === 'late') { if (ds[di] < 0) hit = true; }
-          else if (f.dueMode === 'soon') { if (ds[di] >= 0 && ds[di] <= 7) hit = true; }
-          else if (ds[di] <= 7) hit = true;
+          else if (f.dueMode === 'soon') { if (ds[di] === 0) hit = true; }
+          else if (ds[di] <= 0) hit = true;
         }
         if (!hit) return false;
       }
@@ -3491,21 +3491,23 @@
     }
 
     // 요금제 변경 · 부가서비스 해지 알림 (전 직원 공용)
+    // 기준: 당일(D-DAY, d === 0)부터 — D-1·그 이후 예정 건은 띄우지 않고,
+    //       완료 표시하지 않은 기한 지난 건(d < 0)은 완료할 때까지 계속 남긴다.
     var soon = 0, late = 0, upcoming = [];
     for (i = 0; i < state.records.length; i++) {
       var rr = state.records[i];
       var dPlan = planPending(rr);
       if (dPlan !== null) {
-        if (dPlan < 0) late++; else if (dPlan <= 7) soon++;
-        if (dPlan <= 7) upcoming.push({
+        if (dPlan < 0) late++; else if (dPlan === 0) soon++;
+        if (dPlan <= 0) upcoming.push({
           r: rr, d: dPlan, kind: '요금제',
           what: rr.변경요금제 || '요금제 변경', date: rr.요금제변경일자
         });
       }
       var dAdd = addonPending(rr);
       if (dAdd !== null) {
-        if (dAdd < 0) late++; else if (dAdd <= 7) soon++;
-        if (dAdd <= 7) upcoming.push({
+        if (dAdd < 0) late++; else if (dAdd === 0) soon++;
+        if (dAdd <= 0) upcoming.push({
           r: rr, d: dAdd, kind: '부가서비스',
           what: rr.부가서비스 || '부가서비스 해지', date: rr.부가서비스해지일자
         });
@@ -3523,11 +3525,11 @@
     }
     if (el.dueHint) {
       if (!soon && !late) {
-        el.dueHint.textContent = '예정된 요금제 변경 · 부가서비스 해지가 없습니다';
+        el.dueHint.textContent = '오늘 변경 · 해지할 요금제 · 부가서비스가 없습니다';
       } else {
         var parts = [];
         if (late) parts.push('기한 지남 ' + fmtNum(late) + '건');
-        if (soon) parts.push('7일 이내 ' + fmtNum(soon) + '건');
+        if (soon) parts.push('오늘(D-DAY) ' + fmtNum(soon) + '건');
         el.dueHint.textContent = parts.join(' · ');
       }
     }
@@ -3540,7 +3542,7 @@
   function renderDueList(upcoming) {
     if (!el.dueList) return;
     if (!upcoming.length) {
-      el.dueList.innerHTML = '<p class="due-empty">예정된 요금제 변경 · 부가서비스 해지가 없습니다.</p>';
+      el.dueList.innerHTML = '<p class="due-empty">오늘 변경 · 해지할 요금제 · 부가서비스가 없습니다.</p>';
       return;
     }
     var html = '';
@@ -3576,7 +3578,6 @@
     var badge = '';
     if (d !== null && d < 0) badge = ' <span class="dd dd-late">' + Math.abs(d) + '일 지남</span>';
     else if (d === 0) badge = ' <span class="dd dd-today">D-DAY</span>';
-    else if (d !== null && d <= 7) badge = ' <span class="dd dd-soon">D-' + d + '</span>';
     return '<span class="c-date">' + esc(val) + '</span>' + badge;
   }
 
@@ -3592,7 +3593,7 @@
         '<button type="button" class="dd dd-done" data-act="done" data-kind="' + kind + '" data-id="' + esc(r.id) + '" title="완료 표시를 되돌립니다">' + label + '</button></span>';
     }
     var d = daysFromToday(val);
-    var due = (d !== null && d <= 7)
+    var due = (d !== null && d <= 0)
       ? '<span class="due-top">' + dueCell(val) + '</span>' + btn
       : dueCell(val);
     return '<span class="due-stack">' + due + '</span>';
@@ -3641,7 +3642,7 @@
       body += ' <button type="button" class="dd dd-done" data-act="done" data-kind="' + kind + '" data-id="' + esc(r.id) + '">' +
         (isPlan ? '변경 완료' : '해지 완료') + '</button>';
     } else {
-      if (d !== null && d <= 7) {
+      if (d !== null && d <= 0) {
         body += ' <span class="dd ' + (d < 0 ? 'dd-late' : d === 0 ? 'dd-today' : 'dd-soon') + '">' + ddLabel(d) + '</span>' +
           ' <button type="button" class="mini-done" data-act="done" data-kind="' + kind + '" data-id="' + esc(r.id) + '">' +
           (isPlan ? '변경 완료' : '해지 완료') + '</button>';
@@ -3681,11 +3682,9 @@
     var ddBadge = '';
     if (d !== null && d < 0) ddBadge = '<span class="dd dd-late">요금제 ' + Math.abs(d) + '일 지남</span>';
     else if (d === 0) ddBadge = '<span class="dd dd-today">요금제 D-DAY</span>';
-    else if (d !== null && d <= 7) ddBadge = '<span class="dd dd-soon">요금제 D-' + d + '</span>';
     if (ad !== null && ad < 0) ddBadge += '<span class="dd dd-late">부가 ' + Math.abs(ad) + '일 지남</span>';
     else if (ad === 0) ddBadge += '<span class="dd dd-today">부가 D-DAY</span>';
-    else if (ad !== null && ad <= 7) ddBadge += '<span class="dd dd-soon">부가 D-' + ad + '</span>';
-    return '<div class="mcard' + ((d !== null && d <= 7) || (ad !== null && ad <= 7) ? ' due' : '') + '" data-id="' + esc(r.id) + '">' +
+    return '<div class="mcard' + ((d !== null && d <= 0) || (ad !== null && ad <= 0) ? ' due' : '') + '" data-id="' + esc(r.id) + '">' +
       '<div class="mcard-main" data-mtoggle="1">' +
         '<div class="m-line1">' +
           '<span class="m-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
@@ -3733,7 +3732,7 @@
     var scopeTag = '';
     if (state.filters.due) {
       scopeTag = state.filters.dueMode === 'late' ? '기한지남'
-        : (state.filters.dueMode === 'soon' ? '7일이내' : '변경임박');
+        : (state.filters.dueMode === 'soon' ? '오늘' : '알림대상');
     }
     el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') + rows.length + '건';
     el.footCount.textContent = state.records.length + '건 저장됨';
@@ -3800,7 +3799,7 @@
       var r = rows[i];
       var d = planPending(r);
       var ad0 = addonPending(r);
-      var rowCls = ((d !== null && d <= 7) || (ad0 !== null && ad0 <= 7)) ? ' class="due-row"' : '';
+      var rowCls = ((d !== null && d <= 0) || (ad0 !== null && ad0 <= 0)) ? ' class="due-row"' : '';
 
       if (groupByDate) {
         gk = r.개통일 || '';
@@ -4043,9 +4042,9 @@
     askConfirm(
       done ? label + ' 완료 되돌리기' : label + ' 완료 확인',
       done
-        ? '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' + label + ' 완료 표시를 되돌릴까요?<br>다시 임박 알림에 나타납니다.'
+        ? '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' + label + ' 완료 표시를 되돌릴까요?<br>다시 알림 목록에 나타납니다.'
         : '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' + label + '을(를) 완료로 표시할까요?<br>' +
-          '임박 알림에서 빠지고, 다른 직원 기기·구글 시트에도 함께 표시됩니다.',
+          '알림에서 빠지고, 다른 직원 기기·구글 시트에도 함께 표시됩니다.',
       done ? '되돌리기' : '완료 표시'
     ).then(function (ok) { if (ok) applyDone(rec.id, kind, !done); });
   }
@@ -4677,11 +4676,11 @@
     if (!rows.length) { toast('내보낼 데이터가 없습니다.', true); return; }
 
     var monthTag = state.filters.due
-      ? (state.filters.dueMode === 'late' ? '기한지남' : (state.filters.dueMode === 'soon' ? '7일이내' : '변경임박'))
+      ? (state.filters.dueMode === 'late' ? '기한지남' : (state.filters.dueMode === 'soon' ? '오늘' : '알림대상'))
       : (state.filters.month || '전체');
     var base = 'KT개통장부_' + monthTag + '_' + todayISO().replace(/-/g, '') + '_' + rows.length + '건';
     var scopeLabel = state.filters.due
-      ? (state.filters.dueMode === 'late' ? '기한 지난' : (state.filters.dueMode === 'soon' ? '7일 이내' : '변경임박'))
+      ? (state.filters.dueMode === 'late' ? '기한 지난' : (state.filters.dueMode === 'soon' ? '오늘' : '알림 대상'))
       : monthLabel(state.filters.month);
 
     if (!hasXLSX()) {
