@@ -167,6 +167,16 @@
     background:#fff;font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
   .sum-month input[type=month]:focus{outline:none;box-shadow:0 0 0 3px rgba(11,87,208,.16);border-color:#9DBDF0}
   .sum-month input[type=month].is-all{opacity:.42}
+  /* v19 — 안드로이드 기본 달력 팝업 대신 ◀ / 2026년 11월 / ▶ */
+  .month-nav{display:inline-flex;align-items:center;gap:1px;height:31px;padding:0 2px;
+    border:1px solid var(--line-strong);border-radius:8px;background:#fff}
+  .month-nav .mn-btn{width:24px;height:25px;border:0;border-radius:6px;background:transparent;
+    color:var(--slate-500);font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .month-nav .mn-btn:hover{background:#EFF4FB;color:var(--blue-700)}
+  .month-nav .mn-btn:active{transform:translateY(1px)}
+  .month-nav .mn-text{min-width:92px;text-align:center;font-size:13px;font-weight:800;color:var(--ink);
+    letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .month-nav .mn-text.is-all{color:var(--slate-500);font-weight:700}
   .sum-quick{display:flex;gap:4px}
   .sum-quick .chip-btn{height:28px;font-size:11.5px;padding:0 9px}
   .sum-rows{grid-column:2;display:flex;flex-direction:column;justify-content:center;min-width:0}
@@ -485,6 +495,7 @@
   @media (max-width:560px){.form-grid{grid-template-columns:1fr}}
   .field{display:flex;flex-direction:column;gap:5px;min-width:0}
   .field.span2{grid-column:1/-1}
+  #planLWrap[hidden]{display:none}
   .field label{font-size:12.5px;font-weight:700;color:var(--slate-600);display:flex;align-items:center;gap:4px}
   .field label .req{color:var(--red);font-weight:800}
   .field label .opt{color:var(--slate-400);font-weight:600;font-size:11.5px}
@@ -637,6 +648,17 @@
   .ins-chips.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
   .none-chips{flex:none}
   .none-chips .pchip.on{background:#0F172A;color:#fff;border-color:#0F172A}
+  /* ---------- v19 추지·페이백·중고폰 — [미기입]/[미반납] 1탭 칩 ---------- */
+  .pay-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px}
+  .pay-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+  @media (max-width:700px){.pay-grid,.pay-grid.two{grid-template-columns:1fr}}
+  /* 직원 모드에서는 중고폰금액 칸이 숨는다 — 남은 중고폰 칸이 한 줄을 채우게 */
+  body.role-staff .pay-grid.two{grid-template-columns:1fr}
+  .pay-row{display:flex;align-items:center;gap:6px}
+  .pay-row input.money{flex:1 1 0;min-width:0;width:auto}
+  .pay-row .pchip{white-space:nowrap;flex:none}
+  .pay-row.none-on input.money{background:#F7F9FC;color:#94A3B8}
+  .period-chips.none-chips.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
   .form-error b{font-weight:900}
   .form-error .fe-sub{font-size:11.5px;font-weight:700;color:#8A5200}
   .form-error.show{font-size:13.5px}
@@ -652,6 +674,7 @@
   .ins-chip.on{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700);font-weight:800}
   .ins-chip.on::before{content:"✓ ";font-weight:900}
   .ins-chip.on[data-ins="가입"]{background:var(--green-bg);border-color:#7FCBAE;color:#0B5F45}
+  .badge.foreign-on{background:#EEF2FF;border-color:#C7D2FE;color:#3730A3}
   @media (pointer:coarse){.ins-chip{height:40px;padding:0 19px;font-size:13.5px}}
 
   /* ---------- 관리자/직원 모드 ---------- */
@@ -1307,7 +1330,12 @@
   <section class="card summary">
     <div class="sum-month">
       <label for="monthInput">기준 월</label>
-      <input type="month" id="monthInput" lang="ko-KR">
+      <div class="month-nav" role="group" aria-label="기준 월 선택">
+        <button type="button" class="mn-btn" id="monthPrev" aria-label="이전 달">◀</button>
+        <input type="hidden" id="monthInput" value="">
+        <span class="mn-text" id="monthShow" aria-live="polite">—</span>
+        <button type="button" class="mn-btn" id="monthNext" aria-label="다음 달">▶</button>
+      </div>
       <div class="sum-quick">
         <button class="chip-btn" id="thisMonthBtn">이번 달</button>
         <button class="chip-btn" id="allMonthBtn">전체 기간</button>
@@ -1533,6 +1561,16 @@
 
         <div class="section-label">개통 정보</div>
 
+        <!-- v19 — 외국인 고객 (체크하면 외국인 전용 요금제가 열린다) -->
+        <div class="field span2 foreign-field">
+          <label id="f_foreignLabel">고객 구분 <span class="opt">선택</span></label>
+          <input id="f_foreign" type="hidden" value="">
+          <div class="ins-chips" id="foreignChips" role="group" aria-labelledby="f_foreignLabel">
+            <button type="button" class="ins-chip" data-foreign="1" aria-pressed="false">외국인</button>
+          </div>
+          <span class="hint">외국인 고객이면 눌러 주세요 — 외국인 전용 요금제(웰컴5·웰컴3·웰컴1)가 요금제 목록에 함께 나옵니다.</span>
+        </div>
+
         <div class="field span2">
           <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
           <input id="f_model" type="text" autocomplete="off" list="modelList" placeholder="예) 갤럭시 S26 / 아이폰 17 프로">
@@ -1560,12 +1598,23 @@
 
         <div class="field span2">
           <div class="field-head">
-            <label for="f_plan">요금제(상품명) <span class="req">*</span></label>
-            <button type="button" class="field-pick" data-plan-pick="f_plan">요금제 선택</button>
+            <label for="f_plan">요금제(무선) <span class="req">*</span></label>
+            <button type="button" class="field-pick" data-plan-pick="f_plan">모바일 요금제</button>
           </div>
-          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 베이직 + 지니 TV 에센스">
+          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 유튜브">
           <div class="plan-suggest" id="sug_f_plan" role="listbox" aria-label="요금제 검색 결과"></div>
           <div class="risk-badges" id="formRisk" hidden></div>
+        </div>
+
+        <!-- v19 — 유선 개통유형(인터넷·TV)을 고를 때만 나타나는 유선 요금제 칸 -->
+        <div class="field span2" id="planLWrap" hidden>
+          <div class="field-head">
+            <label for="f_plan_l">유선 요금제 <span class="req">*</span></label>
+            <button type="button" class="field-pick" data-plan-pick="f_plan_l">유선 요금제 선택</button>
+          </div>
+          <input id="f_plan_l" type="text" autocomplete="off" placeholder="예) 인터넷 베이직 + 지니 TV 에센스">
+          <div class="plan-suggest" id="sug_f_plan_l" role="listbox" aria-label="유선 요금제 검색 결과"></div>
+          <span class="hint">유선 개통유형을 고르면 열립니다. 창에서 인터넷·WiFi·TV·셋탑을 고르면 조합이 그대로 들어가고, 저장할 때 무선 요금제와 <b> + </b>로 이어 한 칸(요금제)에 들어갑니다.</span>
         </div>
 
         <div class="field span2 ins-field">
@@ -1684,30 +1733,72 @@
           <span class="hint">인터넷+TV · 인터넷 약정갱신</span>
         </div>
 
-        <div class="field">
-          <label for="f_extra">추가지원금 (원) <span class="opt">선택</span></label>
-          <input id="f_extra" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-          <span class="hint">순마진에서 빠지는 금액</span>
-        </div>
-        <div class="field">
-          <label for="f_paycard">페이백 (카드결제) <span class="opt">선택</span></label>
-          <input id="f_paycard" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-          <span class="hint">카드로 돌려준 금액</span>
-        </div>
-        <div class="field">
-          <label for="f_paybank">페이백 (입금) <span class="opt">선택</span></label>
-          <input id="f_paybank" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-          <span class="hint">계좌로 입금한 금액</span>
+        <!-- v19 — 추지·페이백은 [미기입] 칩을 누르거나 금액을 입력해야 저장된다 -->
+        <div class="form-box" id="payBox">
+          <div class="form-box-head">
+            <span class="fb-title">추지 · 페이백</span>
+            <span class="fb-note">없으면 [미기입] 1탭</span>
+          </div>
+          <div class="pay-grid">
+            <div class="field">
+              <label for="f_extra">추가지원금 (원) <span class="req">*</span></label>
+              <div class="pay-row" id="extraRow">
+                <input id="f_extra" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+                <input id="f_extra_none" type="hidden" value="">
+                <div class="period-chips none-chips" id="extraNoneChips" role="group" aria-label="추가지원금 미기입">
+                  <button type="button" class="pchip" data-pay-none="extra" aria-pressed="false">미기입</button>
+                </div>
+              </div>
+              <span class="hint">순마진에서 빠지는 금액</span>
+            </div>
+            <div class="field">
+              <label for="f_paycard">페이백 (카드결제) <span class="req">*</span></label>
+              <div class="pay-row" id="paycardRow">
+                <input id="f_paycard" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+                <input id="f_paycard_none" type="hidden" value="">
+                <div class="period-chips none-chips" id="paycardNoneChips" role="group" aria-label="페이백 카드결제 미기입">
+                  <button type="button" class="pchip" data-pay-none="paycard" aria-pressed="false">미기입</button>
+                </div>
+              </div>
+              <span class="hint">카드로 돌려준 금액</span>
+            </div>
+            <div class="field">
+              <label for="f_paybank">페이백 (입금) <span class="req">*</span></label>
+              <div class="pay-row" id="paybankRow">
+                <input id="f_paybank" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+                <input id="f_paybank_none" type="hidden" value="">
+                <div class="period-chips none-chips" id="paybankNoneChips" role="group" aria-label="페이백 입금 미기입">
+                  <button type="button" class="pchip" data-pay-none="paybank" aria-pressed="false">미기입</button>
+                </div>
+              </div>
+              <span class="hint">계좌로 입금한 금액</span>
+            </div>
+          </div>
         </div>
 
-        <div class="field">
-          <label for="f_used">중고폰 <span class="opt">선택</span></label>
-          <input id="f_used" type="text" autocomplete="off" placeholder="예) 반납 / 매입 / 미사용">
-        </div>
-        <div class="field">
-          <label for="f_usedprice">중고폰금액 (원) <span class="opt">선택</span></label>
-          <input id="f_usedprice" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-          <span class="hint">중고폰 매입·판매 금액</span>
+        <!-- v19 — 중고폰도 [미반납] 칩을 누르거나 중고폰·금액을 입력해야 저장된다 -->
+        <div class="form-box" id="usedBox">
+          <div class="form-box-head">
+            <span class="fb-title">중고폰</span>
+            <span class="fb-note">받았을 때만 입력</span>
+            <span class="grow"></span>
+            <input id="f_used_none" type="hidden" value="">
+            <div class="period-chips none-chips" id="usedNoneChips" role="group" aria-label="중고폰 미반납">
+              <button type="button" class="pchip" data-pay-none="used" aria-pressed="false">미반납</button>
+            </div>
+          </div>
+          <div class="pay-grid two">
+            <div class="field">
+              <label for="f_used">중고폰 <span class="req">*</span></label>
+              <input id="f_used" type="text" autocomplete="off" placeholder="예) 갤럭시 S22 반납 / 아이폰 14 매입">
+            </div>
+            <div class="field admin-only">
+              <label for="f_usedprice">중고폰금액 (원) <span class="opt">선택</span></label>
+              <input id="f_usedprice" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+              <span class="hint">중고폰 매입·판매 금액 · 관리자만 입력</span>
+            </div>
+          </div>
+          <span class="hint">중고폰을 받지 않았으면 위 <b>미반납</b>을 누르세요.</span>
         </div>
 
         <div class="field span2">
@@ -2031,6 +2122,8 @@
   var INS_TAG = '[보험:';                             // [보험:파손] [보험:분실+파손]
   var CARD_BRANDS = ['우리', '신한', '하나', '롯데', '현대', '삼성', 'KB국민', '기타'];
   var CARD_TAG = '[카드:';
+  /* v19 — 외국인 고객 표시(앱 전용) · 시트에는 [외국인] 메모 표기로만 나간다 */
+  var FOREIGN_MARK = '[외국인]';
   /* 요금제 변경 · 부가서비스 해지 '완료 확인' — 같은 방식(시트 메모 표기)으로 공유한다
      · 앱 안: 요금제변경완료 / 부가서비스해지완료 = '완료' | ''
      · 시트 : 메모 칸 앞에 [요금완료] / [부가완료] */
@@ -2067,6 +2160,70 @@
     { key: '페이백입금', field: '페이백입금' }
   ];
   var PAY_FIELDS = ['추가지원금', '페이백카드', '페이백입금'];
+
+  /* v19 — 추지·페이백·중고폰은 '미기입/미반납' 1탭 칩을 누르거나 금액을 적어야 저장된다.
+     · input 은 빈칸 그대로 두고(placeholder 0), 칩을 눌렀을 때만 통과 → 빈칸과 0원이 섮이지 않는다
+     · 새 등록은 미선택 · 기존 기록 수정은 0/비어 있으면 칩이 켜진 채로 열린다 */
+  var PAY_NONE_ITEMS = [
+    { kind: 'extra', flag: 'f_extra_none', chips: 'extraNoneChips', rows: ['extraRow'], inputs: ['f_extra'], mark: '미기입' },
+    { kind: 'paycard', flag: 'f_paycard_none', chips: 'paycardNoneChips', rows: ['paycardRow'], inputs: ['f_paycard'], mark: '미기입' },
+    { kind: 'paybank', flag: 'f_paybank_none', chips: 'paybankNoneChips', rows: ['paybankRow'], inputs: ['f_paybank'], mark: '미기입' },
+    { kind: 'used', flag: 'f_used_none', chips: 'usedNoneChips', rows: [], inputs: ['f_used', 'f_usedprice'], mark: '미반납' }
+  ];
+
+  function payItem(kind) {
+    for (var i = 0; i < PAY_NONE_ITEMS.length; i++) if (PAY_NONE_ITEMS[i].kind === kind) return PAY_NONE_ITEMS[i];
+    return null;
+  }
+
+  function payNoneOn(kind) {
+    var it = payItem(kind);
+    return !!(it && $(it.flag) && $(it.flag).value);
+  }
+
+  /* 칩 모양·입력칸 흐림을 지금 상태에 맞춘다 */
+  function paintPayNone() {
+    for (var i = 0; i < PAY_NONE_ITEMS.length; i++) {
+      var it = PAY_NONE_ITEMS[i], on = payNoneOn(it.kind);
+      var box = $(it.chips);
+      if (box) {
+        var b = box.querySelector('button[data-pay-none="' + it.kind + '"]');
+        if (b) { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); }
+      }
+      for (var r = 0; r < it.rows.length; r++) if ($(it.rows[r])) $(it.rows[r]).classList.toggle('none-on', on);
+    }
+  }
+
+  function setPayNone(kind, on) {
+    var it = payItem(kind);
+    if (!it || !$(it.flag)) return;
+    $(it.flag).value = on ? it.mark : '';
+    paintPayNone();
+  }
+
+  /* 칩에 빨간 표시를 달거나 벗긴다 (입력칸까지 함께) */
+  function payNoneBad(kind, on) {
+    var it = payItem(kind);
+    if (!it) return;
+    var box = $(it.chips);
+    if (box) box.classList.toggle('bad', !!on);
+    for (var i = 0; i < it.inputs.length; i++) if ($(it.inputs[i])) $(it.inputs[i]).classList.toggle('bad', !!on);
+    if (!on && el.editDialog && !el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
+  }
+
+  function togglePayNone(kind) {
+    var it = payItem(kind);
+    if (!it) return;
+    var on = !payNoneOn(kind);
+    if (on) for (var i = 0; i < it.inputs.length; i++) if ($(it.inputs[i])) $(it.inputs[i]).value = '';
+    setPayNone(kind, on);
+    payNoneBad(kind, false);
+    refreshPolicy(false);
+    updateFormRisk();
+  }
+
+  // 금액이 적혔는가 — "0" 도 적힌 것으로 본다(빈칸과 구분)
+  function moneyFilled(v) { return /[0-9]/.test(String(v == null ? '' : v)); }
 
   /* 주의 배지 기준 — 12개월 약정 · 37K 미만 ·스쿨잼/SEG 하향 */
   var RISK_12 = /12\s*개월|약정\s*12|십이\s*개월/;
@@ -2124,6 +2281,12 @@
       ['베이직4GB(이월)', 37000], ['베이직1.4GB', 33000], ['베이직600MB', 28900]
     ], function (x) { add('mobile', '베이직', x[0], x[1]); });
 
+    // 외국인 전용 — [외국인]을 켰을 때만 요금제 목록·검색에 나온다 (v19)
+    each([['웰컴5', 59000], ['웰컴3', 49000], ['웰컴1', 39000]], function (x) {
+      add('mobile', '웰컴(외국인)', x[0], x[1]);
+      rows[rows.length - 1].foreign = true;
+    });
+
     // 인터넷 (패밀리 제외)
     each([
       ['베이직', 33000], ['에센스', 38500], ['슬림', 22000], ['프리미엄', 44000],
@@ -2179,6 +2342,7 @@
       return 3;
     }
     mob.sort(function (a, b) {
+      if (!!a.foreign !== !!b.foreign) return a.foreign ? 1 : -1;   // 외국인 전용(웰컴)은 맨 뒤
       return (band(a.p || 0) - band(b.p || 0)) ||
         ((b.p || 0) - (a.p || 0)) ||                      // 같은 순위 안에서는 비진 것부터
         (catFirst[a.cat] - catFirst[b.cat]) ||
@@ -2458,11 +2622,26 @@
     return s;
   }
 
+  // 외국인 고객 — '외국인' 또는 빈값
+  function normalizeForeign(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '').toLowerCase();
+    if (!s) return '';
+    return /외국인|foreign|외국|^y$|^yes$|^true$|^1$/.test(s) ? '외국인' : '';
+  }
+
+  function isForeign(v) { return normalizeForeign(v) === '외국인'; }
+
+  // 할인유형 표시 이름 — 단말할인(공시) / 요금할인(선약)
+  function discountLabel(v) {
+    var d = normalizeDiscount(v);
+    return d ? (DISCOUNT_LABEL[d] || d) : '';
+  }
+
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '' };
-    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone']];
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false };
+    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
       if (s.indexOf(tags[i][0]) < 0) continue;
@@ -2531,10 +2710,11 @@
     var m = t.memo;
     var head = [];
     var ins = normalizeIns(rec.단말보험);
-    if (ins === '파손' || ins === '분실+파손') head.push(INS_TAG + ins + ']');
+    if (ins === '파손' || ins === '분실+파손' || ins === '미가입') head.push(INS_TAG + ins + ']');
     else if (ins === '가입') head.push(INS_MARK);
     var card = normalizeCard(rec.제휴카드);
     if (card) head.push(CARD_TAG + card + ']');
+    if (isForeign(rec.외국인)) head.push(FOREIGN_MARK);
     if (normalizeDone(rec.요금제변경완료) === '완료') head.push(PLAN_DONE_MARK);
     if (normalizeDone(rec.부가서비스해지완료) === '완료') head.push(ADDON_DONE_MARK);
     var disc = normalizeDiscount(rec.할인유형);
@@ -2569,6 +2749,7 @@
     var tags = splitMemoTags(o.메모);
     o.메모 = tags.memo;
     o.단말보험 = tags.ins ? normalizeIns(tags.ins) : normalizeIns(o.단말보험);
+    o.외국인 = tags.foreign ? '외국인' : normalizeForeign(r && r.외국인);
     o.제휴카드 = tags.card ? normalizeCard(tags.card) : normalizeCard(r && r.제휴카드);
     o.요금제변경완료 = tags.planDone ? '완료' : normalizeDone(r && r.요금제변경완료);
     o.부가서비스해지완료 = tags.addonDone ? '완료' : normalizeDone(r && r.부가서비스해지완료);
@@ -2872,6 +3053,7 @@
     for (k in rec) if (rec.hasOwnProperty(k)) out[k] = rec[k];
     out.메모 = sheetMemo(rec);
     delete out.단말보험;
+    delete out.외국인;
     delete out.요금제변경완료;
     delete out.부가서비스해지완료;
     return out;
@@ -2929,6 +3111,14 @@
     snap.단말보험 = normalizeIns(rec.단말보험);
     snap.요금제변경완료 = normalizeDone(rec.요금제변경완료);
     snap.부가서비스해지완료 = normalizeDone(rec.부가서비스해지완료);
+    // v19 — 앱 전용 항목도 스냅샷에 담는다.
+    //   여기서 빠뜨리면 sheetMemo() 가 시트 메모 태그([단말할인]·[카드:…]·[추지:…]·[외국인])를 못 만들어
+    //   서버를 한 번 왕복한 뒤 공시/보험/카드가 풀려 버린다.
+    snap.할인유형 = normalizeDiscount(rec.할인유형);
+    snap.특수조건 = condText(condList(rec.특수조건));
+    snap.제휴카드 = normalizeCard(rec.제휴카드);
+    snap.외국인 = normalizeForeign(rec.외국인);
+    for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
 
@@ -3509,7 +3699,17 @@
   function planForPolicy(rec) {
     var p = planMonthly(rec && rec.요금제);
     if (p > 0 && p < 37000 && planFloorOk(rec)) return 37000;   // 37K 구간으로 올려 인정
+    if (planTier61(rec)) return Math.max(p, 61000);             // 50K↑ + 만65세↑/만18세↓ → 61K 구간 (v19)
     return p;
+  }
+
+  /* v19 — 만 65세 이상 또는 만 18세 이하 고객이 월정액 50K 이상 요금제를 쓰면
+     정책 구간·MRA 포인트 구간을 61K 이상으로 인정한다 */
+  function planTier61(rec) {
+    var p = planMonthly(rec && rec.요금제);
+    if (!(p >= 50000)) return false;
+    var age = ageAt(rec && rec.생년월일, rec && rec.개통일);
+    return age >= 65 || (age >= 0 && age <= 18);
   }
 
   function mkey(s) {
@@ -3763,6 +3963,10 @@
       return res;
     }
     var plan = planForPolicy(rec);
+    // v19 — 50K 이상 + 만65세↑/만18세↓ 이면 61K 구간으로 올려 인정 (이유를 남긴다)
+    if (planTier61(rec) && planMonthly(rec.요금제) < 61000) {
+      res.notes.push('만 65세 이상·만 18세 이하 + 50K 이상 요금제 → 정책 구간을 61K 이상으로 인정했습니다.');
+    }
     if (plan < 37000) {
       if (!plan) res.notes.push('요금제 월정액을 읽지 못해 무선 정책을 계산하지 못했습니다.');
       else res.notes.push('요금제가 37K 미만이라 무선 정책 대상이 아닙니다 (정책 기준 37K 이상).');
@@ -4176,7 +4380,8 @@
       개통일: $('f_date') ? $('f_date').value : '',
       개통유형: $('f_type') ? $('f_type').value : '',
       기종: $('f_model') ? $('f_model').value : '',
-      요금제: $('f_plan') ? $('f_plan').value : '',
+      // v19 — 저장값과 같은 모양(무선 + 유선)으로 넘겨 유선 포인트도 계산되게
+      요금제: joinPlanValue($('f_plan') ? $('f_plan').value : '', $('f_plan_l') ? $('f_plan_l').value : ''),
       생년월일: $('f_birth') ? $('f_birth').value : '',
       할인유형: $('f_discount') ? $('f_discount').value : '',
       특수조건: $('f_cond') ? $('f_cond').value : ''
@@ -4294,6 +4499,28 @@
     }
   }
 
+  /* ---------- 외국인 고객 (v19) — 1탭 체크 · 외국인 전용 요금제 열기 ---------- */
+  function foreignOn() {
+    return isForeign($('f_foreign') && $('f_foreign').value);
+  }
+
+  function setForeignChip(on) {
+    var input = $('f_foreign');
+    if (input) input.value = on ? '외국인' : '';
+    var chips = document.querySelectorAll('#foreignChips button[data-foreign]');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.toggle('on', !!on);
+      chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    // 요금제 목록(선택창 · 검색 후보)도 바로 따라간다
+    if (typeof renderPlanPickerBody === 'function') renderPlanPickerBody();
+    if (planSug && planSug.input) showPlanSuggest(planSug.input);
+  }
+
+  function foreignTagHtml(v) {
+    return isForeign(v) ? '<span class="badge foreign-on">외국인</span>' : '';
+  }
+
   /* ---------------- 요금제 빠른 선택 (숫자 검색 + 칩 선택창) ----------------
      · 입력칸에 90 / 90000 / 90k / 베이직 / 에센스 처럼 치면 바로 아래에 후보가 떠서 1탭 입력
      · '요금제 선택' 창은 모바일 / 유선 두 탭뿐. 유선은 고른 것만 조합된다.
@@ -4327,7 +4554,7 @@
   function splitPlanValue(v) {
     var s = String(v || '').trim();
     if (!s) return { w: '', l: '' };
-    // 구분자는 ' / '(공백 포함) — 상품명 안의 '/' (초이스90 티빙/지니/밀리)와 구분한다
+    // 이전 구분자 ' / '(공백 포함) — 상품명 안의 '/' (초이스90 티빙/지니/밀리)와 구분한다
     var parts = s.split(' / ');
     if (parts.length > 1) {
       return { w: parts[0].trim(), l: parts.slice(1).join(' / ').trim() };
@@ -4337,12 +4564,29 @@
     if (i > 0 && isWiredPlanText(s.slice(i + 1))) {
       return { w: s.slice(0, i).trim(), l: s.slice(i + 1).trim() };
     }
+    // v19 구분자 ' + ' — 첫 ' + ' 앞이 무선 요금제, 뒤는 유선 조합(유선 조합 안에 ' + '가 더 있어도 된다)
+    var j = s.indexOf(' + ');
+    if (j > 0 && !isWiredPlanText(s.slice(0, j))) {
+      return { w: s.slice(0, j).trim(), l: s.slice(j + 3).trim() };
+    }
     return isWiredPlanText(s) ? { w: '', l: s } : { w: s, l: '' };
   }
 
+  // v19 — 무선·유선을 ' + '로 이어 요금제 한 칸(시트 20컬럼)에 저장한다
   function joinPlanValue(w, l) {
-    if (w && l) return w + ' / ' + l;
+    if (w && l) return w + ' + ' + l;
     return w || l || '';
+  }
+
+  /* 저장된 요금제를 무선·유선 칸으로 나눈다 — 개통유형이 한쪽뿐이면 그쪽 전부로 본다
+     (예: 유선 단독 기록 "인터넷 베이직 + 지니 TV 에센스" 를 무선으로 잘못 나누지 않도록) */
+  function planPartsForType(v, type) {
+    var s = String(v || '').trim();
+    var slots = typeSlots(type || '');
+    if (!s) return { w: '', l: '' };
+    if (!slots.w && slots.l) return { w: '', l: s };
+    if (slots.w && !slots.l) return { w: s, l: '' };
+    return splitPlanValue(s);
   }
 
   function setPlanField(input, text) {
@@ -4367,6 +4611,7 @@
     var hits = [];
     for (var i = 0; i < KT_PLANS.length; i++) {
       var p = KT_PLANS[i];
+      if (p.foreign && !foreignOn()) continue;   // 외국인 전용 요금제는 [외국인] 체크 때만
       var sc = -1;
       if (num !== null && p.p) {
         var round = String(Math.round(num));
@@ -4514,6 +4759,7 @@
     for (i = 0; i < KT_PLANS.length; i++) {
       p = KT_PLANS[i];
       if (p.tab !== 'mobile') continue;
+      if (p.foreign && !foreignOn()) continue;
       if (p.cat !== cat) {
         if (open) html += '</div></div>';
         html += '<div class="pp-group"><div class="pp-group-title">' + esc(p.cat) + '</div><div class="pp-chips">';
@@ -4571,10 +4817,33 @@
 
   function openPlanPicker(targetId) {
     if (!el.planPicker) return;
-    planPick = { target: targetId || 'f_plan', tab: 'mobile', wired: {} };
-    setPlanTab('mobile');
+    renderPlanPickerBody();   // [외국인] 여부에 따라 외국인 전용 요금제가 붙는다
+    var target = targetId || 'f_plan';
+    // v19 — 무선 요금제 칸은 모바일만, 유선 요금제 칸은 유선만 채운다 (변경요금제 칸은 둘 다)
+    var only = target === 'f_plan' ? 'mobile' : target === 'f_plan_l' ? 'wired' : 'both';
+    planPick = { target: target, tab: only === 'wired' ? 'wired' : 'mobile', wired: {}, only: only };
+    paintPlanTabs();
+    setPlanTab(planPick.tab);
     renderWiredState();
     if (!el.planPicker.open) el.planPicker.showModal();
+  }
+
+  /* 고른 칸에 따라 탭을 감춘다 — 무선 칸에서 유선 상품이 섮이지 않게 */
+  function paintPlanTabs() {
+    if (!el.planPicker) return;
+    var tabs = el.planPicker.querySelectorAll('[data-pp-tab]');
+    for (var i = 0; i < tabs.length; i++) {
+      var t = tabs[i].getAttribute('data-pp-tab');
+      tabs[i].hidden = !!(planPick.only && planPick.only !== 'both' && planPick.only !== t);
+    }
+    var head = el.planPicker.querySelector('.dlg-head p');
+    if (head) {
+      head.textContent = planPick.only === 'wired'
+        ? '인터넷 · WiFi · 지니 TV · 셋탑에서 고른 것만 조합되어 유선 요금제 칸에 들어갑니다'
+        : planPick.only === 'mobile'
+          ? '모바일 요금제를 누르면 바로 무선 요금제 칸에 입력됩니다'
+          : '모바일은 칩을 누르면 바로 입력됩니다 · 유선은 고른 것만 조합됩니다';
+    }
   }
 
   function closePlanPicker() {
@@ -4626,8 +4895,11 @@
     if (!p) return;
     var input = $(planPick.target);
     if (input) {
-      var cur = splitPlanValue(input.value);
-      setPlanField(input, joinPlanValue(planInsertText(p), cur.l));
+      if (planPick.target === 'f_plan_l') setPlanField(input, planInsertText(p));
+      else {
+        var cur = splitPlanValue(input.value);
+        setPlanField(input, joinPlanValue(planInsertText(p), cur.l));
+      }
       toast('요금제를 입력했습니다.');
     }
     closePlanPicker();
@@ -4638,11 +4910,30 @@
     if (!txt) return;
     var input = $(planPick.target);
     if (input) {
-      var cur = splitPlanValue(input.value);
-      setPlanField(input, joinPlanValue(cur.w, txt));
+      if (planPick.target === 'f_plan_l') {
+        // 유선 요금제 칸 — 고른 조합을 그대로 넣는다
+        setPlanField(input, txt);
+        syncWiredPlanField();
+      } else {
+        var cur = splitPlanValue(input.value);
+        setPlanField(input, joinPlanValue(cur.w, txt));
+      }
       toast('요금제를 입력했습니다.');
     }
     closePlanPicker();
+  }
+
+  /* 유선 개통유형을 골랐을 때만 유선 요금제 칸을 보인다 (해제하면 비운다) */
+  function syncWiredPlanField() {
+    var wrap = $('planLWrap');
+    if (!wrap) return;
+    var on = !!typeSlots($('f_type').value).l;
+    if (!on && $('f_plan_l')) {
+      $('f_plan_l').value = '';
+      $('f_plan_l').classList.remove('bad');
+    }
+    wrap.hidden = !on;
+    if (!on && el.editDialog && !el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
   }
 
   function openSyncDialog() {
@@ -5348,6 +5639,13 @@
       (val ? val : '<span class="muted">—</span>') + '</span></div>';
   }
 
+  // v19 — 값이 없는 줄은 카드 상세에서 통째로 생략한다 (— 로 길게 늘어놓지 않음)
+  function mRowOpt(label, val) {
+    var s = String(val == null ? '' : val).trim();
+    if (!s || s === '0') return '';
+    return mRow(label, val);
+  }
+
   // 모바일 카드 상세 — 요금제 변경 / 부가서비스 해지를 각각 따로 (날짜·D-Day·완료 버튼)
   function mDueRow(label, kind, r) {
     var isPlan = kind === 'plan';
@@ -5508,6 +5806,7 @@
       '<div class="mcard-main" data-mtoggle="1">' +
         '<div class="m-line1">' +
           '<span class="m-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
+          foreignTagHtml(r.외국인) +
           typeBadgesHtml(r.개통유형) +
           ddBadge +
           '<span class="m-caret">▾</span>' +
@@ -5523,26 +5822,29 @@
         '</div>' +
       '</div>' +
       '<div class="mcard-detail">' +
-        mRow('연락처', r.연락처 ? esc(r.연락처) : '') +
-        mRow('생년월일', r.생년월일 ? esc(r.생년월일) : '') +
-        mRow('요금제', r.요금제 ? esc(r.요금제) : '') +
-        mRow('변경요금제', r.변경요금제 ? esc(r.변경요금제) : '') +
+        mRowOpt('연락처', r.연락처 ? esc(r.연락처) : '') +
+        mRowOpt('생년월일', r.생년월일 ? esc(r.생년월일) : '') +
+        mRowOpt('요금제', r.요금제 ? esc(r.요금제) : '') +
+        mRowOpt('변경요금제', r.변경요금제 ? esc(r.변경요금제) : '') +
         mDueRow('요금제 변경일', 'plan', r) +
-        mRow('부가서비스', r.부가서비스 ? esc(r.부가서비스) : '') +
-        mRow('부가서비스유지', r.부가서비스유지 ? esc(r.부가서비스유지) : '') +
+        mRowOpt('부가서비스', r.부가서비스 ? esc(r.부가서비스) : '') +
+        mRowOpt('부가서비스유지', r.부가서비스유지 ? esc(r.부가서비스유지) : '') +
         mDueRow('부가서비스 해지', 'addon', r) +
-        mRow('단말보험', normalizeIns(r.단말보험) ? insBadgeHtml(r.단말보험) : '')
-        + mRow('제휴카드', normalizeCard(r.제휴카드) ? esc(normalizeCard(r.제휴카드)) : '')
-        + mRow('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
-        mRow('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
+        // v19 — 할인유형·보험·카드는 선택 결과이므로 미가입까지 그대로 보여 준다
+        mRow('할인유형', discountLabel(r.할인유형)) +
+        mRow('단말보험', normalizeIns(r.단말보험) ? insBadgeHtml(r.단말보험) : '') +
+        mRow('제휴카드', normalizeCard(r.제휴카드) ? esc(normalizeCard(r.제휴카드)) : '') +
+        (isForeign(r.외국인) ? mRow('고객 구분', '외국인') : '') +
+        mRowOpt('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
+        (isAdmin() ? mRowOpt('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') : '') +
         (isAdmin() ? mRow('무선 리베이트', wirelessRebateView(r).manual ? fmtNum(r.무선리베이트) + '원'
           : (wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) : '') +
-        mRow('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') +
-        (isAdmin() ? mRow('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
-        (isAdmin() ? mRow('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' : '') : '') +
-        (isAdmin() ? mRow('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' : '') : '') +
+        (isAdmin() ? mRowOpt('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') : '') +
+        (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
+        (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' : '') : '') +
+        (isAdmin() ? mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' : '') : '') +
         (isAdmin() ? mRow('순마진', '<b>' + netText(r) + '원</b>') : '') +
-        mRow('메모', r.메모 ? esc(r.메모) : '') + riskBadgesHtml(r) +
+        mRowOpt('메모', r.메모 ? esc(r.메모) : '') + riskBadgesHtml(r) +
         mRow('담당자', r.담당자 ? esc(r.담당자) : '') +
         '<div class="m-actions">' + rowActionButtons(r) + '</div>' +
       '</div>' +
@@ -5645,7 +5947,7 @@
 
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
-        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span></td>' +
+        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + '</td>' +
         '<td data-label="연락처" class="nowrap">' + (r.연락처 ? esc(r.연락처) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
@@ -5674,15 +5976,12 @@
   }
 
   function renderFilterUi() {
-    // 전체 기간일 때는 달 입력칸이 빈 마스크로 보이지 않도록 지금 달을 보여주되 흐리게 표시
-    if (!state.filters.month) {
-      if (el.monthInput.value !== currentMonth()) el.monthInput.value = currentMonth();
-      el.monthInput.classList.add('is-all');
-      el.monthInput.title = '전체 기간으로 보는 중입니다. 달을 고르면 그 달만 봅니다.';
-    } else {
-      el.monthInput.value = state.filters.month;
-      el.monthInput.classList.remove('is-all');
-      el.monthInput.title = '';
+    // v19 — ◀ · 2026년 11월 · ▶ 로 달을 오간다 (내부 상태값은 'YYYY-MM' 그대로)
+    if (el.monthInput) el.monthInput.value = state.filters.month || '';
+    if (el.monthShow) {
+      el.monthShow.textContent = state.filters.month ? monthLabel(state.filters.month) : '전체 기간';
+      el.monthShow.classList.toggle('is-all', !state.filters.month);
+      el.monthShow.title = state.filters.month ? '' : '전체 기간으로 보는 중입니다. 화살표를 누르면 달 단위로 봅니다.';
     }
     renderTypeFilter();
     el.typeFilter.value = state.filters.type;
@@ -6059,6 +6358,7 @@
     if (isWiredType(t)) slots.l = (slots.l === t) ? '' : t;
     else slots.w = (slots.w === t) ? '' : t;
     renderTypeChips(joinTypeParts(slots.w, slots.l));
+    syncWiredPlanField();
     refreshPolicy(true); updateFormRisk();
   }
 
@@ -6068,9 +6368,9 @@
     var slots = typeSlots($('f_type').value);
     var both = !!(slots.w && slots.l);
     if (both) hint.innerHTML = document.body.classList.contains('role-staff')
-      ? '무선 + 유선 동시 개통입니다. 유선 상품명은 요금제 칸에 적어 주세요.'
-      : '무선 + 유선 동시 개통입니다. <b>무선·유선 리베이트를 각각</b> 입력해 주세요.';
-    else if (slots.l) hint.textContent = '유선(인터넷·TV) 개통입니다. 요금제 칸에는 상품명을 적어 주세요.';
+      ? '무선 + 유선 동시 개통입니다. 유선 상품은 아래 <b>유선 요금제</b> 칸에 적어 주세요.'
+      : '무선 + 유선 동시 개통입니다. 유선 상품은 아래 <b>유선 요금제</b> 칸에, <b>무선·유선 리베이트는 각각</b> 입력해 주세요.';
+    else if (slots.l) hint.textContent = '유선(인터넷·TV) 개통입니다. 아래 유선 요금제 칸에 상품명을 적어 주세요.';
     else if (slots.w) hint.textContent = '무선 개통입니다. 요금제 변경은 바꿀 때만 입력하면 됩니다.';
     else hint.textContent = '무선은 최대 1개, 유선은 최대 1개 — 두 줄을 함께 골라 한 건으로 저장할 수 있습니다.';
     hint.classList.toggle('both', both);
@@ -6141,11 +6441,16 @@
     $('f_model').value = r.기종 || '';
     markModelChips($('f_model').value);
     setInsChips(r.단말보험);
+    setForeignChip(isForeign(r.외국인));
     setCardChips(r.제휴카드 || '');
     $('f_plan_none').value = '';
     $('f_addon_none').value = '';
     paintNoneChips();
-    $('f_plan').value = r.요금제 || '';
+    // v19 — 저장된 요금제 한 칸(무선 + 유선)을 무선·유선 칸으로 나쳐 복원
+    var pp = planPartsForType(r.요금제 || '', r.개통유형 || '');
+    $('f_plan').value = pp.w;
+    $('f_plan_l').value = pp.l;
+    syncWiredPlanField();
     $('f_newplan').value = r.변경요금제 || '';
     $('f_newdate').value = normalizeDate(r.요금제변경일자) || '';
     $('f_addon').value = r.부가서비스 || '';
@@ -6163,6 +6468,12 @@
     $('f_extra').value = r.추가지원금 ? fmtNum(r.추가지원금) : '';
     $('f_paycard').value = r.페이백카드 ? fmtNum(r.페이백카드) : '';
     $('f_paybank').value = r.페이백입금 ? fmtNum(r.페이백입금) : '';
+    // v19 — 새 등록은 미선택, 기존 기록 수정은 0·빈칸이면 [미기입]/[미반납]을 켠 채로 열어 수정 흐름을 깨지 않는다
+    setPayNone('extra', !!rec && !(Number(r.추가지원금) > 0));
+    setPayNone('paycard', !!rec && !(Number(r.페이백카드) > 0));
+    setPayNone('paybank', !!rec && !(Number(r.페이백입금) > 0));
+    setPayNone('used', !!rec && !(String(r.중고폰 || '').trim() || Number(r.중고폰금액) > 0));
+    paintPayNone();
     $('f_memo').value = r.메모 || '';
     $('f_staff').value = r.담당자 || (rec ? '' : (sync.name || ''));
     markStaffChips(el.staffChips, $('f_staff').value);
@@ -6192,7 +6503,10 @@
     var phone = $('f_phone').value.trim();
     var birth = $('f_birth').value.trim();
     var date = $('f_date').value;
-    var plan = $('f_plan').value.trim();
+    var planW = $('f_plan').value.trim();
+    var planL = $('f_plan_l') ? $('f_plan_l').value.trim() : '';
+    // v19 — 저장은 요금제 한 칸: 무선 + 유선 (시트 20컴럼 그대로)
+    var plan = joinPlanValue(planW, planL);
     clearInvalid();
 
     // 필수 = 개인정보(고객명·연락처·생년월일) + 요금제 (+ 개통일)
@@ -6204,27 +6518,43 @@
     if (!name) need.push({ label: '고객명', el: $('f_name') });
     if (!phone) need.push({ label: '연락처', el: $('f_phone') });
     if (!birth) need.push({ label: '생년월일', el: $('f_birth') });
-    if (!plan) need.push({ label: '요금제', el: $('f_plan') });
+    if (!planW && !(slots.l && !slots.w)) need.push({ label: '요금제', el: $('f_plan') });
     if (!date) need.push({ label: '개통일', el: $('f_date') });
     // v16 — 개통유형은 필수, 무선이면 할인유형 필수, 일반 무선(기변·번이·신규)이면 기종 필수
     //       (중고신규·중고MNP·유선 단독은 기종 없이도 저장할 수 있다)
     if (!slots.w && !slots.l) need.push({ label: '개통유형', el: $('typeChips') });
-    if (slots.w && !normalizeDiscount($('f_discount').value)) need.push({ label: '할인유형', el: $('discChips') });
+    // v19 — 유선 개통유형을 골랐으면 유선 요금제 칸도 반드시 채운다
+    if (slots.l && !planL) need.push({ label: '유선 요금제', el: $('f_plan_l') });
+    // v19 — 2ND(세컨드 디바이스) 단독이면 할인유형·단말보험·제휴카드는 선택 항목이다
+    var only2nd = slots.w === '2ND' && !slots.l;
+    if (slots.w && !only2nd && !normalizeDiscount($('f_discount').value)) need.push({ label: '할인유형', el: $('discChips') });
     if (MRA_WIRELESS_TYPES.indexOf(slots.w) >= 0 && !modelVal) need.push({ label: '기종', el: $('f_model') });
-    // 무선 개통이면 단말보험(3종)과 제휴카드(없음/카드명)를 반드시 고른다 — 유선 단독은 예외
-    if (slots.w && !normalizeIns($('f_ins').value)) need.push({ label: '단말보험', el: $('insChips') });
-    if (slots.w && !normalizeCard($('f_card').value)) need.push({ label: '제휴카드', el: $('cardChips') });
+    // 무선 개통이면 단말보험(3종)과 제휴카드(없음/카드명)를 반드시 고른다 — 유선 단독·2ND는 예외
+    if (slots.w && !only2nd && !normalizeIns($('f_ins').value)) need.push({ label: '단말보험', el: $('insChips') });
+    if (slots.w && !only2nd && !normalizeCard($('f_card').value)) need.push({ label: '제휴카드', el: $('cardChips') });
     // 요금제 변경 · 부가서비스 — '변경 없음'/'미가입'을 골랐거나, 내용을 적었을 때만 저장된다
     var hasPlanChange = !!($('f_newplan').value.trim() || $('f_newdate').value || (period.plan && period.plan !== 'none'));
     if (!planNoneOn() && !hasPlanChange) need.push({ label: '요금제 변경', el: $('planNoneChips') });
     var hasAddon = !!($('f_addon').value.trim() || $('f_addondate').value || (period.addon && period.addon !== 'none'));
     if (!addonNoneOn() && !hasAddon) need.push({ label: '부가서비스', el: $('addonNoneChips') });
+    // v19 — 추지·페이백·중고폰: [미기입]/[미반납] 칩을 눌렀거나 금액·중고폰을 적어야 통과한다
+    if (!payNoneOn('extra') && !moneyFilled($('f_extra').value))
+      need.push({ label: '추가지원금', el: $('extraNoneChips'), inputs: [$('f_extra')] });
+    if (!payNoneOn('paycard') && !moneyFilled($('f_paycard').value))
+      need.push({ label: '페이백(카드결제)', el: $('paycardNoneChips'), inputs: [$('f_paycard')] });
+    if (!payNoneOn('paybank') && !moneyFilled($('f_paybank').value))
+      need.push({ label: '페이백(입금)', el: $('paybankNoneChips'), inputs: [$('f_paybank')] });
+    if (!payNoneOn('used') && !String($('f_used').value).trim() && !moneyFilled($('f_usedprice').value))
+      need.push({ label: '중고폰', el: $('usedNoneChips'), inputs: [$('f_used'), $('f_usedprice')] });
 
     if (need.length) {
       var labels = [];
       for (i = 0; i < need.length; i++) {
         labels.push(need[i].label);
         need[i].el.classList.add('bad');
+        if (need[i].inputs) {
+          for (var q = 0; q < need[i].inputs.length; q++) if (need[i].inputs[q]) need[i].inputs[q].classList.add('bad');
+        }
       }
       el.formError.innerHTML = '⚠️ 미입력 항목: <b>' + esc(labels.join(', ')) + '</b><br><span class="fe-sub">표시된 칸을 채우거나 골라 주세요.</span>';
       el.formError.classList.add('show');
@@ -6243,6 +6573,7 @@
       개통유형: $('f_type').value,
       기종: $('f_model').value.trim(),
       단말보험: normalizeIns($('f_ins').value),
+      외국인: foreignOn() ? '외국인' : '',
       제휴카드: normalizeCard($('f_card').value),
       할인유형: normalizeDiscount($('f_discount').value),
       특수조건: condText(condList($('f_cond').value)),
@@ -6313,6 +6644,7 @@
       $('f_birth').value = '';
       $('f_model').value = '';
       $('f_plan').value = '';
+      if ($('f_plan_l')) $('f_plan_l').value = '';
       $('f_newplan').value = '';
       $('f_newdate').value = '';
       $('f_addon').value = '';
@@ -6330,9 +6662,15 @@
       $('f_extra').value = '';
       $('f_paycard').value = '';
       $('f_paybank').value = '';
+      setPayNone('extra', false);
+      setPayNone('paycard', false);
+      setPayNone('paybank', false);
+      setPayNone('used', false);
+      paintPayNone();
       $('f_memo').value = '';
       renderDiscChips('');
       $('f_cond').value = '';
+      setForeignChip(false);
       if ($('pvYDum')) $('pvYDum').checked = false;
       $('f_name').focus();
       refreshPolicy(true); updateFormRisk();
@@ -6855,9 +7193,24 @@
       el.searchInput.focus();
     });
 
-    // 월
-    el.monthInput.addEventListener('change', function () {
+    // 월 — ◀ / ▶ 화살표
+    function shiftMonth(ym, delta) {
+      var base = ym || currentMonth();
+      var y = Number(base.slice(0, 4)), m = Number(base.slice(5, 7)) + delta;
+      while (m < 1) { m += 12; y -= 1; }
+      while (m > 12) { m -= 12; y += 1; }
+      return y + '-' + pad2(m);
+    }
+    if (el.monthInput) el.monthInput.addEventListener('change', function () {
       state.filters.month = this.value;
+      render();
+    });
+    if ($('monthPrev')) $('monthPrev').addEventListener('click', function () {
+      state.filters.month = shiftMonth(state.filters.month, -1);
+      render();
+    });
+    if ($('monthNext')) $('monthNext').addEventListener('click', function () {
+      state.filters.month = shiftMonth(state.filters.month, 1);
       render();
     });
     el.thisMonthBtn.addEventListener('click', function () {
@@ -7141,7 +7494,10 @@
 
     // 요금제 빠른 검색(숫자·이름) + 요금제 선택 창
     bindPlanField($('f_plan'));
+    bindPlanField($('f_plan_l'));
     bindPlanField($('f_newplan'));
+    // 유선 요금제를 적으면 정책 미리보기·주의 배지도 따라온다 (v19)
+    if ($('f_plan_l')) $('f_plan_l').addEventListener('input', function () { refreshPolicy(false); updateFormRisk(); });
     var pickBtns = el.editDialog.querySelectorAll('[data-plan-pick]');
     for (var pb = 0; pb < pickBtns.length; pb++) {
       pickBtns[pb].addEventListener('click', function () {
@@ -7209,6 +7565,27 @@
       });
       $(id).addEventListener('change', function () {
         if ($(id).value) { $('f_addon_none').value = ''; paintNoneChips(); }
+      });
+    });
+
+    // v19 — [미기입]·[미반납] 1탭 칩 (추지·페이백·중고폰)
+    PAY_NONE_ITEMS.forEach(function (it) {
+      var box = $(it.chips);
+      if (box) box.addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('button[data-pay-none]') : null;
+        if (b) togglePayNone(it.kind);
+      });
+      it.inputs.forEach(function (id) {
+        var inp = $(id);
+        if (!inp) return;
+        var typed = function () {
+          if (!String(inp.value || '').trim()) return;
+          if (payNoneOn(it.kind)) setPayNone(it.kind, false);
+          payNoneBad(it.kind, false);
+          paintPayNone();
+        };
+        inp.addEventListener('input', typed);
+        inp.addEventListener('change', typed);
       });
     });
 
@@ -7379,6 +7756,7 @@
   function init() {
     el = {
       monthInput: $('monthInput'),
+      monthShow: $('monthShow'),
       thisMonthBtn: $('thisMonthBtn'),
       allMonthBtn: $('allMonthBtn'),
       saveState: $('saveState'),
@@ -7546,6 +7924,13 @@
     });
     renderCardBrands();
     setCardChips('');
+    setForeignChip(false);
+    var foreignBox = $('foreignChips');
+    if (foreignBox) foreignBox.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-foreign]') : null;
+      if (!b) return;
+      setForeignChip(!foreignOn());
+    });
     var cardBox = $('cardChips');
     if (cardBox) cardBox.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('button[data-card-sale]') : null;

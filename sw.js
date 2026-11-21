@@ -10,7 +10,7 @@
    배포 후 파일을 수정했다면 아래 CACHE_VERSION 을 올려 주세요.
    ============================================================ */
 
-var CACHE_VERSION = 'v18';
+var CACHE_VERSION = 'v19';
 var CACHE_PREFIX = 'kt-ledger-';
 var CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 var SHEETJS_CACHE = CACHE_PREFIX + 'sheetjs';
