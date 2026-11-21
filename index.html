@@ -302,6 +302,51 @@
   .so-empty{font-size:11.5px;font-weight:700;color:var(--slate-400)}
   .so-div{width:1px;align-self:stretch;min-height:14px;background:#E4EBF4;flex:none}
 
+  /* v30 — 관리자 전용 직원별 실적 표 (요약 카드 아래) */
+  .sum-staff{grid-column:1/-1;min-width:0;border-top:1px solid var(--line);background:#FCFDFF;padding:10px 14px 12px}
+  .sb-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .sb-title{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;white-space:nowrap}
+  .sb-title .tag{font-style:normal;font-size:10.5px;font-weight:800;color:var(--blue-800);background:var(--blue-50);
+    border:1px solid #DCE9FB;border-radius:6px;padding:1px 6px}
+  .sb-note{font-size:11px;font-weight:600;color:var(--slate-400);white-space:nowrap}
+  .sb-scroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .sb-table{width:100%;min-width:640px;border-collapse:separate;border-spacing:0;font-size:11.5px}
+  .sb-table th{position:sticky;top:0;background:#F6F9FD;color:var(--slate-500);font-size:10.5px;font-weight:800;
+    text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);line-height:1.25;white-space:nowrap}
+  .sb-table th.sb-name{text-align:left}
+  .sb-table th small{font-size:9.5px;font-weight:700;color:var(--slate-400)}
+  .sb-table td{padding:6px 8px;border-bottom:1px solid #EEF2F8;text-align:right;white-space:nowrap;
+    font-variant-numeric:tabular-nums;color:var(--ink)}
+  .sb-table tr:last-child td{border-bottom:0}
+  .sb-table td.sb-name{text-align:left;font-weight:800;position:sticky;left:0;background:#fff;
+    box-shadow:1px 0 0 0 #EEF2F8;z-index:1}
+  .sb-table th.sb-name{position:sticky;left:0;z-index:2;box-shadow:1px 0 0 0 var(--line)}
+  .sb-table tbody tr:hover td{background:#FAFCFF}
+  .sb-table tbody tr:hover td.sb-name{background:#FAFCFF}
+  .sb-zero{color:#B4BFCE}
+  .sb-net-pos{font-weight:800;color:#0B6B3A}
+  .sb-net-neg{font-weight:800;color:var(--red)}
+  .sb-pt{display:inline-block;color:#0B4AA2;font-weight:800;background:#F0F7FF;border:1px solid #CFE3FA;
+    border-radius:6px;padding:0 5px;font-size:11px}
+  .sb-pt small{color:#5C7CA6;font-weight:700;font-size:9.5px;margin-left:2px}
+  .sb-table tfoot td{background:#F8FAFD;font-weight:800;border-top:1px solid var(--line);border-bottom:0}
+  .sb-table tfoot td.sb-name{background:#F8FAFD}
+  .sb-rank{font-style:normal;font-size:9.5px;font-weight:900;color:#3730A3;background:#E0E7FF;border-radius:5px;padding:0 4px;margin-left:4px}
+
+  /* v30 — 전화번호 1탭 복사 (표 · 폰 카드 · 임박 알림) */
+  .ph-copy{font:inherit;color:#1D4ED8;font-weight:700;background:none;border:0;padding:0;
+    border-bottom:1px dashed #A9C4EE;cursor:pointer;text-align:left;font-variant-numeric:tabular-nums}
+  .ph-copy:hover{color:#1E3A8A;border-bottom-color:#1D4ED8}
+  .ph-copy:active{background:#EAF2FF;border-radius:4px}
+  .duerow .ph-copy{color:#1D4ED8}
+
+  /* v30 — 자동 계산 안내 · 기존 고객 안내 */
+  .field .hint.hint-auto{color:#0B4AA2;font-weight:800;line-height:1.45}
+  .field .hint.hint-auto[hidden]{display:none}
+  .field .hint.hint-ok{color:#0B6B3A;font-weight:800;line-height:1.45}
+  .field .hint.hint-ok[hidden]{display:none}
+  .field input.money[data-auto="1"]{background:#F7FBFF;border-color:#CFE3FA}
+
   /* 요약 스트립: 무선/유선 리베이트가 늘어난 만큼 좁은 화면에서 줄인다 */
   @media (max-width:1180px){
     .sum-cell{padding:8px 10px}
@@ -320,6 +365,9 @@
     .sum-overview{padding:6px 10px;gap:5px 10px}
     .so-total b{font-size:13px}
     .so-div{display:none}
+    .sum-staff{padding:8px 10px 10px}
+    .sb-note{display:none}
+    .sb-table{min-width:600px;font-size:11px}
     .sum-cell{padding:7px 10px;border-top:1px solid var(--line)}
     .sum-cell:nth-child(2n){border-right:0}
     .sum-value b{font-size:17px}
@@ -534,6 +582,23 @@
   .easy-filter.on .ef-star{color:#FFF3C4}
   .easy-filter.on .ef-count{background:rgba(255,255,255,.92);color:#8A4B00}
   .easy-filter:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
+
+  /* v30 — 관리자 전용 미기입 확인 필터 + 배지 */
+  .miss-filter{
+    display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:999px;
+    border:1.5px solid #E8B4AC;background:#FFF6F5;color:#8E1F16;cursor:pointer;
+    font-size:12.5px;font-weight:800;white-space:nowrap;line-height:1;
+  }
+  .miss-filter:hover{background:#FFECEA;border-color:#DC8B80}
+  .miss-filter .mf-count{background:#FADBD6;color:#8E1F16;border-radius:999px;padding:2px 6px;font-size:11px;font-weight:900}
+  .miss-filter.zero{opacity:.6}
+  .miss-filter.on{background:linear-gradient(180deg,#E0524A 0%,#B42318 100%);border-color:#9F1D13;color:#fff;
+    box-shadow:0 2px 8px rgba(180,35,24,.32);opacity:1}
+  .miss-filter.on .mf-count{background:rgba(255,255,255,.92);color:#8E1F16}
+  .miss-filter:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(220,38,38,.28)}
+  .miss-badges{display:inline-flex;align-items:center;gap:3px;flex-wrap:wrap;vertical-align:middle;margin-left:4px}
+  .miss-badge{display:inline-block;padding:1px 6px;border-radius:6px;background:#FEF0EE;color:#B42318;
+    border:1px solid #F5CBC4;font-size:10.5px;font-weight:800;white-space:nowrap}
   .easy-check-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .easy-chip{
     display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:10px;
@@ -756,6 +821,8 @@
   .pbadge.d2{background:#E1EDFF;color:#0B4AA2;border-color:#C4D9F7}
   .pbadge.c1{background:#FFF3D6;color:#8A5200;border-color:#F2DCA8}
   .pol-auto{display:inline-block;font-weight:800;color:#0B4AA2;background:#F0F7FF;border:1px solid #CFE3FA;border-radius:6px;padding:1px 5px;font-size:11px;white-space:nowrap}
+  /* v30 — 원스톱 배지 */
+  .pbadge.onestop-badge{background:#E9F7EE;color:#0B6B3A;border-color:#BFE6CC}
   .pol-diff{display:block;font-size:10px;font-weight:800;color:#8A5200;margin-top:1px}
   /* 순마진 · 추지·페이백 (관리자) */
   .net-cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px;white-space:nowrap}
@@ -884,6 +951,13 @@
   }
   .pchip:hover{background:#F4F7FB}
   .pchip.on{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700)}
+  /* v30 — 원스톱 체크 칩 (켜짐을 초록으로 선명하게) */
+  .onestop-chips .pchip{border-color:#BFE6CC;background:#F6FCF8;color:#0B6B3A;font-weight:800}
+  .onestop-chips .pchip:hover{background:#E9F7EE;border-color:#8FD3A6}
+  .onestop-chips .pchip .mc{font-size:11px;font-weight:900;opacity:.9;margin-left:2px}
+  .onestop-chips .pchip.on{background:linear-gradient(180deg,#1E9E58 0%,#0B6B3A 100%);border-color:#0B5E32;color:#fff;
+    box-shadow:0 2px 8px rgba(11,107,58,.28)}
+  .onestop-chips .pchip.on .mc{opacity:.95}
 
   /* ---------- 요금제 빠른 선택 (숫자 검색 · 칩 선택창) ---------- */
   .field-head{display:flex;align-items:center;gap:8px}
@@ -1668,6 +1742,33 @@
       </div>
     </div>
 
+    <!-- v30 — 관리자 전용: 이번 달(기준 월) 직원별 실적 요약 (직원 모드에서는 통째로 숨김) -->
+    <div class="sum-staff admin-only" id="staffBoard">
+      <div class="sb-head">
+        <span class="sb-title">🧑‍💼 직원별 실적 <span class="tag" id="sbMonthLabel">—</span></span>
+        <span class="sb-note">담당자별 건수 · 리베이트 · 순마진 · 포인트</span>
+      </div>
+      <div class="sb-scroll">
+        <table class="sb-table" id="staffBoardTable">
+          <thead>
+            <tr>
+              <th class="sb-name">담당자</th>
+              <th>무선<br>개통</th>
+              <th>유선<br>신규</th>
+              <th>유선<br>약갱</th>
+              <th>제휴<br>카드</th>
+              <th class="sb-money">총 리베이트</th>
+              <th class="sb-money">추지·페이백</th>
+              <th class="sb-money">순마진</th>
+              <th class="sb-point">포인트<br><small>무선+유선</small></th>
+            </tr>
+          </thead>
+          <tbody id="staffBoardBody"></tbody>
+          <tfoot id="staffBoardFoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
     <div class="chips sum-chips" id="kpiBreakdown"></div>
   </section>
 
@@ -1719,6 +1820,11 @@
     <!-- v25 — ⭐ 권매·쉬움만 보기 (눈에 띄는 앰버 알약 버튼 · 건수는 지금 월/필터 기준) -->
     <button type="button" class="easy-filter" id="easyFilter" aria-pressed="false" title="권매·쉬움 체크된 고객만 보기">
       <span class="ef-star" aria-hidden="true">★</span><span>권매·쉬움만</span><span class="ef-count" id="easyFilterCount">0건</span>
+    </button>
+    <!-- v30 — 관리자 전용 ⚠️ 미기입 확인 (리베이트·중고폰·추지·페이백이 비어 있는 건만) -->
+    <button type="button" class="miss-filter admin-only" id="missingFilter" aria-pressed="false"
+            title="관리자 전용 — 무선·유선 리베이트·중고폰·추지·페이백이 비어 있는 건만 모아 봅니다">
+      <span class="mf-ico" aria-hidden="true">⚠️</span><span>미기입 확인</span><span class="mf-count" id="missingCount">0건</span>
     </button>
     <button class="btn sm btn-ghost" id="resetFilters">초기화</button>
     <button class="chip-btn" id="viewToggle" title="목록 보기 방식을 바꿉니다">한눈에 보기</button>
@@ -1803,6 +1909,8 @@
         <div class="field">
           <label for="f_phone">연락처 <span class="req">*</span></label>
           <input id="f_phone" type="tel" inputmode="numeric" autocomplete="off" placeholder="010-1234-5678">
+          <span class="hint" id="phoneAuto" hidden></span>
+          <span class="hint hint-bad" id="phoneHint" hidden></span>
         </div>
 
         <div class="field">
@@ -1884,6 +1992,17 @@
           <input id="f_plan_l" type="text" autocomplete="off" placeholder="예) 인터넷 베이직 + 지니 TV 에센스">
           <div class="plan-suggest" id="sug_f_plan_l" role="listbox" aria-label="유선 요금제 검색 결과"></div>
           <span class="hint">유선 개통유형을 고르면 열립니다. <b>인터넷 신규 단품·인터넷 약정갱신</b>이면 인터넷·WiFi만, <b>TV 단품</b>이면 지니 TV·셋탑만, <b>인티 신규·인티 약갱</b>이면 넷 다 고를 수 있고, 고른 조합이 그대로 들어갑니다.</span>
+        </div>
+
+        <!-- v30 — 원스톱 체크: 유선 신규(인티 신규 · 인터넷 신규 단품 · TV 단품)를 골랐을 때만 열린다 -->
+        <div class="field onestop-field" id="onestopWrap" hidden>
+          <label id="f_onestopLabel">원스톱 <span class="opt">선택 · 유선 신규만</span></label>
+          <input id="f_onestop" type="hidden" value="">
+          <div class="period-chips onestop-chips" id="onestopChips" role="group" aria-labelledby="f_onestopLabel">
+            <button type="button" class="pchip" data-onestop="1" aria-pressed="false"
+                    title="원스톱 결합 개통이면 눌러 주세요 — 유선 리베이트에 +100,000원, 유선 포인트에 +1.0P 가 자동으로 붙습니다">원스톱 체크 <span class="mc">+10만원 · +1.0P</span></button>
+          </div>
+          <span class="hint" id="onestopHint">원스톱이면 유선 리베이트 <b>+100,000원</b> · 유선 포인트 <b>+1.0P</b> 가 자동으로 붙습니다. 시트에는 메모 <b>[원스톱]</b> 표기로 나갑니다.</span>
         </div>
 
         <div class="field span2 ins-field">
@@ -1999,6 +2118,7 @@
         <div class="field admin-only">
           <label for="f_rebate_l">유선 리베이트 (원) <span class="opt">선택</span></label>
           <input id="f_rebate_l" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+          <span class="hint hint-auto" id="rebateLHint" hidden></span>
           <span class="hint">인티 신규 · 인터넷 신규 단품 · TV 단품 · 인티 약갱 · 인터넷 약정갱신</span>
         </div>
 
@@ -2311,7 +2431,7 @@
       </div>
       <div class="field" id="sPinField">
         <label for="s_pin">매장 PIN <span class="req">*</span></label>
-        <input id="s_pin" type="text" inputmode="numeric" autocomplete="off" placeholder="예) 5001">
+        <input id="s_pin" type="text" inputmode="numeric" autocomplete="off" placeholder="예) 매장 PIN">
         <span class="hint">Code.gs 의 PIN 과 동일</span>
       </div>
       <div class="field">
@@ -2385,15 +2505,26 @@
   // 목록 보기 방식(한눈에/넓게 · 간단히/자세히)
   var VIEW_KEY = 'kt_chilgeum_view_v1';
 
-  // 관리자(사장님) PIN — 엑셀·백업·삭제·연동 주소 수정은 이 PIN 으로만 열린다
-  var ADMIN_PIN = '0525';
+  /* v30 — 관리자(사장님) PIN 은 코드에 평문으로 두지 않는다.
+     · 비교는 SHA-256 다이제스트로만 한다 (아래 sha256Hex · checkAdminPin).
+     · 사용자가 넣는 PIN 은 예전과 같다 — 화면·동작은 그대로다.
+     · 서버(삭제·차단)로 보낼 때 필요한 값은 잠금 해제 때 입력한 값을 sessionStorage 에만 둔다. */
+  var ADMIN_PIN_HASH = 'ee260f08526f9930ff7d9450916b76a7ce3d2f4b924dfdb84dd0fa77dfa1d8aa';
+  var ADMIN_PIN_KEY = 'kt_chilgeum_adminpin_v1';
   var ROLE_KEY = 'kt_chilgeum_role_v1';
+  // 관리자 모드 자동 잠금 — 10분(600,000ms) 동안 클릭·터치·키입력이 없으면 직원 모드로 돌아간다
+  var ADMIN_IDLE_MS = 600000;
 
   // 매장 공용 장부 기본값 — 배포 주소가 나오면 url 에 넣어 두면
   // 직원은 주소 입력 없이 이름만 고르면 바로 연결됩니다.
+  //  v30 — 기본 매장 PIN 은 서버(Apps Script)로 그대로 보내야 해서 해시로 바꿀 수 없다.
+  //   코드에 평문으로 남기지 않도록 글자 코드로만 적어 둔다(값은 예전과 같다).
+  function defaultStorePin() {
+    return String.fromCharCode(53, 48, 48, 49);
+  }
   var DEFAULT_SYNC = {
     url: '',
-    pin: '5001'
+    pin: defaultStorePin()
   };
 
   // 매장 직원 — 담당자 빠른 선택용 (다른 이름도 직접 입력 가능)
@@ -2446,6 +2577,24 @@
      · 앱 안 : 권매쉬움 = '권매쉬움' | ''
      · 시트   : 메모 칸 앞에 [권매쉬움] */
   var EASY_MARK = '[권매쉬움]';
+  /* v30 — 원스톱 (유선 신규에서만) · 앱 전용 항목(시트 20컴럼 그대로)
+     · 앱 안 : 원스톱 = '원스톱' | ''
+     · 시트   : 메모 칸 앞에 [원스톱]  →  유선 리베이트 +100,000원 · 유선 포인트 +1.0P */
+  var ON_STOP_MARK = '[원스톱]';
+  var ON_STOP_AMOUNT = 100000;
+  var ON_STOP_POINT = 1.0;
+  // 원스톱은 유선 신규(인티 신규·인터넷 신규 단품·TV 단품)에서만 고를 수 있다
+  var ON_STOP_TYPES = ['인티 신규', '인터넷 신규 단품', 'TV 단품'];
+  function isOnestop(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '');
+    if (!s) return '';
+    return /^(원스톱|온스톱|onestop|1|y)$/i.test(s) ? '원스톱' : '';
+  }
+  function onestopOf(r) {
+    if (!r) return false;
+    if (isOnestop(r.원스톱)) return true;
+    return String(r.메모 || '').indexOf(ON_STOP_MARK) >= 0;
+  }
 
   /* 할인 유형(지원금 유형) · 정책 특수 조건 — 단말보험과 같은 방식(시트 메모 표기)으로 공유한다
      · 앱 안 : 할인유형 = '단말할인' | '요금할인' | ''
@@ -2547,6 +2696,29 @@
 
   // 금액이 적혔는가 — "0" 도 적힌 것으로 본다(빈칸과 구분)
   function moneyFilled(v) { return /[0-9]/.test(String(v == null ? '' : v)); }
+
+  /* v30 — 저장할 때 [미기입] 으로 확인된 칸 목록 (금액이 0·빈칸인 칸만)
+     · '추지,페이백카드' 처럼 콤마로 이어 메모에 [미기입:…] 으로 남긴다
+     · 이 표기가 있는 칸은 '미기입 확인' 목록에서 빠진다 (사장님이 확인해서 0원이라는 틭)
+     · 새 등록·수정 모두 저장 시점의 칩 상태로 기록한다 — 칩이 켜져 있다는 것은 곧 "미기입(0원)"이다 */
+  function payNoneTagNow() {
+    var map = [['추지', 'extra', 'f_extra'], ['페이백카드', 'paycard', 'f_paycard'], ['페이백입금', 'paybank', 'f_paybank']];
+    var out = [];
+    for (var i = 0; i < map.length; i++) {
+      var inp = $(map[i][2]);
+      if (inp && moneyFilled(inp.value)) continue;
+      if (!payNoneOn(map[i][1])) continue;
+      out.push(map[i][0]);
+    }
+    // 중고폰 [미반납] 도 함께 남긴다 (중고폰 칸은 값이 아니라 칩 상태로만 확인된다)
+    var usedInp = $('f_used'), usedPrice = $('f_usedprice');
+    if (payNoneOn('used')
+      && !(usedInp && moneyFilled(usedInp.value))
+      && !(usedPrice && moneyFilled(usedPrice.value))) {
+      out.push('중고폰');
+    }
+    return out.join(',');
+  }
 
   /* 주의 배지 기준 — 12개월 약정 · 37K 미만 ·스쿨잼/SEG 하향 */
   var RISK_12 = /12\s*개월|약정\s*12|십이\s*개월/;
@@ -2739,7 +2911,7 @@
 
   var state = {
     records: [],
-    filters: { q: '', month: '', type: '', staff: '', due: false, dueMode: 'all', easy: false },
+    filters: { q: '', month: '', type: '', staff: '', due: false, dueMode: 'all', easy: false, missing: false },
     sort: { key: '개통일', dir: 'desc' },
     view: 'compact',
     role: 'staff',
@@ -2847,6 +3019,39 @@
     if (d.length === 9 && d.slice(0, 2) === '02') return d.slice(0, 2) + '-' + d.slice(2, 5) + '-' + d.slice(5);
     if (d.length === 8) return d.slice(0, 4) + '-' + d.slice(4);
     return raw;
+  }
+
+  /* v30 — 입력 중 자동 하이픈 (숫자만 추려 010-1234-5678 모양으로 보여 준다)
+     · 010·011 같은 휴대폰 접두는 3-4-4, 02 는 2-3(4)-4, 그 밖 지역번호는 3-3-4
+     · 저장은 collectForm 이 formatPhone 으로 한 번 더 정리한다 */
+  function formatPhoneInput(v) {
+    var d = String(v == null ? '' : v).replace(/[^0-9]/g, '').slice(0, 11);
+    if (!d) return '';
+    if (d.slice(0, 2) === '02') {
+      if (d.length <= 2) return d;
+      if (d.length <= 5) return d.slice(0, 2) + '-' + d.slice(2);
+      if (d.length <= 9) return d.slice(0, 2) + '-' + d.slice(2, 5) + '-' + d.slice(5);
+      return d.slice(0, 2) + '-' + d.slice(2, 6) + '-' + d.slice(6, 10);
+    }
+    var mobile = /^01[0-9]$/.test(d.slice(0, 3));
+    if (d.length <= 3) return d;
+    if (mobile) {
+      if (d.length <= 7) return d.slice(0, 3) + '-' + d.slice(3);
+      return d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
+    }
+    if (d.length <= 6) return d.slice(0, 3) + '-' + d.slice(3);
+    return d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6, 10);
+  }
+
+  /* v30 — 연락처 검사: 휴대폰(010)은 정확히 11자리, 그 밖(지역번호·인터넷)은 9~11자리
+     · 통과하면 '', 아니면 칸 아래에 띄울 안내문 */
+  var PHONE_CHECK_MSG = '연락처를 확인해 주세요 (010-XXXX-XXXX 11자리)';
+  function phoneIssueText(v) {
+    var d = digitsOf(v);
+    if (!d) return '';
+    if (d.indexOf('010') === 0 && d.length !== 11) return PHONE_CHECK_MSG;
+    if (d.length < 9 || d.length > 11) return PHONE_CHECK_MSG;
+    return '';
   }
 
   /* v24 — 명의·번호 중복 검사용 정규화
@@ -3189,12 +3394,91 @@
   }
 
   function clearNameBirthHints() {
-    ['nameHint', 'birthHint'].forEach(function (id) {
+    ['nameHint', 'birthHint', 'phoneHint'].forEach(function (id) {
       var box = $(id);
       if (!box) return;
       box.textContent = '';
       box.hidden = true;
     });
+    var pa = $('phoneAuto');
+    if (pa) { pa.textContent = ''; pa.hidden = true; }
+  }
+
+  /* ---------- v30 — 연락처 자동 하이픈·힌트 · 기존 고객 자동 채우기 ---------- */
+  function paintPhoneHint(strict) {
+    var box = $('phoneHint');
+    if (!box) return '';
+    var d = digitsOf($('f_phone') ? $('f_phone').value : '');
+    var msg = phoneIssueText(d);
+    // 입력 중에는 10~11자리가 다 찬 뒤에만 알린다 (덜 찍은 값에는 참견하지 않는다)
+    if (msg && !strict && d.length < 10) msg = '';
+    box.textContent = msg ? '⚠️ ' + msg : '';
+    box.hidden = !msg;
+    if (msg) $('f_phone').classList.add('bad');
+    return msg;
+  }
+
+  var phoneAutoTimer = null;
+  function paintPhoneAuto(text) {
+    var box = $('phoneAuto');
+    if (!box) return;
+    clearTimeout(phoneAutoTimer);
+    if (!text) { box.textContent = ''; box.hidden = true; return; }
+    box.textContent = text;
+    box.hidden = false;
+    phoneAutoTimer = setTimeout(function () { box.textContent = ''; box.hidden = true; }, 3200);
+  }
+
+  // 연락처가 같은 가장 최근 개통 기록 (동명이인 때문에 이름으로는 찾지 않는다)
+  function findCustomerByPhone(phone) {
+    var d = digitsOf(phone);
+    if (!d) return null;
+    var list = state.records || [], best = null, bestKey = '';
+    for (var i = 0; i < list.length; i++) {
+      var r = list[i];
+      if (!r) continue;
+      if (state.editingId && r.id === state.editingId) continue;
+      if (digitsOf(r.연락처) !== d) continue;
+      var key = String(normalizeDate(r.개통일) || '') + '|' + String(Number(r.createdAt) || 0).toString().padStart(13, '0');
+      if (!best || key > bestKey) { best = r; bestKey = key; }
+    }
+    return best;
+  }
+
+  /* v30 — 연락처를 다 적으면 같은 번호의 지난 개통 기록에서 고객명·생년월일·성별·외국인을 채운다
+     · 이미 적혀 있는 칸은 건드리지 않는다 (직원이 고친 값을 덮어쓰지 않는다)
+     · 채운 게 있으면 '기존 고객 정보를 불러왔어요' 힌트를 잠깐 보여 준다 */
+  function autoFillFromCustomer() {
+    if (!el.editDialog || !el.editDialog.open) return;
+    var d = digitsOf($('f_phone') ? $('f_phone').value : '');
+    if (d.length < 10) return;
+    if (phoneIssueText(d)) return;
+    var prev = findCustomerByPhone(d);
+    if (!prev) return;
+    var filled = [];
+    if (!String($('f_name').value || '').trim() && String(prev.고객명 || '').trim()) {
+      $('f_name').value = String(prev.고객명).trim();
+      $('f_name').classList.remove('bad');
+      if (typeof paintNameHint === 'function') paintNameHint(false);
+      filled.push('고객명');
+    }
+    if (!String($('f_birth').value || '').trim() && String(prev.생년월일 || '').trim()) {
+      $('f_birth').value = String(prev.생년월일).trim();
+      $('f_birth').classList.remove('bad');
+      if (typeof paintBirthHint === 'function') paintBirthHint(false);
+      filled.push('생년월일');
+    }
+    if (!genderOn() && String(prev.성별 || '').trim()) {
+      setGenderChips(prev.성별);
+      filled.push('성별');
+    }
+    if (!foreignOn() && isForeign(prev.외국인)) {
+      setForeignChip(true);
+      filled.push('외국인');
+    }
+    if (!filled.length) return;
+    paintPhoneAuto('📥 기존 고객 정보를 불러왔어요 · ' + filled.join('·') +
+      ' (' + (normalizeDate(prev.개통일) || '날짜 미상') + ' ' + (prev.담당자 || '담당자 미기입') + ')');
   }
 
   // 할인유형 표시 이름 — 단말할인(공시) / 요금할인(선약)
@@ -3206,8 +3490,8 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false };
-    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy']];
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '' };
+    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
       if (s.indexOf(tags[i][0]) < 0) continue;
@@ -3239,6 +3523,9 @@
         return ' ';
       });
     }
+    // v30 — 결제 칸 [미기입] 확인 표기 [미기입:추지,페이백카드]
+    var reNone = /\[미기입:\s*([^\]]*)\]/g;
+    s = s.replace(reNone, function (all, v) { hit = true; out.payNone = String(v || '').replace(/\s/g, ''); return ' '; });
     // 할인 유형 · 정책 특수 조건 표기도 떼어 낸다
     for (i = 0; i < DISCOUNT_TYPES.length; i++) {
       var dm = DISCOUNT_MARK[DISCOUNT_TYPES[i]];
@@ -3290,6 +3577,7 @@
     if (card) head.push(CARD_TAG + card + ']');
     if (isForeign(rec.외국인)) head.push(FOREIGN_MARK);
     if (isEasy(rec.권매쉬움)) head.push(EASY_MARK);
+    if (onestopOf(rec)) head.push(ON_STOP_MARK);
     var gift = normalizeWiredGift(rec.유선혜택) || t.wiredGift;
     if (gift) head.push(WIRED_GIFT_TAG + gift + ']');
     var gender = normalizeGender(rec.성별) || t.gender;
@@ -3307,6 +3595,10 @@
       if (!pv) pv = parseNumber(t[pf]);
       if (pv) head.push('[' + PAY_TAGS[i].key + ':' + pv + ']');
     }
+    // v30 — [미기입] 으로 확인한 결제 칸 (0원이 '미기입'인지 '확인해서 0원'인지 시트에도 남긴다)
+    var noneKeys = payNoneKeys(rec);
+    if (!noneKeys.length && t.payNone) noneKeys = String(t.payNone).split(',').filter(function (x) { return !!x; });
+    if (noneKeys.length) head.push('[미기입:' + noneKeys.join(',') + ']');
     if (!head.length) return m;
     return head.join(' ') + (m ? ' ' + m : '');
   }
@@ -3331,6 +3623,10 @@
     o.외국인 = tags.foreign ? '외국인' : normalizeForeign(r && r.외국인);
     // v25 — 권매·쉬움: 시트 메모 표기([권매쉬움]) → 상태로 복원
     o.권매쉬움 = tags.easy ? '권매쉬움' : normalizeEasy(r && r.권매쉬움);
+    // v30 — 원스톱: 시트 메모 표기([원스톱]) → 상태로 복원
+    o.원스톱 = (tags.onestop || isOnestop(r && r.원스톱)) ? '원스톱' : '';
+    // v30 — 결제 칸 [미기입] 확인 표기 → 상태로 복원
+    o.미기입 = tags.payNone || String((r && r.미기입) || '').replace(/\s/g, '');
     o.성별 = tags.gender || normalizeGender(r && r.성별) || (tags.rrn ? (tags.rrn % 2 ? '남' : '여') : '');
     o.제휴카드 = tags.card ? normalizeCard(tags.card) : normalizeCard(r && r.제휴카드);
     o.유선혜택 = normalizeWiredGift(tags.wiredGift || (r && r.유선혜택));
@@ -3705,6 +4001,9 @@
     snap.유선혜택 = normalizeWiredGift(rec.유선혜택);
     // v25 — 권매·쉬움도 스냅샷에 담는다 (빠뜨리면 서버 왕복 뒤 [권매쉬움] 표기가 풀린다)
     snap.권매쉬움 = normalizeEasy(rec.권매쉬움);
+    // v30 — 원스톱도 스냅샷에 담는다 (빠뜨리면 서버 왕복 뒤 [원스톱] 표기가 풀린다)
+    snap.원스톱 = isOnestop(rec.원스톱) ? '원스톱' : '';
+    snap.미기입 = String(rec.미기입 || '').replace(/\s/g, '');
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
@@ -4580,6 +4879,10 @@
         add('무선+유선 결합 M+I(+T)', polPoint('wired|combMI' + renew, W.combMI[renew]),
           (renew ? '약정갱신' : '순신규') + ' · 무선 건 따로 등록 · 결합 120일↑');
       }
+      // v30 — 원스톱 체크: 유선 신규일 때 유선 포인트 +1.0P (메모 [원스톱] 또는 앱 항목)
+      if (onestopOf(rec) && !renew && ON_STOP_TYPES.indexOf(wiredTypeCanon(ltype)) >= 0) {
+        add('유선 원스톱', ON_STOP_POINT, '원스톱 · 유선 신규');
+      }
     }
     out.total = Math.round(out.total * 10) / 10;
     return out;
@@ -5054,7 +5357,9 @@
       요금제: joinPlanValue($('f_plan') ? $('f_plan').value : '', $('f_plan_l') ? $('f_plan_l').value : ''),
       생년월일: $('f_birth') ? $('f_birth').value : '',
       할인유형: $('f_discount') ? $('f_discount').value : '',
-      특수조건: $('f_cond') ? $('f_cond').value : ''
+      특수조건: $('f_cond') ? $('f_cond').value : '',
+      // v30 — 원스톱 체크(유선 +1.0P)도 미리보기에 바로 반영
+      원스톱: onestopOn() ? '원스톱' : ''
     };
   }
 
@@ -5101,6 +5406,8 @@
     var rec = formPolicyRecord();
     var calc = calcPolicy(rec);
     paintPolicyPreview(calc, rec);
+    // v30 — 유선 리베이트 자동 계산도 같은 시점에 맞춘다
+    refreshWiredRebate();
     return calc;
   }
 
@@ -5891,7 +6198,7 @@
   }
 
   /* =========================================================
-     직원 · 기기 관리 (관리자 0525 전용)
+     직원 · 기기 관리 (관리자 PIN 전용)
      ---------------------------------------------------------
      · 서버(Code.gs)의 '_접속기기' 목록과 '_차단' 목록을 받아 보여 준다
      · 기기 또는 직원 이름을 추방(차단) / 차단 해제
@@ -6076,7 +6383,7 @@
   }
 
   /* ---------------- filtering / sorting ---------------- */
-  function visibleRecords(ignoreEasy) {
+  function visibleRecords(ignoreEasy, ignoreMissing) {
     var f = state.filters;
     var q = f.q.trim().toLowerCase();
     // v26 — 검색어가 있을 때는 기준 월과 상관없이 state.records 전체 기간에서 찾는다.
@@ -6104,6 +6411,8 @@
       }
       // v25 — ⭐ 권매·쉬움만 : 체크된 고객만 (건수 계산할 때는 ignoreEasy 로 이 조건만 건너뛴다)
       if (!ignoreEasy && f.easy && !isEasy(r.권매쉬움)) return false;
+      // v30 — ⚠️ 미기입 확인 : 리베이트·중고폰·추지·페이백이 비어 있는 건만 (관리자 전용)
+      if (!ignoreMissing && f.missing && !missingIssues(r).length) return false;
       if (q) {
         var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.부가서비스, r.중고폰, r.메모, r.개통유형, r.담당자].join(' ').toLowerCase();
         // v28 — 예전 표기('인터넷+TV 신규가입')로 저장된 건도 '인티 신규' 로 찾힌다
@@ -6149,6 +6458,77 @@
     el.easyFilter.title = on
       ? '⭕ 권매·쉬움 필터 켜짐 — 다시 누르면 전체 목록'
       : '⭐ 권매·쉬움 체크된 고객만 보기 (현재 ' + n + '건)';
+  }
+
+  /* ---------- v30 — 미기입 확인 (관리자 전용) ----------
+     무엇이 비었는지 작은 배지로 보여 주고, 고쳐 저장하면 목록에서 바로 빠진다.
+     · 결제 칸(추지·페이백)은 0원이 '미기입'인지 '확인해서 0원'인지 데이터로만은 구분할 수 없다.
+       그래서 [미기입] 칩을 누른 칸은 메모에 [미기입:추지,페이백카드] 로 남겨(v30) 그것으로 가린다.
+       → 시트 20컬럼은 그대로, 예전 기록은 비어 있으면 그대로 '미기입' 후보로 나온다. */
+  function payNoneKeys(r) {
+    return String((r && r.미기입) || '').split(',').map(function (s) { return s.trim(); })
+      .filter(function (s) { return !!s; });
+  }
+
+  function missingIssues(r) {
+    var out = [];
+    if (!r || !isAdmin()) return out;
+    var slots = typeSlots(r.개통유형 || '');
+    // 1) 리베이트 — 무선은 정책 자동 산정값도 '산정됨'으로 본다 (2ND 는 정책 대상이 아니라 뺀다)
+    if (slots.w && slots.w !== '2ND') {
+      var v = wirelessRebateView(r);
+      if (!v.manual && !v.auto) out.push({ key: 'rebateW', label: '무선 리베이트 미기입' });
+    }
+    if (slots.l && !(Number(r.유선리베이트) > 0)) out.push({ key: 'rebateL', label: '유선 리베이트 미기입' });
+    // 2) 중고폰 — 금액·모델이 없고 [미반납] 로 확인된 표기도 없는 건
+    var usedTxt = String(r.중고폰 == null ? '' : r.중고폰).trim();
+    var usedNone = payNoneKeys(r).indexOf('중고폰') >= 0 || usedTxt === '미반납';
+    if (!(Number(r.중고폰금액) > 0) && !usedTxt && !usedNone) {
+      out.push({ key: 'used', label: '중고폰 미기입' });
+    }
+    // 3) 추지·페이백 — 0원인데 [미기입] 으로 확인된 표기가 없는 칸
+    var none = payNoneKeys(r), miss = [];
+    for (var i = 0; i < PAY_TAGS.length; i++) {
+      var k = PAY_TAGS[i].key, f = PAY_TAGS[i].field;
+      if (Number(r[f]) > 0) continue;
+      if (none.indexOf(k) >= 0) continue;
+      miss.push(k);
+    }
+    if (miss.length) out.push({ key: 'pay', label: '추지·페이백 미기입' });
+    return out;
+  }
+
+  // 지금 걸린 월·검색·유형·담당자·알림·권매 필터 기준 미기입 건수 (미기입 필터 자신은 뺀다)
+  function missingCount() {
+    if (!isAdmin()) return 0;
+    var base = visibleRecords(true, true);
+    var n = 0;
+    for (var i = 0; i < base.length; i++) if (missingIssues(base[i]).length) n++;
+    return n;
+  }
+
+  function renderMissingFilter() {
+    if (!el.missingFilter) return;
+    var n = missingCount();
+    var on = !!state.filters.missing;
+    el.missingFilter.hidden = !isAdmin();
+    if (el.missingCount) el.missingCount.textContent = n + '건';
+    el.missingFilter.classList.toggle('on', on);
+    el.missingFilter.classList.toggle('zero', n === 0 && !on);
+    el.missingFilter.setAttribute('aria-pressed', on ? 'true' : 'false');
+    el.missingFilter.title = on
+      ? '⚠️ 미기입 필터 켜짐 — 다시 누르면 전체 목록'
+      : '관리자 전용 — 리베이트·중고폰·추지·페이백이 비어 있는 건만 (현재 ' + n + '건)';
+  }
+
+  // 표·폰 카드에 붙는 '무엇이 비었는지' 배지 (관리자 모드에서만 — 금액 정보라서)
+  function missingBadgesHtml(r) {
+    if (!isAdmin()) return '';
+    var list = missingIssues(r);
+    if (!list.length) return '';
+    var html = '';
+    for (var i = 0; i < list.length; i++) html += '<span class="miss-badge">' + esc(list[i].label) + '</span>';
+    return '<span class="miss-badges">' + html + '</span>';
   }
 
   function kpiRecords() {
@@ -6475,6 +6855,113 @@
 
     upcoming.sort(function (a, b) { return a.d - b.d; });
     renderDueList(upcoming);
+    renderStaffBoard();
+  }
+
+  /* v30 — 관리자 전용: 이번 달(기준 월) 직원별 실적 표
+     · 건수(무선 개통 · 유선 신규 · 유선 약갱 · 제휴카드) + 금액(총 리베이트 · 추지·페이백 · 순마진) + 포인트
+     · 직원 모드에서는 통째로 숨김(.admin-only) / 담당자 필터를 고르면 그 담당자만 */
+  function renderStaffBoard() {
+    var box = $('staffBoard'), body = $('staffBoardBody'), foot = $('staffBoardFoot');
+    if (!box || !body) return;
+    if (!isAdmin()) {
+      box.hidden = true;
+      body.innerHTML = '';
+      if (foot) foot.innerHTML = '';
+      return;
+    }
+    box.hidden = false;
+    if ($('sbMonthLabel')) {
+      $('sbMonthLabel').textContent = state.filters.month ? monthLabel(state.filters.month) : '전체 기간';
+    }
+    var list = kpiRecords();
+    var map = {}, order = [];
+    function slot(name) {
+      var n = String(name == null ? '' : name).replace(/\s+/g, ' ').trim() || '미지정';
+      if (!map[n]) {
+        map[n] = { name: n, w: 0, ln: 0, lr: 0, card: 0, rebate: 0, pay: 0, net: 0, pw: 0, pl: 0, n: 0 };
+        order.push(n);
+      }
+      return map[n];
+    }
+    for (var s = 0; s < STAFF_LIST.length; s++) slot(STAFF_LIST[s]);
+    var i, j;
+    for (i = 0; i < list.length; i++) {
+      var r = list[i];
+      var o = slot(r.담당자);
+      o.n++;
+      var slots = typeSlots(r.개통유형 || '');
+      if (slots.w) o.w++;
+      var parts = typeParts(r.개통유형 || '');
+      for (j = 0; j < parts.length; j++) {
+        var pt = wiredTypeCanon(parts[j]);
+        if (WIRED_TYPES.indexOf(pt) < 0) continue;
+        if (wiredTypeRenew(pt)) o.lr++; else o.ln++;
+      }
+      var cd = normalizeCard(r.제휴카드);
+      if (cd && cd !== '미가입') o.card++;
+      var nm = netMargin(r);
+      o.rebate += nm.wireless + nm.wired;
+      o.pay += nm.payback;
+      o.net += nm.total;
+      var ps = pointSplit(r);
+      o.pw += ps.w;
+      o.pl += ps.l;
+    }
+    // 매장 명단(STAFF_LIST) 순서는 그대로, 나머지는 총 리베이트 큰 순으로 뒤에 붙인다
+    var fixed = [], extra = [];
+    for (i = 0; i < order.length; i++) {
+      if (STAFF_LIST.indexOf(order[i]) >= 0) fixed.push(map[order[i]]);
+      else extra.push(map[order[i]]);
+    }
+    extra.sort(function (a, b) { return b.rebate - a.rebate || b.n - a.n; });
+    var rows = fixed.concat(extra);
+    function cnt(v) { return v ? String(v) : '<span class="sb-zero">0</span>'; }
+    function money(v) {
+      if (!v) return '<span class="sb-zero">0</span>';
+      return (v < 0 ? '−' : '') + fmtNum(Math.abs(v));
+    }
+    function netCell(v) {
+      if (!v) return '<span class="sb-zero">0</span>';
+      return '<span class="' + (v < 0 ? 'sb-net-neg' : 'sb-net-pos') + '">' + (v < 0 ? '−' : '') + fmtNum(Math.abs(v)) + '</span>';
+    }
+    function ptCell(w, l) {
+      var t = Math.round((w + l) * 10) / 10;
+      var a = Math.round(w * 10) / 10, b = Math.round(l * 10) / 10;
+      if (!t) return '<span class="sb-zero">0.0P</span>';
+      return '<span class="sb-pt">' + t.toFixed(1) + 'P<small>' + a.toFixed(1) + '+' + b.toFixed(1) + '</small></span>';
+    }
+    var html = '', tot = { w: 0, ln: 0, lr: 0, card: 0, rebate: 0, pay: 0, net: 0, pw: 0, pl: 0, n: 0 };
+    for (i = 0; i < rows.length; i++) {
+      var q = rows[i];
+      tot.w += q.w; tot.ln += q.ln; tot.lr += q.lr; tot.card += q.card;
+      tot.rebate += q.rebate; tot.pay += q.pay; tot.net += q.net; tot.pw += q.pw; tot.pl += q.pl; tot.n += q.n;
+      html += '<tr data-staff-row="' + esc(q.name) + '">' +
+        '<td class="sb-name">' + esc(q.name) + '</td>' +
+        '<td>' + cnt(q.w) + '</td>' +
+        '<td>' + cnt(q.ln) + '</td>' +
+        '<td>' + cnt(q.lr) + '</td>' +
+        '<td>' + cnt(q.card) + '</td>' +
+        '<td>' + money(q.rebate) + '</td>' +
+        '<td>' + (q.pay ? '−' + fmtNum(q.pay) : '<span class="sb-zero">0</span>') + '</td>' +
+        '<td>' + netCell(q.net) + '</td>' +
+        '<td>' + ptCell(q.pw, q.pl) + '</td>' +
+        '</tr>';
+    }
+    body.innerHTML = html;
+    if (foot) {
+      foot.innerHTML = '<tr class="sb-total">' +
+        '<td class="sb-name">매장 합계</td>' +
+        '<td>' + cnt(tot.w) + '</td>' +
+        '<td>' + cnt(tot.ln) + '</td>' +
+        '<td>' + cnt(tot.lr) + '</td>' +
+        '<td>' + cnt(tot.card) + '</td>' +
+        '<td>' + money(tot.rebate) + '</td>' +
+        '<td>' + (tot.pay ? '−' + fmtNum(tot.pay) : '<span class="sb-zero">0</span>') + '</td>' +
+        '<td>' + netCell(tot.net) + '</td>' +
+        '<td>' + ptCell(tot.pw, tot.pl) + '</td>' +
+        '</tr>';
+    }
   }
 
   // 펼쳤을 때: 전 직원의 요금제 변경 · 부가서비스 해지 예정 전체
@@ -6493,7 +6980,7 @@
       var phone = u.r.연락처 ? String(u.r.연락처).trim() : '';
       var birth = u.r.생년월일 ? String(u.r.생년월일).trim() : '';
       var meta = '';
-      if (phone) meta += '<span class="dn-ph">' + esc(phone) + '</span>';
+      if (phone) meta += '<button type="button" class="dn-ph ph-copy" data-copy-phone="' + esc(phone) + '" title="눌러서 전화번호 복사">' + esc(phone) + '</button>';
       if (birth) meta += '<span class="dn-bd">' + esc(birth) + '</span>';
       html += '<div class="duerow" data-due-item="1" role="button" tabindex="0">' +
         '<span class="dk ' + (isPlan ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
@@ -6732,6 +7219,12 @@
       esc(WIRED_GIFT_SHORT[g] || g) + '</span>';
   }
 
+  // v30 — 원스톱 배지 (유선 신규 +10만원 · +1.0P)
+  function onestopBadgeHtml(r) {
+    if (!onestopOf(r)) return '';
+    return '<span class="pbadge onestop-badge" title="원스톱 · 유선 리베이트 +100,000원 · 유선 포인트 +1.0P">원스톱</span>';
+  }
+
   // 모바일 '간단히 보기' 카드 : 두 줄 요약 + 탭하면 상세
   function mcardHtml(r) {
     var d = planPending(r);
@@ -6746,6 +7239,7 @@
         '<div class="m-line1">' +
           '<span class="m-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
           easyBadgeHtml(r) +
+          missingBadgesHtml(r) +
           foreignTagHtml(r.외국인) +
           typeBadgesHtml(r.개통유형) +
           ddBadge +
@@ -6764,7 +7258,8 @@
         '</div>' +
       '</div>' +
       '<div class="mcard-detail">' +
-        mRowOpt('연락처', r.연락처 ? esc(r.연락처) : '') +
+        mRowOpt('연락처', r.연락처
+          ? '<button type="button" class="ph-copy" data-copy-phone="' + esc(r.연락처) + '" title="눌러서 전화번호 복사">' + esc(formatPhone(r.연락처) || r.연락처) + '</button>' : '') +
         mRowOpt('생년월일', r.생년월일 ? esc(r.생년월일) : '') +
         mRowOpt('요금제', r.요금제 ? esc(r.요금제) : '') +
         mRowOpt('변경요금제', r.변경요금제 ? esc(r.변경요금제) : '') +
@@ -6786,6 +7281,7 @@
           : (wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) : '') +
         (isAdmin() ? mRowOpt('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') : '') +
         mRowOpt('유선 사은품', normalizeWiredGift(r.유선혜택) ? esc(wiredGiftLabel(r.유선혜택)) : '') +
+        (onestopOf(r) ? mRow('원스톱', '<span class="pbadge onestop-badge">체크</span> <span class="muted">유선 +10만원 · +1.0P</span>') : '') +
         (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
         (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' : '') : '') +
         (isAdmin() ? mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' : '') : '') +
@@ -6813,6 +7309,11 @@
     }
     // v25 — ⭐ 권매·쉬움 필터 버튼의 건수·켜짐 색을 목록을 다시 그릴 때마다 맞춘다
     renderEasyFilter();
+    // v30 — ⚠️ 미기입 확인 버튼도 같이
+    renderMissingFilter();
+    if (state.filters.missing) scopeTag = scopeTag ? scopeTag + ' · 미기입' : '미기입';
+    // 필터가 켜져 있을 때는 목록과 버튼 건수가 반드시 같아야 한다 (같은 rows 를 쓴다)
+    if (state.filters.missing && el.missingCount && isAdmin()) el.missingCount.textContent = rows.length + '건';
     if (state.filters.easy) scopeTag = scopeTag ? scopeTag + ' · 권매·쉬움' : '권매·쉬움';
     // v26 — 전체 기간 검색 중이라는 것을 건수 자리에 분명히 적는다 (상단 KPI 는 기준 월 그대로)
     var searchAll = !!state.filters.q.trim() && !state.filters.due;
@@ -6908,13 +7409,15 @@
 
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
-        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + '</td>' +
-        '<td data-label="연락처" class="nowrap">' + (r.연락처 ? esc(r.연락처) : '<span class="muted">—</span>') + '</td>' +
+        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + missingBadgesHtml(r) + '</td>' +
+        '<td data-label="연락처" class="nowrap">' + (r.연락처
+          ? '<button type="button" class="ph-copy" data-copy-phone="' + esc(r.연락처) + '" title="눌러서 전화번호 복사">' + esc(formatPhone(r.연락처) || r.연락처) + '</button>'
+          : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
         '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span>' + policyBadgesHtml(r) + '</td>' +
         '<td data-label="단말보험" class="ins-cell">' + insBadgeHtml(r.단말보험) + cardBadgeHtml(r.제휴카드) + '</td>' +
-        '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span>' + wiredGiftBadgeHtml(r) + '</td>' +
+        '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span>' + wiredGiftBadgeHtml(r) + onestopBadgeHtml(r) + '</td>' +
         '<td data-label="변경요금제"><span class="ellip" title="' + esc(r.변경요금제) + '">' + (r.변경요금제 ? esc(r.변경요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="요금제변경일자" class="nowrap">' + changeDateCell(r) + '</td>' +
         '<td data-label="부가서비스"><span class="ellip" title="' + esc(r.부가서비스) + '">' + (r.부가서비스 ? esc(r.부가서비스) : '<span class="muted">—</span>') + (r.부가서비스유지 ? ' <span class="tag-period">' + esc(r.부가서비스유지) + '</span>' : '') + '</span></td>' +
@@ -7155,15 +7658,17 @@
   function loadRole() {
     try {
       var r = sessionStorage.getItem(ROLE_KEY);
-      if (r === 'admin') { state.role = 'admin'; state.adminPin = ADMIN_PIN; }
-      else { state.role = 'staff'; state.adminPin = ''; }
+      if (r === 'admin') {
+        state.role = 'admin';
+        state.adminPin = sessionStorage.getItem(ADMIN_PIN_KEY) || '';
+      } else { state.role = 'staff'; state.adminPin = ''; }
     } catch (e) { state.role = 'staff'; }
   }
 
   function saveRole() {
     try {
       if (state.role === 'admin') sessionStorage.setItem(ROLE_KEY, 'admin');
-      else sessionStorage.removeItem(ROLE_KEY);
+      else { sessionStorage.removeItem(ROLE_KEY); sessionStorage.removeItem(ADMIN_PIN_KEY); }
     } catch (e) {}
   }
 
@@ -7182,8 +7687,79 @@
     }
     // 직원 모드로 돌아가면 관리자 전용 창(단가표)은 닫는다
     if (!admin && el.priceDialog && el.priceDialog.open) el.priceDialog.close();
+    // v30 — 직원 모드에서는 '미기입 확인' 필터를 끈다 (관리자 전용 목록)
+    if (!admin && state.filters.missing) state.filters.missing = false;
+    // v30 — 관리자 모드면 10분 미사용 타이머를 걸고, 직원 모드면 타이머를 끈다
+    if (admin) touchAdminIdle(); else clearAdminIdle();
     // 행 안의 삭제 버튼은 다시 그려야 반영된다
     renderTable();
+  }
+
+  /* v30 — SHA-256 (동기 계산 · 외부 라이브러리 없음)
+     관리자 PIN 을 코드에 평문으로 두지 않고 다이제스트만 비교하려고 쓴다. */
+  function sha256Hex(str) {
+    var K = [
+      0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+      0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+      0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+      0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+      0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+      0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+      0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+      0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+    ];
+    function rotr(x, n) { return (x >>> n) | (x << (32 - n)); }
+    var bytes = [], i, c, ch;
+    for (i = 0; i < str.length; i++) {
+      c = str.charCodeAt(i);
+      if (c < 0x80) bytes.push(c);
+      else if (c < 0x800) bytes.push(0xc0 | (c >> 6), 0x80 | (c & 63));
+      else if (c < 0xd800 || c >= 0xe000) bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 63), 0x80 | (c & 63));
+      else {
+        i++;
+        ch = 0x10000 + (((c & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
+        bytes.push(0xf0 | (ch >> 18), 0x80 | ((ch >> 12) & 63), 0x80 | ((ch >> 6) & 63), 0x80 | (ch & 63));
+      }
+    }
+    var len = bytes.length * 8;
+    bytes.push(0x80);
+    while (bytes.length % 64 !== 56) bytes.push(0);
+    bytes.push(0, 0, 0, 0, (len >>> 24) & 255, (len >>> 16) & 255, (len >>> 8) & 255, len & 255);
+    var H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+    var w = new Array(64);
+    for (var off = 0; off < bytes.length; off += 64) {
+      for (i = 0; i < 16; i++) {
+        w[i] = (bytes[off + i * 4] << 24) | (bytes[off + i * 4 + 1] << 16) | (bytes[off + i * 4 + 2] << 8) | bytes[off + i * 4 + 3];
+      }
+      for (i = 16; i < 64; i++) {
+        var s0 = rotr(w[i - 15], 7) ^ rotr(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+        var s1 = rotr(w[i - 2], 17) ^ rotr(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+        w[i] = (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+      }
+      var a = H[0], b = H[1], cc = H[2], d = H[3], e = H[4], f = H[5], g = H[6], h = H[7];
+      for (i = 0; i < 64; i++) {
+        var S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
+        var chv = (e & f) ^ (~e & g);
+        var t1 = (h + S1 + chv + K[i] + w[i]) | 0;
+        var S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
+        var maj = (a & b) ^ (a & cc) ^ (b & cc);
+        var t2 = (S0 + maj) | 0;
+        h = g; g = f; f = e; e = (d + t1) | 0;
+        d = cc; cc = b; b = a; a = (t1 + t2) | 0;
+      }
+      H[0] = (H[0] + a) | 0; H[1] = (H[1] + b) | 0; H[2] = (H[2] + cc) | 0; H[3] = (H[3] + d) | 0;
+      H[4] = (H[4] + e) | 0; H[5] = (H[5] + f) | 0; H[6] = (H[6] + g) | 0; H[7] = (H[7] + h) | 0;
+    }
+    var out = '';
+    for (i = 0; i < 8; i++) out += ('00000000' + (H[i] >>> 0).toString(16)).slice(-8);
+    return out;
+  }
+
+  // 입력한 PIN 이 관리자 PIN 인가 — 해시끼리만 비교한다
+  function checkAdminPin(pin) {
+    var s = String(pin == null ? '' : pin).trim();
+    if (!s) return false;
+    return sha256Hex(s) === ADMIN_PIN_HASH;
   }
 
   function openAdminDialog() {
@@ -7197,26 +7773,60 @@
 
   function tryUnlockAdmin() {
     var pin = String(el.adminPinInput.value || '').trim();
-    if (pin !== ADMIN_PIN) {
+    if (!checkAdminPin(pin)) {
       el.adminError.textContent = '관리자 PIN이 맞지 않습니다.';
       el.adminError.classList.add('show');
       el.adminPinInput.select();
       return;
     }
     state.role = 'admin';
-    state.adminPin = ADMIN_PIN;
+    state.adminPin = pin;
+    try { sessionStorage.setItem(ADMIN_PIN_KEY, pin); } catch (e) {}
     saveRole();
     el.adminDialog.close();
     applyRole();
-    toast('관리자 모드로 열었습니다. 브라우저를 닫으면 다시 잠깁니다.');
+    toast('관리자 모드로 열었습니다. 10분 동안 아무 것도 안 하면 다시 잠깁니다.');
   }
 
-  function lockAdmin() {
+  function lockAdmin(silent) {
     state.role = 'staff';
     state.adminPin = '';
     saveRole();
     applyRole();
-    toast('관리자 모드를 잠갔습니다.');
+    if (!silent) toast('관리자 모드를 잠갔습니다.');
+  }
+
+  /* v30 — 관리자 모드 10분 미사용 자동 잠금
+     · 클릭·터치·키입력·입력값 변경이 있을 때마다 타이머를 다시 건다
+     · 600,000ms(10분) 이 지나면 직원 모드로 돌아가고 안내 토스트를 띄운다 */
+  var adminIdleTimer = null;
+  var adminIdleInfo = { ms: ADMIN_IDLE_MS, at: 0 };
+
+  function adminIdleMs() {
+    // 테스트/디버그용으로 짧게 바꿔 볼 수 있게 남겨 둔다 (기본 10분)
+    var v = Number(window.__ktAdminIdleMs);
+    return v > 0 ? v : ADMIN_IDLE_MS;
+  }
+
+  function touchAdminIdle() {
+    if (!isAdmin()) return;
+    var ms = adminIdleMs();
+    adminIdleInfo.ms = ms;
+    adminIdleInfo.at = Date.now();
+    clearTimeout(adminIdleTimer);
+    adminIdleTimer = setTimeout(autoLockAdmin, ms);
+  }
+
+  function clearAdminIdle() {
+    clearTimeout(adminIdleTimer);
+    adminIdleTimer = null;
+    adminIdleInfo.at = 0;
+  }
+
+  function autoLockAdmin() {
+    if (!isAdmin()) return;
+    lockAdmin(true);
+    toast('🔒 10분 미사용으로 관리자 모드가 잠겼습니다');
   }
 
   function onAdminLockClick() {
@@ -7315,6 +7925,31 @@
         esc(rec.개통일 || '') + ' 개통 기록을 삭제할까요?<br>삭제한 기록은 되돌릴 수 없습니다.',
         '삭제', true).then(function (ok) { if (ok) deleteRecord(id); });
     }
+  }
+
+  /* ---------------- v30 — 전화번호 1탭 복사 ---------------- */
+  function copyPhoneText(raw) {
+    var txt = formatPhone(raw) || String(raw == null ? '' : raw).trim();
+    if (!txt) return;
+    function done() { toast('📋 ' + txt + ' 복사됨'); }
+    function fallback() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = txt;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.top = '-1000px';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand && document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) done(); else toast('복사하지 못했습니다. 번호를 길게 눌러 복사해 주세요.', true);
+      } catch (e) { toast('복사하지 못했습니다. 번호를 길게 눌러 복사해 주세요.', true); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done).catch(fallback);
+    } else fallback();
   }
 
   /* ---------------- toast ---------------- */
@@ -7493,6 +8128,7 @@
     if (planSug && planSug.input) showPlanSuggest(planSug.input);
     syncWiredPlanField();
     syncWiredGiftField(true);   // 유선 유형을 모두 해제하면 숨기고 값을 비운다
+    syncOnestopField(true);      // v30 — 유선 신규가 아니면 원스톱 칸을 숨기고 값을 비운다
     syncUsedComboField(true);   // v27 — 중고 유형을 해제하면 [중고 결합 여부]도 숨기고 값을 비운다
     refreshPolicy(true); updateFormRisk();
   }
@@ -7594,6 +8230,189 @@
     if (!on && clear !== false) setWiredGift('');
   }
 
+  /* =========================================================
+     v30 — 원스톱 체크 + 유선 리베이트 자동 계산기
+     ---------------------------------------------------------
+     ① 원스톱: 유선 신규(인티 신규 · 인터넷 신규 단품 · TV 단품)일 때만 보이고,
+        체크하면 유선 리베이트 +100,000원 · 유선 포인트 +1.0P. 시트에는 메모 [원스톱].
+     ② 유선 리베이트 자동 계산 — 같은 건에 무선이 있으면 모바일 동판, 유선만이면 단독
+        · 인티 신규    500M + TV 모든G↑ 480,000(동판)/330,000(단독)
+                      500M + TV 에센스↓ 380,000/230,000
+                      1G   + TV 모든G↑ 580,000/430,000
+                      1G   + TV 에센스↓ 480,000/330,000
+        · 인터넷 신규 단품 250,000(동판)/100,000(단독)
+        · 인티 약갱      TV 에센스↓ 150,000 · TV 모든G↑ 200,000
+        · 인터넷 약정갱신 100,000
+        + 원스톱이면 +100,000원
+     ========================================================= */
+  function onestopTypeOn() {
+    var l = wiredTypeCanon(typeSlots($('f_type') ? $('f_type').value : '').l);
+    return ON_STOP_TYPES.indexOf(l) >= 0;
+  }
+
+  function onestopOn() {
+    return !!isOnestop($('f_onestop') && $('f_onestop').value);
+  }
+
+  function paintOnestopChips() {
+    var box = $('onestopChips');
+    if (!box) return;
+    var on = onestopOn();
+    var chips = box.querySelectorAll('button[data-onestop]');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.toggle('on', on);
+      chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  function setOnestop(on) {
+    var input = $('f_onestop');
+    if (input) input.value = on ? '원스톱' : '';
+    paintOnestopChips();
+  }
+
+  function toggleOnestop() {
+    setOnestop(!onestopOn());
+    refreshWiredRebate();
+    refreshPolicy(false);
+  }
+
+  // 유선 신규에서만 보인다 · 약갱·유선 없음이면 숨기고 값을 비운다
+  function syncOnestopField(clear) {
+    var wrap = $('onestopWrap');
+    if (!wrap) return;
+    var on = onestopTypeOn();
+    wrap.hidden = !on;
+    if (!on && clear !== false) setOnestop(false);
+    else paintOnestopChips();
+  }
+
+  // 지니 TV 등급 — 앱 요금제 마스터(KT_PLANS)의 지니 TV 가격 순서로 판정한다
+  //  모든G(23,540원) 이상 = 모든G↑ / 에센스(20,240원) 이하 = 에센스↓
+  function tvTierOf(text) {
+    var raw = String(text == null ? '' : text);
+    if (!raw.replace(/\s/g, '')) return '';
+    // '+' 로 나눈 조각 중 TV·인터넷 구분을 먼저 — '인터넷 베이직' 이 TV '베이직' 으로 잘못 읽히지 않게
+    var chunks = raw.split('+'), tvText = '', i, c, j, nm, best = null, allG = 0, ess = 0;
+    for (i = 0; i < chunks.length; i++) {
+      c = chunks[i].replace(/\s/g, '');
+      if (!c) continue;
+      if (/와이파이|wifi|셋탑|탭|사운드바/i.test(c)) continue;
+      if (/인터넷|기가|500m|1g|1000m/i.test(c) && !/지니|tv|티비/i.test(c)) continue;
+      tvText += '|' + c;
+    }
+    if (!tvText) return '';
+    var rows = [];
+    for (j = 0; j < KT_PLANS.length; j++) {
+      if (KT_PLANS[j].cat === '지니 TV') rows.push(KT_PLANS[j]);
+    }
+    for (j = 0; j < rows.length; j++) {
+      nm = String(rows[j].name || '').replace(/\s/g, '');
+      if (nm === '모든G') allG = rows[j].p;
+      if (nm === '에센스') ess = rows[j].p;
+      if (!nm || tvText.indexOf(nm) < 0) continue;
+      if (!best || nm.length > String(best.name || '').replace(/\s/g, '').length) best = rows[j];
+    }
+    if (!best) {
+      // 마스터에 없는 표기 — 이름으로만 가른다
+      if (/모든g|넷플릭스|티빙|디즈니|유튜브프리미엄|초이스/.test(tvText)) return 'allG';
+      if (/에센스|베이직|라이트/.test(tvText)) return 'ess';
+      return '';
+    }
+    if (!allG || !ess) return 'allG';
+    return best.p >= allG ? 'allG' : 'ess';
+  }
+
+  // 인터넷 속도 — '500M' / '1G' (없으면 '') · 와이파이·셋탑 줄은 보지 않는다
+  function wiredSpeedOf(text) {
+    var parts = String(text == null ? '' : text).split('+'), i, s;
+    for (i = 0; i < parts.length; i++) {
+      s = parts[i].replace(/\s/g, '');
+      if (/와이파이|wifi|셋탑|탭|사운드바/i.test(s)) continue;
+      if (/1g|1기가|기가인터넷|1000m/i.test(s)) return '1G';
+      if (/500m|500메가|0\.5g/i.test(s)) return '500M';
+    }
+    return '';
+  }
+
+  /* 유선 리베이트 자동 계산 — 규칙이 없으면 noRule */
+  function wiredRebateCalc(wiredType, planText, hasWireless, onestop) {
+    var t = wiredTypeCanon(wiredType);
+    if (!t) return null;
+    var combo = hasWireless ? '동판' : '단독';
+    var tv = tvTierOf(planText);
+    var spd = wiredSpeedOf(planText);
+    var amount = null, label = '';
+    if (t === '인티 신규') {
+      var s = spd || '500M';
+      var allG = (tv === 'allG');
+      if (s === '1G') amount = allG ? (hasWireless ? 580000 : 430000) : (hasWireless ? 480000 : 330000);
+      else amount = allG ? (hasWireless ? 480000 : 330000) : (hasWireless ? 380000 : 230000);
+      label = s + (spd ? '' : '(미지정)') + ' · TV ' + (allG ? '모든G↑' : (tv ? '에센스↓' : '미지정(에센스↓ 기준)')) + ' · ' + combo;
+    } else if (t === '인터넷 신규 단품') {
+      amount = hasWireless ? 250000 : 100000;
+      label = '인터넷 신규 단품 · ' + combo;
+    } else if (t === '인티 약갱') {
+      var g2 = (tv === 'allG');
+      amount = g2 ? 200000 : 150000;
+      label = '인티 약갱 · TV ' + (g2 ? '모든G↑' : (tv ? '에센스↓' : '미지정(에센스↓ 기준)'));
+    } else if (t === '인터넷 약정갱신') {
+      amount = 100000;
+      label = '인터넷 약정갱신';
+    } else {
+      return { noRule: true, amount: null, label: 'TV 단품은 자동 계산 규칙이 없습니다 — 유선 리베이트를 직접 입력하세요', onestop: !!onestop, combo: combo };
+    }
+    if (onestop) { amount += ON_STOP_AMOUNT; label += ' + 원스톱'; }
+    return { noRule: false, amount: amount, label: label, combo: combo, speed: spd, tv: tv, onestop: !!onestop };
+  }
+
+  var wiredAutoLast = null;
+
+  /* 칸에 자동 계산값을 채우고 안내를 보여 준다
+     · 비어 있거나, 직전에 자동으로 넣은 값 그대로면 다시 채운다
+     · 직원이 직접 고친 값은 덮어쓰지 않고 '수기 입력 유지' 안내만 한다 */
+  function refreshWiredRebate() {
+    var input = $('f_rebate_l'), hint = $('rebateLHint');
+    if (!input) return;
+    if (!el.editDialog || !el.editDialog.open) return;
+    function hideHint() { if (hint) { hint.textContent = ''; hint.hidden = true; } }
+    var slots = typeSlots($('f_type').value);
+    if (!slots.l || !isAdmin()) { hideHint(); return; }
+    var calc = wiredRebateCalc(slots.l, $('f_plan_l') ? $('f_plan_l').value : '', !!slots.w, onestopOn());
+    if (!calc) { hideHint(); return; }
+    var cur = parseNumber(input.value);
+    if (calc.noRule) {
+      // 규칙이 없으면 앞서 자동으로 넣은 값을 지운다 (남겨 두면 엉뚱한 금액이 저장된다)
+      if (input.getAttribute('data-auto') === '1' || (wiredAutoLast != null && cur === wiredAutoLast)) {
+        input.value = '';
+        input.removeAttribute('data-auto');
+        wiredAutoLast = null;
+      }
+      if (hint) {
+        hint.textContent = '⚠️ ' + calc.label + (calc.onestop ? ' — 원스톱 +100,000원도 직접 더해 주세요.' : '');
+        hint.hidden = false;
+      }
+      return;
+    }
+    var auto = input.getAttribute('data-auto') === '1';
+    var empty = !String(input.value).trim();
+    if (empty || auto || (wiredAutoLast != null && cur === wiredAutoLast)) {
+      input.value = calc.amount ? fmtNum(calc.amount) : '';
+      input.setAttribute('data-auto', '1');
+      wiredAutoLast = calc.amount;
+      input.classList.remove('bad');
+      if (hint) {
+        hint.textContent = '🧮 자동 계산: ' + calc.label + ' → ' + fmtNum(calc.amount) + '원' +
+          (calc.onestop ? ' (원스톱 +100,000 포함)' : '') + ' · 고치면 수기 값으로 저장됩니다';
+        hint.hidden = false;
+      }
+    } else if (hint) {
+      hint.textContent = '✍️ 수기 입력 ' + fmtNum(cur) + '원 유지 · 자동 계산은 ' + fmtNum(calc.amount) +
+        '원 (' + calc.label + ') — 자동값을 쓰려면 칸을 비우세요.';
+      hint.hidden = false;
+    }
+  }
+
   function openEditor(rec) {
     hidePlanSuggest();
     state.editingId = rec ? rec.id : null;
@@ -7641,6 +8460,9 @@
     $('f_plan').value = pp.w;
     $('f_plan_l').value = pp.l;
     syncWiredPlanField();
+    // v30 — 원스톱 체크 복원 · 유선 신규가 아니면 숨김 (수정 시 저장값은 지우지 않는다)
+    setOnestop(!!isOnestop(r.원스톱));
+    syncOnestopField(false);
     $('f_newplan').value = r.변경요금제 || '';
     $('f_newdate').value = normalizeDate(r.요금제변경일자) || '';
     $('f_addon').value = r.부가서비스 || '';
@@ -7654,6 +8476,8 @@
     $('f_used').value = r.중고폰 || '';
     $('f_usedprice').value = r.중고폰금액 ? fmtNum(r.중고폰금액) : '';
     $('f_rebate_w').value = r.무선리베이트 ? fmtNum(r.무선리베이트) : '';
+    wiredAutoLast = null;
+    $('f_rebate_l').removeAttribute('data-auto');
     $('f_rebate_l').value = r.유선리베이트 ? fmtNum(r.유선리베이트) : '';
     $('f_extra').value = r.추가지원금 ? fmtNum(r.추가지원금) : '';
     $('f_paycard').value = r.페이백카드 ? fmtNum(r.페이백카드) : '';
@@ -7714,8 +8538,11 @@
     var issues = [];
     var nameIssue = name ? nameIssueText(name) : '';
     var birthIssue = birth ? birthIssueText(birth) : '';
+    // v30 — 연락처 자릿수 (010 은 정확히 11자리, 그 밖은 9~11자리)
+    var phoneIssue = phone ? phoneIssueText(phone) : '';
     if (nameIssue) issues.push({ label: '고객명', el: $('f_name'), msg: nameIssue, hint: 'nameHint' });
     if (birthIssue) issues.push({ label: '생년월일', el: $('f_birth'), msg: birthIssue, hint: 'birthHint' });
+    if (phoneIssue) issues.push({ label: '연락처', el: $('f_phone'), msg: phoneIssue, hint: 'phoneHint' });
     if (!planW && !(slots.l && !slots.w)) need.push({ label: '요금제', el: $('f_plan') });
     if (!date) need.push({ label: '개통일', el: $('f_date') });
     // v16 — 개통유형은 필수, 무선이면 할인유형 필수, 일반 무선(기변·번이·신규)이면 기종 필수
@@ -7843,6 +8670,10 @@
       페이백카드: parseNumber($('f_paycard').value),
       페이백입금: parseNumber($('f_paybank').value),
       유선혜택: wiredGiftOn(),
+      // v30 — 원스톱 체크 (유선 리베이트 +10만원 · 유선 포인트 +1.0P)
+      원스톱: onestopOn() ? '원스톱' : '',
+      // v30 — [미기입] 으로 확인한 결제 칸 ([미기입:추지,페이백카드] 메모 표기)
+      미기입: payNoneTagNow(),
       // v25 — 메모 위 [권매·쉬움] 1탭 토글
       권매쉬움: easyOn() ? '권매쉬움' : '',
       메모: $('f_memo').value.trim(),
@@ -7912,7 +8743,12 @@
       $('f_used').value = '';
       $('f_usedprice').value = '';
       $('f_rebate_w').value = '';
+      wiredAutoLast = null;
+      $('f_rebate_l').removeAttribute('data-auto');
       $('f_rebate_l').value = '';
+      // v30 — 원스톱은 다음 고객에게 따라가지 않게 해제
+      setOnestop(false);
+      syncOnestopField(false);
       // v28 — 다음 고객에게 유선 사은품이 따라가지 않게 비운다(유형은 유지)
       if ($('f_wiredgift')) setWiredGift('');
       $('f_extra').value = '';
@@ -8548,8 +9384,18 @@
       state.filters.easy = !state.filters.easy;
       render();
     });
+    // v30 — ⚠️ 미기입 확인 (관리자 전용 · 1탭 토글)
+    if (el.missingFilter) el.missingFilter.addEventListener('click', function () {
+      if (!isAdmin()) { openAdminDialog(); return; }
+      state.filters.missing = !state.filters.missing;
+      render();
+      if (state.filters.missing) {
+        var y = el.ledger.getBoundingClientRect().top + window.pageYOffset - 90;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+      }
+    });
     el.resetFilters.addEventListener('click', function () {
-      state.filters = { q: '', month: currentMonth(), type: '', staff: '', due: false, dueMode: 'all', easy: false };
+      state.filters = { q: '', month: currentMonth(), type: '', staff: '', due: false, dueMode: 'all', easy: false, missing: false };
       el.searchInput.value = '';
       el.clearSearch.classList.remove('show');
       render();
@@ -8648,6 +9494,16 @@
     }
     var lockBtn = $('lockRetry');
     if (lockBtn) lockBtn.addEventListener('click', function () { recheckBlock(false); });
+    // v30 — 관리자 모드 10분 미사용 자동 잠금: 클릭·터치·키입력·입력값 변경이 있을 때마다 타이머를 다시 건다
+    ['pointerdown', 'touchstart', 'keydown', 'input', 'change'].forEach(function (evt) {
+      document.addEventListener(evt, function () { touchAdminIdle(); }, true);
+    });
+    // 탭을 다시 열었을 때 — 떠나 있던 시간이 10분을 넘었으면 바로 잠근다(백그라운드 타이머 지연 대비)
+    document.addEventListener('visibilitychange', function () {
+      if (!isAdmin() || document.hidden) return;
+      if (adminIdleInfo.at && Date.now() - adminIdleInfo.at >= adminIdleMs()) { autoLockAdmin(); return; }
+      touchAdminIdle();
+    });
     if (el.adminOk) el.adminOk.addEventListener('click', tryUnlockAdmin);
     if (el.adminCancel) el.adminCancel.addEventListener('click', function () { el.adminDialog.close(); });
     if (el.adminClose) el.adminClose.addEventListener('click', function () { el.adminDialog.close(); });
@@ -8667,6 +9523,16 @@
         if (e.target === el.syncDialog) el.syncDialog.close();
       });
     }
+
+    // v30 — 전화번호를 누르면 1탭 복사 (표 · 폰 카드 · 임박 알림 공통)
+    //   capture 단계에서 받아 stopPropagation — 폰 카드 펼치기·임박 필터·수정 모달이 같이 열리지 않는다
+    document.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('[data-copy-phone]') : null;
+      if (!b) return;
+      e.preventDefault();
+      e.stopPropagation();
+      copyPhoneText(b.getAttribute('data-copy-phone'));
+    }, true);
 
     // KPI 칩 → 유형 필터
     el.kpiBreakdown.addEventListener('click', function (e) {
@@ -8898,6 +9764,17 @@
       if (b) toggleWiredGift(b.getAttribute('data-wired-gift'));
     });
 
+    // v30 — 원스톱 체크 칩 (유선 신규만 · 다시 누르면 해제)
+    if ($('onestopChips')) $('onestopChips').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-onestop]') : null;
+      if (b) toggleOnestop();
+    });
+
+    // v30 — 유선 리베이트를 직접 고치면 자동값 표시를 뗀다 (다음 자동 계산이 덮어쓰지 않게)
+    if ($('f_rebate_l')) $('f_rebate_l').addEventListener('input', function () {
+      this.removeAttribute('data-auto');
+    });
+
     // v19 — [미기입]·[미반납] 1탭 칩 (추지·페이백·중고폰)
     PAY_NONE_ITEMS.forEach(function (it) {
       var box = $(it.chips);
@@ -8930,18 +9807,19 @@
       paintPeriodChips();
     });
 
-    // 전화번호 자동 포맷
+    // v30 — 연락처 자동 하이픈(숫자만 받아 010-1234-5678 모양으로) + 자리수 힌트 + 기존 고객 자동 채우기
     $('f_phone').addEventListener('input', function () {
-      var v = this.value;
-      if (!/^[0-9-]*$/.test(v)) return;
-      var d = v.replace(/[^0-9]/g, '');
-      if (d.length === 10 || d.length === 11) {
-        var f = formatPhone(d);
-        if (f !== v) {
-          this.value = f;
-          try { this.setSelectionRange(f.length, f.length); } catch (err) {}
-        }
+      var next = formatPhoneInput(this.value);
+      if (next !== this.value) {
+        this.value = next;
+        try { this.setSelectionRange(next.length, next.length); } catch (err) {}
       }
+      paintPhoneHint(false);
+      autoFillFromCustomer();
+    });
+    $('f_phone').addEventListener('blur', function () {
+      paintPhoneHint(true);
+      autoFillFromCustomer();
     });
 
     // 금액(무선·유선 리베이트 · 중고폰금액) 콤마 포맷
@@ -8983,6 +9861,7 @@
       if (!String(t.value || '').trim()) return;
       if (t.id === 'f_name' && $('nameHint') && !$('nameHint').hidden) return;
       if (t.id === 'f_birth' && $('birthHint') && !$('birthHint').hidden) return;
+      if (t.id === 'f_phone' && $('phoneHint') && !$('phoneHint').hidden) return;
       t.classList.remove('bad');
       if (!el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
     });
@@ -9162,6 +10041,8 @@
       dueOnly: $('dueOnly'),
       easyFilter: $('easyFilter'),
       easyFilterCount: $('easyFilterCount'),
+      missingFilter: $('missingFilter'),
+      missingCount: $('missingCount'),
       resetFilters: $('resetFilters'),
       resultCount: $('resultCount'),
       addBtn: $('addBtn'),
