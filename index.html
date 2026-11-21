@@ -19,6 +19,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
   *,*::before,*::after{box-sizing:border-box}
+  [hidden]{display:none !important}
   :root{
     --blue-800:#083A8C;
     --blue-700:#0A45A8;
@@ -199,7 +200,25 @@
   }
   .due-item:hover{background:#F4F7FB}
   .due-item .due-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .due-item .due-date{margin-left:auto;color:var(--slate-500);font-size:12.5px;font-variant-numeric:tabular-nums}
+  .due-item{flex-wrap:wrap;row-gap:3px}
+  .due-item .due-date{color:var(--slate-500);font-size:12px;font-variant-numeric:tabular-nums}
+  .due-item .due-kind{
+    flex:none;padding:1px 6px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:-.01em;
+  }
+  .due-kind.k-plan{background:var(--violet-bg);color:var(--violet)}
+  .due-kind.k-addon{background:var(--teal-bg);color:var(--teal)}
+  .due-item .due-what{
+    color:var(--slate-500);font-size:12px;font-weight:600;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;min-width:0;
+  }
+  .due-item .due-staff{
+    margin-left:auto;font-size:11px;font-weight:700;color:var(--slate-600);
+    background:#F1F5F9;border-radius:999px;padding:1px 7px;
+  }
+  .tag-period{
+    display:inline-block;padding:0 5px;border-radius:5px;background:var(--blue-50);color:var(--blue-700);
+    font-size:10.5px;font-weight:800;vertical-align:1px;
+  }
   .due-empty{font-size:12.5px;color:var(--slate-400);padding:4px 2px}
 
   .dd{display:inline-block;padding:1px 6px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
@@ -346,6 +365,116 @@
   .dlg-msg b{color:var(--ink)}
   .dlg-msg .big{font-size:22px;font-weight:800;color:var(--blue-700)}
   .dlg-note{margin-top:12px;padding:11px 13px;background:#F7F9FC;border-radius:11px;font-size:12.5px;color:var(--slate-500);line-height:1.6;text-align:left}
+
+  /* ---------- 공용 장부(구글 시트) 연동 ---------- */
+  .head-right{margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .head-right .save-state{margin-left:0}
+  .sync-pill{
+    display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:999px;
+    border:1px solid #BBD7FB;background:var(--blue-50);color:var(--blue-700);
+    font-size:11.5px;font-weight:700;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  }
+  .sync-pill[hidden]{display:none}
+  .sync-pill .sdot{width:6px;height:6px;border-radius:50%;background:#0E7C5A;flex:none}
+  .sync-pill.pending{border-color:#F3DDAE;background:var(--amber-bg);color:var(--amber)}
+  .sync-pill.pending .sdot{background:#C2851A}
+  .sync-pill.err{border-color:#F3C9C2;background:var(--red-bg);color:var(--red)}
+  .sync-pill.err .sdot{background:#B42318}
+  .sync-pill.busy .sdot{background:var(--blue-600);animation:syncPulse 1s infinite}
+  @keyframes syncPulse{0%,100%{opacity:.25}50%{opacity:1}}
+
+  .sync-status{
+    margin:2px 0 10px;padding:9px 11px;border-radius:11px;background:#F7F9FC;border:1px solid var(--line);
+    font-size:12.5px;color:var(--slate-600);line-height:1.5;word-break:break-word;
+  }
+  .sync-status.ok{background:var(--green-bg);border-color:#BFE3D3;color:#0B5F45}
+  .sync-status.err{background:var(--red-bg);border-color:#F3C9C2;color:var(--red)}
+  .sync-status b{font-weight:800}
+  .sync-help{font-size:11.5px;color:var(--slate-400);line-height:1.6;margin-top:2px}
+  .sync-help code{background:#F1F5F9;border-radius:5px;padding:1px 5px;font-size:11px}
+
+  .staff-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px}
+  .staff-chip{
+    height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--line-strong);
+    background:#fff;font-size:12.5px;font-weight:600;color:var(--slate-600);
+  }
+  .staff-chip:hover{background:#F4F7FB}
+  .staff-chip.on{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700);font-weight:800}
+  .switch-row{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:var(--slate-700);padding:2px 0}
+  .switch-row input{width:17px;height:17px;accent-color:var(--blue-600)}
+  @media (pointer:coarse){.staff-chip{height:36px}}
+
+  /* ---------- 관리자/직원 모드 ---------- */
+  body.role-staff .admin-only{display:none !important}
+  .is-hidden{display:none !important}
+  .role-badge{
+    display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:999px;
+    font-size:11.5px;font-weight:800;border:1px solid var(--line);
+    background:#F1F5F9;color:var(--slate-600);
+  }
+  body.role-admin .role-badge{background:var(--violet-bg);border-color:#D9CEFF;color:var(--violet)}
+
+  /* ---------- 기간 선택 칩 (4·6개월 자동계산) ---------- */
+  .period-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .period-row input[type=date]{flex:1 1 148px;min-width:0;max-width:230px}
+  .period-chips{display:flex;gap:5px;flex-wrap:wrap}
+  .pchip{
+    height:32px;padding:0 11px;border-radius:9px;border:1px solid var(--line-strong);
+    background:#fff;font-size:12.5px;font-weight:700;color:var(--slate-600);
+  }
+  .pchip:hover{background:#F4F7FB}
+  .pchip.on{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700)}
+
+  /* ---------- 목록 보기: 날짜 그룹 · 한눈에/넓게 ---------- */
+  tr.group-row td{
+    background:#EAF1FB;border-bottom:1px solid #DCE6F4;
+    padding:7px 12px !important;font-size:12px;font-weight:800;color:var(--blue-800);
+    letter-spacing:.01em;
+  }
+  tr.group-row .g-count{float:right;color:var(--slate-500);font-weight:700}
+  tr.group-row .g-dow{color:var(--slate-500);font-weight:700}
+
+  .view-compact table.ledger{font-size:12.5px}
+  .view-compact table.ledger th{padding:8px 10px;font-size:11px}
+  .view-compact table.ledger td{padding:6px 10px}
+  .view-wide table.ledger{font-size:14px}
+  .view-wide table.ledger th{padding:13px 14px;font-size:12.5px}
+  .view-wide table.ledger td{padding:13px 14px}
+  .view-wide table.ledger td{border-bottom:1px solid #E3EAF3}
+
+  /* 모바일 간단히 보기 카드 */
+  .mlist{display:none}
+  .mgroup-head{display:flex;align-items:center;gap:8px;padding:14px 16px 7px;font-size:12px;font-weight:800;color:var(--blue-800)}
+  .mgroup-head .g-count{margin-left:auto;color:var(--slate-500);font-weight:700}
+  .mcard{border:1px solid var(--line);border-radius:14px;margin:0 12px 8px;background:#fff;overflow:hidden}
+  .mcard.due{border-color:#F0E2BE;background:#FFFDF6}
+  .mcard.open{border-color:#BBD7FB;box-shadow:0 10px 24px -20px rgba(11,87,208,.9)}
+  .mcard-main{padding:10px 13px;cursor:pointer}
+  .m-line1{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .m-name{font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+  .m-caret{margin-left:auto;color:var(--slate-400);font-size:11px;transition:transform .15s}
+  .mcard.open .m-caret{transform:rotate(180deg)}
+  .m-line2{display:flex;align-items:center;gap:8px;margin-top:3px;font-size:12.5px;color:var(--slate-500);min-width:0}
+  .m-model{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+  .m-money{margin-left:auto;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .m-staff{flex:none;color:var(--slate-600);font-weight:700;background:#F1F5F9;border-radius:999px;padding:1px 8px;font-size:11.5px}
+  .mcard-detail{display:none;border-top:1px solid var(--line);padding:9px 13px 11px;background:#FCFDFF}
+  .mcard.open .mcard-detail{display:block}
+  .m-row{display:flex;gap:10px;padding:3px 0;font-size:12.5px;line-height:1.45}
+  .m-k{flex:none;width:92px;color:var(--slate-400);font-weight:700}
+  .m-v{flex:1;min-width:0;color:var(--slate-700);word-break:break-word}
+  .m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+  .m-actions .icon-btn{width:34px;height:34px;background:#F3F7FC;border-color:var(--line);color:var(--slate-500)}
+  .m-actions .icon-btn.del{color:#C6554A}
+
+  @media (max-width:900px){
+    body.view-compact .table-scroll{display:none}
+    body.view-compact .mlist{display:block}
+    table.ledger tr.group-row{display:block;border:0;background:transparent;padding:0;margin:0}
+    table.ledger tr.group-row td{display:block;background:transparent;padding:15px 16px 6px !important;font-size:12px}
+    table.ledger tr.group-row td::before{content:"";display:none}
+    table.ledger tr.group-row .g-count{float:right}
+  }
 
   /* ---------- toast ---------- */
   #toast{
@@ -523,15 +652,15 @@
       </div>
     </div>
     <div class="topbar-actions">
-      <button class="btn btn-ghost" id="templateBtn" title="빈 엑셀 양식(.xlsx)을 받습니다">
+      <button class="btn btn-ghost admin-only" id="templateBtn" title="빈 엑셀 양식(.xlsx)을 받습니다">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.5h6.5L16 7v10.5H5z"/><path d="M11 2.5V7h5"/><path d="M7.5 11h5M7.5 14h3"/></svg>
         양식 받기
       </button>
-      <button class="btn btn-ghost" id="importBtn">
+      <button class="btn btn-ghost admin-only" id="importBtn">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13V3.5"/><path d="M6.5 6.5 10 3l3.5 3.5"/><path d="M4 12v3.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V12"/></svg>
         엑셀 가져오기
       </button>
-      <button class="btn btn-primary" id="exportBtn">
+      <button class="btn btn-primary admin-only" id="exportBtn">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9.5"/><path d="M6.5 9.5 10 13l3.5-3.5"/><path d="M4 13v2.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V13"/></svg>
         엑셀 내보내기
       </button>
@@ -544,16 +673,19 @@
           <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
         </summary>
         <div class="menu-panel" role="menu">
-          <button class="menu-item" id="jsonBackupBtn" role="menuitem">JSON 백업 저장</button>
-          <button class="menu-item" id="jsonRestoreBtn" role="menuitem">JSON 백업 복원</button>
+          <button class="menu-item admin-only" id="jsonBackupBtn" role="menuitem">JSON 백업 저장</button>
+          <button class="menu-item admin-only" id="jsonRestoreBtn" role="menuitem">JSON 백업 복원</button>
+          <div class="menu-sep"></div>
+          <button class="menu-item" id="syncOpenBtn" role="menuitem">공용 장부 연동 (Google 시트)</button>
+          <button class="menu-item" id="adminLockBtn" role="menuitem">🔓 관리자 모드 잠금 해제</button>
+          <button class="menu-item" id="syncNowBtn" role="menuitem" hidden>지금 동기화</button>
           <div class="menu-sep menu-mobile-only"></div>
-          <button class="menu-item menu-mobile-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
-          <button class="menu-item menu-mobile-only" id="importBtnMobile" role="menuitem">엑셀 · CSV 가져오기</button>
+          <button class="menu-item menu-mobile-only admin-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
+          <button class="menu-item menu-mobile-only admin-only" id="importBtnMobile" role="menuitem">엑셀 · CSV 가져오기</button>
           <div class="menu-sep"></div>
           <button class="menu-item" id="installHintBtn" role="menuitem">앱 설치 · 홈 화면 추가</button>
           <div class="menu-sep"></div>
-          <button class="menu-item" id="sampleBtn" role="menuitem">샘플 데이터 넣기</button>
-          <button class="menu-item danger" id="clearBtn" role="menuitem">전체 데이터 삭제</button>
+          <button class="menu-item admin-only" id="sampleBtn" role="menuitem">샘플 데이터 넣기</button>
         </div>
       </details>
     </div>
@@ -575,7 +707,11 @@
         <button class="chip-btn" id="thisMonthBtn">이번 달</button>
         <button class="chip-btn" id="allMonthBtn">전체 기간</button>
       </div>
-      <div class="save-state"><span class="dot"></span><span id="saveState">저장됨</span></div>
+      <div class="head-right">
+        <span class="role-badge" id="roleBadge" title="관리자 모드에서만 엑셀·백업·삭제가 보입니다">👤 직원 모드</span>
+        <button type="button" class="sync-pill" id="syncPill" hidden><span class="sdot"></span><span id="syncPillText">공용 장부</span></button>
+        <div class="save-state"><span class="dot"></span><span id="saveState">저장됨</span></div>
+      </div>
     </div>
 
     <div class="kpi-grid">
@@ -590,15 +726,16 @@
         <div class="kpi-label">리베이트 합계</div>
         <div class="kpi-value"><span class="num" id="kpiRebate">0</span><span class="unit">원</span></div>
         <div class="kpi-sub" id="kpiRebateSub">건당 평균 0원</div>
+        <div class="kpi-sub" id="kpiUsedSub" hidden></div>
       </article>
 
       <article class="card kpi kpi-due">
-        <div class="kpi-label">요금제 변경 예정 <span style="font-weight:600;color:var(--slate-400);font-size:11.5px">· 숫자를 누르면 해당 건만 보기</span></div>
+        <div class="kpi-label">요금제 변경 · 부가서비스 해지 예정 <span style="font-weight:600;color:var(--slate-400);font-size:11.5px">· 숫자를 누르면 해당 건만 보기</span></div>
         <div class="due-stats">
-          <button class="due-stat soon" id="dueSoonStat" title="오늘부터 7일 이내에 요금제 변경일자가 도래하는 건">
+          <button class="due-stat soon" id="dueSoonStat" title="오늘부터 7일 이내 요금제 변경 / 부가서비스 해지 예정">
             <span class="due-num num" id="dueSoonCount">0</span><span class="due-cap">7일 이내</span>
           </button>
-          <button class="due-stat overdue" id="dueOverdueStat" title="요금제변경일자가 지났는데 아직 일자가 남아 있는 건">
+          <button class="due-stat overdue" id="dueOverdueStat" title="요금제 변경 / 부가서비스 해지일자가 지난 건">
             <span class="due-num num" id="dueOverdueCount">0</span><span class="due-cap">기한 지남</span>
           </button>
         </div>
@@ -616,8 +753,12 @@
     <select class="filter" id="typeFilter" aria-label="개통유형 필터">
       <option value="">전체 유형</option>
     </select>
-    <label class="check"><input type="checkbox" id="dueOnly"> 요금제 변경 임박만</label>
+    <select class="filter" id="staffFilter" aria-label="담당자 필터">
+      <option value="">전체 담당자</option>
+    </select>
+    <label class="check"><input type="checkbox" id="dueOnly"> 요금제·부가서비스 임박만</label>
     <button class="btn sm btn-ghost" id="resetFilters">초기화</button>
+    <button class="chip-btn" id="viewToggle" title="목록 보기 방식을 바꿉니다">한눈에 보기</button>
     <span class="result-count" id="resultCount">0건</span>
     <button class="btn btn-primary" id="addBtn">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4.5v11M4.5 10h11"/></svg>
@@ -639,20 +780,25 @@
             <th>요금제</th>
             <th>변경요금제</th>
             <th>요금제변경일자</th>
+            <th>부가서비스</th>
+            <th>부가서비스해지일자</th>
             <th>중고폰</th>
+            <th class="money" data-sort="중고폰금액">중고폰금액<span class="arrow">▼</span></th>
             <th class="money" data-sort="리베이트">리베이트<span class="arrow">▼</span></th>
             <th>메모</th>
+            <th>담당자</th>
             <th class="actions-col">관리</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
+    <div class="mlist" id="mlist"></div>
     <div class="empty" id="emptyState" hidden></div>
   </section>
 
   <footer class="foot">
-    <span>데이터는 이 브라우저(<b>localStorage</b>)에만 저장됩니다.</span>
+    <span id="footStorage">데이터는 이 브라우저(<b>localStorage</b>)에만 저장됩니다.</span>
     <span class="sep"></span>
     <span>PC를 바꾸거나 브라우저를 정리하기 전에 JSON 백업을 받아두세요.</span>
     <span class="sep"></span>
@@ -717,10 +863,37 @@
           <input id="f_newplan" type="text" autocomplete="off" placeholder="예) 5G 프리미엄 68,000">
         </div>
 
-        <div class="field">
+        <div class="field span2">
           <label for="f_newdate">요금제변경일자 <span class="opt">선택</span></label>
-          <input id="f_newdate" type="date">
-          <span class="hint">오늘 ~ 7일 이내면 알림에 표시됩니다</span>
+          <div class="period-row">
+            <div class="period-chips" id="planPeriodChips">
+              <button type="button" class="pchip" data-period="none">없음</button>
+              <button type="button" class="pchip" data-period="4">4개월</button>
+              <button type="button" class="pchip" data-period="6">6개월</button>
+              <button type="button" class="pchip" data-period="custom">직접입력</button>
+            </div>
+            <input id="f_newdate" type="date">
+          </div>
+          <span class="hint">4·6개월 = 개통일 기준 자동 계산 · 7일 이내면 알림</span>
+        </div>
+
+        <div class="field span2">
+          <label for="f_addon">부가서비스 <span class="opt">선택</span></label>
+          <input id="f_addon" type="text" autocomplete="off" placeholder="예) 안심보험 / 워치 요금제 / 시즌 패스">
+        </div>
+
+        <div class="field span2">
+          <label for="f_addondate">부가서비스 유지기간 · 해지일자 <span class="opt">선택</span></label>
+          <div class="period-row">
+            <div class="period-chips" id="addonPeriodChips">
+              <button type="button" class="pchip" data-period="none">없음</button>
+              <button type="button" class="pchip" data-period="4">4개월</button>
+              <button type="button" class="pchip" data-period="6">6개월</button>
+              <button type="button" class="pchip" data-period="custom">직접입력</button>
+            </div>
+            <input id="f_addondate" type="date">
+          </div>
+          <span class="hint">유지기간을 누르면 개통일 기준으로 해지일자가 자동 계산됩니다</span>
         </div>
         <div class="field">
           <label for="f_rebate">리베이트 (원)</label>
@@ -728,8 +901,20 @@
         </div>
 
         <div class="field span2">
+          <label for="f_staff">담당자 <span class="opt">선택</span></label>
+          <input id="f_staff" type="text" autocomplete="off" placeholder="예) 김태양">
+          <div class="staff-chips" id="staffChips"></div>
+          <span class="hint">이름을 누르면 바로 입력됩니다. 비워두면 설정한 내 이름으로 저장돼요.</span>
+        </div>
+
+        <div class="field">
           <label for="f_used">중고폰 <span class="opt">선택</span></label>
-          <input id="f_used" type="text" autocomplete="off" placeholder="예) 반납 / 매입 15만 / 미사용">
+          <input id="f_used" type="text" autocomplete="off" placeholder="예) 반납 / 매입 / 미사용">
+        </div>
+        <div class="field">
+          <label for="f_usedprice">중고폰금액 (원) <span class="opt">선택</span></label>
+          <input id="f_usedprice" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+          <span class="hint">중고폰 매입·판매 금액</span>
         </div>
 
         <div class="field span2">
@@ -740,7 +925,7 @@
     </div>
 
     <div class="dlg-foot">
-      <button type="button" class="btn btn-danger" id="deleteBtn" style="display:none">
+      <button type="button" class="btn btn-danger admin-only" id="deleteBtn" style="display:none">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.5 5.5l.8 10.2a1.3 1.3 0 0 0 1.3 1.2h4.8a1.3 1.3 0 0 0 1.3-1.2l.8-10.2"/></svg>
         삭제
       </button>
@@ -789,6 +974,72 @@
   </div>
 </dialog>
 
+<!-- ===================== 관리자 모드 ===================== -->
+<dialog id="adminDialog">
+  <div class="dlg-head">
+    <div>
+      <h2>관리자 모드</h2>
+      <p>사장님 PIN을 넣으면 엑셀 · 백업 · 삭제 메뉴가 열립니다.</p>
+    </div>
+    <button type="button" class="dlg-close" id="adminClose" aria-label="닫기">×</button>
+  </div>
+  <div class="dlg-body">
+    <div class="field">
+      <label for="adminPinInput">관리자 PIN</label>
+      <input id="adminPinInput" type="password" inputmode="numeric" autocomplete="off" placeholder="PIN">
+      <span class="hint">직원 모드에서는 삭제·엑셀·백업 메뉴가 보이지 않습니다</span>
+    </div>
+    <div class="form-error" id="adminError" style="margin:8px 0 0"></div>
+  </div>
+  <div class="dlg-foot">
+    <span class="grow"></span>
+    <button type="button" class="btn" id="adminCancel">취소</button>
+    <button type="button" class="btn btn-primary" id="adminOk">확인</button>
+  </div>
+</dialog>
+
+<!-- ===================== 공용 장부 연동 (Google 시트) ===================== -->
+<dialog id="syncDialog">
+  <div class="dlg-head">
+    <div>
+      <h2>공용 장부 연동 (Google 시트)</h2>
+      <p>직원이 등록한 개통이 사장님 구글 시트에 바로 쌓이고, 다른 직원 폰에도 같이 보입니다.</p>
+    </div>
+    <button type="button" class="dlg-close" id="syncClose" aria-label="닫기">×</button>
+  </div>
+  <div class="dlg-body">
+    <div class="sync-status" id="syncStatus">아직 연동하지 않았습니다.</div>
+    <div class="form-grid">
+      <div class="field span2" id="sEnabledField">
+        <label class="switch-row" for="s_enabled"><input type="checkbox" id="s_enabled"> 공용 장부 연동 사용</label>
+        <span class="hint">끄면 이 기기(브라우저)에만 저장됩니다. 기존 데이터는 그대로 남습니다.</span>
+      </div>
+      <div class="field span2" id="sUrlField">
+        <label for="s_url">연동 주소 (Apps Script 웹앱 주소) <span class="req">*</span></label>
+        <input id="s_url" type="url" inputmode="url" autocomplete="off" placeholder="https://script.google.com/macros/s/…/exec">
+        <span class="sync-help">시트 → <b>확장 프로그램 → Apps Script</b> → <b>웹앱으로 배포</b> 후 나오는 주소</span>
+      </div>
+      <div class="field" id="sPinField">
+        <label for="s_pin">매장 PIN <span class="req">*</span></label>
+        <input id="s_pin" type="text" inputmode="numeric" autocomplete="off" placeholder="예) 5001">
+        <span class="hint">Code.gs 의 PIN 과 동일</span>
+      </div>
+      <div class="field">
+        <label for="s_name">내 이름 (담당자)</label>
+        <input id="s_name" type="text" autocomplete="off" placeholder="예) 김태양">
+        <div class="staff-chips" id="syncStaffChips"></div>
+      </div>
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <button type="button" class="btn" id="syncTestBtn">연결 테스트</button>
+    <button type="button" class="btn" id="syncNowBtn2" hidden>지금 동기화</button>
+    <span class="grow"></span>
+    <button type="button" class="btn" id="syncCancel">닫기</button>
+    <button type="button" class="btn btn-primary" id="syncSaveBtn">저장</button>
+  </div>
+</dialog>
+
 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,text/csv" style="display:none">
 <input type="file" id="jsonInput" accept=".json,application/json" style="display:none">
 <div id="toast" role="status" aria-live="polite"></div>
@@ -808,14 +1059,36 @@
 
   var STORAGE_KEY = 'kt_chilgeum_activations_v1';
 
-  // 엑셀/CSV 헤더 순서 — 절대 변경 금지
-  var HEADERS = ['개통일','고객명','연락처','생년월일','개통유형','기종','요금제','변경요금제','요금제변경일자','중고폰','리베이트','메모'];
+  // 공용 장부(구글 시트) 연동 설정 키
+  var SYNC_KEY = 'kt_chilgeum_sync_v1';
+  var SYNC_TIMEOUT = 15000;
+  // 목록 보기 방식(한눈에/넓게 · 간단히/자세히)
+  var VIEW_KEY = 'kt_chilgeum_view_v1';
+
+  // 관리자(사장님) PIN — 엑셀·백업·삭제·연동 주소 수정은 이 PIN 으로만 열린다
+  var ADMIN_PIN = '0525';
+  var ROLE_KEY = 'kt_chilgeum_role_v1';
+
+  // 매장 공용 장부 기본값 — 배포 주소가 나오면 url 에 넣어 두면
+  // 직원은 주소 입력 없이 이름만 고르면 바로 연결됩니다.
+  var DEFAULT_SYNC = {
+    url: '',
+    pin: '5001'
+  };
+
+  // 매장 직원 — 담당자 빠른 선택용 (다른 이름도 직접 입력 가능)
+  var STAFF_LIST = ['김태양', '김설화', '이건엽', '권영한'];
+
+  // 엑셀/CSV 헤더 순서 — 기존 12컬럼 유지 + 중고폰 뒤 중고폰금액
+  var HEADERS = ['개통일','고객명','연락처','생년월일','개통유형','기종','요금제','변경요금제','요금제변경일자','부가서비스','부가서비스유지','부가서비스해지일자','중고폰','중고폰금액','리베이트','메모'];
+  // 금액(숫자)으로 다루는 컬럼
+  var MONEY_COLS = ['중고폰금액', '리베이트'];
 
   var TYPES = ['기기변경','번호이동','신규가입','인터넷+TV','키즈폰','기타'];
   var TYPE_CLASS = {'기기변경':'t-change','번호이동':'t-move','신규가입':'t-new','인터넷+TV':'t-net','키즈폰':'t-kids','기타':'t-etc'};
 
   // 엑셀 컬럼 너비
-  var COL_W = {'개통일':12,'고객명':14,'연락처':16,'생년월일':14,'개통유형':12,'기종':20,'요금제':22,'변경요금제':22,'요금제변경일자':16,'중고폰':20,'리베이트':12,'메모':34};
+  var COL_W = {'개통일':12,'고객명':14,'연락처':16,'생년월일':14,'개통유형':12,'기종':20,'요금제':22,'변경요금제':22,'요금제변경일자':16,'부가서비스':22,'부가서비스유지':14,'부가서비스해지일자':16,'중고폰':20,'중고폰금액':13,'리베이트':12,'메모':34};
 
   // 가져오기 헤더 별칭 (정규화된 문자열 기준)
   var ALIASES = {
@@ -828,15 +1101,22 @@
     '요금제': ['요금제','현재요금제','요금상품'],
     '변경요금제': ['변경요금제','변경요금','변경상품'],
     '요금제변경일자': ['요금제변경일자','변경일자','요금제변경일','변경예정일','요금제변경'],
+    '부가서비스': ['부가서비스','부가서비스명','부가','부가상품'],
+    '부가서비스유지': ['부가서비스유지','부가서비스기간','부가유지','부가서비스유지기간'],
+    '부가서비스해지일자': ['부가서비스해지일자','부가서비스해지일','부가해지일자','부가서비스종료일','부가종료일'],
     '중고폰': ['중고폰','중고','중고폰정보','중고기기'],
+    '중고폰금액': ['중고폰금액','중고금액','중고폰매입','중고폰매입금액','중고폰가격','중고폰판매','중고폰판매금액','매입금액','매입가'],
     '리베이트': ['리베이트','지원금','리베이트금액','리베이드'],
     '메모': ['메모','비고','특이사항','참고']
   };
 
   var state = {
     records: [],
-    filters: { q: '', month: '', type: '', due: false, dueMode: 'all' },
+    filters: { q: '', month: '', type: '', staff: '', due: false, dueMode: 'all' },
     sort: { key: '개통일', dir: 'desc' },
+    view: 'compact',
+    role: 'staff',
+    adminPin: '',
     editingId: null,
     pendingRows: null,
     pendingKind: 'excel'
@@ -960,9 +1240,16 @@
     }
     o.개통일 = normalizeDate(o.개통일);
     o.요금제변경일자 = normalizeDate(o.요금제변경일자);
+    o.부가서비스해지일자 = normalizeDate(o.부가서비스해지일자);
     o.연락처 = formatPhone(o.연락처);
     o.리베이트 = parseNumber(o.리베이트);
+    o.중고폰금액 = parseNumber(o.중고폰금액);
     if (!o.개통유형) o.개통유형 = '';
+    // 구글 시트에서 숫자로 바뀌며 앞자리 0이 사라진 생년월일(010105 → 10105) 복원
+    if (/^\d{5}$/.test(o.생년월일)) o.생년월일 = '0' + o.생년월일;
+    // 공용 장부 전용 항목
+    o.담당자 = r && r.담당자 != null ? String(r.담당자).trim() : '';
+    o.수정일시 = r && r.수정일시 != null ? String(r.수정일시).trim() : '';
     return o;
   }
 
@@ -992,6 +1279,420 @@
     }
   }
 
+  /* =========================================================
+     공용 장부(Google 시트) 연동
+     ---------------------------------------------------------
+     · 설정 : 더보기 → 공용 장부 연동 (주소 · 매장 PIN · 내 이름)
+     · 등록/수정/삭제 → 구글 시트에 바로 올리고, 목록을 다시 받아 맞춘다
+     · 연동이 꺼져 있으면 예전처럼 이 기기에만 저장된다
+     ========================================================= */
+  var sync = { url: '', pin: '', name: '', enabled: false, lastSync: 0, lastError: '', pending: [] };
+  var syncing = false;
+
+  function loadSync() {
+    try {
+      var raw = localStorage.getItem(SYNC_KEY);
+      if (!raw) return;
+      var d = JSON.parse(raw) || {};
+      sync.url = String(d.url || '');
+      sync.pin = String(d.pin || '');
+      sync.name = String(d.name || '');
+      sync.enabled = !!d.enabled;
+      sync.lastSync = Number(d.lastSync || 0);
+      sync.pending = Array.isArray(d.pending) ? d.pending : [];
+    } catch (e) {}
+  }
+
+  function saveSync() {
+    try {
+      localStorage.setItem(SYNC_KEY, JSON.stringify({
+        url: sync.url, pin: sync.pin, name: sync.name,
+        enabled: sync.enabled, lastSync: sync.lastSync, pending: sync.pending
+      }));
+    } catch (e) {}
+  }
+
+  function syncOn() { return !!(sync.enabled && sync.url && sync.pin); }
+
+  function buildUrl(base, params) {
+    var q = [];
+    for (var k in params) if (params.hasOwnProperty(k)) {
+      q.push(encodeURIComponent(k) + '=' + encodeURIComponent(params[k]));
+    }
+    if (!q.length) return base;
+    return base + (base.indexOf('?') >= 0 ? '&' : '?') + q.join('&');
+  }
+
+  function normalizeEndpoint(v) {
+    var s = String(v || '').trim();
+    if (!s) return '';
+    if (!/^https?:\/\//i.test(s)) s = 'https://' + s;
+    return s;
+  }
+
+  function fetchJson(url, opts) {
+    return new Promise(function (resolve, reject) {
+      var settled = false, timer = null, ctrl = null;
+      if (typeof AbortController !== 'undefined') { try { ctrl = new AbortController(); } catch (e) { ctrl = null; } }
+      function finish(fn, v) { if (settled) return; settled = true; if (timer) clearTimeout(timer); fn(v); }
+      timer = setTimeout(function () {
+        if (ctrl) { try { ctrl.abort(); } catch (e) {} }
+        finish(reject, new Error('응답이 없습니다 (인터넷 연결 확인)'));
+      }, SYNC_TIMEOUT);
+      var o = {};
+      for (var k in (opts || {})) if (opts.hasOwnProperty(k)) o[k] = opts[k];
+      if (ctrl) o.signal = ctrl.signal;
+      fetch(url, o).then(function (res) {
+        return res.text().then(function (t) { return { res: res, text: t }; });
+      }).then(function (r) {
+        if (!r.res.ok) { finish(reject, new Error('서버 응답 ' + r.res.status)); return; }
+        var data = null;
+        try { data = JSON.parse(r.text); } catch (e) { data = null; }
+        if (!data) { finish(reject, new Error('응답을 해석하지 못했습니다.')); return; }
+        finish(resolve, data);
+      }).catch(function (err) {
+        finish(reject, err || new Error('연결 실패'));
+      });
+    });
+  }
+
+  // 구글의 응답 헤더 때문에 본문을 못 읽을 때를 대비한 대체 경로(JSONP)
+  function jsonpGet(url) {
+    return new Promise(function (resolve, reject) {
+      var name = '__ktSync' + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36);
+      var script = document.createElement('script');
+      var settled = false, timer = null;
+      function cleanup() {
+        if (timer) clearTimeout(timer);
+        try { delete window[name]; } catch (e) { window[name] = undefined; }
+        if (script.parentNode) script.parentNode.removeChild(script);
+      }
+      window[name] = function (data) { if (settled) return; settled = true; cleanup(); resolve(data); };
+      script.onerror = function () { if (settled) return; settled = true; cleanup(); reject(new Error('연결 실패')); };
+      timer = setTimeout(function () { if (settled) return; settled = true; cleanup(); reject(new Error('응답이 없습니다')); }, SYNC_TIMEOUT);
+      script.src = buildUrl(url, { callback: name });
+      document.head.appendChild(script);
+    });
+  }
+
+  function pullList(base, pin) {
+    var target = buildUrl(base || sync.url, {
+      pin: (pin == null ? sync.pin : pin),
+      action: 'list',
+      t: String(Date.now())
+    });
+    return fetchJson(target, { method: 'GET', cache: 'no-store', redirect: 'follow' })
+      .catch(function () { return jsonpGet(target); })
+      .then(function (data) {
+        if (!data || data.ok !== true) throw new Error((data && data.error) || '공용 장부 응답 오류');
+        var rows = Array.isArray(data.records) ? data.records : [];
+        return rows.map(normalizeRecord);
+      });
+  }
+
+  function pushItem(item) {
+    var payload = {
+      pin: sync.pin,
+      action: item.op,
+      id: item.id || (item.rec && item.rec.id) || '',
+      record: item.rec || null
+    };
+    if (item.op === 'delete') payload.adminPin = state.adminPin || '';
+    var body = JSON.stringify(payload);
+    return fetchJson(sync.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: body,
+      redirect: 'follow'
+    }).then(function (data) {
+      if (data && data.ok === true) return data;
+      throw new Error((data && data.error) || '저장 실패');
+    });
+  }
+
+  function queueOp(item) {
+    if (!syncOn()) return;
+    if (item.op === 'upsert' && item.rec) {
+      var rid = item.rec.id;
+      sync.pending = sync.pending.filter(function (it) {
+        return !((it.op === 'upsert' && it.rec && it.rec.id === rid) || (it.op === 'delete' && it.id === rid));
+      });
+    } else if (item.op === 'delete' && item.id) {
+      sync.pending = sync.pending.filter(function (it) {
+        return !((it.op === 'upsert' && it.rec && it.rec.id === item.id) || (it.op === 'delete' && it.id === item.id));
+      });
+    }
+    sync.pending.push(item);
+    saveSync();
+    renderSyncUi();
+  }
+
+  function queueUpsert(rec) {
+    if (!syncOn() || !rec) return;
+    var snap = { id: rec.id };
+    for (var i = 0; i < HEADERS.length; i++) snap[HEADERS[i]] = rec[HEADERS[i]];
+    snap.담당자 = rec.담당자 || '';
+    snap.수정일시 = rec.수정일시 || new Date().toISOString();
+    queueOp({ op: 'upsert', rec: snap, at: Date.now() });
+  }
+
+  function queueDelete(id) {
+    if (!syncOn() || !id) return;
+    queueOp({ op: 'delete', id: id, at: Date.now() });
+  }
+
+  function flushPending() {
+    if (!sync.pending.length) return Promise.resolve();
+    var item = sync.pending[0];
+    return pushItem(item).then(function () {
+      sync.pending.shift();
+      saveSync();
+      renderSyncUi();
+      return flushPending();
+    });
+  }
+
+  // 서버(시트) 목록을 화면에 반영. 아직 못 올린 내 기록은 지우지 않는다.
+  function applyServerList(list) {
+    var raw = {}, map = {}, id, i;
+    for (i = 0; i < list.length; i++) { raw[list[i].id] = list[i]; map[list[i].id] = list[i]; }
+
+    for (i = 0; i < sync.pending.length; i++) {
+      var it = sync.pending[i];
+      if (it.op !== 'upsert' || !it.rec) continue;
+      var rec = normalizeRecord(it.rec);
+      var srv = raw[rec.id];
+      if (!srv || String(srv.수정일시 || '') < String(rec.수정일시 || '')) map[rec.id] = rec;
+    }
+    for (i = 0; i < sync.pending.length; i++) {
+      var d = sync.pending[i];
+      if (d.op === 'delete' && d.id) delete map[d.id];
+    }
+
+    // 이미 시트에 들어간 대기 항목은 큐에서 제거
+    sync.pending = sync.pending.filter(function (item) {
+      if (item.op === 'upsert' && item.rec) {
+        var s = raw[item.rec.id];
+        return !(s && String(s.수정일시 || '') >= String(item.rec.수정일시 || ''));
+      }
+      if (item.op === 'delete') return !!raw[item.id];
+      return true;
+    });
+
+    var out = [];
+    for (id in map) if (map.hasOwnProperty(id)) out.push(map[id]);
+    state.records = out;
+    persist();
+    render();
+  }
+
+  function runSync(opts) {
+    var o = opts || {};
+    if (!syncOn()) { renderSyncUi(); return Promise.resolve(false); }
+    if (syncing) return Promise.resolve(false);
+    syncing = true;
+    renderSyncUi();
+    return flushPending()
+      .then(function () { return pullList(); })
+      .then(function (list) {
+        applyServerList(list);
+        sync.lastSync = Date.now();
+        sync.lastError = '';
+        saveSync();
+        syncing = false;
+        renderSyncUi();
+        if (!o.quiet) toast('공용 장부와 동기화했습니다.');
+        return true;
+      })
+      .catch(function (err) {
+        sync.lastError = String((err && err.message) || err || '연결 실패');
+        syncing = false;
+        saveSync();
+        renderSyncUi();
+        if (!o.quietFail) toast('공용 장부 연결 실패 · 이 기기에는 저장됐습니다', true);
+        return false;
+      });
+  }
+
+  // 이 기기에서 기록이 바뀌었을 때 (등록·수정·삭제·가져오기·전체삭제)
+  function syncAfterChange() {
+    if (!syncOn()) return;
+    runSync({ quiet: true });
+  }
+
+  function relTime(ts) {
+    if (!ts) return '';
+    var diff = Date.now() - ts;
+    if (diff < 0) diff = 0;
+    if (diff < 60000) return '방금';
+    if (diff < 3600000) return Math.floor(diff / 60000) + '분 전';
+    if (diff < 86400000) return Math.floor(diff / 3600000) + '시간 전';
+    var d = new Date(ts);
+    return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+
+  function renderSyncUi() {
+    if (!el.syncPill) return;
+    var on = syncOn();
+    el.syncPill.hidden = !on;
+    if (el.syncNowBtn) el.syncNowBtn.hidden = !on;
+    if (el.syncNowBtn2) el.syncNowBtn2.hidden = !on;
+
+    var cls = 'sync-pill', text = '공용 장부';
+    if (on) {
+      if (syncing) { cls += ' busy'; text = '공용 장부 연결 중…'; }
+      else if (sync.lastError) { cls += ' err'; text = '공용 장부 · 연결 실패'; }
+      else if (sync.pending.length) { cls += ' pending'; text = '공용 장부 · 저장 대기 ' + sync.pending.length + '건'; }
+      else { text = '공용 장부 · ' + (sync.lastSync ? relTime(sync.lastSync) + ' 동기화' : '연결됨'); }
+    }
+    el.syncPill.className = cls;
+    el.syncPillText.textContent = text;
+
+    if (el.footStorage) {
+      el.footStorage.innerHTML = on
+        ? '구글 시트 공용 장부(<b>전체_통합</b>)와 연결되어 함께 저장됩니다.'
+        : '데이터는 이 브라우저(<b>localStorage</b>)에만 저장됩니다.';
+    }
+    updateSyncDialogStatus();
+  }
+
+  function updateSyncDialogStatus() {
+    if (!el.syncStatus) return;
+    var cls = 'sync-status', html = '';
+    if (!syncOn()) {
+      html = '아직 연동하지 않았습니다. 지금은 이 기기에만 저장됩니다.';
+    } else if (sync.lastError) {
+      cls += ' err';
+      html = '연결에 실패했습니다: <b>' + esc(sync.lastError) + '</b><br>연동 주소와 매장 PIN을 확인해 주세요.';
+    } else {
+      cls += ' ok';
+      html = '연결됨 · <b>전체_통합</b> 시트와 ' + (sync.lastSync ? relTime(sync.lastSync) : '대기 중') + ' 동기화' +
+        (sync.pending.length
+          ? '<br>아직 못 올린 기록 <b>' + sync.pending.length + '건</b> — 연결되면 자동으로 올라갑니다.'
+          : '');
+    }
+    el.syncStatus.className = cls;
+    el.syncStatus.innerHTML = html;
+  }
+
+  function renderStaffChips(box, input) {
+    if (!box || !input) return;
+    var html = '';
+    for (var i = 0; i < STAFF_LIST.length; i++) {
+      var n = STAFF_LIST[i];
+      html += '<button type="button" class="staff-chip" data-staff="' + esc(n) + '">' + esc(n) + '</button>';
+    }
+    box.innerHTML = html;
+    box.onclick = function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-staff]') : null;
+      if (!b) return;
+      input.value = b.getAttribute('data-staff');
+      markStaffChips(box, input.value);
+    };
+    input.addEventListener('input', function () { markStaffChips(box, input.value); });
+    markStaffChips(box, input.value);
+  }
+
+  function markStaffChips(box, value) {
+    var v = String(value || '').trim();
+    var chips = box.querySelectorAll('button[data-staff]');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.toggle('on', chips[i].getAttribute('data-staff') === v);
+    }
+  }
+
+  function openSyncDialog() {
+    if (!el.syncDialog) return;
+    var staff = !isAdmin();
+    var hasEndpoint = !!(DEFAULT_SYNC.url || sync.url);
+    el.sUrl.value = sync.url || DEFAULT_SYNC.url || '';
+    el.sPin.value = sync.pin || DEFAULT_SYNC.pin || '';
+    el.sName.value = sync.name;
+    el.sEnabled.checked = staff ? true : syncOn();
+    // 직원 모드에서는(주소가 이미 정해져 있으면) 주소·PIN·연동 스위치를 감춘다
+    if (el.sUrlField) el.sUrlField.classList.toggle('is-hidden', staff && hasEndpoint);
+    if (el.sPinField) el.sPinField.classList.toggle('is-hidden', staff && hasEndpoint);
+    if (el.sEnabledField) el.sEnabledField.classList.toggle('is-hidden', staff);
+    renderStaffChips(el.syncStaffChips, el.sName);
+    updateSyncDialogStatus();
+    if (!el.syncDialog.open) el.syncDialog.showModal();
+  }
+
+  function saveSyncSettings() {
+    var staff = !isAdmin();
+    var url = normalizeEndpoint(el.sUrl.value) || normalizeEndpoint(DEFAULT_SYNC.url || '');
+    var pin = el.sPin.value.trim() || String(DEFAULT_SYNC.pin || '');
+    var name = el.sName.value.trim();
+    var wantOn = staff ? !!url : el.sEnabled.checked;
+    el.sUrl.value = url;
+
+    if (wantOn) {
+      if (!url) return syncFormError('연동 주소를 입력해 주세요.');
+      if (!/^https?:\/\//i.test(url)) return syncFormError('연동 주소는 https:// 로 시작해야 합니다.');
+      if (!/\/exec(\?|$)/.test(url)) return syncFormError('웹앱 주소가 맞는지 확인해 주세요 (/exec 로 끝나야 합니다).');
+      if (!pin) return syncFormError('매장 PIN을 입력해 주세요.');
+    }
+    if (staff && !name) return syncFormError('내 이름을 골라 주세요. (직원별로 기록이 구분됩니다)');
+
+    var wasOn = syncOn();
+    var urlChanged = url !== sync.url || pin !== sync.pin;
+    sync.url = url;
+    sync.pin = pin;
+    sync.name = name;
+    sync.enabled = wantOn;
+    saveSync();
+
+    // 새로 연동을 켜면 이 기기에 있던 장부도 시트에 올린다 (id 기준이라 중복 없음)
+    if (!wasOn && syncOn()) {
+      for (var i = 0; i < state.records.length; i++) queueUpsert(state.records[i]);
+    } else if (wasOn && urlChanged) {
+      sync.lastError = '';
+    }
+
+    renderSyncUi();
+    if (el.syncDialog.open) el.syncDialog.close();
+
+    if (syncOn()) {
+      runSync({ quiet: true }).then(function (ok) {
+        if (ok) toast('공용 장부 연동 완료 · 시트와 맞췄습니다.');
+      });
+    } else {
+      toast('이 기기에만 저장하도록 바꿨습니다. 기존 데이터는 그대로 있습니다.');
+    }
+  }
+
+  function syncFormError(msg) {
+    if (el.syncStatus) {
+      el.syncStatus.className = 'sync-status err';
+      el.syncStatus.textContent = msg;
+    }
+    toast(msg, true);
+    return false;
+  }
+
+  function testSyncConnection() {
+    var url = normalizeEndpoint(el.sUrl.value);
+    var pin = el.sPin.value.trim();
+    if (!url || !pin) return syncFormError('연동 주소와 매장 PIN을 먼저 입력해 주세요.');
+    el.syncStatus.className = 'sync-status';
+    el.syncStatus.textContent = '연결 확인 중…';
+    pullList(url, pin).then(function (list) {
+      el.syncStatus.className = 'sync-status ok';
+      el.syncStatus.innerHTML = '연결 성공! 시트에 <b>' + list.length + '건</b>이 있습니다.';
+    }).catch(function (err) {
+      el.syncStatus.className = 'sync-status err';
+      el.syncStatus.innerHTML = '연결 실패: <b>' + esc(String((err && err.message) || err)) + '</b><br>배포 설정(액세스: 모든 사용자)과 PIN을 확인해 주세요.';
+    });
+  }
+
+  function syncNowFromDialog() {
+    if (!syncOn()) { openSyncDialog(); return; }
+    runSync({ quiet: true }).then(function (ok) {
+      updateSyncDialogStatus();
+      toast(ok ? '지금 동기화했습니다.' : '동기화 실패 · 이 기기에는 저장돼 있습니다', !ok);
+    });
+  }
+
   /* ---------------- filtering / sorting ---------------- */
   function visibleRecords() {
     var f = state.filters;
@@ -1000,15 +1701,24 @@
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
       if (f.type && r.개통유형 !== f.type) return false;
+      if (f.staff && (r.담당자 || '') !== f.staff) return false;
       if (f.due) {
-        var d = daysFromToday(r.요금제변경일자);
-        if (d === null) return false;
-        if (f.dueMode === 'late') { if (d >= 0) return false; }
-        else if (f.dueMode === 'soon') { if (d < 0 || d > 7) return false; }
-        else if (d > 7) return false;
+        var ds = [];
+        var dp = daysFromToday(r.요금제변경일자);
+        var da = daysFromToday(r.부가서비스해지일자);
+        if (dp !== null) ds.push(dp);
+        if (da !== null) ds.push(da);
+        if (!ds.length) return false;
+        var hit = false;
+        for (var di = 0; di < ds.length; di++) {
+          if (f.dueMode === 'late') { if (ds[di] < 0) hit = true; }
+          else if (f.dueMode === 'soon') { if (ds[di] >= 0 && ds[di] <= 7) hit = true; }
+          else if (ds[di] <= 7) hit = true;
+        }
+        if (!hit) return false;
       }
       if (q) {
-        var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.중고폰, r.메모, r.개통유형].join(' ').toLowerCase();
+        var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.부가서비스, r.중고폰, r.메모, r.개통유형, r.담당자].join(' ').toLowerCase();
         if (hay.indexOf(q) < 0) return false;
       }
       return true;
@@ -1038,6 +1748,7 @@
     renderTable();
     renderFilterUi();
     el.footCount.textContent = state.records.length + '건 저장됨';
+    renderSyncUi();
   }
 
   function renderKpis() {
@@ -1070,23 +1781,45 @@
     }
     el.kpiBreakdown.innerHTML = chips.length ? chips.join('') : '<span class="chip t-etc">아직 기록 없음</span>';
 
-    // 리베이트
-    var sum = 0;
-    for (i = 0; i < list.length; i++) sum += Number(list[i].리베이트) || 0;
+    // 리베이트 · 중고폰금액 합계
+    var sum = 0, usedSum = 0;
+    for (i = 0; i < list.length; i++) {
+      sum += Number(list[i].리베이트) || 0;
+      usedSum += Number(list[i].중고폰금액) || 0;
+    }
     el.kpiRebate.textContent = fmtNum(sum);
     el.kpiRebateSub.textContent = list.length
       ? '건당 평균 ' + fmtNum(Math.round(sum / list.length)) + '원 · ' + list.length + '건'
       : '기록을 추가하면 자동으로 합산됩니다';
+    if (el.kpiUsedSub) {
+      if (usedSum) {
+        el.kpiUsedSub.hidden = false;
+        el.kpiUsedSub.innerHTML = '중고폰 판매 합계 <b>' + fmtNum(usedSum) + '원</b>';
+      } else {
+        el.kpiUsedSub.hidden = true;
+      }
+    }
 
-    // 요금제 변경 알림
+    // 요금제 변경 · 부가서비스 해지 알림 (전 직원 공용)
     var soon = 0, late = 0, upcoming = [];
     for (i = 0; i < state.records.length; i++) {
-      var r = state.records[i];
-      var d = daysFromToday(r.요금제변경일자);
-      if (d === null) continue;
-      if (d < 0) late++;
-      else if (d <= 7) soon++;
-      if (d <= 7) upcoming.push({ r: r, d: d });
+      var rr = state.records[i];
+      var dPlan = daysFromToday(rr.요금제변경일자);
+      if (dPlan !== null) {
+        if (dPlan < 0) late++; else if (dPlan <= 7) soon++;
+        if (dPlan <= 7) upcoming.push({
+          r: rr, d: dPlan, kind: '요금제',
+          what: rr.변경요금제 || '요금제 변경', date: rr.요금제변경일자
+        });
+      }
+      var dAdd = daysFromToday(rr.부가서비스해지일자);
+      if (dAdd !== null) {
+        if (dAdd < 0) late++; else if (dAdd <= 7) soon++;
+        if (dAdd <= 7) upcoming.push({
+          r: rr, d: dAdd, kind: '부가서비스',
+          what: rr.부가서비스 || '부가서비스 해지', date: rr.부가서비스해지일자
+        });
+      }
     }
     el.dueSoonCount.textContent = fmtNum(soon);
     el.dueOverdueCount.textContent = fmtNum(late);
@@ -1095,36 +1828,120 @@
 
     upcoming.sort(function (a, b) { return a.d - b.d; });
     if (!upcoming.length) {
-      el.dueList.innerHTML = '<p class="due-empty">예정된 요금제 변경이 없습니다.</p>';
+      el.dueList.innerHTML = '<p class="due-empty">예정된 요금제 변경 · 부가서비스 해지가 없습니다.</p>';
     } else {
       var html = '';
-      for (i = 0; i < Math.min(upcoming.length, 4); i++) {
+      for (i = 0; i < Math.min(upcoming.length, 6); i++) {
         var u = upcoming[i];
-        var label = u.d < 0 ? (Math.abs(u.d) + '일 지남') : (u.d === 0 ? 'D-DAY' : 'D-' + u.d);
+        var label = ddLabel(u.d);
         var ddCls = u.d < 0 ? 'dd-late' : (u.d === 0 ? 'dd-today' : 'dd-soon');
         html += '<button type="button" class="due-item" data-due-item="1">' +
+          '<span class="due-kind ' + (u.kind === '요금제' ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
           '<span class="due-name">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
-          '<span class="due-date">' + esc(u.r.요금제변경일자.slice(5)) + '</span>' +
+          '<span class="due-what">' + esc(u.what) + '</span>' +
+          '<span class="due-date">' + esc(String(u.date).slice(5)) + '</span>' +
           '<span class="dd ' + ddCls + '">' + label + '</span>' +
+          (u.r.담당자 ? '<span class="due-staff">' + esc(u.r.담당자) + '</span>' : '') +
           '</button>';
       }
-      if (upcoming.length > 4) {
+      if (upcoming.length > 6) {
         html += '<button type="button" class="due-item" data-due-item="1" style="color:var(--slate-500)">' +
-          '<span class="due-name">외 ' + (upcoming.length - 4) + '건 더 보기</span></button>';
+          '<span class="due-name">외 ' + (upcoming.length - 6) + '건 더 보기</span></button>';
       }
       el.dueList.innerHTML = html;
     }
   }
 
-  function changeDateCell(r) {
-    var s = r.요금제변경일자 || '';
-    if (!s) return '<span class="muted">—</span>';
-    var d = daysFromToday(s);
+  function dueCell(val) {
+    if (!val) return '<span class="muted">—</span>';
+    var d = daysFromToday(val);
     var badge = '';
     if (d !== null && d < 0) badge = ' <span class="dd dd-late">' + Math.abs(d) + '일 지남</span>';
     else if (d === 0) badge = ' <span class="dd dd-today">D-DAY</span>';
     else if (d !== null && d <= 7) badge = ' <span class="dd dd-soon">D-' + d + '</span>';
-    return '<span class="c-date">' + esc(s) + '</span>' + badge;
+    return '<span class="c-date">' + esc(val) + '</span>' + badge;
+  }
+
+  function changeDateCell(r) {
+    return dueCell(r.요금제변경일자 || '');
+  }
+
+  function ddLabel(d) {
+    return d < 0 ? (Math.abs(d) + '일 지남') : (d === 0 ? 'D-DAY' : 'D-' + d);
+  }
+
+  function weekdayKo(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    if (!m) return '';
+    var d = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (isNaN(d.getTime())) return '';
+    return '일월화수목금토'.charAt(d.getDay());
+  }
+
+  function groupRowHtml(key, count) {
+    var label = key
+      ? esc(key) + (weekdayKo(key) ? ' <span class="g-dow">(' + weekdayKo(key) + ')</span>' : '')
+      : '날짜 없음';
+    return '<tr class="group-row"><td colspan="17"><span class="g-date">' + label +
+      '</span><span class="g-count">' + count + '건</span></td></tr>';
+  }
+
+  function mRow(label, val) {
+    return '<div class="m-row"><span class="m-k">' + label + '</span><span class="m-v">' +
+      (val ? val : '<span class="muted">—</span>') + '</span></div>';
+  }
+
+  function rowActionButtons(r) {
+    return '<button type="button" class="icon-btn" data-act="edit" data-id="' + esc(r.id) + '" title="수정" aria-label="수정">' +
+        '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 3.6a1.7 1.7 0 0 1 2.4 2.4L7 14.8l-3.4.8.8-3.4z"/><path d="M12 5l3 3"/></svg>' +
+      '</button>' +
+      '<button type="button" class="icon-btn del admin-only" data-act="del" data-id="' + esc(r.id) + '" title="삭제" aria-label="삭제">' +
+        '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.5 5.5l.8 10.2a1.3 1.3 0 0 0 1.3 1.2h4.8a1.3 1.3 0 0 0 1.3-1.2l.8-10.2"/></svg>' +
+      '</button>';
+  }
+
+  // 모바일 '간단히 보기' 카드 : 두 줄 요약 + 탭하면 상세
+  function mcardHtml(r) {
+    var d = daysFromToday(r.요금제변경일자);
+    var ad = daysFromToday(r.부가서비스해지일자);
+    var ddBadge = '';
+    if (d !== null && d < 0) ddBadge = '<span class="dd dd-late">요금제 ' + Math.abs(d) + '일 지남</span>';
+    else if (d === 0) ddBadge = '<span class="dd dd-today">요금제 D-DAY</span>';
+    else if (d !== null && d <= 7) ddBadge = '<span class="dd dd-soon">요금제 D-' + d + '</span>';
+    if (ad !== null && ad < 0) ddBadge += '<span class="dd dd-late">부가 ' + Math.abs(ad) + '일 지남</span>';
+    else if (ad === 0) ddBadge += '<span class="dd dd-today">부가 D-DAY</span>';
+    else if (ad !== null && ad <= 7) ddBadge += '<span class="dd dd-soon">부가 D-' + ad + '</span>';
+    var typeCls = TYPE_CLASS[r.개통유형] || 't-etc';
+    return '<div class="mcard' + ((d !== null && d <= 7) || (ad !== null && ad <= 7) ? ' due' : '') + '" data-id="' + esc(r.id) + '">' +
+      '<div class="mcard-main" data-mtoggle="1">' +
+        '<div class="m-line1">' +
+          '<span class="m-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
+          (r.개통유형 ? '<span class="badge ' + typeCls + '">' + esc(r.개통유형) + '</span>' : '') +
+          ddBadge +
+          '<span class="m-caret">▾</span>' +
+        '</div>' +
+        '<div class="m-line2">' +
+          '<span class="m-model">' + (r.기종 ? esc(r.기종) : '<span class="muted">기종 없음</span>') + '</span>' +
+          '<span class="m-money">' + fmtNum(r.리베이트) + '원</span>' +
+          (r.담당자 ? '<span class="m-staff">' + esc(r.담당자) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="mcard-detail">' +
+        mRow('연락처', r.연락처 ? esc(r.연락처) : '') +
+        mRow('생년월일', r.생년월일 ? esc(r.생년월일) : '') +
+        mRow('요금제', r.요금제 ? esc(r.요금제) : '') +
+        mRow('변경요금제', r.변경요금제 ? esc(r.변경요금제) : '') +
+        mRow('변경일자', r.요금제변경일자 ? changeDateCell(r) : '') +
+        mRow('부가서비스', r.부가서비스 ? esc(r.부가서비스) : '') +
+        mRow('부가서비스유지', r.부가서비스유지 ? esc(r.부가서비스유지) : '') +
+        mRow('부가서비스해지', r.부가서비스해지일자 ? dueCell(r.부가서비스해지일자) : '') +
+        mRow('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
+        mRow('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
+        mRow('메모', r.메모 ? esc(r.메모) : '') +
+        mRow('담당자', r.담당자 ? esc(r.담당자) : '') +
+        '<div class="m-actions">' + rowActionButtons(r) + '</div>' +
+      '</div>' +
+    '</div>';
   }
 
   function renderTable() {
@@ -1149,6 +1966,7 @@
 
     if (!rows.length) {
       el.tbody.innerHTML = '';
+      if (el.mlist) el.mlist.innerHTML = '';
       el.ledger.style.display = 'none';
       el.emptyState.hidden = false;
       if (state.records.length === 0) {
@@ -1173,12 +1991,38 @@
 
     el.emptyState.hidden = true;
     el.ledger.style.display = '';
+
+    // 날짜별 그룹 (개통일 정렬일 때만)
+    var groupByDate = state.sort.key === '개통일';
+    var counts = {}, i, gk;
+    if (groupByDate) {
+      for (i = 0; i < rows.length; i++) {
+        gk = rows[i].개통일 || '';
+        counts[gk] = (counts[gk] || 0) + 1;
+      }
+    }
+
     var html = '';
-    for (var i = 0; i < rows.length; i++) {
+    var mhtml = '';
+    var lastGroup = null;
+    for (i = 0; i < rows.length; i++) {
       var r = rows[i];
       var d = daysFromToday(r.요금제변경일자);
-      var rowCls = (d !== null && d <= 7) ? ' class="due-row"' : '';
+      var ad0 = daysFromToday(r.부가서비스해지일자);
+      var rowCls = ((d !== null && d <= 7) || (ad0 !== null && ad0 <= 7)) ? ' class="due-row"' : '';
       var typeCls = TYPE_CLASS[r.개통유형] || 't-etc';
+
+      if (groupByDate) {
+        gk = r.개통일 || '';
+        if (gk !== lastGroup) {
+          lastGroup = gk;
+          html += groupRowHtml(gk, counts[gk]);
+          mhtml += '<div class="mgroup-head"><span class="g-date">' +
+            (gk ? esc(gk) + (weekdayKo(gk) ? ' <span class="g-dow">(' + weekdayKo(gk) + ')</span>' : '') : '날짜 없음') +
+            '</span><span class="g-count">' + counts[gk] + '건</span></div>';
+        }
+      }
+
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
         '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span></td>' +
@@ -1189,30 +2033,171 @@
         '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="변경요금제"><span class="ellip" title="' + esc(r.변경요금제) + '">' + (r.변경요금제 ? esc(r.변경요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="요금제변경일자" class="nowrap">' + changeDateCell(r) + '</td>' +
+        '<td data-label="부가서비스"><span class="ellip" title="' + esc(r.부가서비스) + '">' + (r.부가서비스 ? esc(r.부가서비스) : '<span class="muted">—</span>') + (r.부가서비스유지 ? ' <span class="tag-period">' + esc(r.부가서비스유지) + '</span>' : '') + '</span></td>' +
+        '<td data-label="부가서비스해지일자" class="nowrap">' + dueCell(r.부가서비스해지일자) + '</td>' +
         '<td data-label="중고폰"><span class="ellip" title="' + esc(r.중고폰) + '">' + (r.중고폰 ? esc(r.중고폰) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="중고폰금액" class="money">' + (r.중고폰금액 ? fmtNum(r.중고폰금액) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="리베이트" class="money">' + fmtNum(r.리베이트) + '</td>' +
         '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span></td>' +
-        '<td class="actions">' +
-          '<button type="button" class="icon-btn" data-act="edit" data-id="' + esc(r.id) + '" title="수정" aria-label="수정">' +
-            '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M13.4 3.6a1.7 1.7 0 0 1 2.4 2.4L7 14.8l-3.4.8.8-3.4z"/><path d="M12 5l3 3"/></svg>' +
-          '</button>' +
-          '<button type="button" class="icon-btn del" data-act="del" data-id="' + esc(r.id) + '" title="삭제" aria-label="삭제">' +
-            '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5h13M8 5.5V3.8h4v1.7M5.5 5.5l.8 10.2a1.3 1.3 0 0 0 1.3 1.2h4.8a1.3 1.3 0 0 0 1.3-1.2l.8-10.2"/></svg>' +
-          '</button>' +
-        '</td>' +
+        '<td data-label="담당자" class="nowrap">' + (r.담당자 ? esc(r.담당자) : '<span class="muted">—</span>') + '</td>' +
+        '<td class="actions">' + rowActionButtons(r) + '</td>' +
       '</tr>';
+
+      mhtml += mcardHtml(r);
     }
     el.tbody.innerHTML = html;
+    if (el.mlist) el.mlist.innerHTML = mhtml;
   }
 
   function renderFilterUi() {
     el.monthInput.value = state.filters.month;
     el.typeFilter.value = state.filters.type;
+    renderStaffFilter();
     el.dueOnly.checked = state.filters.due;
     el.searchInput.value = state.filters.q;
     el.clearSearch.classList.toggle('show', !!state.filters.q);
     el.thisMonthBtn.classList.toggle('on', state.filters.month === currentMonth());
     el.allMonthBtn.classList.toggle('on', !state.filters.month);
+  }
+
+  function renderStaffFilter() {
+    if (!el.staffFilter) return;
+    var seen = {}, i, r, n;
+    for (i = 0; i < state.records.length; i++) {
+      r = state.records[i];
+      if (r.담당자) seen[r.담당자] = true;
+    }
+    var list = STAFF_LIST.filter(function (name) { return seen[name]; });
+    var extra = [];
+    for (n in seen) if (seen.hasOwnProperty(n) && STAFF_LIST.indexOf(n) < 0) extra.push(n);
+    extra.sort();
+    list = list.concat(extra);
+    if (state.filters.staff && list.indexOf(state.filters.staff) < 0) state.filters.staff = '';
+    var html = '<option value="">전체 담당자</option>';
+    for (i = 0; i < list.length; i++) {
+      html += '<option value="' + esc(list[i]) + '">' + esc(list[i]) + '</option>';
+    }
+    el.staffFilter.innerHTML = html;
+    el.staffFilter.value = state.filters.staff;
+  }
+
+  /* ---------------- 관리자 / 직원 모드 ---------------- */
+  function isAdmin() { return state.role === 'admin'; }
+
+  function loadRole() {
+    try {
+      var r = sessionStorage.getItem(ROLE_KEY);
+      if (r === 'admin') { state.role = 'admin'; state.adminPin = ADMIN_PIN; }
+      else { state.role = 'staff'; state.adminPin = ''; }
+    } catch (e) { state.role = 'staff'; }
+  }
+
+  function saveRole() {
+    try {
+      if (state.role === 'admin') sessionStorage.setItem(ROLE_KEY, 'admin');
+      else sessionStorage.removeItem(ROLE_KEY);
+    } catch (e) {}
+  }
+
+  function applyRole() {
+    var admin = isAdmin();
+    document.body.classList.toggle('role-admin', admin);
+    document.body.classList.toggle('role-staff', !admin);
+    if (el.adminLockBtn) {
+      el.adminLockBtn.textContent = admin ? '🔒 관리자 모드 잠그기' : '🔓 관리자 모드 잠금 해제';
+    }
+    if (el.roleBadge) {
+      el.roleBadge.textContent = admin ? '🔓 관리자' : '👤 직원 모드';
+      el.roleBadge.title = admin ? '관리자 모드입니다. 브라우저를 닫으면 자동으로 잠깁니다.' : '엑셀·백업·삭제는 관리자 모드에서만 보입니다.';
+    }
+    // 행 안의 삭제 버튼은 다시 그려야 반영된다
+    renderTable();
+  }
+
+  function openAdminDialog() {
+    if (!el.adminDialog) return;
+    el.adminPinInput.value = '';
+    el.adminError.classList.remove('show');
+    el.adminError.textContent = '';
+    if (!el.adminDialog.open) el.adminDialog.showModal();
+    setTimeout(function () { try { el.adminPinInput.focus(); } catch (e) {} }, 30);
+  }
+
+  function tryUnlockAdmin() {
+    var pin = String(el.adminPinInput.value || '').trim();
+    if (pin !== ADMIN_PIN) {
+      el.adminError.textContent = '관리자 PIN이 맞지 않습니다.';
+      el.adminError.classList.add('show');
+      el.adminPinInput.select();
+      return;
+    }
+    state.role = 'admin';
+    state.adminPin = ADMIN_PIN;
+    saveRole();
+    el.adminDialog.close();
+    applyRole();
+    toast('관리자 모드로 열었습니다. 브라우저를 닫으면 다시 잠깁니다.');
+  }
+
+  function lockAdmin() {
+    state.role = 'staff';
+    state.adminPin = '';
+    saveRole();
+    applyRole();
+    toast('관리자 모드를 잠갔습니다.');
+  }
+
+  function onAdminLockClick() {
+    if (isAdmin()) lockAdmin();
+    else openAdminDialog();
+  }
+
+  /* ---------------- 목록 보기 방식 ---------------- */
+  function loadView() {
+    try {
+      var v = localStorage.getItem(VIEW_KEY);
+      if (v === 'wide' || v === 'compact') state.view = v;
+    } catch (e) {}
+  }
+
+  function saveView() {
+    try { localStorage.setItem(VIEW_KEY, state.view); } catch (e) {}
+  }
+
+  function isNarrow() {
+    return !!(window.matchMedia && window.matchMedia('(max-width:900px)').matches);
+  }
+
+  function applyViewMode() {
+    var compact = state.view !== 'wide';
+    document.body.classList.toggle('view-compact', compact);
+    document.body.classList.toggle('view-wide', !compact);
+    var b = el.viewToggle;
+    if (!b) return;
+    var narrow = isNarrow();
+    b.textContent = narrow ? (compact ? '간단히 보기' : '자세히 보기')
+                           : (compact ? '한눈에 보기' : '넓게 보기');
+    b.classList.toggle('on', compact);
+    b.title = narrow
+      ? (compact ? '카드를 누르면 상세가 펼쳐집니다 · 눌러서 자세히 보기' : '눌러서 간단히 보기')
+      : (compact ? '눌러서 넓게 보기' : '눌러서 한눈에 보기');
+  }
+
+  function handleRowAct(btn) {
+    if (!btn) return;
+    var id = btn.getAttribute('data-id');
+    var rec = null;
+    for (var i = 0; i < state.records.length; i++) {
+      if (state.records[i].id === id) { rec = state.records[i]; break; }
+    }
+    if (!rec) return;
+    if (btn.getAttribute('data-act') === 'edit') {
+      openEditor(rec);
+    } else {
+      askConfirm('기록 삭제', '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' +
+        esc(rec.개통일 || '') + ' 개통 기록을 삭제할까요?<br>삭제한 기록은 되돌릴 수 없습니다.',
+        '삭제', true).then(function (ok) { if (ok) deleteRecord(id); });
+    }
   }
 
   /* ---------------- toast ---------------- */
@@ -1238,6 +2223,62 @@
   function closeConfirm(v) {
     el.confirmDialog.close();
     if (confirmResolve) { var f = confirmResolve; confirmResolve = null; f(v); }
+  }
+
+  /* ---------------- 기간 자동계산 (4개월 / 6개월) ---------------- */
+  var period = { plan: 'none', addon: 'none' };
+
+  // 개통일 + N개월 (말일 보정: 1/31 + 1개월 → 2/28·29)
+  function addMonths(iso, n) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    if (!m) return '';
+    var y = +m[1], mo = +m[2] - 1, d = +m[3];
+    var total = mo + Number(n);
+    var ty = y + Math.floor(total / 12);
+    var tm = ((total % 12) + 12) % 12;
+    var last = new Date(ty, tm + 1, 0).getDate();
+    return ty + '-' + pad2(tm + 1) + '-' + pad2(Math.min(d, last));
+  }
+
+  function inferPeriod(dateVal, baseIso) {
+    if (!dateVal) return 'none';
+    if (baseIso && dateVal === addMonths(baseIso, 4)) return '4';
+    if (baseIso && dateVal === addMonths(baseIso, 6)) return '6';
+    return 'custom';
+  }
+
+  function paintPeriodChips() {
+    var map = { plan: el.planPeriodChips, addon: el.addonPeriodChips };
+    var cur = { plan: period.plan, addon: period.addon };
+    for (var k in map) {
+      if (!map.hasOwnProperty(k) || !map[k]) continue;
+      var chips = map[k].querySelectorAll('button[data-period]');
+      for (var i = 0; i < chips.length; i++) {
+        chips[i].classList.toggle('on', chips[i].getAttribute('data-period') === cur[k]);
+      }
+    }
+  }
+
+  // 선택한 기간에 맞춰 날짜 칸을 채운다
+  function applyPeriod(kind) {
+    var val = kind === 'plan' ? period.plan : period.addon;
+    var input = kind === 'plan' ? $('f_newdate') : $('f_addondate');
+    if (!input) return;
+    if (val === '4' || val === '6') {
+      input.value = addMonths($('f_date').value || todayISO(), Number(val));
+    } else if (val === 'none') {
+      input.value = '';
+    }
+    paintPeriodChips();
+  }
+
+  function recalcPeriods() {
+    if (period.plan === '4' || period.plan === '6') {
+      $('f_newdate').value = addMonths($('f_date').value || todayISO(), Number(period.plan));
+    }
+    if (period.addon === '4' || period.addon === '6') {
+      $('f_addondate').value = addMonths($('f_date').value || todayISO(), Number(period.addon));
+    }
   }
 
   /* ---------------- editor ---------------- */
@@ -1271,14 +2312,30 @@
     $('f_plan').value = r.요금제 || '';
     $('f_newplan').value = r.변경요금제 || '';
     $('f_newdate').value = normalizeDate(r.요금제변경일자) || '';
+    $('f_addon').value = r.부가서비스 || '';
+    $('f_addondate').value = normalizeDate(r.부가서비스해지일자) || '';
+    var baseDate = normalizeDate(r.개통일) || todayISO();
+    period.plan = inferPeriod($('f_newdate').value, baseDate);
+    period.addon = (r.부가서비스유지 === '4개월') ? '4'
+      : (r.부가서비스유지 === '6개월') ? '6'
+      : (r.부가서비스유지 === '직접입력' || $('f_addondate').value) ? 'custom' : 'none';
+    paintPeriodChips();
     $('f_used').value = r.중고폰 || '';
+    $('f_usedprice').value = r.중고폰금액 ? fmtNum(r.중고폰금액) : '';
     $('f_rebate').value = r.리베이트 ? fmtNum(r.리베이트) : '';
     $('f_memo').value = r.메모 || '';
+    $('f_staff').value = r.담당자 || (rec ? '' : (sync.name || ''));
+    markStaffChips(el.staffChips, $('f_staff').value);
 
     clearInvalid();
     if (el.editDialog.open) el.editDialog.close();
     el.editDialog.showModal();
-    setTimeout(function () { $('f_name').focus(); }, 30);
+    setTimeout(function () {
+      var a = document.activeElement;
+      if (!a || a === document.body || a === el.editDialog) {
+        try { $('f_name').focus(); } catch (err) {}
+      }
+    }, 30);
   }
 
   function clearInvalid() {
@@ -1311,15 +2368,24 @@
       요금제: $('f_plan').value.trim(),
       변경요금제: $('f_newplan').value.trim(),
       요금제변경일자: normalizeDate($('f_newdate').value),
+      부가서비스: $('f_addon').value.trim(),
+      부가서비스유지: period.addon === '4' ? '4개월'
+        : period.addon === '6' ? '6개월'
+        : period.addon === 'custom' ? '직접입력' : '',
+      부가서비스해지일자: normalizeDate($('f_addondate').value),
       중고폰: $('f_used').value.trim(),
+      중고폰금액: parseNumber($('f_usedprice').value),
       리베이트: parseNumber($('f_rebate').value),
-      메모: $('f_memo').value.trim()
+      메모: $('f_memo').value.trim(),
+      담당자: $('f_staff').value.trim()
     };
   }
 
   function saveForm(keepOpen) {
     var data = collectForm();
     if (!data) return;
+    data.수정일시 = new Date().toISOString();
+    if (!data.담당자) data.담당자 = sync.name || '';
 
     if (state.editingId) {
       var idx = -1;
@@ -1335,6 +2401,8 @@
         toast('수정했습니다.');
         el.editDialog.close();
         state.editingId = null;
+        queueUpsert(state.records[idx]);
+        syncAfterChange();
       }
       return;
     }
@@ -1344,6 +2412,8 @@
     persist();
     render();
     toast(rec.고객명 + ' 고객 개통을 저장했습니다.');
+    queueUpsert(rec);
+    syncAfterChange();
 
     if (keepOpen) {
       // 날짜·유형은 유지하고 나머지만 비워 연속 입력
@@ -1354,7 +2424,13 @@
       $('f_plan').value = '';
       $('f_newplan').value = '';
       $('f_newdate').value = '';
+      $('f_addon').value = '';
+      $('f_addondate').value = '';
+      period.plan = 'none';
+      period.addon = 'none';
+      paintPeriodChips();
       $('f_used').value = '';
+      $('f_usedprice').value = '';
       $('f_rebate').value = '';
       $('f_memo').value = '';
       $('f_name').focus();
@@ -1364,6 +2440,7 @@
   }
 
   function deleteRecord(id) {
+    if (!isAdmin()) { toast('삭제는 관리자 모드에서만 됩니다.', true); return; }
     var rec = null, idx = -1;
     for (var i = 0; i < state.records.length; i++) {
       if (state.records[i].id === id) { rec = state.records[i]; idx = i; break; }
@@ -1373,6 +2450,8 @@
     persist();
     render();
     toast(rec.고객명 + ' 고객 기록을 삭제했습니다.');
+    queueDelete(id);
+    syncAfterChange();
   }
 
   /* ---------------- CSV ---------------- */
@@ -1389,7 +2468,7 @@
       var line = [];
       for (var j = 0; j < HEADERS.length; j++) {
         var h = HEADERS[j];
-        line.push(csvCell(h === '리베이트' ? (Number(r[h]) || 0) : r[h]));
+        line.push(csvCell(MONEY_COLS.indexOf(h) >= 0 ? (Number(r[h]) || 0) : r[h]));
       }
       lines.push(line.join(','));
     }
@@ -1576,7 +2655,7 @@
       var r = rows[i], line = [];
       for (var j = 0; j < HEADERS.length; j++) {
         var h = HEADERS[j];
-        if (h === '리베이트') line.push(Number(r[h]) || 0);
+        if (MONEY_COLS.indexOf(h) >= 0) line.push(Number(r[h]) || 0);
         else line.push(r[h] == null ? '' : String(r[h]));
       }
       aoa.push(line);
@@ -1585,11 +2664,14 @@
     var ws = XLSX.utils.aoa_to_sheet(aoa);
     ws['!cols'] = HEADERS.map(function (h) { return { wch: COL_W[h] || 14 }; });
 
-    var rebateCol = HEADERS.indexOf('리베이트');
     var range = XLSX.utils.decode_range(ws['!ref']);
-    for (var R = 1; R <= range.e.r; R++) {
-      var addr = XLSX.utils.encode_cell({ r: R, c: rebateCol });
-      if (ws[addr] && ws[addr].t === 'n') ws[addr].z = '#,##0';
+    for (var mi = 0; mi < MONEY_COLS.length; mi++) {
+      var mcol = HEADERS.indexOf(MONEY_COLS[mi]);
+      if (mcol < 0) continue;
+      for (var R = 1; R <= range.e.r; R++) {
+        var addr = XLSX.utils.encode_cell({ r: R, c: mcol });
+        if (ws[addr] && ws[addr].t === 'n') ws[addr].z = '#,##0';
+      }
     }
 
     var wb = XLSX.utils.book_new();
@@ -1672,6 +2754,7 @@
     if (!rows.length) { el.importDialog.close(); return; }
 
     if (mode === 'replace') {
+      var oldIds = state.records.map(function (r) { return r.id; });
       state.records = rows.map(function (r) { return normalizeRecord(r); });
       resetViewFilters();         // 가져온 데이터가 바로 보이도록
       persist();
@@ -1679,6 +2762,11 @@
       el.importDialog.close();
       state.pendingRows = null;
       toast(rows.length + '건으로 교체했습니다.');
+      if (syncOn()) {
+        for (var a = 0; a < oldIds.length; a++) queueDelete(oldIds[a]);
+        for (var b = 0; b < state.records.length; b++) queueUpsert(state.records[b]);
+        syncAfterChange();
+      }
       return;
     }
 
@@ -1687,13 +2775,14 @@
       var r = state.records[i];
       seen[(r.개통일 || '') + '|' + (r.고객명 || '') + '|' + (r.연락처 || '')] = true;
     }
-    var added = 0, skipped = 0;
+    var added = 0, skipped = 0, addedRecs = [];
     for (var j = 0; j < rows.length; j++) {
       var n = normalizeRecord(rows[j]);
       var key = (n.개통일 || '') + '|' + (n.고객명 || '') + '|' + (n.연락처 || '');
       if (seen[key]) { skipped++; continue; }
       seen[key] = true;
       state.records.push(n);
+      addedRecs.push(n);
       added++;
     }
     state.filters.month = '';     // 가져온 데이터가 바로 보이도록 전체 기간으로
@@ -1704,6 +2793,10 @@
     el.importDialog.close();
     state.pendingRows = null;
     toast(added + '건을 추가했습니다.' + (skipped ? ' (중복 ' + skipped + '건 건너뜀)' : ''));
+    if (syncOn() && addedRecs.length) {
+      for (var k2 = 0; k2 < addedRecs.length; k2++) queueUpsert(addedRecs[k2]);
+      syncAfterChange();
+    }
   }
 
   /* ---------------- JSON backup ---------------- */
@@ -1761,14 +2854,14 @@
     }
     var base = [
       { 개통일: day(2), 고객명: '김민수', 연락처: '010-2345-6789', 생년월일: '880312', 개통유형: '번호이동', 기종: '갤럭시 S25', 요금제: '5G 슬림 55,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 리베이트: 350000, 메모: 'SKT에서 이동 · 가족결합' },
-      { 개통일: day(3), 고객명: '이서연', 연락처: '010-3456-7890', 생년월일: '1995-07-21', 개통유형: '기기변경', 기종: '아이폰 17 프로', 요금제: '5G 프리미엄 68,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '반납', 리베이트: 420000, 메모: '기존 회선 유지' },
+      { 개통일: day(3), 고객명: '이서연', 연락처: '010-3456-7890', 생년월일: '1995-07-21', 개통유형: '기기변경', 기종: '아이폰 17 프로', 요금제: '5G 프리미엄 68,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '반납', 중고폰금액: 0, 리베이트: 420000, 메모: '기존 회선 유지' },
       { 개통일: day(5), 고객명: '박준호', 연락처: '010-4567-8901', 생년월일: '011105', 개통유형: '신규가입', 기종: '갤럭시 A56', 요금제: '5G 베이직 33,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '미사용', 리베이트: 250000, 메모: '학생 · 첫 개통' },
       { 개통일: day(7), 고객명: '최유진', 연락처: '010-5678-9012', 생년월일: '790420', 개통유형: '인터넷+TV', 기종: '인터넷 에센스 + TV 베이직', 요금제: '인터넷+TV 38,500', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 리베이트: 300000, 메모: '설치 완료 · 약정 3년' },
       { 개통일: day(9), 고객명: '정하늘', 연락처: '010-6789-0123', 생년월일: '140902', 개통유형: '키즈폰', 기종: '갤럭시 키즈폰', 요금제: '키즈 15,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 리베이트: 120000, 메모: '부모님 동반 방문' },
-      { 개통일: day(11), 고객명: '한지우', 연락처: '010-7890-1234', 생년월일: '1992-11-02', 개통유형: '번호이동', 기종: '아이폰 16', 요금제: '5G 스탠다드 48,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(5), 중고폰: '매입 15만', 리베이트: 380000, 메모: '한 달 뒤 요금제 상향 예정' },
+      { 개통일: day(11), 고객명: '한지우', 연락처: '010-7890-1234', 생년월일: '1992-11-02', 개통유형: '번호이동', 기종: '아이폰 16', 요금제: '5G 스탠다드 48,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(5), 중고폰: '매입 15만', 중고폰금액: 150000, 리베이트: 380000, 메모: '한 달 뒤 요금제 상향 예정' },
       { 개통일: day(13), 고객명: '오세훈', 연락처: '010-8901-2345', 생년월일: '850618', 개통유형: '기기변경', 기종: '갤럭시 S24', 요금제: '5G 슬림 55,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(3), 중고폰: '반납', 리베이트: 330000, 메모: '' },
       { 개통일: day(15), 고객명: '윤가은', 연락처: '010-9012-3456', 생년월일: '990227', 개통유형: '신규가입', 기종: '갤럭시 A36', 요금제: '5G 베이직 33,000', 변경요금제: '5G 슬림 55,000', 요금제변경일자: rel(-2), 중고폰: '', 리베이트: 240000, 메모: '요금제 변경 상담 필요' },
-      { 개통일: day(17), 고객명: '서도윤', 연락처: '010-1234-5678', 생년월일: '730810', 개통유형: '기타', 기종: '갤럭시 S23 (중고)', 요금제: '5G 슬림 45,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '매입 15만', 리베이트: 180000, 메모: '중고 기기 개통' }
+      { 개통일: day(17), 고객명: '서도윤', 연락처: '010-1234-5678', 생년월일: '730810', 개통유형: '기타', 기종: '갤럭시 S23 (중고)', 요금제: '5G 슬림 45,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '매입 15만', 중고폰금액: 150000, 리베이트: 180000, 메모: '중고 기기 개통' }
     ];
     return base.map(function (r) { return normalizeRecord(r); });
   }
@@ -1819,11 +2912,50 @@
       render();
     });
     el.resetFilters.addEventListener('click', function () {
-      state.filters = { q: '', month: currentMonth(), type: '', due: false, dueMode: 'all' };
+      state.filters = { q: '', month: currentMonth(), type: '', staff: '', due: false, dueMode: 'all' };
       el.searchInput.value = '';
       el.clearSearch.classList.remove('show');
       render();
     });
+
+    // 담당자 필터
+    if (el.staffFilter) {
+      el.staffFilter.addEventListener('change', function () {
+        state.filters.staff = this.value;
+        render();
+      });
+    }
+
+    // 공용 장부 연동
+    if (el.syncOpenBtn) el.syncOpenBtn.addEventListener('click', function () { closeMenu(); openSyncDialog(); });
+    if (el.syncNowBtn) el.syncNowBtn.addEventListener('click', function () {
+      closeMenu();
+      if (!syncOn()) { openSyncDialog(); return; }
+      runSync({ quiet: true }).then(function (ok) {
+        toast(ok ? '지금 동기화했습니다.' : '동기화 실패 · 이 기기에는 저장돼 있습니다', !ok);
+      });
+    });
+    if (el.syncPill) el.syncPill.addEventListener('click', function () { openSyncDialog(); });
+    if (el.adminLockBtn) el.adminLockBtn.addEventListener('click', function () { closeMenu(); onAdminLockClick(); });
+    if (el.adminOk) el.adminOk.addEventListener('click', tryUnlockAdmin);
+    if (el.adminCancel) el.adminCancel.addEventListener('click', function () { el.adminDialog.close(); });
+    if (el.adminClose) el.adminClose.addEventListener('click', function () { el.adminDialog.close(); });
+    if (el.adminPinInput) el.adminPinInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); tryUnlockAdmin(); }
+    });
+    if (el.adminDialog) el.adminDialog.addEventListener('click', function (e) {
+      if (e.target === el.adminDialog) el.adminDialog.close();
+    });
+    if (el.syncClose) el.syncClose.addEventListener('click', function () { el.syncDialog.close(); });
+    if (el.syncCancel) el.syncCancel.addEventListener('click', function () { el.syncDialog.close(); });
+    if (el.syncSaveBtn) el.syncSaveBtn.addEventListener('click', saveSyncSettings);
+    if (el.syncTestBtn) el.syncTestBtn.addEventListener('click', testSyncConnection);
+    if (el.syncNowBtn2) el.syncNowBtn2.addEventListener('click', syncNowFromDialog);
+    if (el.syncDialog) {
+      el.syncDialog.addEventListener('click', function (e) {
+        if (e.target === el.syncDialog) el.syncDialog.close();
+      });
+    }
 
     // KPI 칩 → 유형 필터
     el.kpiBreakdown.addEventListener('click', function (e) {
@@ -1868,20 +3000,30 @@
 
     // 표 안 버튼
     el.tbody.addEventListener('click', function (e) {
-      var btn = e.target.closest ? e.target.closest('button[data-act]') : null;
-      if (!btn) return;
-      var id = btn.getAttribute('data-id');
-      var rec = null;
-      for (var i = 0; i < state.records.length; i++) if (state.records[i].id === id) { rec = state.records[i]; break; }
-      if (!rec) return;
-      if (btn.getAttribute('data-act') === 'edit') {
-        openEditor(rec);
-      } else {
-        askConfirm('기록 삭제', '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' +
-          esc(rec.개통일 || '') + ' 개통 기록을 삭제할까요?<br>삭제한 기록은 되돌릴 수 없습니다.',
-          '삭제', true).then(function (ok) { if (ok) deleteRecord(id); });
-      }
+      handleRowAct(e.target.closest ? e.target.closest('button[data-act]') : null);
     });
+
+    // 모바일 간단히 보기 카드: 탭하면 상세 펼치기, 버튼은 수정/삭제
+    if (el.mlist) {
+      el.mlist.addEventListener('click', function (e) {
+        var actBtn = e.target.closest ? e.target.closest('button[data-act]') : null;
+        if (actBtn) { handleRowAct(actBtn); return; }
+        var main = e.target.closest ? e.target.closest('.mcard-main') : null;
+        if (!main) return;
+        var card = main.parentNode;
+        if (card) card.classList.toggle('open');
+      });
+    }
+
+    // 보기 방식 토글
+    if (el.viewToggle) {
+      el.viewToggle.addEventListener('click', function () {
+        state.view = state.view === 'wide' ? 'compact' : 'wide';
+        saveView();
+        applyViewMode();
+      });
+      window.addEventListener('resize', applyViewMode);
+    }
 
     // 빈 상태 버튼
     el.emptyState.addEventListener('click', function (e) {
@@ -1910,6 +3052,35 @@
         .then(function (ok) { if (ok) deleteRecord(id); });
     });
 
+    // 기간 칩 (4개월 / 6개월 자동계산)
+    function bindPeriod(box, kind) {
+      if (!box) return;
+      box.addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('button[data-period]') : null;
+        if (!b) return;
+        var v = b.getAttribute('data-period');
+        if (kind === 'plan') period.plan = v; else period.addon = v;
+        applyPeriod(kind);
+        if (v === 'custom') {
+          var input = kind === 'plan' ? $('f_newdate') : $('f_addondate');
+          try { input.focus(); } catch (err) {}
+        }
+      });
+    }
+    bindPeriod(el.planPeriodChips, 'plan');
+    bindPeriod(el.addonPeriodChips, 'addon');
+
+    // 개통일을 바꾸면 선택한 기간에 맞춰 다시 계산
+    $('f_date').addEventListener('change', recalcPeriods);
+    $('f_newdate').addEventListener('change', function () {
+      period.plan = this.value ? 'custom' : 'none';
+      paintPeriodChips();
+    });
+    $('f_addondate').addEventListener('change', function () {
+      period.addon = this.value ? 'custom' : 'none';
+      paintPeriodChips();
+    });
+
     // 전화번호 자동 포맷
     $('f_phone').addEventListener('input', function () {
       var v = this.value;
@@ -1924,12 +3095,14 @@
       }
     });
 
-    // 리베이트 콤마 포맷
-    $('f_rebate').addEventListener('input', function () {
-      var neg = /^-/.test(this.value);
-      var d = this.value.replace(/[^0-9]/g, '');
-      if (!d) { this.value = neg ? '-' : ''; return; }
-      this.value = (neg ? '-' : '') + Number(d).toLocaleString('ko-KR');
+    // 금액(리베이트·중고폰금액) 콤마 포맷
+    ['f_rebate', 'f_usedprice'].forEach(function (id) {
+      $(id).addEventListener('input', function () {
+        var neg = /^-/.test(this.value);
+        var d = this.value.replace(/[^0-9]/g, '');
+        if (!d) { this.value = neg ? '-' : ''; return; }
+        this.value = (neg ? '-' : '') + Number(d).toLocaleString('ko-KR');
+      });
     });
 
     // 생년월일: 숫자/하이픈만 허용 (자유 입력 유지)
@@ -1974,19 +3147,6 @@
       jsonRestore(this.files && this.files[0]);
     });
     el.sampleBtn.addEventListener('click', function () { closeMenu(); insertSample(); });
-    el.clearBtn.addEventListener('click', function () {
-      closeMenu();
-      if (!state.records.length) { toast('삭제할 데이터가 없습니다.'); return; }
-      askConfirm('전체 데이터 삭제',
-        '저장된 <b>' + state.records.length + '건</b>을 모두 지웁니다.<br>되돌릴 수 없으니 먼저 JSON 백업을 받아두세요.',
-        '전체 삭제', true).then(function (ok) {
-          if (!ok) return;
-          state.records = [];
-          persist();
-          render();
-          toast('전체 데이터를 삭제했습니다.');
-        });
-    });
 
     // 단축키
     document.addEventListener('keydown', function (e) {
@@ -2038,12 +3198,17 @@
     resetViewFilters();
     render();
     toast(rows.length + '건의 샘플 데이터를 넣었습니다.');
+    if (syncOn()) {
+      for (var j = 0; j < rows.length; j++) queueUpsert(rows[j]);
+      syncAfterChange();
+    }
   }
 
   // 임시 필터(검색·유형·임박)를 풀고 전체 기간으로
   function resetViewFilters() {
     state.filters.q = '';
     state.filters.type = '';
+    state.filters.staff = '';
     state.filters.due = false;
     state.filters.dueMode = 'all';
     state.filters.month = '';
@@ -2099,10 +3264,45 @@
       jsonBackupBtn: $('jsonBackupBtn'),
       jsonRestoreBtn: $('jsonRestoreBtn'),
       sampleBtn: $('sampleBtn'),
-      clearBtn: $('clearBtn'),
-      toast: $('toast')
+      mlist: $('mlist'),
+      viewToggle: $('viewToggle'),
+      kpiUsedSub: $('kpiUsedSub'),
+      planPeriodChips: $('planPeriodChips'),
+      adminLockBtn: $('adminLockBtn'),
+      adminDialog: $('adminDialog'),
+      adminPinInput: $('adminPinInput'),
+      adminError: $('adminError'),
+      adminOk: $('adminOk'),
+      adminCancel: $('adminCancel'),
+      adminClose: $('adminClose'),
+      roleBadge: $('roleBadge'),
+      sUrlField: $('sUrlField'),
+      sPinField: $('sPinField'),
+      addonPeriodChips: $('addonPeriodChips'),
+      toast: $('toast'),
+      /* 공용 장부 연동 */
+      syncPill: $('syncPill'),
+      syncPillText: $('syncPillText'),
+      footStorage: $('footStorage'),
+      staffFilter: $('staffFilter'),
+      staffChips: $('staffChips'),
+      syncDialog: $('syncDialog'),
+      syncStatus: $('syncStatus'),
+      sUrl: $('s_url'),
+      sPin: $('s_pin'),
+      sName: $('s_name'),
+      sEnabled: $('s_enabled'),
+      syncStaffChips: $('syncStaffChips'),
+      syncOpenBtn: $('syncOpenBtn'),
+      syncNowBtn: $('syncNowBtn'),
+      syncNowBtn2: $('syncNowBtn2'),
+      syncSaveBtn: $('syncSaveBtn'),
+      syncTestBtn: $('syncTestBtn'),
+      syncClose: $('syncClose'),
+      syncCancel: $('syncCancel')
     };
 
+    loadSync();
     state.records = loadRecords();
     state.filters.month = currentMonth();
 
@@ -2113,12 +3313,23 @@
     }
     el.typeFilter.innerHTML = opts;
 
+    loadView();
+    loadRole();
     bindEvents();
+    applyRole();
+    renderStaffChips(el.staffChips, $('f_staff'));
+    applyViewMode();
     render();
+    renderSyncUi();
 
     // 첫 방문 안내 (데이터 없을 때만)
     if (!state.records.length) {
       el.saveState.textContent = '새 장부';
+    }
+
+    // 앱을 열면 최신 공용 장부를 먼저 받아온다
+    if (syncOn()) {
+      setTimeout(function () { runSync({ quiet: true }); }, 600);
     }
   }
 
