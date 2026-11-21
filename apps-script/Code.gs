@@ -24,13 +24,17 @@ var CREATE_STAFF_TABS = true;            // 담당자 이름이 처음 등장할
 var COLS = ['id', '개통일', '고객명', '연락처', '생년월일', '개통유형', '기종', '요금제',
             '변경요금제', '요금제변경일자',
             '부가서비스', '부가서비스유지', '부가서비스해지일자',
-            '중고폰', '중고폰금액', '리베이트', '메모', '담당자', '수정일시'];
+            '중고폰', '중고폰금액', '무선리베이트', '유선리베이트', '메모', '담당자', '수정일시'];
 
 /* 금액(숫자)으로 저장하는 열 */
-var MONEY_COLS = ['중고폰금액', '리베이트'];
+var MONEY_COLS = ['중고폰금액', '무선리베이트', '유선리베이트'];
 
 /* 앞자리 0(010105)이나 날짜 문자열이 숫자로 바뀌지 않도록 텍스트로 고정하는 열 */
 var TEXT_COLS = ['id', '개통일', '연락처', '생년월일', '요금제변경일자', '부가서비스해지일자', '수정일시'];
+
+/* 예전 장부의 단일 리베이트 열 — 시트를 처음 열 때 무선/유선으로 나눠 옮긴다 */
+var LEGACY_REBATE_COL = '리베이트';
+var WIRED_TYPES = ['인터넷+TV 신규가입', '인터넷+TV 약정갱신', '인터넷 약정갱신'];
 
 /* =========================================================
    웹앱 진입점
@@ -138,6 +142,16 @@ function num_(v) {
   return isFinite(n) ? n : 0;
 }
 
+/** 유선(인터넷·TV) 개통인가? (예전 '인터넷+TV' 포함) */
+function isWiredType_(t) {
+  var s = String(t == null ? '' : t).replace(/\s/g, '');
+  if (!s) return false;
+  for (var i = 0; i < WIRED_TYPES.length; i++) {
+    if (WIRED_TYPES[i].replace(/\s/g, '') === s) return true;
+  }
+  return /인터넷|TV|티비|iptv/i.test(s);
+}
+
 /** 엑셀 일련번호(46000 등)는 날짜로, 나머지는 문자열 그대로 */
 function dateToText_(v, tz) {
   if (v instanceof Date) {
@@ -204,12 +218,89 @@ function headerMap_(sh) {
 }
 
 function ensureHeader_(sh) {
+  // 예전 형식(단일 리베이트) 시트면 새 형식으로 옮긴다
+  try { migrateSheet_(sh); } catch (err) { /* 옮기기 실패해도 읽기·쓰기는 계속 */ }
   var idx = headerMap_(sh);
   if (idx.found < 3 && sh.getLastRow() <= 1) {
     writeHeader_(sh, 1, COLS.length);
     idx = headerMap_(sh);
   }
   return idx;
+}
+
+/** 1행 헤더를 문자열 배열로 */
+function readHeader_(sh) {
+  var width = Math.max(sh.getLastColumn(), COLS.length);
+  return sh.getRange(1, 1, 1, width).getValues()[0].map(function (v) {
+    return String(v == null ? '' : v).trim();
+  });
+}
+
+/**
+ * 헤더가 새 형식(무선리베이트·유선리베이트)이 아니면,
+ * 예전 열 이름을 지켜 값을 새 열 순서로 옮기고 헤더를 다시 그린다.
+ * 예전 단일 '리베이트' 값은 개통유형을 보고 유선/무선으로 나네 넣는다.
+ * 이미 새 형식이면 아무 것도 하지 않고 false 를 돌려준다.
+ */
+function migrateSheet_(sh) {
+  var head = readHeader_(sh);
+  var allNew = head.indexOf('무선리베이트') >= 0 && head.indexOf('유선리베이트') >= 0;
+  if (allNew && head.indexOf(LEGACY_REBATE_COL) < 0) {
+    for (var n = 0; n < COLS.length; n++) {
+      if (head.indexOf(COLS[n]) < 0) { allNew = false; break; }
+    }
+  } else {
+    allNew = false;
+  }
+  if (allNew) return false;
+
+  var last = sh.getLastRow();
+  if (last < 2) {
+    writeHeader_(sh, 1, COLS.length);
+    return true;
+  }
+
+  var tz = tz_();
+  var width = Math.max(head.length, COLS.length);
+  var values = sh.getRange(2, 1, last - 1, width).getValues();
+  var rows = [];
+  for (var r = 0; r < values.length; r++) {
+    var src = values[r];
+    var byName = {};
+    for (var i = 0; i < head.length; i++) {
+      if (head[i]) byName[head[i]] = src[i];
+    }
+    if (byName['무선리베이트'] == null && byName['유선리베이트'] == null) {
+      var legacy = num_(byName[LEGACY_REBATE_COL]);
+      if (legacy) {
+        if (isWiredType_(byName['개통유형'])) byName['유선리베이트'] = legacy;
+        else byName['무선리베이트'] = legacy;
+      }
+    }
+    var line = [], any = false;
+    for (var k = 0; k < COLS.length; k++) {
+      var name = COLS[k];
+      var v = byName[name];
+      var cell;
+      if (name === 'id') cell = String(v == null ? '' : v).trim();
+      else if (MONEY_COLS.indexOf(name) >= 0) cell = num_(v);
+      else cell = dateToText_(v, tz);
+      line.push(cell);
+      if (String(cell == null ? '' : cell).trim() !== '') any = true;
+    }
+    if (!any) continue;
+    if (!line[0]) line[0] = 'row' + (r + 2);
+    rows.push(line);
+  }
+
+  sh.clear();
+  writeHeader_(sh, 1, COLS.length);
+  var idx = headerMap_(sh);
+  for (var t = 0; t < TEXT_COLS.length; t++) {
+    sh.getRange(2, idx.map[TEXT_COLS[t]] + 1, Math.max(rows.length, 1)).setNumberFormat('@');
+  }
+  if (rows.length) sh.getRange(2, 1, rows.length, COLS.length).setValues(rows);
+  return true;
 }
 
 function colLetter_(n) { // 1부터 시작
