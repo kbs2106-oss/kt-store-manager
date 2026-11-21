@@ -77,7 +77,7 @@
     border-bottom:1px solid var(--line);
   }
   .topbar-inner{
-    max-width:1280px;margin:0 auto;padding:9px 22px;
+    max-width:1440px;margin:0 auto;padding:9px 22px;
     display:flex;align-items:center;gap:12px;
   }
   .brand{display:flex;align-items:center;gap:10px;min-width:0}
@@ -139,7 +139,7 @@
   .menu-sep{height:1px;background:var(--line);margin:6px 4px}
 
   /* ---------- layout ---------- */
-  .app{max-width:1280px;margin:0 auto;padding:18px 22px 56px}
+  .app{max-width:1440px;margin:0 auto;padding:18px 22px 56px}
   .card{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);
@@ -166,6 +166,7 @@
   .sum-month input[type=month]{height:31px;padding:0 8px;border-radius:8px;border:1px solid var(--line-strong);
     background:#fff;font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
   .sum-month input[type=month]:focus{outline:none;box-shadow:0 0 0 3px rgba(11,87,208,.16);border-color:#9DBDF0}
+  .sum-month input[type=month].is-all{opacity:.42}
   .sum-quick{display:flex;gap:4px}
   .sum-quick .chip-btn{height:28px;font-size:11.5px;padding:0 9px}
   .sum-cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -313,7 +314,7 @@
   .muted{color:var(--slate-400)}
   .money{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink);letter-spacing:-.01em}
   th.money{text-align:right}
-  .actions-col{width:88px;text-align:right}
+  .actions-col{width:78px;text-align:right}
   td.actions{text-align:right;white-space:nowrap;padding-right:10px}
   /* 관리(수정·삭제) 열은 오른쪽에 고정 — 가로로 넓은 장부에서도 항상 보이게 */
   table.ledger th.actions-col{position:sticky;right:0;z-index:3;background:#F6F9FD;
@@ -475,8 +476,8 @@
   tr.group-row .g-dow{color:var(--slate-500);font-weight:700}
 
   .view-compact table.ledger{font-size:12.5px}
-  .view-compact table.ledger th{padding:8px 10px;font-size:11px}
-  .view-compact table.ledger td{padding:6px 10px}
+  .view-compact table.ledger th{padding:8px 9px;font-size:11px}
+  .view-compact table.ledger td{padding:6px 9px}
   .view-wide table.ledger{font-size:14px}
   .view-wide table.ledger th{padding:13px 14px;font-size:12.5px}
   .view-wide table.ledger td{padding:13px 14px}
@@ -2185,7 +2186,16 @@
   }
 
   function renderFilterUi() {
-    el.monthInput.value = state.filters.month;
+    // 전체 기간일 때는 달 입력칸이 빈 마스크로 보이지 않도록 지금 달을 보여주되 흐리게 표시
+    if (!state.filters.month) {
+      if (el.monthInput.value !== currentMonth()) el.monthInput.value = currentMonth();
+      el.monthInput.classList.add('is-all');
+      el.monthInput.title = '전체 기간으로 보는 중입니다. 달을 고르면 그 달만 봅니다.';
+    } else {
+      el.monthInput.value = state.filters.month;
+      el.monthInput.classList.remove('is-all');
+      el.monthInput.title = '';
+    }
     el.typeFilter.value = state.filters.type;
     renderStaffFilter();
     el.dueOnly.checked = state.filters.due;
