@@ -1540,6 +1540,16 @@
 
     <div class="dlg-body">
       <div class="form-grid">
+        <!-- v20 — 외국인 고객 (모달 맨 위 · 체크하면 외국인 전용 요금제가 열린다) -->
+        <div class="field span2 foreign-field">
+          <label id="f_foreignLabel">고객 구분 <span class="opt">선택</span></label>
+          <input id="f_foreign" type="hidden" value="">
+          <div class="ins-chips" id="foreignChips" role="group" aria-labelledby="f_foreignLabel">
+            <button type="button" class="ins-chip" data-foreign="1" aria-pressed="false">외국인</button>
+          </div>
+          <span class="hint">외국인 고객이면 눌러 주세요 — 외국인 전용 요금제(웰컴5·웰컴3·웰컴1)가 요금제 목록에 함께 나옵니다.</span>
+        </div>
+
         <div class="field">
           <label for="f_name">고객명 <span class="req">*</span></label>
           <input id="f_name" type="text" autocomplete="off" placeholder="예) 김민수">
@@ -1560,16 +1570,6 @@
         </div>
 
         <div class="section-label">개통 정보</div>
-
-        <!-- v19 — 외국인 고객 (체크하면 외국인 전용 요금제가 열린다) -->
-        <div class="field span2 foreign-field">
-          <label id="f_foreignLabel">고객 구분 <span class="opt">선택</span></label>
-          <input id="f_foreign" type="hidden" value="">
-          <div class="ins-chips" id="foreignChips" role="group" aria-labelledby="f_foreignLabel">
-            <button type="button" class="ins-chip" data-foreign="1" aria-pressed="false">외국인</button>
-          </div>
-          <span class="hint">외국인 고객이면 눌러 주세요 — 외국인 전용 요금제(웰컴5·웰컴3·웰컴1)가 요금제 목록에 함께 나옵니다.</span>
-        </div>
 
         <div class="field span2">
           <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
