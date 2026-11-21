@@ -959,8 +959,10 @@
   .paycard-field .pc-foot .hint{flex:1 1 auto;min-width:0}
   .paycard-field .pc-foot .pc-add{flex:none;margin-top:-2px}
   .paycard-lines{display:flex;flex-direction:column;gap:8px}
-  .paycard-line{display:flex;flex-direction:column;gap:5px;padding:7px 8px 8px;border:1px solid var(--line,#E5E9F0);border-radius:12px;background:#FBFCFE}
-  .paycard-line:first-child{padding-top:0;border:0;background:transparent}
+  /* v36 — 첫 줄은 여백 0: 추지·페이백(입금) 입력칸과 좌우 끝선을 1px까지 맞춘다 */
+  .paycard-line{display:flex;flex-direction:column;gap:5px;padding:0;border:0;background:transparent}
+  /* v36 — 추가 줄도 같은 좌우 끝선(위 구분선만)이라 입력칸이 밀리지 않는다 */
+  .paycard-line + .paycard-line{padding:9px 0 0;border-top:1px solid #E2EAF5}
   .paycard-line .pay-row{gap:6px}
   .paycard-line .pc-amt{flex:1 1 0;min-width:0;width:auto}
   .paycard-line .pc-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
