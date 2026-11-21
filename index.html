@@ -1019,6 +1019,84 @@
     section{margin-bottom:12px}
   }
 
+  /* ---------- 단가표 관리 (관리자 전용) ---------- */
+  .price-dlg{width:min(780px,calc(100vw - 24px))}
+  .pd-admin{font-size:10.5px;font-weight:800;color:var(--violet);background:var(--violet-bg);border-radius:999px;padding:2px 8px;vertical-align:2px;margin-left:5px}
+  .pd-sec-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:14px 0 7px}
+  .pd-sec-head:first-child{margin-top:2px}
+  .pd-sec-title{font-size:12.5px;font-weight:800;color:var(--slate-600);letter-spacing:.01em}
+  .pd-note{font-size:11px;font-weight:600;color:var(--slate-400)}
+  .pd-paste-box{
+    border:1px solid #E2ECF9;border-radius:14px;padding:11px 12px 12px;
+    background:linear-gradient(180deg,#F7FAFF 0%,#FCFDFF 100%);
+  }
+  .pd-paste-box textarea{
+    width:100%;min-height:84px;padding:9px 10px;border-radius:10px;border:1px solid var(--line-strong);
+    background:#fff;font-size:12.5px;line-height:1.55;resize:vertical;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  .pd-paste-box textarea:focus{outline:none;border-color:#8FB4EE;box-shadow:0 0 0 3px rgba(11,87,208,.14)}
+  .pd-paste-foot{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .pd-paste-foot .hint{flex:1 1 220px;font-size:11px;color:var(--slate-400);line-height:1.45}
+  .pd-paste-result{
+    margin-top:8px;padding:7px 10px;border-radius:9px;background:var(--blue-50);
+    font-size:12px;font-weight:700;color:var(--blue-700);line-height:1.5;
+  }
+  .pd-paste-result[hidden]{display:none}
+  .pd-paste-result.err{background:var(--red-bg);color:var(--red)}
+  .pd-table-wrap{border:1px solid var(--line);border-radius:12px;overflow:auto;background:#fff}
+  table.pd-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:430px}
+  table.pd-table th{
+    background:#F6F9FE;font-size:11px;font-weight:800;color:var(--slate-500);
+    padding:7px 5px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap;
+  }
+  table.pd-table th:first-child{text-align:left;padding-left:10px;width:39%}
+  table.pd-table td{padding:4px 5px;border-top:1px solid #F1F5F9}
+  table.pd-table tr:first-child td{border-top:0}
+  table.pd-table .pd-dev{
+    padding-left:10px;font-size:12px;font-weight:700;color:#1E293B;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+  .pd-input{
+    width:100%;height:32px;padding:0 7px;border-radius:8px;border:1px solid var(--line-strong);
+    background:#fff;text-align:right;font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums;
+  }
+  .pd-input:focus{outline:none;border-color:#8FB4EE;box-shadow:0 0 0 3px rgba(11,87,208,.14)}
+  .pd-input::placeholder{color:#C9D4E2;font-weight:700}
+  .pd-input.on{background:#F8FBFF;border-color:#BBD7FB;color:var(--blue-700)}
+  .pd-empty{font-size:11.5px;color:var(--slate-400);line-height:1.5;padding:2px 0 0}
+  .pd-wired{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;border:1px solid var(--line);border-radius:12px;padding:10px;background:#fff}
+  .pd-wcell{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .pd-wcell label{font-size:11.5px;font-weight:700;color:var(--slate-600);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pd-wcell .pd-unit{font-size:10.5px;font-weight:700;color:var(--slate-400);margin-left:2px}
+  .pd-wcell label{display:flex;align-items:center;gap:4px}
+  .pd-summary{margin:12px 0 2px;font-size:11.5px;color:var(--slate-400);line-height:1.65}
+  .pd-summary b{color:var(--blue-700)}
+  @media (max-width:640px){
+    .pd-wired{grid-template-columns:1fr}
+    table.pd-table{min-width:0}
+    table.pd-table th{font-size:10.5px;padding:6px 3px}
+    table.pd-table th:first-child{width:34%;padding-left:8px}
+    table.pd-table td{padding:3px}
+    table.pd-table .pd-dev{font-size:11.5px;padding-left:8px}
+    .pd-input{height:30px;font-size:11.5px;padding:0 5px}
+    .price-dlg .dlg-body{padding:14px 14px 4px}
+    .price-dlg .dlg-head,.price-dlg .dlg-foot{padding-left:14px;padding-right:14px}
+  }
+
+  /* 등록 창 — 단가표 자동 입력 안내 칩 */
+  .pt-hint{display:flex;align-items:center;gap:6px;margin-top:1px;flex-wrap:wrap}
+  .pt-hint[hidden]{display:none}
+  .pt-apply{
+    display:inline-flex;align-items:center;gap:5px;height:27px;padding:0 10px;border-radius:999px;
+    border:1px solid #9DBDF0;background:var(--blue-50);color:var(--blue-700);
+    font-size:11.5px;font-weight:800;white-space:nowrap;
+  }
+  .pt-apply:hover{background:#E4F0FF}
+  .pt-apply::before{content:"↓";font-weight:900}
+  .pt-same{font-size:11px;font-weight:700;color:#0B5F45;background:var(--green-bg);border-radius:999px;padding:3px 9px}
+  @media (pointer:coarse){.pt-apply{height:32px;font-size:12.5px}}
+
   @media print{
     .fab{display:none !important}
   }
@@ -1077,6 +1155,7 @@
           <button class="menu-item" id="syncOpenBtn" role="menuitem">공용 장부 연동 (Google 시트)</button>
           <button class="menu-item" id="adminLockBtn" role="menuitem">🔓 관리자 모드 잠금 해제</button>
           <button class="menu-item admin-only" id="devicesBtn" role="menuitem">🛡️ 직원 · 기기 관리 (추방)</button>
+          <button class="menu-item admin-only" id="priceBtn" role="menuitem">🏷️ 단가표 관리</button>
           <button class="menu-item" id="syncNowBtn" role="menuitem" hidden>지금 동기화</button>
           <div class="menu-sep menu-mobile-only"></div>
           <button class="menu-item menu-mobile-only admin-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
@@ -1386,11 +1465,13 @@
           <label for="f_rebate_w">무선 리베이트 (원) <span class="opt">선택</span></label>
           <input id="f_rebate_w" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
           <span class="hint">기기변경 · 번호이동 · 신규가입</span>
+          <div class="pt-hint" id="ptHintW" hidden></div>
         </div>
         <div class="field">
           <label for="f_rebate_l">유선 리베이트 (원) <span class="opt">선택</span></label>
           <input id="f_rebate_l" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-          <span class="hint">인터넷+TV · 인터넷 약정갱신</span>
+          <span class="hint">인터넷+TV · 인터넷 약정갱신 · 단가표와 연동됩니다</span>
+          <div class="pt-hint" id="ptHintL" hidden></div>
         </div>
 
         <div class="field">
@@ -1540,6 +1621,59 @@
     <button type="button" class="btn" id="dvRefresh">새로고침</button>
     <span class="grow"></span>
     <button type="button" class="btn" id="dvDone">닫기</button>
+  </div>
+</dialog>
+
+<!-- ===================== 단가표 관리 (관리자 전용) ===================== -->
+<dialog id="priceDialog" class="price-dlg">
+  <div class="dlg-head">
+    <div>
+      <h2>단가표 관리<span class="pd-admin">관리자 전용</span></h2>
+      <p>기종·개통유형별 기준 리베이트를 저장해 두면 개통 등록에서 자동으로 채워집니다. 금액은 모두 <b>원</b> 단위입니다.</p>
+    </div>
+    <button type="button" class="dlg-close" id="pdClose" aria-label="닫기">×</button>
+  </div>
+  <div class="dlg-body">
+    <!-- 일괄 붙여넣기 -->
+    <div class="pd-paste-box">
+      <div class="pd-sec-head">
+        <span class="pd-sec-title">일괄 붙여넣기</span>
+        <span class="pd-note">사진에서 뽑은 표를 그대로 붙여넣으면 한 번에 채워집니다</span>
+      </div>
+      <textarea id="pdPaste" spellcheck="false" placeholder="기종 / 기변 / 번이 / 신규&#10;갤럭시 S26 / 35 / 40 / 30&#10;아이폰 17 프로 / 40 / 45 / 35&#10;인터넷+TV 신규가입 / 30"></textarea>
+      <div class="pd-paste-foot">
+        <span class="hint">탭 · 쉼표 · 슬래시(/) 어느 것으로 나눠도 됩니다. 1~2자리는 만원으로 계산합니다(35 → 350,000원).</span>
+        <button type="button" class="btn sm" id="pdApplyPaste">표에 반영</button>
+      </div>
+      <div class="pd-paste-result" id="pdPasteResult" hidden></div>
+    </div>
+
+    <div class="pd-sec-head">
+      <span class="pd-sec-title">무선 단말기</span>
+      <span class="pd-note">21종 × 3유형 · 원 단위</span>
+    </div>
+    <div class="pd-table-wrap">
+      <table class="pd-table" id="pdWireless">
+        <thead>
+          <tr><th>기종</th><th>기기변경</th><th>번호이동</th><th>신규가입</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <div class="pd-sec-head">
+      <span class="pd-sec-title">유선 (인터넷·TV)</span>
+      <span class="pd-note">3유형 · 원 단위</span>
+    </div>
+    <div class="pd-wired" id="pdWired"></div>
+
+    <div class="pd-summary" id="pdSummary"></div>
+  </div>
+  <div class="dlg-foot">
+    <button type="button" class="btn btn-danger" id="pdClear">초기화</button>
+    <span class="grow"></span>
+    <button type="button" class="btn" id="pdCancel">취소</button>
+    <button type="button" class="btn btn-primary" id="pdSave">저장</button>
   </div>
 </dialog>
 
@@ -1792,6 +1926,7 @@
     adminPin: '',
     editingId: null,
     pendingRows: null,
+    pendingPriceTable: null,
     pendingKind: 'excel',
     dueOpen: false
   };
@@ -2590,7 +2725,7 @@
       toggleModel(b.getAttribute('data-model'));
     };
     var input = $('f_model');
-    if (input) input.addEventListener('input', function () { markModelChips(input.value); });
+    if (input) input.addEventListener('input', function () { markModelChips(input.value); syncPriceHints(false); });
     markModelChips(input ? input.value : '');
   }
 
@@ -2604,6 +2739,7 @@
     else parts.push(name);
     input.value = parts.join(' + ');
     markModelChips(input.value);
+    syncPriceHints(true);
   }
 
   function markModelChips(value) {
@@ -2614,6 +2750,398 @@
     for (var i = 0; i < chips.length; i++) {
       chips[i].classList.toggle('on', parts.indexOf(chips[i].getAttribute('data-model')) >= 0);
     }
+  }
+
+  /* =========================================================
+     단가표 (관리자 전용) — 기종 · 개통유형별 기준 리베이트
+     ---------------------------------------------------------
+     · 저장: localStorage 'kt_price_table_v1'
+         { wireless: { '갤럭시 S26': { '기기변경': 350000, ... } },
+           wired: { '인터넷+TV 신규가입': 300000, ... }, updatedAt }
+     · 개통 등록에서 기종·유형을 고르면 비어 있는 리베이트 칸을 자동 입력하고,
+       이미 숫자가 있으면 '단가표 적용 (350,000원)' 칩으로 1탭 반영한다.
+     · 금액은 기존 리베이트와 똑같이 '원' 단위. 붙여넣기에서 1~2자리는 만원으로 읽는다(35 → 350,000).
+     ========================================================= */
+  var PRICE_KEY = 'kt_price_table_v1';
+  var priceTable = { wireless: {}, wired: {}, updatedAt: '' };
+
+  function priceNorm(s) {
+    return String(s == null ? '' : s).replace(/\s+/g, '').toLowerCase();
+  }
+
+  function emptyPriceTable() { return { wireless: {}, wired: {}, updatedAt: '' }; }
+
+  function normalizePriceTable(raw) {
+    var out = emptyPriceTable();
+    if (!raw || typeof raw !== 'object') return out;
+    var w = (raw.wireless && typeof raw.wireless === 'object') ? raw.wireless : {};
+    for (var dev in w) {
+      if (!Object.prototype.hasOwnProperty.call(w, dev)) continue;
+      var row = w[dev];
+      if (!row || typeof row !== 'object') continue;
+      var put = {};
+      for (var i = 0; i < WIRELESS_TYPES.length; i++) {
+        var v = parseNumber(row[WIRELESS_TYPES[i]]);
+        if (v > 0) put[WIRELESS_TYPES[i]] = v;
+      }
+      if (Object.keys(put).length) out.wireless[String(dev).trim()] = put;
+    }
+    var l = (raw.wired && typeof raw.wired === 'object') ? raw.wired : {};
+    for (var k = 0; k < WIRED_TYPES.length; k++) {
+      var lv = parseNumber(l[WIRED_TYPES[k]]);
+      if (lv > 0) out.wired[WIRED_TYPES[k]] = lv;
+    }
+    out.updatedAt = raw.updatedAt ? String(raw.updatedAt) : '';
+    return out;
+  }
+
+  function loadPriceTable() {
+    try {
+      var raw = localStorage.getItem(PRICE_KEY);
+      priceTable = normalizePriceTable(raw ? JSON.parse(raw) : null);
+    } catch (e) {
+      priceTable = emptyPriceTable();
+    }
+  }
+
+  function savePriceTable(next) {
+    priceTable = normalizePriceTable(next);
+    try {
+      localStorage.setItem(PRICE_KEY, JSON.stringify(priceTable));
+      return true;
+    } catch (e) {
+      toast('단가표를 저장하지 못했습니다. 저장 공간을 확인해 주세요.', true);
+      return false;
+    }
+  }
+
+  function priceCounts(tbl) {
+    var t = tbl || priceTable, w = 0, l = 0, dev, k;
+    for (dev in t.wireless) {
+      if (Object.prototype.hasOwnProperty.call(t.wireless, dev)) w += Object.keys(t.wireless[dev]).length;
+    }
+    for (k in t.wired) {
+      if (Object.prototype.hasOwnProperty.call(t.wired, k)) l += 1;
+    }
+    return { wireless: w, wired: l, total: w + l };
+  }
+
+  // 기종 이름 → 단가표에 저장된 정확한 키 (공백·대소문자 무시)
+  function priceDeviceKey(name) {
+    var n = priceNorm(name);
+    if (!n) return '';
+    var keys = Object.keys(priceTable.wireless);
+    for (var i = 0; i < keys.length; i++) {
+      if (priceNorm(keys[i]) === n) return keys[i];
+    }
+    return '';
+  }
+
+  // 기종 칸 값('갤럭시 S26' / '갤럭시 S26 + 인터넷 에센스')에서 무선 단가 찾기
+  function wirelessPrice(modelValue, type) {
+    if (!type || WIRELESS_TYPES.indexOf(type) < 0) return null;
+    var parts = modelParts(modelValue), i, key, v;
+    for (i = 0; i < parts.length; i++) {
+      key = priceDeviceKey(parts[i]);
+      if (!key) continue;
+      v = parseNumber(priceTable.wireless[key] && priceTable.wireless[key][type]);
+      if (v > 0) return { value: v, device: key, type: type };
+    }
+    return null;
+  }
+
+  function wiredPrice(type) {
+    if (!type || WIRED_TYPES.indexOf(type) < 0) return null;
+    var v = parseNumber(priceTable.wired[type]);
+    return v > 0 ? { value: v, type: type } : null;
+  }
+
+  // 등록 창의 리베이트 칸에 단가표 안내/적용 칩을 그린다
+  function syncPriceHints(autoFill) {
+    if (!el || !el.editDialog || !el.editDialog.open) return;
+    var slots = typeSlots($('f_type').value);
+    paintPriceHint('w', wirelessPrice($('f_model').value, slots.w), 'f_rebate_w', 'ptHintW', autoFill);
+    paintPriceHint('l', wiredPrice(slots.l), 'f_rebate_l', 'ptHintL', autoFill);
+  }
+
+  function paintPriceHint(kind, hit, inputId, hintId, autoFill) {
+    var box = $(hintId), input = $(inputId);
+    if (!box || !input) return;
+    var autoPrev = parseNumber(input.getAttribute('data-pt-auto'));
+    if (!hit) {
+      // 단가표에서 자동으로 넣었던 값은 유형·기종이 빠지면 같이 지운다 (직접 적은 값은 그대로)
+      if (autoPrev && parseNumber(input.value) === autoPrev) input.value = '';
+      input.removeAttribute('data-pt-auto');
+      box.hidden = true;
+      box.innerHTML = '';
+      box.setAttribute('data-val', '');
+      return;
+    }
+    var cur = parseNumber(input.value);
+    // 자동으로 채워 둔 값은 기종·유형을 바꾸면 새 단가로 따라간다
+    if (autoPrev && cur === autoPrev && cur !== hit.value && autoFill) {
+      input.value = fmtNum(hit.value);
+      cur = hit.value;
+    } else if (!cur && autoFill) {
+      input.value = fmtNum(hit.value);
+      cur = hit.value;
+    }
+    box.hidden = false;
+    box.setAttribute('data-val', String(hit.value));
+    if (cur === hit.value) {
+      input.setAttribute('data-pt-auto', String(hit.value));
+      box.innerHTML = '<span class="pt-same">단가표 ' + fmtNum(hit.value) + '원 적용됨</span>';
+      return;
+    }
+    input.removeAttribute('data-pt-auto');
+    box.innerHTML = '<button type="button" class="pt-apply" data-pt="' + kind + '">' +
+      '단가표 적용 (' + fmtNum(hit.value) + '원)</button>';
+  }
+
+  function applyPriceHint(kind) {
+    var box = $(kind === 'w' ? 'ptHintW' : 'ptHintL');
+    var input = $(kind === 'w' ? 'f_rebate_w' : 'f_rebate_l');
+    if (!box || !input) return;
+    var v = parseNumber(box.getAttribute('data-val'));
+    if (!v) return;
+    input.value = fmtNum(v);
+    syncPriceHints(false);
+  }
+
+  /* ---------- 단가표 관리 창 ---------- */
+  function openPriceDialog() {
+    if (!el.priceDialog) return;
+    if (!isAdmin()) { openAdminDialog(); return; }
+    renderPriceDialog();
+    if (el.priceDialog.open) el.priceDialog.close();
+    el.priceDialog.showModal();
+  }
+
+  function pdValue(dev, type) {
+    var row = priceTable.wireless[dev];
+    var v = row ? parseNumber(row[type]) : 0;
+    return v > 0 ? fmtNum(v) : '';
+  }
+
+  function renderPriceDialog() {
+    var html = '', i, j;
+    for (i = 0; i < KT_DEVICES.length; i++) {
+      var dev = KT_DEVICES[i];
+      html += '<tr><td class="pd-dev" title="' + esc(dev) + '">' + esc(dev) + '</td>';
+      for (j = 0; j < WIRELESS_TYPES.length; j++) {
+        var t = WIRELESS_TYPES[j], v = pdValue(dev, t);
+        html += '<td><input class="pd-input' + (v ? ' on' : '') + '" type="text" inputmode="numeric" autocomplete="off"' +
+          ' data-dev="' + esc(dev) + '" data-wtype="' + esc(t) + '" value="' + v + '" placeholder="—"' +
+          ' aria-label="' + esc(dev + ' ' + t) + '"></td>';
+      }
+      html += '</tr>';
+    }
+    el.pdWireless.querySelector('tbody').innerHTML = html;
+
+    var wh = '';
+    for (i = 0; i < WIRED_TYPES.length; i++) {
+      var wt = WIRED_TYPES[i], wv = priceTable.wired[wt] ? fmtNum(priceTable.wired[wt]) : '';
+      wh += '<div class="pd-wcell"><label for="pdw' + i + '">' + esc(wt) + '<span class="pd-unit">원</span></label>' +
+        '<input id="pdw' + i + '" class="pd-input' + (wv ? ' on' : '') + '" type="text" inputmode="numeric" autocomplete="off"' +
+        ' data-wired="' + esc(wt) + '" value="' + wv + '" placeholder="—" aria-label="' + esc(wt) + '"></div>';
+    }
+    el.pdWired.innerHTML = wh;
+
+    el.pdPaste.value = '';
+    el.pdPasteResult.hidden = true;
+    el.pdPasteResult.className = 'pd-paste-result';
+    renderPdSummary();
+  }
+
+  // 표에 지금 적혀 있는 값 모으기 (+ 비어 있는 칸 표시 정리)
+  function pdCollect() {
+    var tbl = { wireless: {}, wired: {}, updatedAt: priceTable.updatedAt || '' };
+    var inputs = el.pdWireless.querySelectorAll('input[data-dev]'), i;
+    for (i = 0; i < inputs.length; i++) {
+      var dev = inputs[i].getAttribute('data-dev');
+      var type = inputs[i].getAttribute('data-wtype');
+      var v = parseNumber(inputs[i].value);
+      inputs[i].classList.toggle('on', v > 0);
+      if (!v) continue;
+      if (!tbl.wireless[dev]) tbl.wireless[dev] = {};
+      tbl.wireless[dev][type] = v;
+    }
+    var winputs = el.pdWired.querySelectorAll('input[data-wired]');
+    for (i = 0; i < winputs.length; i++) {
+      var wt = winputs[i].getAttribute('data-wired');
+      var wv = parseNumber(winputs[i].value);
+      winputs[i].classList.toggle('on', wv > 0);
+      if (wv > 0) tbl.wired[wt] = wv;
+    }
+    return tbl;
+  }
+
+  function renderPdSummary() {
+    if (!el.pdSummary) return null;
+    var t = pdCollect();
+    var c = priceCounts(t);
+    el.pdSummary.innerHTML = c.total
+      ? '지금 표에 적힌 단가 <b>' + c.total + '칸</b> (무선 ' + c.wireless + ' · 유선 ' + c.wired + ') — <b>저장</b>을 눌러야 이 기기에 남습니다.'
+      : '아직 적힌 단가가 없습니다. 위에 표를 붙여넣거나 표에 직접 입력한 뒤 <b>저장</b>을 누르세요. 비워 두면 자동 입력도 하지 않습니다.';
+    return t;
+  }
+
+  function savePriceFromDialog() {
+    if (!isAdmin()) { toast('단가표는 관리자 모드에서만 저장할 수 있습니다.', true); return; }
+    var t = pdCollect();
+    t.updatedAt = new Date().toISOString();
+    if (!savePriceTable(t)) return;
+    var c = priceCounts();
+    if (el.priceDialog.open) el.priceDialog.close();
+    toast(c.total
+      ? '단가표 ' + c.total + '칸을 저장했습니다. 개통 등록에서 자동으로 채워집니다.'
+      : '단가표를 비웠습니다. 자동 입력도 멈춥니다.');
+    syncPriceHints(false);
+  }
+
+  function clearPriceTable() {
+    if (!isAdmin()) { toast('단가표는 관리자 모드에서만 바꿀 수 있습니다.', true); return; }
+    askConfirm('단가표 초기화', '저장된 단가표를 모두 지울까요?<br>개통 등록의 자동 입력도 함께 멈춥니다.', '초기화', true)
+      .then(function (ok) {
+        if (!ok) return;
+        savePriceTable(emptyPriceTable());
+        renderPriceDialog();
+        toast('단가표를 초기화했습니다.');
+        syncPriceHints(false);
+      });
+  }
+
+  /* 붙여넣기 표 읽기 — 탭 · 쉼표 · 슬래시 · 두 칸 이상 공백으로 나뉜 줄을 읽는다.
+     1~2자리 숫자는 만원으로 계산한다(35 → 350,000원). 머리글 줄(기종/기변/번이/신규)은 순서만 읽는다. */
+  function priceNamePrefixLen(line, name) {
+    var chars = String(name).replace(/\s+/g, '').split('');
+    if (!chars.length) return -1;
+    var re = new RegExp('^\\s*' + chars.map(function (c) {
+      return c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }).join('\\s*'), 'i');
+    var m = re.exec(line);
+    return m ? m[0].length : -1;
+  }
+
+  function priceAmounts(s) {
+    var out = [], re = /(\d[\d,]*(?:\.\d+)?)\s*(만)?/g, m;
+    while ((m = re.exec(String(s || ''))) !== null) {
+      var num = parseFloat(String(m[1]).replace(/,/g, ''));
+      if (!isFinite(num) || num <= 0) continue;
+      var val = m[2] ? Math.round(num * 10000) : num;
+      if (val <= 99) val = val * 10000;     // 35 → 350,000 (만원 단위로 적은 값)
+      out.push(val);
+      if (out.length >= 8) break;
+    }
+    return out;
+  }
+
+  function parsePricePaste(text) {
+    var res = { wireless: {}, wired: {}, filled: 0, wCells: 0, lCells: 0, skipped: [], header: '' };
+    var names = [], i;
+    for (i = 0; i < KT_DEVICES.length; i++) names.push({ name: KT_DEVICES[i], kind: 'w' });
+    for (i = 0; i < WIRED_TYPES.length; i++) names.push({ name: WIRED_TYPES[i], kind: 'l' });
+    // KT_DEVICES 에 없는 이름도 이미 저장된 단가표 키라면 받아 준다
+    var stored = Object.keys(priceTable.wireless);
+    for (i = 0; i < stored.length; i++) {
+      var dup = false;
+      for (var s = 0; s < names.length; s++) if (priceNorm(names[s].name) === priceNorm(stored[i])) { dup = true; break; }
+      if (!dup) names.push({ name: stored[i], kind: 'w' });
+    }
+    names.sort(function (a, b) { return b.name.length - a.name.length; });
+
+    var order = WIRELESS_TYPES.slice();   // 머리글에 적힌 열 순서
+    var lines = String(text || '').split(/\r?\n/);
+    for (var li = 0; li < lines.length; li++) {
+      var line = lines[li].replace(/\u00a0/g, ' ').trim();
+      if (!line) continue;
+      line = line.replace(/^\s*\d+\s*[.)]\s*/, '');   // '1. ' 같은 번호 제거
+
+      var amounts = priceAmounts(line);
+      // 머리글 줄 — 숫자가 없으면 열 순서만 읽고 넘어간다
+      if (!amounts.length) {
+        var cols = [], words = line.split(/\t|,|\/|\s{2,}/);
+        for (i = 0; i < words.length; i++) {
+          var w = priceNorm(words[i]);
+          if (!w) continue;
+          if (/^(기종|단말기|모델|모델명|기기|상품|구분)$/.test(w)) continue;
+          if (/기기변경|기변/.test(w)) cols.push('기기변경');
+          else if (/번호이동|번이/.test(w)) cols.push('번호이동');
+          else if (/신규/.test(w)) cols.push('신규가입');
+        }
+        if (cols.length >= 2) { order = cols; res.header = cols.join(' / '); }
+        continue;
+      }
+
+      // 줄 앞의 이름 찾기 — 가장 긴 이름부터
+      var hit = null, rest = '';
+      for (i = 0; i < names.length; i++) {
+        var len = priceNamePrefixLen(line, names[i].name);
+        if (len > 0) { hit = names[i]; rest = line.slice(len); break; }
+      }
+      if (!hit) {
+        res.skipped.push(line.split(/\t|,|\/|\s{2,}/)[0].trim().slice(0, 14) || line.slice(0, 14));
+        continue;
+      }
+      var vals = priceAmounts(rest);
+      if (!vals.length) continue;
+      if (hit.kind === 'l') {
+        res.wired[hit.name] = vals[0];
+        res.lCells += 1;
+        continue;
+      }
+      var row = res.wireless[hit.name] || (res.wireless[hit.name] = {});
+      for (i = 0; i < vals.length && i < order.length; i++) {
+        if (row[order[i]]) continue;
+        row[order[i]] = vals[i];
+        res.wCells += 1;
+      }
+    }
+    res.filled = res.wCells + res.lCells;
+    return res;
+  }
+
+  function applyPricePaste() {
+    if (!isAdmin()) { toast('단가표는 관리자 모드에서만 바꿀 수 있습니다.', true); return; }
+    var text = el.pdPaste.value || '';
+    if (!text.trim()) {
+      pdPasteMsg('붙여넣은 내용이 없습니다.', true);
+      return;
+    }
+    var parsed = parsePricePaste(text);
+    var inputs = el.pdWireless.querySelectorAll('input[data-dev]'), i;
+    for (i = 0; i < inputs.length; i++) {
+      var dev = inputs[i].getAttribute('data-dev');
+      var type = inputs[i].getAttribute('data-wtype');
+      var row = parsed.wireless[dev];
+      if (row && row[type]) inputs[i].value = fmtNum(row[type]);
+    }
+    var winputs = el.pdWired.querySelectorAll('input[data-wired]');
+    for (i = 0; i < winputs.length; i++) {
+      var wt = winputs[i].getAttribute('data-wired');
+      if (parsed.wired[wt]) winputs[i].value = fmtNum(parsed.wired[wt]);
+    }
+    renderPdSummary();
+
+    if (!parsed.filled) {
+      pdPasteMsg('기종과 금액을 찾지 못했습니다. 예) 갤럭시 S26\t35\t40\t30 처럼 한 줄에 기종과 금액을 적어 주세요.', true);
+      return;
+    }
+    var msg = '표에 <b>' + parsed.filled + '칸</b>을 반영했습니다 (무선 ' + parsed.wCells + ' · 유선 ' + parsed.lCells + ').';
+    if (parsed.header) msg += ' 열 순서: ' + esc(parsed.header) + '.';
+    if (parsed.skipped.length) {
+      msg += '<br>목록에 없는 이름 ' + parsed.skipped.length + '개는 건너뛰었습니다: ' + esc(parsed.skipped.slice(0, 3).join(', ')) +
+        (parsed.skipped.length > 3 ? ' 외' : '');
+    }
+    msg += '<br>아직 저장 전입니다 — 아래 <b>저장</b>을 누르세요.';
+    pdPasteMsg(msg, false);
+  }
+
+  function pdPasteMsg(html, isErr) {
+    if (!el.pdPasteResult) return;
+    el.pdPasteResult.innerHTML = html;
+    el.pdPasteResult.className = 'pd-paste-result' + (isErr ? ' err' : '');
+    el.pdPasteResult.hidden = false;
   }
 
   /* ---------------- 단말 보험 칩 (미가입 · 가입) ----------------
@@ -3949,6 +4477,8 @@
         : '👤 <span class="rb-t">직원 모드</span>';
       el.roleBadge.title = admin ? '관리자 모드입니다. 브라우저를 닫으면 자동으로 잠깁니다.' : '엑셀·백업·삭제는 관리자 모드에서만 보입니다.';
     }
+    // 직원 모드로 돌아가면 관리자 전용 창(단가표)은 닫는다
+    if (!admin && el.priceDialog && el.priceDialog.open) el.priceDialog.close();
     // 행 안의 삭제 버튼은 다시 그려야 반영된다
     renderTable();
   }
@@ -4227,6 +4757,7 @@
     if (isWiredType(t)) slots.l = (slots.l === t) ? '' : t;
     else slots.w = (slots.w === t) ? '' : t;
     renderTypeChips(joinTypeParts(slots.w, slots.l));
+    syncPriceHints(true);
   }
 
   function applyTypeHint() {
@@ -4284,6 +4815,9 @@
     clearInvalid();
     if (el.editDialog.open) el.editDialog.close();
     el.editDialog.showModal();
+    // 새 등록이면 단가표의 기준 금액을 비어 있는 리베이트 칸에 먼저 넣어 준다
+    // (수정할 때는 기존 금액을 바꾸지 않고 '단가표 적용' 칩만 보여 준다)
+    syncPriceHints(!rec);
     setTimeout(function () {
       var a = document.activeElement;
       if (!a || a === document.body || a === el.editDialog) {
@@ -4414,6 +4948,7 @@
       $('f_rebate_l').value = '';
       $('f_memo').value = '';
       $('f_name').focus();
+      syncPriceHints(true);
     } else {
       el.editDialog.close();
     }
@@ -4796,6 +5331,12 @@
     var rows = state.pendingRows || [];
     if (!rows.length) { el.importDialog.close(); return; }
 
+    // 백업 파일에 단가표가 들어 있었으면 기록과 함께 되살린다
+    if (state.pendingPriceTable) {
+      savePriceTable(state.pendingPriceTable);
+      state.pendingPriceTable = null;
+    }
+
     if (mode === 'replace') {
       var oldIds = state.records.map(function (r) { return r.id; });
       state.records = rows.map(function (r) { return normalizeRecord(r); });
@@ -4844,18 +5385,21 @@
 
   /* ---------------- JSON backup ---------------- */
   function jsonBackup() {
-    if (!state.records.length) { toast('백업할 데이터가 없습니다.', true); return; }
+    var pc = priceCounts();
+    if (!state.records.length && !pc.total) { toast('백업할 데이터가 없습니다.', true); return; }
     var payload = {
       app: 'kt-store-manager',
       version: 1,
       store: '충주 KT대리점 칠금점',
       exportedAt: new Date().toISOString(),
       count: state.records.length,
+      // 기종별 단가표도 함께 백업한다 (다른 기기에서 복원하면 그대로 살아난다)
+      priceTable: priceTable,
       records: state.records
     };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
     downloadBlob(blob, 'KT개통장부_백업_' + todayISO() + '.json');
-    toast(state.records.length + '건을 백업 파일로 저장했습니다.');
+    toast(state.records.length + '건' + (pc.total ? ' · 단가표 ' + pc.total + '칸' : '') + '을 백업 파일로 저장했습니다.');
   }
 
   function jsonRestore(file) {
@@ -4867,12 +5411,24 @@
         var arr = Array.isArray(data) ? data : (data && Array.isArray(data.records) ? data.records : null);
         if (!arr) throw new Error('백업 파일 형식이 아닙니다.');
         var recs = arr.map(normalizeRecord);
+        // 단가표만 들어 있는 백업(기록 0건)이면 단가표만 바로 되살린다
+        if (!recs.length && data && data.priceTable) {
+          savePriceTable(normalizePriceTable(data.priceTable));
+          var pcOnly = priceCounts();
+          if (!pcOnly.total) throw new Error('백업 파일에 데이터가 없습니다.');
+          toast('백업의 단가표 ' + pcOnly.total + '칸을 복원했습니다.');
+          return;
+        }
         if (!recs.length) throw new Error('백업 파일에 데이터가 없습니다.');
         state.pendingRows = recs;
+        // 단가표가 들어 있는 백업이면 복원을 누를 때 함께 되살린다
+        state.pendingPriceTable = data && data.priceTable ? normalizePriceTable(data.priceTable) : null;
+        var pc = state.pendingPriceTable ? priceCounts(state.pendingPriceTable) : null;
         $('iTitle').textContent = '백업 복원';
         $('iSub').textContent = '백업에 들어 있는 기록으로 장부를 채웁니다.';
         $('iMsg').innerHTML = '백업 파일에서 <b>' + recs.length + '건</b>을 찾았습니다.<br>' +
-          '현재 장부에는 <b>' + state.records.length + '건</b>이 저장되어 있습니다.';
+          '현재 장부에는 <b>' + state.records.length + '건</b>이 저장되어 있습니다.' +
+          (pc && pc.total ? '<br>기종별 단가표 <b>' + pc.total + '칸</b>도 함께 복원됩니다.' : '');
         $('iAdd').textContent = '기존에 추가';
         $('iReplace').style.display = '';
         el.importDialog.showModal();
@@ -4982,6 +5538,35 @@
     if (el.syncPill) el.syncPill.addEventListener('click', function () { openSyncDialog(); });
     if (el.adminLockBtn) el.adminLockBtn.addEventListener('click', function () { closeMenu(); onAdminLockClick(); });
     if (el.devicesBtn) el.devicesBtn.addEventListener('click', function () { closeMenu(); openDevicesDialog(); });
+    if (el.priceBtn) el.priceBtn.addEventListener('click', function () { closeMenu(); openPriceDialog(); });
+    if (el.priceDialog) {
+      if (el.pdClose) el.pdClose.addEventListener('click', function () { el.priceDialog.close(); });
+      if (el.pdCancel) el.pdCancel.addEventListener('click', function () { el.priceDialog.close(); });
+      if (el.pdSave) el.pdSave.addEventListener('click', savePriceFromDialog);
+      if (el.pdClear) el.pdClear.addEventListener('click', clearPriceTable);
+      if (el.pdApplyPaste) el.pdApplyPaste.addEventListener('click', applyPricePaste);
+      el.priceDialog.addEventListener('input', function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('pd-input')) return;
+        var neg = /^-/.test(t.value);
+        var d = t.value.replace(/[^0-9]/g, '');
+        t.value = d ? (neg ? '-' : '') + Number(d).toLocaleString('ko-KR') : (neg ? '-' : '');
+        renderPdSummary();
+      });
+      // 1~2자리로 적으면 만원 단위로 바꿔 준다 (35 → 350,000)
+      el.priceDialog.addEventListener('focusout', function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('pd-input')) return;
+        var d = t.value.replace(/[^0-9]/g, '');
+        if (!d) return;
+        var n = Number(d);
+        if (n > 0 && n <= 99) t.value = (n * 10000).toLocaleString('ko-KR');
+        renderPdSummary();
+      });
+      el.priceDialog.addEventListener('click', function (e) {
+        if (e.target === el.priceDialog) el.priceDialog.close();
+      });
+    }
     if (el.devicesDialog) {
       if (el.dvClose) el.dvClose.addEventListener('click', function () { el.devicesDialog.close(); });
       if (el.dvDone) el.dvDone.addEventListener('click', function () { el.devicesDialog.close(); });
@@ -5213,8 +5798,13 @@
       $(id).addEventListener('input', function () {
         var neg = /^-/.test(this.value);
         var d = this.value.replace(/[^0-9]/g, '');
-        if (!d) { this.value = neg ? '-' : ''; return; }
+        if (!d) {
+          this.value = neg ? '-' : '';
+          if (id !== 'f_usedprice') syncPriceHints(false);
+          return;
+        }
         this.value = (neg ? '-' : '') + Number(d).toLocaleString('ko-KR');
+        if (id !== 'f_usedprice') syncPriceHints(false);
       });
     });
 
@@ -5236,6 +5826,8 @@
     el.editDialog.addEventListener('cancel', function () { state.editingId = null; hidePlanSuggest(); });
     el.editDialog.addEventListener('close', hidePlanSuggest);
     el.editDialog.addEventListener('click', function (e) {
+      var pt = e.target.closest ? e.target.closest('button[data-pt]') : null;
+      if (pt) { applyPriceHint(pt.getAttribute('data-pt')); return; }
       if (e.target === el.editDialog) el.editDialog.close();
     });
 
@@ -5249,11 +5841,11 @@
       if (e.target === el.confirmDialog) closeConfirm(false);
     });
 
-    el.importDialog.addEventListener('cancel', function () { state.pendingRows = null; });
+    el.importDialog.addEventListener('cancel', function () { state.pendingRows = null; state.pendingPriceTable = null; });
     el.importDialog.addEventListener('click', function (e) {
-      if (e.target === el.importDialog) { el.importDialog.close(); state.pendingRows = null; }
+      if (e.target === el.importDialog) { el.importDialog.close(); state.pendingRows = null; state.pendingPriceTable = null; }
     });
-    $('iCancel').addEventListener('click', function () { el.importDialog.close(); state.pendingRows = null; });
+    $('iCancel').addEventListener('click', function () { el.importDialog.close(); state.pendingRows = null; state.pendingPriceTable = null; });
     $('iAdd').addEventListener('click', function () { applyImport('add'); });
     $('iReplace').addEventListener('click', function () { applyImport('replace'); });
 
@@ -5457,6 +6049,19 @@
       dvRefresh: $('dvRefresh'),
       dvDone: $('dvDone'),
       dvClose: $('dvClose'),
+      /* 단가표 관리 */
+      priceBtn: $('priceBtn'),
+      priceDialog: $('priceDialog'),
+      pdPaste: $('pdPaste'),
+      pdPasteResult: $('pdPasteResult'),
+      pdApplyPaste: $('pdApplyPaste'),
+      pdWireless: $('pdWireless'),
+      pdWired: $('pdWired'),
+      pdSummary: $('pdSummary'),
+      pdSave: $('pdSave'),
+      pdCancel: $('pdCancel'),
+      pdClear: $('pdClear'),
+      pdClose: $('pdClose'),
       syncOpenBtn: $('syncOpenBtn'),
       syncNowBtn: $('syncNowBtn'),
       syncNowBtn2: $('syncNowBtn2'),
@@ -5468,6 +6073,7 @@
 
     loadSync();
     loadDevice();
+    loadPriceTable();
     state.records = blockedStored() ? [] : loadRecords();
     state.filters.month = currentMonth();
 
