@@ -3534,8 +3534,20 @@
       ['베이직70GB', 65000], ['베이직50GB', 63000], ['베이직30GB', 61000], ['베이직21GB', 58000],
       ['베이직21GB(이월)', 58000], ['베이직14GB', 55000], ['베이직14GB(이월)', 55000], ['베이직10GB', 50000],
       ['베이직10GB(이월)', 50000], ['베이직7GB', 45000], ['베이직7GB(이월)', 45000], ['베이직4GB', 37000],
-      ['베이직4GB(이월)', 37000], ['베이직1.4GB', 33000], ['베이직600MB', 28900]
+      ['베이직4GB(이월)', 37000], ['베이직1.4GB', 33000], ['베이직600MB', 28900],
+      // v37 — KT 공식 음성 요금제 2종 (베이직600MB 바로 아래 · 가격순 18,700 → 12,100)
+      ['음성 18.7', 18700], ['음성 12.1', 12100]
     ], function (x) { add('mobile', '베이직', x[0], x[1]); });
+
+    // 키즈 전용 (v37) — 만 12세 이하(개통일 기준) 어린이 고객일 때만 목록·검색에 나온다
+    //   KT 공식: 키즈38 38,000(5GB+1Mbps) · 키즈28 28,000(3GB+400Kbps) · 키즈24 24,000(1.5GB+400Kbps)
+    //            키즈20 20,000(800MB+400Kbps) · 키즈13 13,000(데이터 미제공)
+    each([
+      ['키즈38', 38000], ['키즈28', 28000], ['키즈24', 24000], ['키즈20', 20000], ['키즈13', 13000]
+    ], function (x) {
+      add('mobile', '키즈(만 12세 이하)', x[0], x[1]);
+      rows[rows.length - 1].kids = true;
+    });
 
     // 외국인 전용 — [외국인]을 켰을 때만 요금제 목록·검색에 나온다 (v19)
     each([['웰컴5', 59000], ['웰컴3', 49000], ['웰컴1', 39000]], function (x) {
@@ -3608,6 +3620,7 @@
       return 4;
     }
     mob.sort(function (a, b) {
+      if (!!a.kids !== !!b.kids) return a.kids ? -1 : 1;             // v37 — 키즈 5종은 목록 맨 위
       if (!!a.foreign !== !!b.foreign) return a.foreign ? 1 : -1;   // 외국인 전용(웰컴)은 맨 뒤
       return (band(a.p || 0) - band(b.p || 0)) ||
         ((b.p || 0) - (a.p || 0)) ||                      // 같은 순위 안에서는 비진 것부터
@@ -6366,10 +6379,31 @@
   //  · 그 외    → 데이터투게더 숨김 · 외국인 전용(웰컴)은 [외국인] 켰을 때만
   function mobilePlanShown(p) {
     if (!p) return false;
-    if (secondOn()) return !!p.is2nd;
+    if (secondOn()) return !!p.is2nd;      // 2ND 는 데이터투게더 2종만 (키즈·웰컴도 숨김)
     if (p.is2nd) return false;
+    if (p.kids && !kidsOn()) return false; // v37 — 키즈 5종은 만 12세 이하일 때만
     if (p.foreign && !foreignOn()) return false;
     return true;
+  }
+
+  /* ---------- 키즈 요금제 (v37) — 만 12세 이하 어린이 고객일 때만 열린다 ----------
+     · 생년월일 칸에 유효한 생년월일이 있고, 개통일(없으면 오늘) 기준 만 12세 이하이면 켜진다
+     · 덜 친 값·없는 날짜는 어린이로 보지 않는다(만 13세 이상이 되면 다시 숨김) */
+  function kidsAge() {
+    var birth = $('f_birth') ? $('f_birth').value : '';
+    if (birthIssueText(birth)) return -1;              // 잘못된 날짜·자릿수 부족은 제외
+    return ageAt(birth, $('f_date') ? $('f_date').value : '');
+  }
+
+  function kidsOn() {
+    var age = kidsAge();
+    return age >= 0 && age <= 12;
+  }
+
+  // 생년월일·개통일이 바뀌면 요금제 선택창·검색 후보를 바로 다시 그린다(외국인 칩과 같은 방식)
+  function refreshKidsPlans() {
+    if (typeof renderPlanPickerBody === 'function') renderPlanPickerBody();
+    if (planSug && planSug.input) showPlanSuggest(planSug.input);
   }
 
   /* ---------- 외국인 고객 (v19) — 1탭 체크 · 외국인 전용 요금제 열기 ---------- */
@@ -6789,6 +6823,11 @@
   function renderPlanPickerBody() {
     if (!el.ppMobile || !el.ppWired) return;
     var i, p, html = '', cat = '', open = false;
+    // v37 — 만 12세 이하 생년월일이면 왜 키즈 요금제가 나오는지 한 줄로 알린다(정적 안내 줄 아님)
+    if (kidsOn()) {
+      html += '<div class="pp-wired-note pp-kids-note">생년월일 기준 <b>만 ' + kidsAge() +
+        '세</b> — 키즈 요금제 5종이 맨 위에 나옵니다</div>';
+    }
     // 모바일 — 그룹별 칩
     for (i = 0; i < KT_PLANS.length; i++) {
       p = KT_PLANS[i];
@@ -11095,7 +11134,10 @@
       this.value = this.value.replace(/[^0-9-]/g, '').slice(0, 10);
       renderRrnDigit();
       paintBirthHint(false);
+      refreshKidsPlans();   // v37 — 만 12세 이하가 되면 키즈 5종이 바로 열리고, 넘어가면 닫힌다
     });
+    $('f_birth').addEventListener('blur', function () { refreshKidsPlans(); });
+    if ($('f_date')) $('f_date').addEventListener('change', refreshKidsPlans);
     // v29 — blur 때는 '덜 찍은 값'(1글자·자릿수 부족)에는 굳이 참견하지 않는다.
     //   칸을 벗어나는 순간 안내문이 생기면 폼이 밀려 다음 탭이 엉뚱한 칸에 찍힐 수 있다.
     $('f_birth').addEventListener('blur', function () { paintBirthHint(false); });
