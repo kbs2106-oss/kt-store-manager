@@ -3990,9 +3990,13 @@
       if (!pv) pv = parseNumber(t[pf]);
       if (pv) head.push('[' + PAY_TAGS[i].key + ':' + pv + ']');
     }
-    // v32 — 카드결제 상세(할부금/위약금 · 선결제/1일예정) — 여러 줄일 때만 남긴다
+    // v32 — 카드결제 상세(할부금/위약금 · 선결제/1일예정) — 여러 줄이거나 종류·시기를 골랐을 때만 남긴다
     var pcDet = String(rec.페이백카드상세 || t.paycardDetail || '').trim();
-    if (pcDet && pcDetailParse(pcDet).length > 1) head.push('[카드상세:' + pcDet.replace(/\]/g, '') + ']');
+    if (pcDet) {
+      var pcList = pcDetailParse(pcDet), pcWorth = pcList.length > 1;
+      for (var q = 0; q < pcList.length; q++) if (pcList[q].kind || pcList[q].when) pcWorth = true;
+      if (pcWorth) head.push('[카드상세:' + pcDet.replace(/\]/g, '') + ']');
+    }
     // v30 — [미기입] 으로 확인한 결제 칸 (0원이 '미기입'인지 '확인해서 0원'인지 시트에도 남긴다)
     var noneKeys = payNoneKeys(rec);
     if (!noneKeys.length && t.payNone) noneKeys = String(t.payNone).split(',').filter(function (x) { return !!x; });
