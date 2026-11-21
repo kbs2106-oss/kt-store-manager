@@ -691,12 +691,15 @@
   .ins-chips.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
   .none-chips{flex:none}
   .none-chips .pchip.on{background:#0F172A;color:#fff;border-color:#0F172A}
+  /* v22 — 유선 사은품 처리 칸 (유선 개통일 때만 열린다) */
+  .wired-gift{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
+  .wired-gift[hidden]{display:none !important}
+  .wired-gift .gift-chips{display:flex;flex-wrap:wrap;gap:6px}
+  .gift-badge{background:#EAF6EF;color:#0B5F45;border-color:#BFE3D3;margin-left:6px}
   /* ---------- v19 추지·페이백·중고폰 — [미기입]/[미반납] 1탭 칩 ---------- */
   .pay-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px}
   .pay-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
   @media (max-width:700px){.pay-grid,.pay-grid.two{grid-template-columns:1fr}}
-  /* 직원 모드에서는 중고폰금액 칸이 숨는다 — 남은 중고폰 칸이 한 줄을 채우게 */
-  body.role-staff .pay-grid.two{grid-template-columns:1fr}
   .pay-row{display:flex;align-items:center;gap:6px}
   .pay-row input.money{flex:1 1 0;min-width:0;width:auto}
   .pay-row .pchip{white-space:nowrap;flex:none}
@@ -1657,18 +1660,18 @@
         <div class="section-label">개통 정보</div>
 
         <div class="field span2">
+          <label id="f_typeLabel">개통유형 <span class="opt">선택 · 무선·유선 각 1개</span></label>
+          <input id="f_type" type="hidden" value="">
+          <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
+          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP·2ND, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
+        </div>
+
+        <div class="field span2">
           <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
           <input id="f_model" type="text" autocomplete="off" list="modelList" placeholder="예) 갤럭시 S26 / 아이폰 17 프로">
           <datalist id="modelList"></datalist>
           <div class="staff-chips model-chips" id="modelChips"></div>
           <span class="hint">단말기를 누르면 바로 들어갑니다. 다시 누르면 빠지고, 인터넷·TV 상품은 직접 입력해도 됩니다.</span>
-        </div>
-
-        <div class="field span2">
-          <label id="f_typeLabel">개통유형 <span class="opt">선택 · 무선·유선 각 1개</span></label>
-          <input id="f_type" type="hidden" value="">
-          <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
-          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP·2ND, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
 
         <div class="field span2">
@@ -1859,6 +1862,16 @@
               <span class="hint">계좌로 입금한 금액</span>
             </div>
           </div>
+          <!-- v22 — 유선(인터넷·TV) 개통일 때만: 유선 사은품 처리 (단일 선택 · 다시 누르면 해제) -->
+          <div class="field wired-gift" id="wiredGiftWrap" hidden>
+            <label id="f_wiredgiftLabel">유선 사은품 처리 <span class="opt">선택 · 상품권 · 단말할인쿠폰</span></label>
+            <input id="f_wiredgift" type="hidden" value="">
+            <div class="period-chips gift-chips" id="wiredGiftChips" role="group" aria-labelledby="f_wiredgiftLabel">
+              <button type="button" class="pchip" data-wired-gift="상품권 지급" aria-pressed="false">상품권 고객 지급</button>
+              <button type="button" class="pchip" data-wired-gift="단말할인쿠폰" aria-pressed="false">단말할인쿠폰 결제</button>
+            </div>
+            <span class="hint">유선(인터넷·TV) 개통에서 고객에게 준 사은품입니다. 시트에는 메모 <b>[유선혜택:…]</b> 표기로 나갑니다.</span>
+          </div>
         </div>
 
         <!-- v19 — 중고폰도 [미반납] 칩을 누르거나 중고폰·금액을 입력해야 저장된다 -->
@@ -1877,10 +1890,10 @@
               <label for="f_used">중고폰 <span class="req">*</span></label>
               <input id="f_used" type="text" autocomplete="off" placeholder="예) 갤럭시 S22 반납 / 아이폰 14 매입">
             </div>
-            <div class="field admin-only">
+            <div class="field">
               <label for="f_usedprice">중고폰금액 (원) <span class="opt">선택</span></label>
               <input id="f_usedprice" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-              <span class="hint">중고폰 매입·판매 금액 · 관리자만 입력</span>
+              <span class="hint">중고폰 매입·판매 금액 · 직원도 입력할 수 있습니다</span>
             </div>
           </div>
           <span class="hint">중고폰을 받지 않았으면 위 <b>미반납</b>을 누르세요.</span>
@@ -2228,6 +2241,10 @@
      → Code.gs(20컴럼)를 고치지 않고도 직원끼리 그대로 맞는다. */
   var DISCOUNT_TYPES = ['단말할인', '요금할인'];
   var DISCOUNT_MARK = { '단말할인': '[단말할인]', '요금할인': '[요금할인]' };
+  // v22 — 유선(인터넷·TV) 개통 사은품 처리 · 시트에는 메모 태그로만 나간다
+  var WIRED_GIFT_TAG = '[유선혜택:';
+  var WIRED_GIFTS = ['상품권 지급', '단말할인쿠폰'];
+  var WIRED_GIFT_LABEL = { '상품권 지급': '상품권 고객 지급', '단말할인쿠폰': '단말할인쿠폰 결제' };
   var DISCOUNT_LABEL = { '단말할인': '단말할인(공시)', '요금할인': '요금할인(선약)' };
   var POLICY_CONDS = [
     { key: '중고신규', label: '중고신규', hint: '010 자급제·중고 (G2982)' },
@@ -2376,6 +2393,16 @@
     each([['웰컴5', 59000], ['웰컴3', 49000], ['웰컴1', 39000]], function (x) {
       add('mobile', '웰컴(외국인)', x[0], x[1]);
       rows[rows.length - 1].foreign = true;
+    });
+
+    // 2ND(세컨드 디바이스) 전용 — 데이터투게더 Large · Watch (v22) · 개통유형이 2ND 일 때만 목록·검색에 나온다
+    //  KT닷컴 공식: 데이터투게더 Large 11,000(1GB) · 데이터투게더 Watch 11,000 — 사장님 지시로 이 2종만 넣는다
+    each([
+      ['데이터투게더 Large', 11000],
+      ['데이터투게더 Watch', 11000]
+    ], function (x) {
+      add('mobile', '데이터투게더(2ND)', x[0], x[1]);
+      rows[rows.length - 1].is2nd = true;
     });
 
     // 인터넷 (패밀리 제외)
@@ -2655,6 +2682,19 @@
      · 앱 안에서는 '단말보험' 항목으로 다니고,
      · 기존 구글 시트(20컴럼)에는 메모 칸의 '[단말보험]' 표기로만 실려 나간다.
      · 화면(메모 입력난)에는 표기가 보이지 않게 떼어 낸다. */
+  // 유선 사은품 처리 — '상품권 지급' | '단말할인쿠폰' (그 밖의 값은 버린다)
+  function normalizeWiredGift(v) {
+    var t = String(v == null ? '' : v).replace(/\s/g, '');
+    if (!t) return '';
+    if (/상품권/.test(t)) return '상품권 지급';
+    if (/쿠폰|단말할인/.test(t)) return '단말할인쿠폰';
+    return '';
+  }
+  function wiredGiftLabel(v) {
+    var g = normalizeWiredGift(v);
+    return g ? (WIRED_GIFT_LABEL[g] || g) : '';
+  }
+
   function normalizeDiscount(v) {
     var s = String(v == null ? '' : v).replace(/\s/g, '');
     if (!s) return '';
@@ -2766,7 +2806,7 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0 };
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '' };
     var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
@@ -2780,6 +2820,9 @@
     s = s.replace(reIns, function (all, v) { hit = true; out.ins = normalizeIns(v); return ' '; });
     var reCard = /\[카드:\s*([^\]]*)\]/g;
     s = s.replace(reCard, function (all, v) { hit = true; out.card = normalizeCard(v); return ' '; });
+    // 유선 사은품 [유선혜택:상품권 지급] [유선혜택:단말할인쿠폰]
+    var reGift = /\[유선혜택:\s*([^\]]*)\]/g;
+    s = s.replace(reGift, function (all, v) { hit = true; out.wiredGift = normalizeWiredGift(v); return ' '; });
     // 성별 [성별:남] · (호환) 뒷자리 표기 [뒷자리:1] — 뒷자리는 홀수 남/짝수 여로만 되살린다
     var reGender = /\[성별:\s*([^\]]*)\]/g;
     s = s.replace(reGender, function (all, v) { hit = true; out.gender = normalizeGender(v); return ' '; });
@@ -2846,6 +2889,8 @@
     var card = normalizeCard(rec.제휴카드);
     if (card) head.push(CARD_TAG + card + ']');
     if (isForeign(rec.외국인)) head.push(FOREIGN_MARK);
+    var gift = normalizeWiredGift(rec.유선혜택) || t.wiredGift;
+    if (gift) head.push(WIRED_GIFT_TAG + gift + ']');
     var gender = normalizeGender(rec.성별) || t.gender;
     if (gender) head.push(GENDER_TAG + gender + ']');
     if (normalizeDone(rec.요금제변경완료) === '완료') head.push(PLAN_DONE_MARK);
@@ -2885,6 +2930,7 @@
     o.외국인 = tags.foreign ? '외국인' : normalizeForeign(r && r.외국인);
     o.성별 = tags.gender || normalizeGender(r && r.성별) || (tags.rrn ? (tags.rrn % 2 ? '남' : '여') : '');
     o.제휴카드 = tags.card ? normalizeCard(tags.card) : normalizeCard(r && r.제휴카드);
+    o.유선혜택 = normalizeWiredGift(tags.wiredGift || (r && r.유선혜택));
     o.요금제변경완료 = tags.planDone ? '완료' : normalizeDone(r && r.요금제변경완료);
     o.부가서비스해지완료 = tags.addonDone ? '완료' : normalizeDone(r && r.부가서비스해지완료);
     // 할인 유형 · 정책 특수 조건 (메모 표기 → 값 복원)
@@ -3253,6 +3299,7 @@
     snap.제휴카드 = normalizeCard(rec.제휴카드);
     snap.외국인 = normalizeForeign(rec.외국인);
     snap.성별 = normalizeGender(rec.성별);
+    snap.유선혜택 = normalizeWiredGift(rec.유선혜택);
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
@@ -4650,6 +4697,24 @@
     }
   }
 
+  /* ---------- 2ND(세컨드 디바이스) — 데이터투게더 전용 (v22) ---------- */
+  // 개통유형 무선 줄이 2ND 인가?
+  function secondOn() {
+    var t = $('f_type');
+    return !!t && typeSlots(t.value).w === '2ND';
+  }
+
+  // 모바일 요금제를 지금 목록·검색에 보여 줄지
+  //  · 2ND      → 데이터투게더(is2nd)만
+  //  · 그 외    → 데이터투게더 숨김 · 외국인 전용(웰컴)은 [외국인] 켰을 때만
+  function mobilePlanShown(p) {
+    if (!p) return false;
+    if (secondOn()) return !!p.is2nd;
+    if (p.is2nd) return false;
+    if (p.foreign && !foreignOn()) return false;
+    return true;
+  }
+
   /* ---------- 외국인 고객 (v19) — 1탭 체크 · 외국인 전용 요금제 열기 ---------- */
   function foreignOn() {
     return isForeign($('f_foreign') && $('f_foreign').value);
@@ -4794,7 +4859,7 @@
     var hits = [];
     for (var i = 0; i < KT_PLANS.length; i++) {
       var p = KT_PLANS[i];
-      if (p.foreign && !foreignOn()) continue;   // 외국인 전용 요금제는 [외국인] 체크 때만
+      if (p.tab === 'mobile' && !mobilePlanShown(p)) continue;   // 외국인(웰컴)·2ND(데이터투게더) 전용 필터
       var sc = -1;
       if (num !== null && p.p) {
         var round = String(Math.round(num));
@@ -4942,7 +5007,7 @@
     for (i = 0; i < KT_PLANS.length; i++) {
       p = KT_PLANS[i];
       if (p.tab !== 'mobile') continue;
-      if (p.foreign && !foreignOn()) continue;
+      if (!mobilePlanShown(p)) continue;   // 2ND 면 데이터투게더만 · 아니면 데이터투게더는 숨김
       if (p.cat !== cat) {
         if (open) html += '</div></div>';
         html += '<div class="pp-group"><div class="pp-group-title">' + esc(p.cat) + '</div><div class="pp-chips">';
@@ -5023,6 +5088,8 @@
     if (head) {
       head.textContent = planPick.only === 'wired'
         ? '인터넷 · WiFi · 지니 TV · 셋탑에서 고른 것만 조합되어 유선 요금제 칸에 들어갑니다'
+        : (secondOn() && planPick.only !== 'wired')
+          ? '2ND(세컨드 디바이스) 개통입니다 — 데이터투게더 요금제만 고를 수 있습니다'
         : planPick.only === 'mobile'
           ? '모바일 요금제를 누르면 바로 무선 요금제 칸에 입력됩니다'
           : '모바일은 칩을 누르면 바로 입력됩니다 · 유선은 고른 것만 조합됩니다';
@@ -6011,6 +6078,15 @@
     return '<span class="badge card-on">카드 ' + esc(s) + '</span>';
   }
 
+  // 간단한 유선 사은품 배지 — 상품권 / 단말할인쿠폰
+  var WIRED_GIFT_SHORT = { '상품권 지급': '상품권', '단말할인쿠폰': '단말할인쿠폰' };
+  function wiredGiftBadgeHtml(r) {
+    var g = normalizeWiredGift(r && r.유선혜택);
+    if (!g) return '';
+    return '<span class="pbadge gift-badge" title="유선 사은품 · ' + esc(wiredGiftLabel(g)) + '">' +
+      esc(WIRED_GIFT_SHORT[g] || g) + '</span>';
+  }
+
   // 모바일 '간단히 보기' 카드 : 두 줄 요약 + 탭하면 상세
   function mcardHtml(r) {
     var d = planPending(r);
@@ -6056,10 +6132,11 @@
         mRow('제휴카드', normalizeCard(r.제휴카드) ? esc(normalizeCard(r.제휴카드)) : '') +
         (isForeign(r.외국인) ? mRow('고객 구분', '외국인') : '') +
         mRowOpt('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
-        (isAdmin() ? mRowOpt('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') : '') +
+        mRowOpt('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
         (isAdmin() ? mRow('무선 리베이트', wirelessRebateView(r).manual ? fmtNum(r.무선리베이트) + '원'
           : (wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) : '') +
         (isAdmin() ? mRowOpt('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') : '') +
+        mRowOpt('유선 사은품', normalizeWiredGift(r.유선혜택) ? esc(wiredGiftLabel(r.유선혜택)) : '') +
         (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
         (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' : '') : '') +
         (isAdmin() ? mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' : '') : '') +
@@ -6173,7 +6250,7 @@
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
         '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span>' + policyBadgesHtml(r) + '</td>' +
         '<td data-label="단말보험" class="ins-cell">' + insBadgeHtml(r.단말보험) + cardBadgeHtml(r.제휴카드) + '</td>' +
-        '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span>' + wiredGiftBadgeHtml(r) + '</td>' +
         '<td data-label="변경요금제"><span class="ellip" title="' + esc(r.변경요금제) + '">' + (r.변경요금제 ? esc(r.변경요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="요금제변경일자" class="nowrap">' + changeDateCell(r) + '</td>' +
         '<td data-label="부가서비스"><span class="ellip" title="' + esc(r.부가서비스) + '">' + (r.부가서비스 ? esc(r.부가서비스) : '<span class="muted">—</span>') + (r.부가서비스유지 ? ' <span class="tag-period">' + esc(r.부가서비스유지) + '</span>' : '') + '</span></td>' +
@@ -6578,7 +6655,11 @@
     if (isWiredType(t)) slots.l = (slots.l === t) ? '' : t;
     else slots.w = (slots.w === t) ? '' : t;
     renderTypeChips(joinTypeParts(slots.w, slots.l));
+    // v22 — 2ND 를 껐다 켜면 요금제 선택창·검색 후보가 바로 따라간다 (데이터투게더만 / 숨김)
+    if (typeof renderPlanPickerBody === 'function') renderPlanPickerBody();
+    if (planSug && planSug.input) showPlanSuggest(planSug.input);
     syncWiredPlanField();
+    syncWiredGiftField(true);   // 유선 유형을 모두 해제하면 숨기고 값을 비운다
     refreshPolicy(true); updateFormRisk();
   }
 
@@ -6641,6 +6722,44 @@
     paintNoneChips();
   }
 
+  /* ---------- v22 — 유선(인터넷·TV) 사은품 처리 칸 ---------- */
+  function wiredGiftOn() {
+    return normalizeWiredGift($('f_wiredgift') && $('f_wiredgift').value);
+  }
+
+  function paintWiredGiftChips() {
+    var box = $('wiredGiftChips');
+    if (!box) return;
+    var v = wiredGiftOn();
+    var chips = box.querySelectorAll('button[data-wired-gift]');
+    for (var i = 0; i < chips.length; i++) {
+      var on = chips[i].getAttribute('data-wired-gift') === v;
+      chips[i].classList.toggle('on', on);
+      chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  function setWiredGift(v) {
+    var input = $('f_wiredgift');
+    if (input) input.value = normalizeWiredGift(v);
+    paintWiredGiftChips();
+  }
+
+  function toggleWiredGift(v) {
+    var g = normalizeWiredGift(v);
+    if (!g) return;
+    setWiredGift(wiredGiftOn() === g ? '' : g);
+  }
+
+  // 유선 개통유형이 하나라도 골라져 있을 때만 보인다 · 모두 해제하면 숨기고 값을 비운다
+  function syncWiredGiftField(clear) {
+    var wrap = $('wiredGiftWrap');
+    if (!wrap) return;
+    var on = !!typeSlots($('f_type').value).l;
+    wrap.hidden = !on;
+    if (!on && clear !== false) setWiredGift('');
+  }
+
   function openEditor(rec) {
     hidePlanSuggest();
     state.editingId = rec ? rec.id : null;
@@ -6689,6 +6808,8 @@
     $('f_extra').value = r.추가지원금 ? fmtNum(r.추가지원금) : '';
     $('f_paycard').value = r.페이백카드 ? fmtNum(r.페이백카드) : '';
     $('f_paybank').value = r.페이백입금 ? fmtNum(r.페이백입금) : '';
+    setWiredGift(r.유선혜택 || '');
+    syncWiredGiftField(false);   // 수정할 때 저장값은 유선 유형이 없어도 지우지 않는다
     // v19 — 새 등록은 미선택, 기존 기록 수정은 0·빈칸이면 [미기입]/[미반납]을 켠 채로 열어 수정 흐름을 깨지 않는다
     setPayNone('extra', !!rec && !(Number(r.추가지원금) > 0));
     setPayNone('paycard', !!rec && !(Number(r.페이백카드) > 0));
@@ -6814,6 +6935,7 @@
       추가지원금: parseNumber($('f_extra').value),
       페이백카드: parseNumber($('f_paycard').value),
       페이백입금: parseNumber($('f_paybank').value),
+      유선혜택: wiredGiftOn(),
       메모: $('f_memo').value.trim(),
       담당자: $('f_staff').value.trim()
     };
@@ -7789,6 +7911,12 @@
       $(id).addEventListener('change', function () {
         if ($(id).value) { $('f_addon_none').value = ''; paintNoneChips(); }
       });
+    });
+
+    // v22 — 유선 사은품 처리 칩 (상품권 / 단말할인쿠폰 · 단일 선택)
+    if ($('wiredGiftChips')) $('wiredGiftChips').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-wired-gift]') : null;
+      if (b) toggleWiredGift(b.getAttribute('data-wired-gift'));
     });
 
     // v19 — [미기입]·[미반납] 1탭 칩 (추지·페이백·중고폰)
