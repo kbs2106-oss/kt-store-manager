@@ -293,7 +293,7 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     새로고침해도 유지되고, 승인되면 저절로 사라진다(`onPending` · `clearPending`, `runSync` 성공 시 해제).
     관리자 `더보기 → 직원 · 기기 관리` 에 **`승인 대기` 섹션**(`#dvPending` · `#dvPendingCount`)이 생겨 줄마다 `[승인]` `[차단]`,
     승인된 기기 목록에서 **`owner` 기기는 추방 버튼 대신 `👑 사장님 기기 (추방 불가)` 배지**가 보인다(`renderDevices` · `approveTarget`).
-  - 테스트 `qa-kt/v32_approval_payback_used_test.py`(47항목) · `qa-kt/code_gs_sim.py`(27항목, 승인제 시뮬레이션) ·
+  - 테스트 `qa-kt/v32_approval_payback_used_test.py`(49항목) · `qa-kt/code_gs_sim.py`(27항목, 승인제 시뮬레이션) ·
     스크린샷 `downloads/개통장부-v32-페이백중고폰.png`(+`-모바일`·`중고폰-모바일`) · `downloads/개통장부-v32-기기승인.png`(+`-모바일`).
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
