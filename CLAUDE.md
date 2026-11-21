@@ -204,8 +204,14 @@ kt-store-manager/
 | `typeBadgesHtml()` | 복합 유형을 배지 2개로 그린다(표·폰 카드 공통) |
 | `isWiredType(t)` | 유선(인터넷·TV) 유형인지 판별 (예전 '인터넷+TV' 포함, 복합 값은 조각 단위로) |
 | `collectForm()` / `saveForm()` | 입력 수집·필수 검사·저장 (+동기화 큐) |
-| `addMonths(iso, n)` | 개통일 + N개월 (말일 보정: 1/31+1 → 2/28·29) |
-| `applyPeriod()/recalcPeriods()` | 4·6개월 칩 → 날짜 자동 입력, 개통일 변경 시 재계산 |
+| `PERIOD_DAYS` / `periodDate(iso, p)` | 4개월 = **+124일**, 6개월 = **+184일** (달력 개월 아님) |
+| `addDays(iso, n)` | 날짜 문자열 + n일 (YYYY-MM-DD 그대로 반환) |
+| `applyPeriod()/recalcPeriods()` | 4·6개월 칩 → +124/+184일 날짜 자동 입력, 개통일 변경 시 재계산 |
+| `setInsChips(v)` / `insBadgeHtml(v)` | 단말보험 칩(미가입·가입) 선택·표/카드 배지 |
+| `planPending(r)` / `addonPending(r)` | 완료 표시된 항목은 `null` (임박 알림·강조에서 제외) — 둘은 서로 따로 |
+| `dueStatusHtml(r, kind)` / `mDueRow(label, kind, r)` | 표 칸 / 폰카드 상세의 날짜·D-Day·`완료` 버튼 (kind = `plan`·`addon`) |
+| `handleDoneClick()` / `applyDone(id, kind, done)` | `변경 완료`·`해지 완료` 확인·되돌리기 (확인 → 저장 → 동기화) |
+| `splitMemoTags()` / `sheetMemo()` / `sheetRecord()` | 시트 메모 표기(`[단말보험]`·`[요금완료]`·`[부가완료]`) 직렬화·복원 |
 | `deleteRecord(id)` | 행 삭제 (관리자 전용, 확인 후) |
 | `applyRole()/tryUnlockAdmin()` | 관리자/직원 모드 전환 |
 | `runSync()/flushPending()/applyServerList()` | 공용 장부 업로드·병합 |
