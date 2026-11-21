@@ -958,6 +958,14 @@
   .onestop-chips .pchip.on{background:linear-gradient(180deg,#1E9E58 0%,#0B6B3A 100%);border-color:#0B5E32;color:#fff;
     box-shadow:0 2px 8px rgba(11,107,58,.28)}
   .onestop-chips .pchip.on .mc{opacity:.95}
+  /* v31 — 부가서비스 1탭 칩 */
+  .addon-chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .addon-chip{height:30px;padding:0 11px;border-radius:8px;font-size:12.5px;font-weight:800;
+    border:1.5px solid #CFE0F5;background:#F8FBFF;color:#1E4E8C;cursor:pointer;white-space:nowrap}
+  .addon-chip:hover{background:#EDF4FE;border-color:#9DBDF0}
+  .addon-chip.on{background:linear-gradient(180deg,#3B82F6 0%,#1D4ED8 100%);border-color:#1E40AF;color:#fff;
+    box-shadow:0 2px 6px rgba(29,78,216,.24)}
+  .addon-chip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(59,130,246,.3)}
 
   /* ---------- 요금제 빠른 선택 (숫자 검색 · 칩 선택창) ---------- */
   .field-head{display:flex;align-items:center;gap:8px}
@@ -1942,17 +1950,17 @@
           <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP·2ND, 유선은 <b>신규</b>·<b>약갱</b> 그룹에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
 
-        <!-- v27 — 중고신규·중고MNP 를 골랐을 때만: 중고 결합 여부 (MBA-02-02 결합 수수료 누락 방지 · 필수) -->
+        <!-- v27 · v31 — 번호이동·신규가입·중고신규·중고MNP 를 골랐을 때: 결합 여부 (필수) -->
         <div class="field span2" id="usedComboWrap" hidden>
-          <label id="f_usedcomboLabel">중고 결합 여부 <span class="req">*</span> <span class="opt">중고신규·중고MNP · 필수</span></label>
+          <label id="f_usedcomboLabel">결합 여부 <span class="req">*</span> <span class="opt">번호이동·신규가입·중고개통 · 필수</span></label>
           <input id="f_usedcombo" type="hidden" value="">
           <div class="period-chips combo-chips" id="usedComboChips" role="group" aria-labelledby="f_usedcomboLabel">
             <button type="button" class="pchip" data-used-combo="단독" aria-pressed="false"
-                    title="중고 단독 개통 — MBA-02-02 결합 수수료가 붙지 않습니다">단독(미결합)</button>
+                    title="결합 없는 단독 개통으로 저장합니다">단독(미결합)</button>
             <button type="button" class="pchip" data-used-combo="결합" aria-pressed="false"
-                    title="SIMple 후불 결합 — MBA-02-02 결합 금액이 무선 리베이트에 자동 합산됩니다">결합 적용<span class="mc">+MBA-02-02</span></button>
+                    title="결합 조건으로 저장합니다 — 시트에는 메모 [중고결합] 으로 나갑니다">결합 적용</button>
           </div>
-          <span class="hint" id="usedComboHint">중고신규·중고MNP 는 결합 여부를 반드시 골라야 저장됩니다. <b>결합 적용</b>이면 MBA-02-02 결합 금액이 리베이트에 자동 합산되고 시트에는 <b>[중고결합]</b> 표기로 나갑니다.</span>
+          <span class="hint" id="usedComboHint">번호이동·신규가입·중고 개통은 결합 여부를 반드시 골라야 저장됩니다.</span>
         </div>
 
         <div class="field span2">
@@ -2082,6 +2090,13 @@
           <div class="field">
             <label for="f_addon">부가서비스 <span class="opt">선택</span></label>
             <input id="f_addon" type="text" autocomplete="off" placeholder="예) 안심보험 / 워치 요금제 / 시즌 패스">
+            <!-- v31 — 자주 쓰는 부가서비스 1탭 칩 (복수 선택 토글 · 직접 입력 그대로) -->
+            <div class="addon-chips" id="addonChips" role="group" aria-label="자주 쓰는 부가서비스">
+              <button type="button" class="pchip addon-chip" data-addon-chip="캐치콜플러스" aria-pressed="false"
+                      title="누르면 부가서비스 칸에 들어갑니다 — 다시 누르면 빠집니다">캐치콜플러스</button>
+              <button type="button" class="pchip addon-chip" data-addon-chip="필수팩L" aria-pressed="false"
+                      title="누르면 부가서비스 칸에 들어갑니다 — 다시 누르면 빠집니다">필수팩L</button>
+            </div>
           </div>
 
           <div class="field">
@@ -5339,9 +5354,14 @@
     var html = '<span class="pol-badges">';
     if (disc) html += '<span class="pbadge ' + (disc === '요금할인' ? 'd2' : 'd1') + '">' +
       (disc === '요금할인' ? '요금할인' : '단말할인') + '</span>';
-    for (var i = 0; i < conds.length; i++) html += (conds[i] === USED_COMBO_KEY
-      ? '<span class="pbadge c2" title="중고 결합 · MBA-02-02 SIMple 후불 결합 금액 포함">중고결합</span>'
-      : '<span class="pbadge c1">' + esc(conds[i]) + '</span>');
+    for (var i = 0; i < conds.length; i++) {
+      if (conds[i] !== USED_COMBO_KEY) { html += '<span class="pbadge c1">' + esc(conds[i]) + '</span>'; continue; }
+      // v31 — 중고 2종은 '중고결합', 일반 번호이동·신규가입은 '결합'(직원도 보는 배지 — 정책명은 쓰지 않는다)
+      var w = typeSlots(r.개통유형 || '').w;
+      var used = w === '중고신규' || w === '중고MNP';
+      html += '<span class="pbadge c2" title="' + (used ? '중고 결합 — 결합 조건으로 저장됨' : '결합 조건으로 저장됨') + '">' +
+        (used ? '중고결합' : '결합') + '</span>';
+    }
     return html + '</span>';
   }
 
@@ -5529,13 +5549,20 @@
     }
   }
 
-  /* ---------- 중고 결합 여부 (v27) — 중고신규·중고MNP 를 골랐을 때만 열리는 필수 선택 ----------
-     · 단독(미결합) / 결합 적용(+MBA-02-02) 2개 칩, 한쪽만 선택
-     · 결합 = 특수조건 '중고결합' → calcPolicy() 가 MBA-02-02 를 자동 합산,
-       시트에는 메모 [중고결합] 표기로만 나간다(20컬럼 그대로) */
+  /* ---------- 결합 여부 (v27 · v31) — 번호이동·신규가입·중고신규·중고MNP 를 골랐을 때 열리는 필수 선택 ----------
+     · 단독(미결합) / 결합 적용 2개 칩, 한쪽만 선택
+     · 결합 = 특수조건 '중고결합' (중고 2종이면 MBA-02-02 가 자동 합산, 일반 번호이동·신규가입은 금액 변화 없이 기록만)
+     · 시트에는 메모 [중고결합] 표기로만 나간다(20컬럼 그대로)
+     · v31 — 직원 화면에 정책명(MBA-02-02)·리베이트 문구는 보이지 않는다 */
 
-  // 중고 2종(중고신규·중고MNP)일 때만 이 칸이 열린다
+  // 무선 유형이 번호이동·신규가입·중고신규·중고MNP 일 때 이 칸이 열린다 (기기변경·2ND 는 숨김)
   function usedComboTypeOn() {
+    var w = typeSlots($('f_type') ? $('f_type').value : '').w;
+    return w === '번호이동' || w === '신규가입' || w === '중고신규' || w === '중고MNP';
+  }
+
+  // 중고 2종 — 이때만 MBA-02-02 결합 금액이 붙는다
+  function usedComboUsedType() {
     var w = typeSlots($('f_type') ? $('f_type').value : '').w;
     return w === '중고신규' || w === '중고MNP';
   }
@@ -5568,15 +5595,16 @@
     var h = $('usedComboHint');
     if (!h) return;
     var v = usedComboPickValue();
+    var used = usedComboUsedType();
     if (v === '결합') {
-      h.innerHTML = '<b>결합 적용</b> — 무선 리베이트에 <b>MBA-02-02 SIMple 후불 결합</b> 금액이 바로 합쳐집니다. '
-        + '시트에는 메모 <b>[중고결합]</b> 표기로 나갑니다.'
-        + (normalizeDiscount($('f_discount') ? $('f_discount').value : '') === '요금할인'
-          ? '' : ' <b class="uc-warn">요금할인(선약) 개통에만 MBA-02-02 가 인정됩니다.</b>');
+      // 정책명·리베이트 문구는 직원도 보는 자리라 넣지 않는다 (관리자 정책 미리보기에만 남김)
+      h.innerHTML = '<b>결합 적용</b> — 결합 조건으로 저장됩니다(시트 메모 <b>[중고결합]</b>).'
+        + (isAdmin() && used && normalizeDiscount($('f_discount') ? $('f_discount').value : '') !== '요금할인'
+          ? ' <b class="uc-warn">요금할인(선약) 개통에만 결합 금액이 인정됩니다.</b>' : '');
     } else if (v === '단독') {
-      h.innerHTML = '<b>단독(미결합)</b> — MBA-02-02 결합 수수료는 붙지 않고 시트에도 <b>[중고결합]</b> 표기가 나가지 않습니다.';
+      h.innerHTML = '<b>단독(미결합)</b> — 결합 없이 저장됩니다(시트에 <b>[중고결합]</b> 표기 없음).';
     } else {
-      h.innerHTML = '중고 개통은 결합 여부를 <b>반드시</b> 골라야 저장됩니다. <b>결합 적용</b>이면 MBA-02-02 결합 금액이 리베이트에 자동 합산됩니다.';
+      h.innerHTML = '번호이동·신규가입·중고 개통은 결합 여부를 <b>반드시</b> 골라야 저장됩니다.';
     }
   }
 
@@ -7274,9 +7302,9 @@
         (isForeign(r.외국인) ? mRow('고객 구분', '외국인') : '') +
         mRowOpt('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
         mRowOpt('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
-        // v27 — 중고 결합 여부: 결합 적용 건만 한 줄로 보인다(카드 2번째 줄 배지와 같은 정보)
+        // v27 · v31 — 결합 적용 건만 한 줄로 보인다 (정책명 없이)
         (condList(r.특수조건).indexOf(USED_COMBO_KEY) >= 0
-          ? mRow('중고 결합', '<span class="pbadge c2">결합 적용</span> <span class="muted">+MBA-02-02</span>') : '') +
+          ? mRow('결합 여부', '<span class="pbadge c2">결합 적용</span> <span class="muted">결합 조건으로 저장됨</span>') : '') +
         (isAdmin() ? mRow('무선 리베이트', wirelessRebateView(r).manual ? fmtNum(r.무선리베이트) + '원'
           : (wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) : '') +
         (isAdmin() ? mRowOpt('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') : '') +
@@ -8120,7 +8148,8 @@
   function toggleTypeChip(t) {
     if (!t) return;
     var slots = typeSlots($('f_type').value);
-    if (isWiredType(t)) slots.l = (slots.l === t) ? '' : t;
+    // 예전 표기('인터넷+TV 신규가입')가 켜져 있어도 같은 뜻의 새 칩을 누르면 한 번에 해제된다(v31)
+    if (isWiredType(t)) slots.l = (slots.l && wiredTypeCanon(slots.l) === wiredTypeCanon(t)) ? '' : t;
     else slots.w = (slots.w === t) ? '' : t;
     renderTypeChips(joinTypeParts(slots.w, slots.l));
     // v22 — 2ND 를 껐다 켜면 요금제 선택창·검색 후보가 바로 따라간다 (데이터투게더만 / 숨김)
@@ -8129,7 +8158,7 @@
     syncWiredPlanField();
     syncWiredGiftField(true);   // 유선 유형을 모두 해제하면 숨기고 값을 비운다
     syncOnestopField(true);      // v30 — 유선 신규가 아니면 원스톱 칸을 숨기고 값을 비운다
-    syncUsedComboField(true);   // v27 — 중고 유형을 해제하면 [중고 결합 여부]도 숨기고 값을 비운다
+    syncUsedComboField(true);   // v27 · v31 — 결합 여부 칸이 필요 없는 유형이면 숨기고 값을 비운다
     refreshPolicy(true); updateFormRisk();
   }
 
@@ -8175,6 +8204,7 @@
     $('f_addondate').value = '';
     period.addon = 'none';
     paintPeriodChips();
+    paintAddonChips();   // v31 — [미가입] 을 누르면 부가서비스 칩도 함께 해제
     var badge = $('addonExpect');
     if (badge) badge.hidden = true;
   }
@@ -8190,6 +8220,49 @@
       if (on2) clearAddon();
     }
     paintNoneChips();
+  }
+
+  /* ---------- v31 — 부가서비스 1탭 칩 (캐치콜플러스 · 필수팩L) ----------
+     · 누르면 #f_addon 에 들어가고 다시 누르면 빠진다 (복수 선택 → '캐치콜플러스 · 필수팩L')
+     · 직접 입력·수정은 그대로, [미가입] 을 누르면 칸이 비면서 칩도 함께 해제된다 */
+  var ADDON_CHIPS = ['캐치콜플러스', '필수팩L'];
+
+  function addonHas(name) {
+    return String($('f_addon') ? $('f_addon').value : '').indexOf(name) >= 0;
+  }
+
+  function paintAddonChips() {
+    var box = $('addonChips');
+    if (!box) return;
+    var btns = box.querySelectorAll('button[data-addon-chip]');
+    for (var i = 0; i < btns.length; i++) {
+      var on = addonHas(btns[i].getAttribute('data-addon-chip'));
+      btns[i].classList.toggle('on', on);
+      btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  // 칸에서 그 이름만 빼고 앞뒤 구분자(· , + /)를 정리한다
+  function addonRemoveToken(v, name) {
+    var s = String(v == null ? '' : v);
+    while (s.indexOf(name) >= 0) {
+      var at = s.indexOf(name);
+      s = s.slice(0, at) + ' · ' + s.slice(at + name.length);
+    }
+    s = s.replace(/\s*·\s*(·\s*)+/g, ' · ');
+    s = s.replace(/^\s*[·,/+]\s*/, '').replace(/\s*[·,/+]\s*$/, '');
+    return s.replace(/\s{2,}/g, ' ').trim();
+  }
+
+  function toggleAddonChip(name) {
+    if (!name || ADDON_CHIPS.indexOf(name) < 0) return;
+    var v = String($('f_addon').value || '');
+    if (v.indexOf(name) >= 0) v = addonRemoveToken(v, name);
+    else v = v.trim() ? (v.trim() + ' · ' + name) : name;
+    $('f_addon').value = v;
+    if (v.trim()) { $('f_addon_none').value = ''; paintNoneChips(); }
+    paintAddonChips();
+    updateFormRisk();
   }
 
   /* ---------- v22 — 유선(인터넷·TV) 사은품 처리 칸 ---------- */
@@ -8449,7 +8522,7 @@
     setEasyChip(isEasy(r.권매쉬움));
     setGenderChips(r.성별 || '');
     setCardChips(r.제휴카드 || '');
-    // v27 — 중고 결합 여부 칸: 중고 2종이면 보이고, 아니면 숨긴다(수정 시 예전 값은 지우지 않는다)
+    // v27 · v31 — 결합 여부 칸: 번호이동·신규가입·중고 2종이면 보이고, 아니면 숨긴다(수정 시 예전 값은 지우지 않는다)
     syncUsedComboField(false);
     paintUsedComboChips();
     $('f_plan_none').value = '';
@@ -8466,6 +8539,7 @@
     $('f_newplan').value = r.변경요금제 || '';
     $('f_newdate').value = normalizeDate(r.요금제변경일자) || '';
     $('f_addon').value = r.부가서비스 || '';
+    paintAddonChips();
     $('f_addondate').value = normalizeDate(r.부가서비스해지일자) || '';
     var baseDate = normalizeDate(r.개통일) || todayISO();
     period.plan = inferPeriod($('f_newdate').value, baseDate);
@@ -8550,9 +8624,9 @@
     if (!slots.w && !slots.l) need.push({ label: '개통유형', el: $('typeChips') });
     // v19 — 유선 개통유형을 골랐으면 유선 요금제 칸도 반드시 채운다
     if (slots.l && !planL) need.push({ label: '유선 요금제', el: $('f_plan_l') });
-    // v27 — 중고신규·중고MNP 는 [중고 결합 여부]를 반드시 고른다 (MBA-02-02 수수료 누락 방지)
-    if ((slots.w === '중고신규' || slots.w === '중고MNP') && !usedComboPickValue())
-      need.push({ label: '중고 결합 여부', el: $('usedComboChips') });
+    // v27 · v31 — 번호이동·신규가입·중고신규·중고MNP 는 [결합 여부]를 반드시 고른다
+    if (usedComboTypeOn() && !usedComboPickValue())
+      need.push({ label: '결합 여부', el: $('usedComboChips') });
     // v19 — 2ND(세컨드 디바이스) 단독이면 할인유형·단말보험·제휴카드는 선택 항목이다
     var only2nd = slots.w === '2ND' && !slots.l;
     if (slots.w && !only2nd && !normalizeDiscount($('f_discount').value)) need.push({ label: '할인유형', el: $('discChips') });
@@ -8740,6 +8814,7 @@
       $('f_addon_none').value = '';
       paintNoneChips();
       paintPeriodChips();
+      paintAddonChips();   // v31 — 다음 고객에게 부가서비스 칩이 따라가지 않게
       $('f_used').value = '';
       $('f_usedprice').value = '';
       $('f_rebate_w').value = '';
@@ -9752,10 +9827,18 @@
     ['f_addon', 'f_addondate'].forEach(function (id) {
       $(id).addEventListener('input', function () {
         if ($(id).value) { $('f_addon_none').value = ''; paintNoneChips(); }
+        if (id === 'f_addon') paintAddonChips();
       });
       $(id).addEventListener('change', function () {
         if ($(id).value) { $('f_addon_none').value = ''; paintNoneChips(); }
+        if (id === 'f_addon') paintAddonChips();
       });
+    });
+
+    // v31 — 부가서비스 1탭 칩 (캐치콜플러스 · 필수팩L)
+    if ($('addonChips')) $('addonChips').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-addon-chip]') : null;
+      if (b) toggleAddonChip(b.getAttribute('data-addon-chip'));
     });
 
     // v22 — 유선 사은품 처리 칩 (상품권 / 단말할인쿠폰 · 단일 선택)
