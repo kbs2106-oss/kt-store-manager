@@ -2622,6 +2622,37 @@
     return raw;
   }
 
+  /* v24 — 명의·번호 중복 검사용 정규화
+     · 고객명: 앞뒤 공백 제거 + 가운데 연속 공백(줄바꿈·탭·전각 공백)은 한 칸으로
+     · 연락처: 숫자만 (010-1234-5678 == 01012345678 == 010 1234 5678) */
+  function normName(v) {
+    return String(v == null ? '' : v).replace(/[\s\u00a0\u3000]+/g, ' ').trim();
+  }
+
+  function digitsOf(v) {
+    return String(v == null ? '' : v).replace(/[^0-9]/g, '');
+  }
+
+  /* v24 — 고객명과 연락처가 '동시에' 같은 기존 기록을 찾는다 (수정 중인 자기 자신은 제외).
+     같은 이름 + 다른 번호(가족·다회선) 나 다른 이름 + 같은 번호는 중복이 아니다. */
+  function findDuplicateRecord(name, phone) {
+    var n = normName(name), d = digitsOf(phone);
+    if (!n || !d) return null;
+    var list = state.records || [];
+    for (var i = 0; i < list.length; i++) {
+      var r = list[i];
+      if (!r) continue;
+      if (state.editingId && r.id === state.editingId) continue;
+      if (normName(r.고객명) !== n) continue;
+      if (digitsOf(r.연락처) !== d) continue;
+      return r;
+    }
+    return null;
+  }
+
+  /* v24 — 지금 배너에 떠 있는 경고가 '중복 명의·번호' 안내인지. 이름·연락처를 고쳐 중복이 풀리면 바로 내린다. */
+  var dupGuardOn = false;
+
   function esc(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -6780,6 +6811,7 @@
     el.dlgTitle.textContent = rec ? '개통 수정' : '개통 등록';
     el.deleteBtn.style.display = rec ? 'inline-flex' : 'none';
     el.formError.classList.remove('show');
+    dupGuardOn = false;
 
     var r = rec || { 개통일: todayISO(), 개통유형: '' };
     $('f_date').value = normalizeDate(r.개통일) || todayISO();
@@ -6913,6 +6945,7 @@
         }
       }
       el.formError.innerHTML = '⚠️ 미입력 항목: <b>' + esc(labels.join(', ')) + '</b><br><span class="fe-sub">표시된 칸을 채우거나 골라 주세요.</span>';
+      dupGuardOn = false;
       el.formError.classList.add('show');
       try {
         need[0].el.focus();
@@ -6920,6 +6953,28 @@
       } catch (e) {}
       return null;
     }
+
+    // v24 — 동일 명의 + 동일 연락처(하이픈 무관) 중복 등록 차단. 수정 중인 자기 자신은 통과.
+    var dup = findDuplicateRecord(name, phone);
+    if (dup) {
+      var dupDate = normalizeDate(dup.개통일) || String(dup.개통일 || '').trim() || '날짜 미상';
+      var dupPhone = formatPhone(dup.연락처) || String(dup.연락처 || '').trim();
+      var dupStaff = String(dup.담당자 || '').trim();
+      var dupInfo = dupDate + ' · ' + normName(dup.고객명) + ' · ' + dupPhone + ' · 담당자 ' + (dupStaff || '미기입');
+      $('f_name').classList.add('bad');
+      $('f_phone').classList.add('bad');
+      el.formError.innerHTML = '⚠️ 이미 등록된 고객명·연락처입니다 (' + esc(dupInfo) + ').<br>'
+        + '중복 입력을 막기 위해 저장할 수 없습니다.'
+        + '<br><span class="fe-sub">기존 건을 수정하거나 고객명·연락처를 확인해 주세요.</span>';
+      dupGuardOn = true;
+      el.formError.classList.add('show');
+      try {
+        el.formError.scrollIntoView({ block: 'center' });
+        $('f_phone').focus({ preventScroll: true });
+      } catch (e) {}
+      return null;
+    }
+    dupGuardOn = false;
     el.formError.classList.remove('show');
     return {
       개통일: normalizeDate(date),
@@ -8010,6 +8065,18 @@
       if (!String(t.value || '').trim()) return;
       t.classList.remove('bad');
       if (!el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
+    });
+
+    // v24 — 이름·연락처를 고쳐 중복이 풀리면 '이미 등록된…' 안내를 바로 내린다
+    el.editForm.addEventListener('input', function (e) {
+      if (!dupGuardOn) return;
+      var t = e.target;
+      if (!t || (t.id !== 'f_name' && t.id !== 'f_phone')) return;
+      if (findDuplicateRecord($('f_name').value, $('f_phone').value)) return;
+      dupGuardOn = false;
+      $('f_name').classList.remove('bad');
+      $('f_phone').classList.remove('bad');
+      el.formError.classList.remove('show');
     });
 
     // 다이얼로그 닫기 처리

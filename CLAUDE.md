@@ -116,6 +116,18 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
   - 수정(`@media (max-width:900px)`): `table.ledger td[data-label]{max-width:none}` + `td .ellip{flex:0 1 auto;min-width:0}` + 긴 글 칸(`기종`·`요금제`·`변경요금제`·`부가서비스`·`중고폰`·`메모`)은 `white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-overflow:clip` 로 **폰에서는 말줄임 대신 정상 줄바꿈**. 폰 카드 상세 `.m-v` 도 같은 값(`word-break:keep-all;overflow-wrap:anywhere`).
   - 라벨 칸 `td::before` 를 **96px → 112px**(`부가서비스해지일자` 108px 가 값 칸을 덮치던 것) · `white-space:normal;word-break:keep-all`.
   - 데스크톱(>900px) 표의 말줄임 폭 제한·한 줄 표시는 그대로다.
+- **v24 — 같은 이름 + 같은 번호 중복 등록 차단**:
+  - `collectForm()` 이 **필수 항목 검사를 통과한 직후** `findDuplicateRecord(name, phone)` 로 `state.records` 를 훑어,
+    **고객명과 연락처가 동시에 같은 다른 기록**(`r.id !== state.editingId`)이 있으면 **저장하지 않고 `null`** 을 돌려준다(`saveForm` 은 아무 것도 저장·시트전송하지 않는다).
+  - 정규화는 두 함수 — `normName()`(앞뒤 공백 제거 + 가운데 줄바꿈·탭·전각 공백까지 한 칸으로) · `digitsOf()`(**숫자만**).
+    그래서 `010-1234-5678` · `01012345678` · `010 1234 5678` 은 모두 같은 번호다.
+  - **통과해야 하는 경우**: 같은 이름 + 다른 번호(가족·다회선 개통) · 다른 이름 + 같은 번호 · **수정 모드의 자기 자신**(`state.editingId`).
+  - 차단 문구(`#formError`): `⚠️ 이미 등록된 고객명·연락처입니다 (2026-11-21 · 김태양 · 010-1234-5678 · 담당자 김설화).` +
+    `중복 입력을 막기 위해 저장할 수 없습니다.` + `.fe-sub` 안내 — 기존 건의 **개통일 · 고객명 · 연락처 · 담당자**(없으면 `미기입`)를 보여 준다.
+    `#f_name`·`#f_phone` 에 `.bad` 를 주고 배너로 `scrollIntoView({block:'center'})` + 연락처 칸 `focus({preventScroll:true})`.
+    이름·연락처를 고쳐 **중복이 풀리면**(`findDuplicateRecord` 가 `null`) 이름·연락처 칸의 `.bad` 를 지우고 배너를 **바로** 내린다 —
+    이 배너가 중복 안내인지 표시하는 `dupGuardOn` 플래그를 두어, **필수칸 안내·다른 경고는 건드리지 않는다**(모달을 열 때·다른 문구를 띄울 때 플래그를 끈다).
+  - 테스트 `qa-kt/v24_duplicate_guard_test.py` · 스크린샷 `downloads/개통장부-v24-중복차단.png`.
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
 ---
