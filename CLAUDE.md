@@ -188,7 +188,7 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     칩은 펼친 브랜드의 모델만 DOM 에 있고, **직접 입력 `#f_model`·자동완성 `#modelList` 는 22종 전체 그대로**(`markModelChips(value, noAuto)` — 입력한 기종의 브랜드로 자동 전환).
   - **KPI·정책**: `유선 신규`/`유선 약갱` 집계와 유선 MRA 포인트의 `순신규/약정갱신` 판정이 `wiredTypeRenew()` 로 새 이름(`인티 약갱`)도 알아본다.
   - **`저장 후 계속 입력`**: 유형은 유지하고 **유선 사은품(`#f_wiredgift`)은 비운다**(다음 고객에게 따라가지 않게).
-  - 테스트 `qa-kt/v28_grouped_chips_test.py`(85항목) · 스크린샷 `downloads/개통장부-v28-그룹접힘.png` · `downloads/개통장부-v28-브랜드·유선펼침.png`.
+  - 테스트 `qa-kt/v28_grouped_chips_test.py`(87항목) · 스크린샷 `downloads/개통장부-v28-그룹접힘.png` · `downloads/개통장부-v28-브랜드·유선펼침.png`.
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
 ---
