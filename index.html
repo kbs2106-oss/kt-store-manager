@@ -1533,6 +1533,14 @@
         <div class="section-label">개통 정보</div>
 
         <div class="field span2">
+          <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
+          <input id="f_model" type="text" autocomplete="off" list="modelList" placeholder="예) 갤럭시 S26 / 아이폰 17 프로">
+          <datalist id="modelList"></datalist>
+          <div class="staff-chips model-chips" id="modelChips"></div>
+          <span class="hint">단말기를 누르면 바로 들어갑니다. 다시 누르면 빠지고, 인터넷·TV 상품은 직접 입력해도 됩니다.</span>
+        </div>
+
+        <div class="field span2">
           <label id="f_typeLabel">개통유형 <span class="opt">선택 · 무선·유선 각 1개</span></label>
           <input id="f_type" type="hidden" value="">
           <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
@@ -1550,11 +1558,13 @@
         <input id="f_cond" type="hidden" value="">
 
         <div class="field span2">
-          <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
-          <input id="f_model" type="text" autocomplete="off" list="modelList" placeholder="예) 갤럭시 S26 / 아이폰 17 프로">
-          <datalist id="modelList"></datalist>
-          <div class="staff-chips model-chips" id="modelChips"></div>
-          <span class="hint">단말기를 누르면 바로 들어갑니다. 다시 누르면 빠지고, 인터넷·TV 상품은 직접 입력해도 됩니다.</span>
+          <div class="field-head">
+            <label for="f_plan">요금제(상품명) <span class="req">*</span></label>
+            <button type="button" class="field-pick" data-plan-pick="f_plan">요금제 선택</button>
+          </div>
+          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 베이직 + 지니 TV 에센스">
+          <div class="plan-suggest" id="sug_f_plan" role="listbox" aria-label="요금제 검색 결과"></div>
+          <div class="risk-badges" id="formRisk" hidden></div>
         </div>
 
         <div class="field span2 ins-field">
@@ -1580,16 +1590,6 @@
             <input id="f_cardname" type="text" autocomplete="off" placeholder="카드명 (예: 우리카드 카드의정석)">
           </div>
           <span class="hint">제휴카드를 판매했으면 카드사를 고르세요. 시트에는 [카드:우리] 처럼 저장됩니다.</span>
-        </div>
-
-        <div class="field span2">
-          <div class="field-head">
-            <label for="f_plan">요금제(상품명) <span class="req">*</span></label>
-            <button type="button" class="field-pick" data-plan-pick="f_plan">요금제 선택</button>
-          </div>
-          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 베이직 + 지니 TV 에센스">
-          <div class="plan-suggest" id="sug_f_plan" role="listbox" aria-label="요금제 검색 결과"></div>
-          <div class="risk-badges" id="formRisk" hidden></div>
         </div>
 
         <!-- 바꿀 때만 쓰는 영역 — 요금제 변경 -->
