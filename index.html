@@ -912,6 +912,51 @@
   .pay-row input.money{flex:1 1 0;min-width:0;width:auto}
   .pay-row .pchip{white-space:nowrap;flex:none}
   .pay-row.none-on input.money{background:#F7F9FC;color:#94A3B8}
+  /* v32 — 페이백(카드결제) 여러 줄: 평소엔 1줄, [+ 추가]로 할부금·위약금을 나눠 적는다 */
+  .paycard-field .pc-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .paycard-field .pc-head label{flex:0 0 auto;margin:0}
+  .paycard-field .pc-head .grow{flex:1 1 auto}
+  .pc-add{height:28px;padding:0 10px;font-size:12px;font-weight:800;color:var(--blue-700);border-color:#B9D2F5;background:var(--blue-50)}
+  .pc-add:hover{background:#DBEAFE;border-color:#8CB8F0}
+  .paycard-field .pc-foot{display:flex;align-items:flex-start;gap:8px;margin-top:6px}
+  .paycard-field .pc-foot .hint{flex:1 1 auto;min-width:0}
+  .paycard-field .pc-foot .pc-add{flex:none;margin-top:-2px}
+  .paycard-lines{display:flex;flex-direction:column;gap:8px}
+  .paycard-line{display:flex;flex-direction:column;gap:5px;padding:7px 8px 8px;border:1px solid var(--line,#E5E9F0);border-radius:12px;background:#FBFCFE}
+  .paycard-line:first-child{padding-top:0;border:0;background:transparent}
+  .paycard-line .pay-row{gap:6px}
+  .paycard-line .pc-amt{flex:1 1 0;min-width:0;width:auto}
+  .paycard-line .pc-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .paycard-line .pc-chips{gap:4px}
+  .paycard-line .pc-chips .pchip{height:26px;padding:0 9px;font-size:11.5px;font-weight:700}
+  .paycard-line .pc-chips .pchip.on{background:#0F172A;color:#fff;border-color:#0F172A}
+  .paycard-line .pc-del{height:26px;width:26px;padding:0;font-size:14px;font-weight:900;line-height:1;color:#B42318;border-color:#F1C2BD;background:#FEF3F2}
+  .paycard-line .pc-del[hidden]{display:none}
+  .paycard-line.none-on{opacity:.55}
+  .paycard-line .pc-no{font-size:11px;font-weight:800;color:var(--slate-400);min-width:0}
+  .paycard-field .pc-total{font-weight:800;color:var(--blue-700)}
+  /* v32 — 기기 승인 대기 화면 (차단 화면과 같은 모양, 문구·버튼만 다름) */
+  .pending-screen{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:22px;
+    background:rgba(15,23,42,.72);backdrop-filter:blur(3px)}
+  .pending-screen[hidden]{display:none}
+  body.is-pending{overflow:hidden}
+  .pending-card{width:100%;max-width:380px;background:#fff;border-radius:18px;padding:24px 22px;text-align:center;box-shadow:0 18px 44px rgba(15,23,42,.35)}
+  .pending-card .pk-ico{width:52px;height:52px;border-radius:16px;background:#FFF7E6;color:#B45309;display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+  .pending-card .pk-ico svg{width:28px;height:28px}
+  .pending-card h2{font-size:17px;font-weight:800;color:var(--ink);line-height:1.45}
+  .pending-card p{font-size:12.5px;color:var(--slate-500);line-height:1.65;margin-top:9px}
+  .pending-card .pk-row{display:flex;gap:6px;margin-top:16px}
+  .pending-card .pk-row input{flex:1 1 auto;min-width:0;height:42px;border:1px solid #D6DEE8;border-radius:11px;padding:0 12px;font-size:15px;font-weight:800;letter-spacing:.16em;text-align:center}
+  .pending-card .btn{width:100%}
+  .pending-card .pk-err{color:#B42318;font-size:12px;font-weight:700;margin-top:8px}
+  .pending-card .pk-err[hidden]{display:none}
+  .dv-badge.owner{background:#FFF4D6;color:#8A5200}
+  .dv-badge.pend{background:#FFF7E6;color:#B45309}
+  .dv-row.pending-row{background:#FFFCF4}
+  .dv-btn.ok{color:#0B5F45;border-color:#A9DCC8;background:#F2FBF7}
+  .dv-owner-note{font-size:11px;font-weight:800;color:#8A5200;white-space:nowrap}
+  .dv-acts{display:flex;gap:4px;justify-content:flex-end}
+  .dv-acts .dv-btn{height:26px;padding:0 8px;font-size:11.5px}
   .period-chips.none-chips.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
   .form-error b{font-weight:900}
   .form-error .fe-sub{font-size:11.5px;font-weight:700;color:#8A5200}
@@ -2155,16 +2200,35 @@
               </div>
               <span class="hint">순마진에서 빠지는 금액</span>
             </div>
-            <div class="field">
+            <div class="field paycard-field">
               <label for="f_paycard">페이백 (카드결제) <span class="req">*</span></label>
-              <div class="pay-row" id="paycardRow">
-                <input id="f_paycard" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-                <input id="f_paycard_none" type="hidden" value="">
-                <div class="period-chips none-chips" id="paycardNoneChips" role="group" aria-label="페이백 카드결제 미기입">
-                  <button type="button" class="pchip" data-pay-none="paycard" aria-pressed="false">미기입</button>
+              <div class="paycard-lines" id="paycardLines">
+                <div class="paycard-line" id="paycardRow" data-pc-row="1">
+                  <div class="pay-row">
+                    <input id="f_paycard" class="money pc-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+                    <input id="f_paycard_none" type="hidden" value="">
+                    <div class="period-chips none-chips" id="paycardNoneChips" role="group" aria-label="페이백 카드결제 미기입">
+                      <button type="button" class="pchip" data-pay-none="paycard" aria-pressed="false">미기입</button>
+                    </div>
+                  </div>
+                  <div class="pc-tags">
+                    <div class="period-chips pc-chips" role="group" aria-label="결제 종류">
+                      <button type="button" class="pchip" data-pc-kind="할부금" aria-pressed="false">할부금</button>
+                      <button type="button" class="pchip" data-pc-kind="위약금" aria-pressed="false">위약금</button>
+                    </div>
+                    <div class="period-chips pc-chips" role="group" aria-label="결제 시기">
+                      <button type="button" class="pchip" data-pc-when="선결제" aria-pressed="false">선결제</button>
+                      <button type="button" class="pchip" data-pc-when="1일예정" aria-pressed="false">1일 예정</button>
+                    </div>
+                    <button type="button" class="pchip pc-del" data-pc-del="1" aria-label="이 줄 삭제" hidden>×</button>
+                  </div>
                 </div>
               </div>
-              <span class="hint">카드로 돌려준 금액</span>
+              <span class="hint hint-auto" id="paycardTotal" hidden></span>
+              <div class="pc-foot">
+                <span class="hint">카드로 돌려준 금액 · 할부금·위약금을 나눠 적으세요</span>
+                <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
+              </div>
             </div>
             <div class="field">
               <label for="f_paybank">페이백 (입금) <span class="req">*</span></label>
@@ -2204,12 +2268,13 @@
           <div class="pay-grid two">
             <div class="field">
               <label for="f_used">중고폰 <span class="req">*</span></label>
-              <input id="f_used" type="text" autocomplete="off" placeholder="예) 갤럭시 S22 반납 / 아이폰 14 매입">
+              <input id="f_used" type="text" autocomplete="off" placeholder="예) S25/에어팟">
             </div>
             <div class="field">
-              <label for="f_usedprice">중고폰금액 (원) <span class="opt">선택</span></label>
-              <input id="f_usedprice" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-              <span class="hint">중고폰 매입·판매 금액 · 직원도 입력할 수 있습니다</span>
+              <label for="f_usedprice">중고폰금액 <span class="opt">선택</span></label>
+              <input id="f_usedprice" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="예) 22 · 50/20">
+              <span class="hint hint-auto" id="usedPriceHint" hidden></span>
+              <span class="hint">만 원 단위로 적으면 원으로 바뀝니다 — <b>22</b> = 22만원 · <b>50/20</b> = 70만원</span>
             </div>
           </div>
           <span class="hint">중고폰을 받지 않았으면 위 <b>미반납</b>을 누르세요.</span>
@@ -2352,6 +2417,11 @@
   </div>
   <div class="dlg-body">
     <div class="sync-status" id="dvStatus">불러오는 중…</div>
+    <div class="dv-sec" id="dvPendingSec" hidden>
+      <h3>승인 대기 <span class="cnt" id="dvPendingCount">0</span></h3>
+      <p class="dv-hint">새 기기에서 앱을 열면 여기에 생깁니다. <b>[승인]</b>을 눌러야 그 기기에서 장부가 보입니다.</p>
+      <div class="dv-list" id="dvPending"></div>
+    </div>
     <div class="dv-sec">
       <h3>접속한 기기 <span class="cnt" id="dvDevCount">0</span></h3>
       <div class="dv-list" id="dvDevices"></div>
@@ -2474,6 +2544,24 @@
     <p>이 기기에서는 장부 열람과 입력이 모두 막혀 있습니다.<br>이전에 저장된 장부도 이 기기에서 지워졌습니다.</p>
     <p class="lock-meta" id="lockMeta"></p>
     <button type="button" class="btn btn-primary" id="lockRetry">다시 확인</button>
+  </div>
+</div>
+
+<!-- ===================== v32 — 기기 승인 대기 (사장님 승인 전) ===================== -->
+<div class="pending-screen" id="pendingScreen" hidden>
+  <div class="pending-card">
+    <div class="pk-ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.6"/><path d="M12 7.4V12l3 1.9"/></svg>
+    </div>
+    <h2>⏳ 사장님 승인 대기 중</h2>
+    <p>이 기기는 아직 장부에 들어올 수 없습니다.<br>사장님이 <b>더보기 → 직원 · 기기 관리</b>에서 <b>승인</b>을 누르거나, 아래에 <b>사장님 PIN</b> 을 넣으면 바로 들어옵니다.</p>
+    <p class="lock-meta" id="pendMeta"></p>
+    <div class="pk-row">
+      <input id="pendPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="사장님 PIN" aria-label="사장님 PIN">
+      <button type="button" class="btn btn-primary" id="pendApprove">승인</button>
+    </div>
+    <p class="pk-err" id="pendError" hidden></p>
+    <button type="button" class="btn" id="pendRetry" style="margin-top:8px">다시 확인</button>
   </div>
 </div>
 
@@ -2679,6 +2767,8 @@
       }
       for (var r = 0; r < it.rows.length; r++) if ($(it.rows[r])) $(it.rows[r]).classList.toggle('none-on', on);
     }
+    // v32 — 페이백(카드결제) 여러 줄도 함께 흐리게
+    if ($('paycardLines')) pcRefresh();
   }
 
   function setPayNone(kind, on) {
@@ -2702,7 +2792,17 @@
     var it = payItem(kind);
     if (!it) return;
     var on = !payNoneOn(kind);
-    if (on) for (var i = 0; i < it.inputs.length; i++) if ($(it.inputs[i])) $(it.inputs[i]).value = '';
+    if (on) {
+      for (var i = 0; i < it.inputs.length; i++) if ($(it.inputs[i])) $(it.inputs[i]).value = '';
+      // v32 — 페이백(카드결제)을 [미기입]으로 두면 여러 줄의 금액도 모두 비운다
+      if (kind === 'paycard') {
+        var ls = pcLines();
+        for (var j = 0; j < ls.length; j++) {
+          var inp = ls[j].querySelector('.pc-amt');
+          if (inp) inp.value = '';
+        }
+      }
+    }
     setPayNone(kind, on);
     payNoneBad(kind, false);
     refreshPolicy(false);
@@ -2711,6 +2811,281 @@
 
   // 금액이 적혔는가 — "0" 도 적힌 것으로 본다(빈칸과 구분)
   function moneyFilled(v) { return /[0-9]/.test(String(v == null ? '' : v)); }
+
+  /* =========================================================
+     v32 — 페이백(카드결제) 여러 줄
+     · 한 줄 = [금액] [할부금 / 위약금] [선결제 / 1일 예정]
+     · 앱 필드  페이백카드상세 = '할부금/선결제 200000,위약금/1일예정 150000'
+       앱 필드  페이백카드     = 상세의 합계(원) — 순마진·KPI·시트 [페이백카드:…] 그대로
+     · 시트 20컴럼 유지는 메모 표기 [카드상세:…] 로만 나간다(sheetMemo·splitMemoTags)
+     ========================================================= */
+  var PC_KINDS = ['할부금', '위약금'];
+  var PC_WHENS = ['선결제', '1일예정'];
+  var PC_WHEN_LABEL = { '선결제': '선결제', '1일예정': '1일 예정' };
+
+  function pcNormKind(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '');
+    if (s === '할부금' || s === '할부') return '할부금';
+    if (s === '위약금' || s === '위약') return '위약금';
+    return '';
+  }
+  function pcNormWhen(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '');
+    if (s === '선결제' || s === '선결') return '선결제';
+    if (s === '1일예정' || s === '1일' || s === '예정') return '1일예정';
+    return '';
+  }
+
+  /** '할부금/선결제 200000,위약금/1일예정 150000' → [{kind, when, amt}] */
+  function pcDetailParse(text) {
+    var out = [];
+    var parts = String(text == null ? '' : text).split(',');
+    for (var i = 0; i < parts.length; i++) {
+      var t = String(parts[i] || '').trim();
+      if (!t) continue;
+      var m = /^(.*?)\s*([-0-9,]+)$/.exec(t);
+      if (!m) continue;
+      var amt = parseNumber(m[2]);
+      var tag = String(m[1] || '').replace(/\s/g, '');
+      var kind = '', when = '';
+      if (tag.indexOf('/') >= 0) {
+        var pr = tag.split('/');
+        kind = pcNormKind(pr[0]); when = pcNormWhen(pr[1] || '');
+      } else {
+        kind = pcNormKind(tag);
+      }
+      if (!amt && !kind && !when) continue;
+      out.push({ kind: kind, when: when, amt: amt });
+    }
+    return out;
+  }
+
+  function pcDetailSum(text) {
+    var list = pcDetailParse(text), s = 0;
+    for (var i = 0; i < list.length; i++) s += Number(list[i].amt) || 0;
+    return s;
+  }
+
+  function pcDetailText(list) {
+    var out = [];
+    for (var i = 0; i < list.length; i++) {
+      var d = list[i];
+      if (!(Number(d.amt) > 0)) continue;
+      out.push((d.kind || '-') + '/' + (d.when || '-') + ' ' + Math.round(Number(d.amt) || 0));
+    }
+    return out.join(',');
+  }
+
+  function pcLines() {
+    var box = $('paycardLines');
+    return box ? box.querySelectorAll('.paycard-line') : [];
+  }
+
+  /* 폰 카드 상세에 카드결제 내역을 작게 붙인다 — ' (할부금 200,000 · 위약금 150,000)' */
+  function pcDetailBadge(detail) {
+    var list = pcDetailParse(detail);
+    if (list.length < 2) return '';
+    var parts = [];
+    for (var i = 0; i < list.length; i++) {
+      var d = list[i];
+      var lbl = (d.kind || '카드') + (d.when ? '·' + PC_WHEN_LABEL[d.when] : '');
+      parts.push(lbl + ' ' + fmtNum(d.amt));
+    }
+    return ' <span class="muted">(' + esc(parts.join(' · ')) + ')</span>';
+  }
+
+  function pcLineData(line) {
+    var inp = line ? line.querySelector('.pc-amt') : null;
+    return {
+      line: line,
+      raw: inp ? String(inp.value == null ? '' : inp.value) : '',
+      amt: inp ? parseNumber(inp.value) : 0,
+      kind: line ? pcNormKind(line.getAttribute('data-pc-kind')) : '',
+      when: line ? pcNormWhen(line.getAttribute('data-pc-when')) : ''
+    };
+  }
+
+  function pcAll() {
+    var ls = pcLines(), out = [];
+    for (var i = 0; i < ls.length; i++) out.push(pcLineData(ls[i]));
+    return out;
+  }
+
+  function pcTotal() {
+    var list = pcAll(), s = 0;
+    for (var i = 0; i < list.length; i++) s += Number(list[i].amt) || 0;
+    return s;
+  }
+
+  /* 어느 한 줄이라도 금액을 적었는가 ("0" 도 적은 것으로 본다) */
+  function pcAnyFilled() {
+    var list = pcAll();
+    for (var i = 0; i < list.length; i++) if (moneyFilled(list[i].raw)) return true;
+    return false;
+  }
+
+  /* 여러 줄의 합계·삭제 버튼·칩 모양을 한 번에 맞춘다 */
+  function pcRefresh() {
+    var ls = pcLines(), i, j;
+    for (i = 0; i < ls.length; i++) {
+      var d = pcLineData(ls[i]);
+      var kb = ls[i].querySelectorAll('button[data-pc-kind]');
+      for (j = 0; j < kb.length; j++) {
+        var on = kb[j].getAttribute('data-pc-kind') === d.kind;
+        kb[j].classList.toggle('on', on);
+        kb[j].setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+      var wb = ls[i].querySelectorAll('button[data-pc-when]');
+      for (j = 0; j < wb.length; j++) {
+        var won = wb[j].getAttribute('data-pc-when') === d.when;
+        wb[j].classList.toggle('on', won);
+        wb[j].setAttribute('aria-pressed', won ? 'true' : 'false');
+      }
+      var del = ls[i].querySelector('.pc-del');
+      if (del) del.hidden = ls.length <= 1;
+      if (payNoneOn('paycard')) ls[i].classList.add('none-on');
+      else ls[i].classList.remove('none-on');
+    }
+    var total = 0, n = 0, chip = false;
+    for (i = 0; i < ls.length; i++) {
+      var dd = pcLineData(ls[i]);
+      total += Number(dd.amt) || 0;
+      if (Number(dd.amt) > 0) n++;
+      if (dd.kind || dd.when) chip = true;
+    }
+    var box = $('paycardTotal');
+    if (box) {
+      if (n >= 2) {
+        box.innerHTML = '총 카드결제: <b class="pc-total">' + fmtNum(total) + '원</b> (' + n + '건)';
+        box.hidden = false;
+      } else if (chip && n >= 1) {
+        box.innerHTML = '카드결제 ' + fmtNum(total) + '원 — ' + esc(pcDetailText(pcAll())) ;
+        box.hidden = false;
+      } else {
+        box.textContent = '';
+        box.hidden = true;
+      }
+    }
+    return total;
+  }
+
+  function pcChipsHtml() {
+    var h = '<div class="period-chips pc-chips" role="group" aria-label="결제 종류">';
+    for (var i = 0; i < PC_KINDS.length; i++) {
+      h += '<button type="button" class="pchip" data-pc-kind="' + PC_KINDS[i] + '" aria-pressed="false">' + PC_KINDS[i] + '</button>';
+    }
+    h += '</div><div class="period-chips pc-chips" role="group" aria-label="결제 시기">';
+    for (var j = 0; j < PC_WHENS.length; j++) {
+      h += '<button type="button" class="pchip" data-pc-when="' + PC_WHENS[j] + '" aria-pressed="false">' + PC_WHEN_LABEL[PC_WHENS[j]] + '</button>';
+    }
+    return h + '</div>';
+  }
+
+  function pcAddRow(data) {
+    var box = $('paycardLines');
+    if (!box) return null;
+    var n = pcLines().length + 1;
+    var d = data || {};
+    var line = document.createElement('div');
+    line.className = 'paycard-line';
+    line.setAttribute('data-pc-row', String(n));
+    line.setAttribute('data-pc-kind', d.kind || '');
+    line.setAttribute('data-pc-when', d.when || '');
+    line.innerHTML =
+      '<div class="pay-row">' +
+        '<input class="money pc-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="페이백 카드결제 금액 ' + n + '">' +
+      '</div>' +
+      '<div class="pc-tags">' + pcChipsHtml() +
+        '<button type="button" class="pchip pc-del" data-pc-del="' + n + '" aria-label="이 줄 삭제">×</button></div>';
+    box.appendChild(line);
+    var inp = line.querySelector('.pc-amt');
+    if (inp && Number(d.amt) > 0) inp.value = fmtNum(d.amt);
+    pcRefresh();
+    return line;
+  }
+
+  /* 상세 문자열·합계로 줄을 다시 그린다 (수정 모달 복원·다음 고객 초기화) */
+  function pcSetRows(detailText, total) {
+    var box = $('paycardLines');
+    if (!box) return;
+    var ls = pcLines();
+    for (var i = ls.length - 1; i > 0; i--) box.removeChild(ls[i]);
+    var list = pcDetailParse(detailText);
+    var sum = 0;
+    for (var k = 0; k < list.length; k++) sum += Number(list[k].amt) || 0;
+    if (!list.length && (Number(total) || 0) > 0) list = [{ kind: '', when: '', amt: Number(total) || 0 }];
+    if (!list.length) list = [{ kind: '', when: '', amt: 0 }];
+    var first = pcLines()[0];
+    if (!first) return;
+    first.setAttribute('data-pc-kind', list[0].kind || '');
+    first.setAttribute('data-pc-when', list[0].when || '');
+    var inp = first.querySelector('.pc-amt');
+    if (inp) inp.value = Number(list[0].amt) > 0 ? fmtNum(list[0].amt) : '';
+    for (var j = 1; j < list.length; j++) pcAddRow(list[j]);
+    pcRefresh();
+  }
+
+  function pcToggle(line, attr, value) {
+    if (!line) return;
+    var cur = line.getAttribute(attr) || '';
+    line.setAttribute(attr, cur === value ? '' : value);
+    pcRefresh();
+  }
+
+  /* =========================================================
+     v32 — 중고폰금액 만 원 단위·슬래시 자동 합산
+     · '22' → 220,000원 · '223' → 2,230,000원 · '50/20' → 700,000원
+     · 이미 10,000 이상인 단일 숫자는 원 단위로 본다(예전 기록 '700000' → 700,000원)
+     ========================================================= */
+  function usedParse(text) {
+    var s = String(text == null ? '' : text).trim();
+    var res = { total: 0, parts: [], slash: false, ok: true, has: false };
+    if (!s) return res;
+    var toks = s.split('/');
+    res.slash = toks.length > 1;
+    for (var i = 0; i < toks.length; i++) {
+      var tk = String(toks[i] || '').trim();
+      if (!tk) { res.ok = false; continue; }
+      var d = tk.replace(/[^0-9]/g, '');
+      if (!d) { res.ok = false; continue; }
+      var n = Number(d);
+      if (!isFinite(n)) { res.ok = false; continue; }
+      var won = n >= 10000 ? n : n * 10000;
+      res.parts.push({ n: n, won: won });
+      res.total += won;
+      res.has = true;
+    }
+    return res;
+  }
+
+  function usedPartLabel(n) {
+    var v = Number(n) || 0;
+    return v >= 10000 ? fmtNum(v) + '원' : v + '만';
+  }
+
+  function usedAmount(text) { return usedParse(text).total; }
+
+  function usedPriceHintText(text) {
+    var p = usedParse(text);
+    if (!p.has || !(p.total > 0)) return '';
+    if (p.slash && p.parts.length > 1) {
+      var labels = [];
+      for (var i = 0; i < p.parts.length; i++) labels.push(usedPartLabel(p.parts[i].n));
+      return '자동 계산: ' + fmtNum(p.total) + '원 (' + labels.join(' + ') + ') · 합산 ' + p.parts.length + '건';
+    }
+    var one = p.parts[0];
+    if (!one) return '';
+    if (one.n >= 10000) return '자동 계산: ' + fmtNum(p.total) + '원 (원 단위로 입력됨)';
+    return '자동 계산: ' + fmtNum(p.total) + '원 (' + one.n + '만원)';
+  }
+
+  function paintUsedPriceHint(force) {
+    var box = $('usedPriceHint'), inp = $('f_usedprice');
+    if (!box || !inp) return;
+    var t = usedPriceHintText(inp.value);
+    box.textContent = t ? '🧮 ' + t : '';
+    box.hidden = !t;
+  }
 
   /* v30 — 저장할 때 [미기입] 으로 확인된 칸 목록 (금액이 0·빈칸인 칸만)
      · '추지,페이백카드' 처럼 콤마로 이어 메모에 [미기입:…] 으로 남긴다
@@ -2721,7 +3096,9 @@
     var out = [];
     for (var i = 0; i < map.length; i++) {
       var inp = $(map[i][2]);
-      if (inp && moneyFilled(inp.value)) continue;
+      // v32 — 페이백(카드결제)은 여러 줄의 합계로 본다
+      var filled = (map[i][1] === 'paycard') ? (pcTotal() > 0 || pcAnyFilled()) : (inp && moneyFilled(inp.value));
+      if (filled) continue;
       if (!payNoneOn(map[i][1])) continue;
       out.push(map[i][0]);
     }
@@ -3505,7 +3882,7 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '' };
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '' };
     var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
@@ -3541,6 +3918,9 @@
     // v30 — 결제 칸 [미기입] 확인 표기 [미기입:추지,페이백카드]
     var reNone = /\[미기입:\s*([^\]]*)\]/g;
     s = s.replace(reNone, function (all, v) { hit = true; out.payNone = String(v || '').replace(/\s/g, ''); return ' '; });
+    // v32 — 카드결제 상세 [카드상세:할부금/선결제 200000,위약금/1일예정 150000]
+    var rePcDetail = /\[카드상세:\s*([^\]]*)\]/g;
+    s = s.replace(rePcDetail, function (all, v) { hit = true; out.paycardDetail = String(v || '').trim(); return ' '; });
     // 할인 유형 · 정책 특수 조건 표기도 떼어 낸다
     for (i = 0; i < DISCOUNT_TYPES.length; i++) {
       var dm = DISCOUNT_MARK[DISCOUNT_TYPES[i]];
@@ -3610,6 +3990,9 @@
       if (!pv) pv = parseNumber(t[pf]);
       if (pv) head.push('[' + PAY_TAGS[i].key + ':' + pv + ']');
     }
+    // v32 — 카드결제 상세(할부금/위약금 · 선결제/1일예정) — 여러 줄일 때만 남긴다
+    var pcDet = String(rec.페이백카드상세 || t.paycardDetail || '').trim();
+    if (pcDet && pcDetailParse(pcDet).length > 1) head.push('[카드상세:' + pcDet.replace(/\]/g, '') + ']');
     // v30 — [미기입] 으로 확인한 결제 칸 (0원이 '미기입'인지 '확인해서 0원'인지 시트에도 남긴다)
     var noneKeys = payNoneKeys(rec);
     if (!noneKeys.length && t.payNone) noneKeys = String(t.payNone).split(',').filter(function (x) { return !!x; });
@@ -3657,6 +4040,12 @@
     for (var p = 0; p < PAY_TAGS.length; p++) {
       var pf = PAY_TAGS[p].field;
       o[pf] = tags[pf] != null ? parseNumber(tags[pf]) : parseNumber(r && r[pf]);
+    }
+    // v32 — 카드결제 상세(할부금/위약금 · 선결제/1일예정) 복원 · 상세가 있으면 합계를 다시 맞춘다
+    o.페이백카드상세 = String(tags.paycardDetail || (r && r.페이백카드상세) || '').trim();
+    if (o.페이백카드상세) {
+      var pcSum = pcDetailSum(o.페이백카드상세);
+      if (pcSum > 0) o.페이백카드 = pcSum;
     }
     if (!o.개통유형) o.개통유형 = '';
     // 하위 호환: 단일 리베이트뿐이면 유선 유형 → 유선리베이트, 그 밖 → 무선리베이트
@@ -3839,9 +4228,122 @@
     return e;
   }
 
+  /* v32 — 서버 에러 코드를 화면 문구로 */
+  function apiErrorText(data, fallback) {
+    var msg = (data && (data.message || data.error)) || fallback || '요청에 실패했습니다.';
+    if (msg === 'cannot_kick_owner') return '👑 사장님(김태양) 기기는 추방할 수 없습니다.';
+    if (msg === 'device_pending') return '사장님 승인을 기다리는 기기입니다.';
+    return String(msg);
+  }
+
+  /* =========================================================
+     v32 — 기기 승인제 (사장님 승인 전에는 장부를 보여 주지 않는다)
+     · 서버가 {ok:false, error:'device_pending'} 을 주면 승인 대기 화면만 띄운다
+     · [사장님 PIN으로 즉시 승인] → approve_device (관리자 PIN 필요)
+     ========================================================= */
+  var PENDING_KEY = 'kt_chilgeum_pending_v1';
+
+  function pendingStored() {
+    try { return !!localStorage.getItem(PENDING_KEY); } catch (e) { return false; }
+  }
+
+  function setPendingStore(info) {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(info || { at: new Date().toISOString() })); } catch (e) {}
+  }
+
+  function clearPending() {
+    try { localStorage.removeItem(PENDING_KEY); } catch (e) {}
+    showPending(false);
+    var err = $('pendError');
+    if (err) { err.hidden = true; err.textContent = ''; }
+  }
+
+  function showPending(on) {
+    var box = $('pendingScreen');
+    if (!box) return;
+    box.hidden = !on;
+    document.body.classList.toggle('is-pending', !!on);
+    if (!on) return;
+    var meta = $('pendMeta');
+    if (!meta) return;
+    var info = {};
+    try { info = JSON.parse(localStorage.getItem(PENDING_KEY) || '{}') || {}; } catch (e) { info = {}; }
+    var when = info.at ? String(info.at).slice(0, 16).replace('T', ' ') : '';
+    var dev = '';
+    try { dev = deviceInfo().device || ''; } catch (e) { dev = ''; }
+    meta.textContent = (when ? '요청 ' + when + ' · ' : '') + '기기 ' + (dev || '이 기기');
+  }
+
+  // 서버가 승인 대기 응답을 주면 → 장부 화면을 덮고 안내
+  function onPending(info) {
+    setPendingStore({ at: new Date().toISOString(), deviceId: (info && info.deviceId) || '' });
+    try { if (el.editDialog && el.editDialog.open) el.editDialog.close(); } catch (e) {}
+    try { if (el.devicesDialog && el.devicesDialog.open) el.devicesDialog.close(); } catch (e) {}
+    showPending(true);
+  }
+
+  function pendingError() {
+    var e = new Error('사장님 승인을 기다리는 기기입니다.');
+    e.pending = true;
+    return e;
+  }
+
+  // 승인 대기 화면의 [다시 확인]
+  function recheckPending() {
+    var btn = $('pendRetry');
+    if (btn) { btn.disabled = true; btn.textContent = '확인 중…'; }
+    function done() { if (btn) { btn.disabled = false; btn.textContent = '다시 확인'; } }
+    if (!syncOn()) { done(); toast('공용 장부 연동 설정이 없습니다. 사장님께 문의해 주세요.', true); return; }
+    runSync({ quiet: true, quietFail: true }).then(function (ok) {
+      done();
+      if (ok && !pendingStored()) { showPending(false); toast('승인되었습니다. 장부를 엽니다.'); location.reload(); }
+      else toast('아직 사장님 승인을 기다리는 중입니다.', true);
+    });
+  }
+
+  // 승인 대기 화면의 [승인] — 사장님 PIN 으로 이 기기를 바로 승인
+  function approvePendingDevice() {
+    var pin = String(($('pendPin') || {}).value || '').trim();
+    var errBox = $('pendError');
+    if (errBox) { errBox.hidden = true; errBox.textContent = ''; }
+    if (!pin) {
+      if (errBox) { errBox.textContent = '사장님 PIN 을 넣어 주세요.'; errBox.hidden = false; }
+      return;
+    }
+    if (!syncOn()) {
+      if (errBox) { errBox.textContent = '공용 장부 연동 설정이 없습니다.'; errBox.hidden = false; }
+      return;
+    }
+    var info = deviceInfo();
+    var btn = $('pendApprove');
+    if (btn) btn.disabled = true;
+    fetchJson(sync.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        pin: sync.pin, action: 'approve_device', adminPin: pin, value: info.deviceId,
+        deviceId: info.deviceId, device: info.device, name: info.name, ua: info.ua
+      }),
+      redirect: 'follow'
+    }).then(function (data) {
+      if (data && data.ok === true) {
+        clearPending();
+        if (data.owner === 'Y') toast('👑 사장님 기기로 승인했습니다. 장부를 엽니다.');
+        else toast('승인했습니다. 장부를 엽니다.');
+        setTimeout(function () { location.reload(); }, 300);
+        return;
+      }
+      throw new Error((data && (data.message || data.error)) || '승인하지 못했습니다.');
+    }).catch(function (err) {
+      if (btn) btn.disabled = false;
+      var msg = String((err && err.message) || '승인하지 못했습니다.');
+      if (msg === 'cannot_kick_owner') msg = '사장님 기기는 추방할 수 없습니다.';
+      if (errBox) { errBox.textContent = msg; errBox.hidden = false; }
+    });
+  }
+
   // 잠금 화면의 ‘다시 확인’ — 차단이 풀렸으면 잠금을 해제하고 새로 시작
-  function recheckBlock(quiet) {
-    var btn = $('lockRetry');
+  function recheckBlock(quiet) {    var btn = $('lockRetry');
     if (btn && !quiet) { btn.disabled = true; btn.textContent = '확인 중…'; }
     function done() { if (btn && !quiet) { btn.disabled = false; btn.textContent = '다시 확인'; } }
     if (!syncOn()) {
@@ -3935,6 +4437,7 @@
       .catch(function () { return jsonpGet(target); })
       .then(function (data) {
         if (data && data.blocked) { onBlocked(data); throw blockedError(); }
+        if (data && data.pending && data.error === 'device_pending') { onPending(data); throw pendingError(); }
         if (!data || data.ok !== true) throw new Error((data && data.error) || '공용 장부 응답 오류');
         var rows = Array.isArray(data.records) ? data.records : [];
         return rows.map(normalizeRecord);
@@ -3974,6 +4477,7 @@
       redirect: 'follow'
     }).then(function (data) {
       if (data && data.blocked) { onBlocked(data); throw blockedError(); }
+      if (data && data.pending && data.error === 'device_pending') { onPending(data); throw pendingError(); }
       if (data && data.ok === true) return data;
       throw new Error((data && data.error) || '저장 실패');
     });
@@ -4019,6 +4523,8 @@
     // v30 — 원스톱도 스냅샷에 담는다 (빠뜨리면 서버 왕복 뒤 [원스톱] 표기가 풀린다)
     snap.원스톱 = isOnestop(rec.원스톱) ? '원스톱' : '';
     snap.미기입 = String(rec.미기입 || '').replace(/\s/g, '');
+    // v32 — 카드결제 상세도 스냅사진에 담는다 (빠뜨리면 서버 왕복 뒤 [카드상세:…] 표기가 풀린다)
+    snap.페이백카드상세 = String(rec.페이백카드상세 || '').trim();
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
@@ -4087,6 +4593,8 @@
         sync.lastError = '';
         saveSync();
         syncing = false;
+        // v32 — 승인이 떨어졌으면 대기 화면을 내린다
+        if (pendingStored()) clearPending();
         renderSyncUi();
         if (!o.quiet) toast('공용 장부와 동기화했습니다.');
         return true;
@@ -4096,7 +4604,7 @@
         syncing = false;
         saveSync();
         renderSyncUi();
-        if (!o.quietFail && !(err && err.blocked)) {
+        if (!o.quietFail && !(err && (err.blocked || err.pending))) {
           toast('공용 장부 연결 실패 · 이 기기에는 저장됐습니다', true);
         }
         return false;
@@ -6268,16 +6776,20 @@
       redirect: 'follow'
     }).then(function (data) {
       if (data && data.blocked) { onBlocked(data); throw blockedError(); }
+      if (data && data.pending && data.error === 'device_pending') { onPending(data); throw pendingError(); }
       if (data && data.ok === true) return data;
-      throw new Error((data && data.error) || '요청에 실패했습니다.');
+      throw new Error(apiErrorText(data, '요청에 실패했습니다.'));
     });
   }
 
   function openDevicesDialog() {
     if (!el.devicesDialog) return;
     if (!isAdmin()) { openAdminDialog(); return; }
-    el.dvDevices.innerHTML = '';
+    if (el.dvDevices) el.dvDevices.innerHTML = '';
     el.dvStaff.innerHTML = '';
+    if ($('dvPending')) $('dvPending').innerHTML = '';
+    if ($('dvPendingSec')) $('dvPendingSec').hidden = true;
+    if ($('dvPendingCount')) $('dvPendingCount').textContent = '0';
     el.dvDevCount.textContent = '0';
     el.dvStaffCount.textContent = '0';
     el.dvStatus.className = 'sync-status';
@@ -6306,7 +6818,9 @@
       };
       renderDevices();
       el.dvStatus.className = 'sync-status ok';
-      el.dvStatus.innerHTML = '서버(구글 시트)와 연결됨 · 기기 <b>' + dvState.devices.length + '대</b> · 차단 <b>' +
+      var pendN = dvState.devices.filter(function (d) { return d.status === 'pending'; }).length;
+      el.dvStatus.innerHTML = '서버(구글 시트)와 연결됨 · 기기 <b>' + dvState.devices.length + '대</b>' +
+        (pendN ? ' · 승인 대기 <b>' + pendN + '대</b>' : '') + ' · 차단 <b>' +
         (dvState.blocks.device.length + dvState.blocks.staff.length) + '건</b>';
       return true;
     }).catch(function (err) {
@@ -6321,11 +6835,45 @@
     var mine = deviceInfo().deviceId;
     var i, html = '';
 
+    /* v32 — 승인 대기 기기 (사장님이 [승인]해야 장부가 보인다) */
+    var pend = [], devs = [];
+    for (i = 0; i < dvState.devices.length; i++) {
+      if (dvState.devices[i].status === 'pending') pend.push(dvState.devices[i]);
+      else devs.push(dvState.devices[i]);
+    }
+    var sec = $('dvPendingSec'), pbox = $('dvPending'), pcnt = $('dvPendingCount');
+    if (pcnt) pcnt.textContent = String(pend.length);
+    if (sec) sec.hidden = !pend.length;
+    if (pbox) {
+      if (!pend.length) {
+        pbox.innerHTML = '';
+      } else {
+        html = '<div class="dv-row head"><span>담당자</span><span>기기</span><span>최근 접속</span><span>상태</span><span>승인</span></div>';
+        for (i = 0; i < pend.length; i++) {
+          var p = pend[i];
+          html += '<div class="dv-row pending-row" data-dv-row="' + esc(p.deviceId) + '">' +
+            '<span class="who">' + esc(p.name || '이름 없음') +
+              (p.deviceId === mine ? '<span class="dv-badge mine">이 기기</span>' : '') + '</span>' +
+            '<span class="dev">' + esc(p.label || '기기') + '</span>' +
+            '<span class="seen">' + esc(dvSeenText(p.lastSeen)) + '</span>' +
+            '<span class="st"><span class="dv-badge pend">승인 대기</span></span>' +
+            '<span class="dv-acts">' +
+              '<button type="button" class="dv-btn ok" data-dv-act="approve" data-dv-type="device" data-dv-value="' + esc(p.deviceId) +
+                '" data-dv-label="' + esc(p.label || '') + '">승인</button>' +
+              '<button type="button" class="dv-btn bad" data-dv-act="reject" data-dv-type="device" data-dv-value="' + esc(p.deviceId) +
+                '" data-dv-label="' + esc(p.label || '') + '">차단</button>' +
+            '</span>' +
+            '</div>';
+        }
+        pbox.innerHTML = html;
+      }
+    }
+
     html = '<div class="dv-row head"><span>담당자</span><span>기기</span><span>최근 접속</span><span>상태</span><span></span></div>';
-    var devs = dvState.devices.slice();
     for (i = 0; i < devs.length; i++) {
       var d = devs[i];
-      var blocked = !!bd[d.deviceId];
+      var blocked = !!bd[d.deviceId] || d.status === 'blocked';
+      var owner = d.owner === 'Y' || d.ownerName;
       html += '<div class="dv-row" data-dv-row="' + esc(d.deviceId) + '">' +
         '<span class="who">' + esc(d.name || '이름 없음') +
           (d.deviceId === mine ? '<span class="dv-badge mine">이 기기</span>' : '') + '</span>' +
@@ -6333,11 +6881,13 @@
         '<span class="seen">' + esc(dvSeenText(d.lastSeen)) + '</span>' +
         '<span class="st">' + (blocked
           ? '<span class="dv-badge off">차단됨</span>'
-          : '<span class="dv-badge on">사용 중</span>') + '</span>' +
-        '<button type="button" class="dv-btn' + (blocked ? ' bad' : '') + '" data-dv-act="' +
-          (blocked ? 'unblock' : 'block') + '" data-dv-type="device" data-dv-value="' + esc(d.deviceId) +
-          '" data-dv-label="' + esc(d.label || '') + '">' +
-          (blocked ? '차단 해제' : '추방(차단)') + '</button>' +
+          : (owner ? '<span class="dv-badge owner">👑 사장님 기기 (추방 불가)</span>' : '<span class="dv-badge on">사용 중</span>')) + '</span>' +
+        (owner
+          ? '<span class="dv-owner-note" title="사장님이 쓰는 기기는 앱에서 추방(차단)할 수 없습니다"></span>'
+          : '<button type="button" class="dv-btn' + (blocked ? ' bad' : '') + '" data-dv-act="' +
+            (blocked ? 'unblock' : 'block') + '" data-dv-type="device" data-dv-value="' + esc(d.deviceId) +
+            '" data-dv-label="' + esc(d.label || '') + '">' +
+            (blocked ? '차단 해제' : '추방(차단)') + '</button>') +
         '</div>';
     }
     el.dvDevices.innerHTML = devs.length
@@ -6376,6 +6926,17 @@
     }
     el.dvStaff.innerHTML = html;
     el.dvStaffCount.textContent = String(names.length);
+  }
+
+  function approveTarget(type, value, label) {
+    dvRequest('approve_device', { value: value, type: type, label: label || '' }).then(function (data) {
+      if (Array.isArray(data.devices)) dvState.devices = data.devices;
+      if (data.blocks) dvState.blocks = data.blocks;
+      renderDevices();
+      toast('“' + (label || value) + '” 기기를 승인했습니다.');
+    }).catch(function (err) {
+      toast(String((err && err.message) || '승인하지 못했습니다.'), true);
+    });
   }
 
   function blockTarget(type, value, label) {
@@ -7311,7 +7872,7 @@
         mRowOpt('유선 사은품', normalizeWiredGift(r.유선혜택) ? esc(wiredGiftLabel(r.유선혜택)) : '') +
         (onestopOf(r) ? mRow('원스톱', '<span class="pbadge onestop-badge">체크</span> <span class="muted">유선 +10만원 · +1.0P</span>') : '') +
         (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
-        (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' : '') : '') +
+        (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세) : '') : '') +
         (isAdmin() ? mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' : '') : '') +
         (isAdmin() ? mRow('순마진', '<b>' + netText(r) + '원</b>') : '') +
         mRowOpt('메모', r.메모 ? esc(r.메모) : '') + riskBadgesHtml(r) +
@@ -8549,12 +9110,14 @@
     paintPeriodChips();
     $('f_used').value = r.중고폰 || '';
     $('f_usedprice').value = r.중고폰금액 ? fmtNum(r.중고폰금액) : '';
+    paintUsedPriceHint(true);
     $('f_rebate_w').value = r.무선리베이트 ? fmtNum(r.무선리베이트) : '';
     wiredAutoLast = null;
     $('f_rebate_l').removeAttribute('data-auto');
     $('f_rebate_l').value = r.유선리베이트 ? fmtNum(r.유선리베이트) : '';
     $('f_extra').value = r.추가지원금 ? fmtNum(r.추가지원금) : '';
-    $('f_paycard').value = r.페이백카드 ? fmtNum(r.페이백카드) : '';
+    // v32 — 페이백(카드결제)은 여러 줄(할부금/위약금 · 선결제/1일예정)로 복원한다
+    pcSetRows(r.페이백카드상세 || '', Number(r.페이백카드) || 0);
     $('f_paybank').value = r.페이백입금 ? fmtNum(r.페이백입금) : '';
     setWiredGift(r.유선혜택 || '');
     syncWiredGiftField(false);   // 수정할 때 저장값은 유선 유형이 없어도 지우지 않는다
@@ -8642,7 +9205,7 @@
     // v19 — 추지·페이백·중고폰: [미기입]/[미반납] 칩을 눌렀거나 금액·중고폰을 적어야 통과한다
     if (!payNoneOn('extra') && !moneyFilled($('f_extra').value))
       need.push({ label: '추가지원금', el: $('extraNoneChips'), inputs: [$('f_extra')] });
-    if (!payNoneOn('paycard') && !moneyFilled($('f_paycard').value))
+    if (!payNoneOn('paycard') && !pcAnyFilled() && !(pcTotal() > 0))
       need.push({ label: '페이백(카드결제)', el: $('paycardNoneChips'), inputs: [$('f_paycard')] });
     if (!payNoneOn('paybank') && !moneyFilled($('f_paybank').value))
       need.push({ label: '페이백(입금)', el: $('paybankNoneChips'), inputs: [$('f_paybank')] });
@@ -8737,11 +9300,13 @@
         : period.addon === 'custom' ? '직접입력' : '',
       부가서비스해지일자: normalizeDate($('f_addondate').value),
       중고폰: $('f_used').value.trim(),
-      중고폰금액: parseNumber($('f_usedprice').value),
+      중고폰금액: usedAmount($('f_usedprice').value),
       무선리베이트: parseNumber($('f_rebate_w').value),
       유선리베이트: parseNumber($('f_rebate_l').value),
       추가지원금: parseNumber($('f_extra').value),
-      페이백카드: parseNumber($('f_paycard').value),
+      // v32 — 페이백(카드결제): 여러 줄의 합계 + 상세(할부금/위약금 · 선결제/1일예정)
+      페이백카드: pcTotal(),
+      페이백카드상세: pcDetailText(pcAll()),
       페이백입금: parseNumber($('f_paybank').value),
       유선혜택: wiredGiftOn(),
       // v30 — 원스톱 체크 (유선 리베이트 +10만원 · 유선 포인트 +1.0P)
@@ -8817,6 +9382,7 @@
       paintAddonChips();   // v31 — 다음 고객에게 부가서비스 칩이 따라가지 않게
       $('f_used').value = '';
       $('f_usedprice').value = '';
+      paintUsedPriceHint(true);
       $('f_rebate_w').value = '';
       wiredAutoLast = null;
       $('f_rebate_l').removeAttribute('data-auto');
@@ -8827,7 +9393,7 @@
       // v28 — 다음 고객에게 유선 사은품이 따라가지 않게 비운다(유형은 유지)
       if ($('f_wiredgift')) setWiredGift('');
       $('f_extra').value = '';
-      $('f_paycard').value = '';
+      pcSetRows('', 0);
       $('f_paybank').value = '';
       setPayNone('extra', false);
       setPayNone('paycard', false);
@@ -9561,6 +10127,8 @@
           var label = b.getAttribute('data-dv-label') || '';
           if (act === 'block') blockTarget(type, value, label);
           else if (act === 'unblock') unblockTarget(type, value);
+          else if (act === 'approve') approveTarget(type, value, label);
+          else if (act === 'reject') blockTarget(type, value, label);
           return;
         }
         if (e.target === el.devicesDialog) el.devicesDialog.close();
@@ -9569,6 +10137,12 @@
     }
     var lockBtn = $('lockRetry');
     if (lockBtn) lockBtn.addEventListener('click', function () { recheckBlock(false); });
+    // v32 — 기기 승인 대기 화면
+    if ($('pendRetry')) $('pendRetry').addEventListener('click', recheckPending);
+    if ($('pendApprove')) $('pendApprove').addEventListener('click', approvePendingDevice);
+    if ($('pendPin')) $('pendPin').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); approvePendingDevice(); }
+    });
     // v30 — 관리자 모드 10분 미사용 자동 잠금: 클릭·터치·키입력·입력값 변경이 있을 때마다 타이머를 다시 건다
     ['pointerdown', 'touchstart', 'keydown', 'input', 'change'].forEach(function (evt) {
       document.addEventListener(evt, function () { touchAdminIdle(); }, true);
@@ -9905,18 +10479,70 @@
       autoFillFromCustomer();
     });
 
-    // 금액(무선·유선 리베이트 · 중고폰금액) 콤마 포맷
-    ['f_rebate_w', 'f_rebate_l', 'f_usedprice', 'f_extra', 'f_paycard', 'f_paybank'].forEach(function (id) {
+    // v32 — 페이백(카드결제) 여러 줄: 칩·삭제·[+ 추가]
+    var pcBox = $('paycardLines');
+    if (pcBox) {
+      pcBox.addEventListener('click', function (e) {
+        var t = e.target;
+        var kb = t && t.closest ? t.closest('button[data-pc-kind]') : null;
+        if (kb) { pcToggle(kb.closest('.paycard-line'), 'data-pc-kind', kb.getAttribute('data-pc-kind')); return; }
+        var wb = t && t.closest ? t.closest('button[data-pc-when]') : null;
+        if (wb) { pcToggle(wb.closest('.paycard-line'), 'data-pc-when', wb.getAttribute('data-pc-when')); return; }
+        var db = t && t.closest ? t.closest('button[data-pc-del]') : null;
+        if (db) {
+          var line = db.closest('.paycard-line');
+          if (!line) return;
+          var ls = pcLines();
+          if (ls.length > 1) { line.parentNode.removeChild(line); }
+          else {
+            var inp = line.querySelector('.pc-amt');
+            if (inp) inp.value = '';
+            line.setAttribute('data-pc-kind', '');
+            line.setAttribute('data-pc-when', '');
+          }
+          pcRefresh();
+        }
+      });
+      pcBox.addEventListener('input', function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('pc-amt')) return;
+        var neg = /^-/.test(t.value);
+        var d = String(t.value).replace(/[^0-9]/g, '');
+        t.value = d ? (neg ? '-' : '') + Number(d).toLocaleString('ko-KR') : (neg ? '-' : '');
+        pcRefresh();
+        refreshPolicy(false); updateFormRisk();
+      });
+    }
+    if ($('paycardAdd')) $('paycardAdd').addEventListener('click', function () {
+      if (payNoneOn('paycard')) setPayNone('paycard', false);
+      var line = pcAddRow({});
+      var inp = line && line.querySelector('.pc-amt');
+      if (inp) { try { inp.focus(); } catch (e) {} }
+    });
+
+    // v32 — 중고폰금액: 만 원 단위·슬래시(/) 자동 합산
+    $('f_usedprice').addEventListener('input', function () {
+      this.value = String(this.value || '').replace(/[^0-9/]/g, '');
+      paintUsedPriceHint();
+      updateFormRisk();
+    });
+    $('f_usedprice').addEventListener('blur', function () {
+      var p = usedParse(this.value);
+      if (p.has) this.value = fmtNum(p.total);
+      paintUsedPriceHint(true);
+    });
+    // 금액(무선·유선 리베이트 · 추지·페이백입금) 콤마 포맷
+    ['f_rebate_w', 'f_rebate_l', 'f_extra', 'f_paybank'].forEach(function (id) {
       $(id).addEventListener('input', function () {
         var neg = /^-/.test(this.value);
         var d = this.value.replace(/[^0-9]/g, '');
         if (!d) {
           this.value = neg ? '-' : '';
-          if (id !== 'f_usedprice') refreshPolicy(false); updateFormRisk();
+          refreshPolicy(false); updateFormRisk();
           return;
         }
         this.value = (neg ? '-' : '') + Number(d).toLocaleString('ko-KR');
-        if (id !== 'f_usedprice') refreshPolicy(false); updateFormRisk();
+        refreshPolicy(false); updateFormRisk();
       });
     });
 
@@ -10332,6 +10958,10 @@
     if (blockedStored()) {
       showLock(true);
       setTimeout(function () { if (blockedStored()) recheckBlock(true); }, 900);
+    }
+    // v32 — 승인 대기 중인 기기면 승인 안내 화면부터
+    if (!blockedStored() && pendingStored()) {
+      showPending(true);
     }
 
     // 첫 방문 안내 (데이터 없을 때만)

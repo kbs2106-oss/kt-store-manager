@@ -265,6 +265,36 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     누르면 칸에 들어가고(복수 선택 시 `캐치콜플러스 · 필수팩L`), 다시 누르면 그 이름만 빠진다. 직접 입력·수정은 그대로이고
     **`[미가입]` 을 누르면 칸이 비면서 칩도 함께 해제**된다(`clearAddon` → `paintAddonChips`). 저장·수정 시 칸 값(부가서비스 텍스트)으로 그대로 왕복한다.
   - 테스트 `qa-kt/v31_refine_test.py`(36항목) · 스크린샷 `downloads/개통장부-v31-결합여부-직원.png` · `downloads/개통장부-v31-부가서비스칩.png` · `downloads/개통장부-v31-결합배지.png`.
+- **v32 — 페이백(카드결제) 여러 줄 · 중고폰금액 만 원/슬래시 자동 합산 · 기기 승인제**:
+  - **페이백(카드결제)은 평소 1줄, 필요할 때 `+ 추가`**: `#paycardLines` 안의 `.paycard-line` 한 줄 = `[금액] `
+    [`할부금`·`위약금`] [`선결제`·`1일 예정`] (+ `×` 삭제). 첫 줄은 기존 `#paycardRow`(=`#f_paycard` · `#paycardNoneChips` `미기입`)이고
+    줄이 2개 이상이면 합계가 `#paycardTotal` 에 `총 카드결제: 350,000원 (2건)` 로 뜬다(한 줄이면 숨김). `+ 추가` 는 줄 아래 오른쪽(`#paycardAdd`).
+    할부금+할부금·할부금+위약금 등 **어떤 조합도** 된다(`pcAddRow` · `pcToggle` · `pcRefresh` · `pcSetRows`).
+  - **저장·복원**: 앱 필드 **`페이백카드상세`** = `할부금/선결제 200000,위약금/1일예정 150000`, 앱 필드 **`페이백카드` = 상세 합계(원)**.
+    순마진·KPI·`[페이백카드:350000]` 메모 표기는 그대로 합계를 쓰고, 시트 20컴럼은 **메모 `[카드상세:…]`**(줄이 2개 이상일 때)로만 나간다
+    (`sheetMemo` · `splitMemoTags` · `normalizeRecord` · `queueUpsert` 스냅샷). 서버를 왕복해도 수정 모달에 **줄·칩·금액이 그대로** 돌아오고,
+    예전 기록(`[페이백카드:120000]` 만 있는 행)은 **1줄**로 열린다. `[미기입]` 을 누르면 모든 줄의 금액이 비워진다.
+  - **중고폰금액 만 원 단위·슬래시 자동 합산(`usedParse`)**: `22` → 220,000원 · `223` → 2,230,000원 · `50/20` → 700,000원.
+    규칙은 **1~9,999 는 만 원 단위(×10,000), 이미 10,000 이상인 숫자는 원 단위**, 슬래시로 나눈 조각마다 같은 규칙을 적용해 **합산**한다.
+    칸 아래 `#usedPriceHint` 에 `🧮 자동 계산: 700,000원 (50만 + 20만) · 합산 2건` 이 실시간으로 뜨고, 칸을 벗어나면 금액이 `700,000` 처럼
+    **원 단위로 정리**된다(그래서 다시 열어 고쳐도 해석이 흔들리지 않는다). 저장은 항상 실제 원 단위 숫자(`중고폰금액: 700000`).
+    품목(`중고폰`) placeholder 도 `예) S25/에어팟`.
+  - **기기 승인제(Code.gs)**: 숨김 탭 `_접속기기` 헤더가 **`deviceId · 기기명 · 담당자명 · 최근접속 · 최초접속 · UA · 상태 · owner`** 8칸으로 늘고,
+    `상태` = `approved` / `pending` / `blocked`, `owner` = `Y`. **처음 보는 기기**는 `pending` 으로 적히고
+    `{ok:false, error:'device_pending', pending:true, deviceId}` 만 받아 **장부 레코드를 받지 못한다**(`upsert` 도 막힌다).
+    **사장님 PIN(`0525`)을 함께 보낸 요청의 기기**는 자동 `approved` + `owner:Y` 로 등록되고, `pending` 기기도 그 PIN 으로 즉시 승인된다.
+    새 액션 `approve_device` · `reject_device`(둘 다 `adminPin` 필요). **`owner` 기기이거나 이름이 `김태양` 인 기기·직원은
+    `block` · `kick` · `block_device` · `reject_device` 모두 `{ok:false, error:'cannot_kick_owner'}`** 로 서버에서 거부된다.
+    차단은 기존 `_차단` 탭과 함께 기기 `상태` 도 `blocked` 로 바꾸고, 해제하면 `approved` 로 돌린다.
+    **승인제 이전에 쓰던 6칸 기기 탭은 첫 요청에서 자동으로 8칸으로 옮겨지며 기존 기기는 모두 `approved`**(김태양 기기는 `owner:Y`) —
+    이미 쓰던 직원 폰이 잠기지 않는다(`ensureDeviceHead_`). `deviceId` 없는 단순 curl 조회(`?pin=5001&action=list`)는 예전처럼 통과.
+  - **앱 화면**: 서버가 `device_pending` 을 주면 **`#pendingScreen`(⏳ 사장님 승인 대기 중)** 이 장부를 덮고,
+    `[사장님 PIN] + [승인]`(그 자리에서 `approve_device`) · `[다시 확인]`(`recheckPending`)을 보여 준다. 대기 상태는 `kt_chilgeum_pending_v1` 에 남아
+    새로고침해도 유지되고, 승인되면 저절로 사라진다(`onPending` · `clearPending`, `runSync` 성공 시 해제).
+    관리자 `더보기 → 직원 · 기기 관리` 에 **`승인 대기` 섹션**(`#dvPending` · `#dvPendingCount`)이 생겨 줄마다 `[승인]` `[차단]`,
+    승인된 기기 목록에서 **`owner` 기기는 추방 버튼 대신 `👑 사장님 기기 (추방 불가)` 배지**가 보인다(`renderDevices` · `approveTarget`).
+  - 테스트 `qa-kt/v32_approval_payback_used_test.py`(47항목) · `qa-kt/code_gs_sim.py`(27항목, 승인제 시뮬레이션) ·
+    스크린샷 `downloads/개통장부-v32-페이백중고폰.png`(+`-모바일`·`중고폰-모바일`) · `downloads/개통장부-v32-기기승인.png`(+`-모바일`).
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
 ---
@@ -304,6 +334,7 @@ kt-store-manager/
 | `#devicesDialog` | **직원 · 기기 관리** — 접속 기기 목록(담당자·기기·최근 접속·상태)과 직원 이름, 각 줄 `추방(차단)`/`차단 해제` |
 | `#priceDialog` | **단가표 · 정책 계산표(관리자 전용)** — 탭 4개: `정산 요약`(`#pvTotal`·`#pvPoints`·`#pvList`) / `정책 계산표`(`#polTables`) / `MRA 포인트`(`#polPoints`) / `단가표`(`#pdPaste`·`#pdWireless`·`#pdWired`·`#pdSummary`), `초기화`·`저장` |
 | `#lockScreen` | 차단된 기기의 잠금 화면 — “관리자에 의해 접근이 제한되었습니다” + `다시 확인` |
+| `#pendingScreen` | **v32** 승인 대기 화면 — “⏳ 사장님 승인 대기 중” + 사장님 PIN `[승인]` + `다시 확인` |
 | `<script>` (본문 끝) | 앱 로직 (IIFE, `'use strict'`) |
 | `<script>` (그 뒤) | PWA 로직 (서비스 워커, 설치 버튼, 플로팅 버튼) |
 
@@ -332,7 +363,7 @@ kt-store-manager/
 | `부가서비스유지` | 선택 | `4개월` / `6개월` / `직접입력` / (없음=`''`) |
 | `부가서비스해지일자` | 날짜(선택) | **개통일 +124일 / +184일** 자동 계산 |
 | `중고폰` | 문자열 | 반납 / 매입 / 미사용 등 |
-| `중고폰금액` | 숫자(원) | 리베이트와 동일하게 `#,##0` |
+| `중고폰금액` | 숫자(원) | 리베이트와 동일하게 `#,##0`. 입력은 **만 원 단위·슬래시 자동 합산**(`22`→220,000 · `50/20`→700,000), 저장은 항상 원 단위 숫자 |
 | `무선리베이트` | 숫자(원) | 기기변경·번호이동·신규가입 지원금. 통계에서 합산 |
 | `유선리베이트` | 숫자(원) | 인터넷·TV 가입·약정갱신 지원금. 통계에서 합산 |
 | `메모` | 문자열 | 자유 메모. 시트로 나갈 때 상태 표기(`[단말보험]`·`[요금완료]`·`[부가완료]`·`[단말할인]`·`[요금할인]`·`[중고신규]`·`[중고MNP]`·`[중고결합]`·`[장기기변]`·`[512G]`)가 앞에 붙고, 화면에는 보이지 않는다 |
@@ -342,6 +373,7 @@ kt-store-manager/
   |---|---|---|
   | `할인유형` | `단말할인` / `요금할인` / `''` | `[단말할인]` / `[요금할인]` |
   | `특수조건` | `중고신규,512G` 처럼 콤마로 이은 목록 | `[중고신규]` `[중고MNP]` `[중고결합]` `[장기기변]` `[512G]` |
+  | `페이백카드상세` (v32) | `할부금/선결제 200000,위약금/1일예정 150000` | `[카드상세:…]` (줄이 2개 이상일 때만) |
 
 - **내부 전용 키(엑셀 컬럼 아님)**: `요금제변경완료` · `부가서비스해지완료` — `'완료'` 또는 `''`. JSON 백업에는 들어가고, 엑셀·시트에는 메모 표기로만 나간다.
 
@@ -376,7 +408,7 @@ kt-store-manager/
 
 | 탭 | 헤더 | 언제 쓰나 |
 |---|---|---|
-| `_접속기기` (`DEVICE_SHEET`) | `deviceId · 기기명 · 담당자명 · 최근접속 · 최초접속 · UA` | 앱이 `list`/`upsert` 할 때마다 그 기기 한 줄을 새로 넣거나 최근 접속만 갱신 (`touchDevice_()`) |
+| `_접속기기` (`DEVICE_SHEET`) | `deviceId · 기기명 · 담당자명 · 최근접속 · 최초접속 · UA · 상태 · owner` | 앱이 `list`/`upsert` 할 때마다 그 기기 한 줄을 새로 넣거나 최근 접속만 갱신 (`touchDevice_()`). **v32 승인제**: `상태` = `approved`/`pending`/`blocked`, `owner` = `Y`(사장님 기기 — 추방 불가). 승인제 이전 6칸 탭은 첫 요청에서 8칸으로 옮겨지고 기존 기기는 그대로 `approved` |
 | `_차단` (`BLOCK_SHEET`) | `종류 · 값 · 표시이름 · 차단시각 · 차단한사람` | 관리자가 추방(차단)한 **기기(`deviceId`)** 와 **직원 이름**. `종류`는 `기기`/`직원` |
 
 ---
@@ -427,6 +459,9 @@ kt-store-manager/
 
 - 앱은 처음 열 때 `deviceId` 하나를 만들어 localStorage 에 보관하고, 모든 요청에
   `deviceId · device(기기명) · name(내 이름) · ua` 를 함께 보낸다. `Code.gs`는 이를 `_접속기기` 에 기록한다.
+- **v32 기기 승인제**: `_접속기기` 의 `상태` 가 `pending` 이면 서버는 `{ok:false, error:'device_pending'}` 만 돌려주고 앱은 `#pendingScreen` 을 띄운다.
+  사장님 PIN 을 그 기기에서 넣으면(`approve_device`) `approved` + `owner` 가 되고, 관리자는 `기기 관리 → 승인 대기 → [승인]` 으로 다른 기기를 승인한다.
+  `owner` 기기·이름 `김태양` 은 `cannot_kick_owner` 로 추방이 거부된다.
 - 관리자 모드의 `더보기 → 직원 · 기기 관리`(`#devicesDialog`)가 서버에 `devices` / `block` / `unblock` 을 보낸다.
   **셋 다 `adminPin`(관리자 PIN — 잠금 해제 때 입력한 값, sessionStorage 에만 둔다)이 필요하다.**
 - 차단된 기기·직원이 `list`/`upsert` 하면 `Code.gs`는 `{ok:false, blocked:true, error:'관리자에 의해 접근이 제한되었습니다.'}` 만 돌려주고
@@ -508,6 +543,10 @@ kt-store-manager/
 | `runSync()/flushPending()/applyServerList()` | 공용 장부 업로드·병합 |
 | `loadDevice()/deviceInfo()` | 이 브라우저의 `deviceId` 생성·유지, 요청에 실어 보낼 기기 정보 |
 | `onBlocked()/showLock()/recheckBlock()` | 차단 응답 → 로컬 장부 삭제 + 잠금 화면, `다시 확인` |
+| `showPending()/onPending()/recheckPending()/approvePendingDevice()` | **v32** — 승인 대기 화면(⏳ 사장님 승인 대기 중) · `[다시 확인]` · 사장님 PIN 즉시 승인(`approve_device`) |
+| `pcSetRows()/pcAddRow()/pcRefresh()/pcToggle()/pcDetailParse()/pcDetailText()` | **v32** — 페이백(카드결제) 여러 줄 그리기·합계·칩 토글·상세 문자열↔줄 변환 |
+| `usedParse()/usedAmount()/usedPriceHintText()/paintUsedPriceHint()` | **v32** — 중고폰금액 만 원 단위·슬래시 합산 파서 · `자동 계산` 미리보기 |
+| `approveTarget()/renderDevices()/loadDevices()` | **v32** — 기기 관리: 승인 대기 섹션(`[승인]`·`[차단]`)·사장님 기기 `👑` 배지 |
 | `openDevicesDialog()/loadDevices()/renderDevices()` | 관리자 `직원 · 기기 관리` 창 |
 | `loadPriceTable()/savePriceTable()/normalizePriceTable()` | 단가표 불러오기·저장(`kt_price_table_v1`)·정리 |
 | `openPriceDialog()/renderPriceDialog()/pdCollect()` | 관리자 `단가표 · 정책 계산표` 창 그리기 · 지금 표에 적힌 값 모으기 |
@@ -755,6 +794,10 @@ kt-store-manager/
 
 - **v30 부터 결제 칸(추지·페이백)·중고폰 확인 상태는 메모 표기 `[미기입:추지,페이백카드,중고폰]`** 으로 공유됩니다(시트 20컬럼 유지).
   예전에 저장된 기록에는 이 표기가 없어 `⚠️ 미기입 확인` 목록에 후보로 나옵니다 — 한 번 열어 확인·저장하면 빠집니다.
+- **v32 — 기기 승인제는 `Code.gs` 를 다시 배포해야 동작합니다.** 앱만 새 버전이면 구 서버가 승인제를 모르니 모든 기기가 예전처럼 들어옵니다.
+  배포 후 첫 요청에서 `_접속기기` 가 8칸(상태·owner)으로 늘고 **이미 쓰던 기기는 자동으로 `approved`** 됩니다.
+  새 기기(새 폰·새 브라우저·origin 변경)는 `pending` 이라 사장님이 `직원 · 기기 관리 → 승인` 을 누르거나 그 기기에서 사장님 PIN 을 넣어야 합니다.
+  **사장님(김태양) 기기와 이름이 `김태양` 인 직원 항목은 서버가 추방을 거부**합니다(`cannot_kick_owner`) — 실수로 잠기는 일을 막는 장치입니다.
 - **관리자 PIN 은 SHA-256 해시로만 비교**합니다(코드에 평문 없음). 잠금 해제 때 입력한 PIN 은 삭제·차단 요청에 쓰려고 **sessionStorage** 에만 잠깐 둡니다
   (브라우저 탭을 닫으면 사라짐). 관리자 모드는 **10분 미사용 시 자동 잠금**입니다.
 

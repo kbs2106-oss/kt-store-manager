@@ -7,6 +7,10 @@
  *  · 앱(kt-store-manager)에서 매장 PIN 을 함께 보내야 읽기/쓰기가 됩니다.
  *  · 앱을 연 기기는 숨김 탭 '_접속기기' 에, 추방(차단)한 기기·직원은 '_차단' 에 기록됩니다.
  *    차단된 기기/직원은 list·upsert 요청에 {ok:false, blocked:true} 만 받고 데이터는 받지 못합니다.
+ *  · v32 부터 기기 승인제: '_접속기기' 의 상태 칸이 approved / pending / blocked 이고
+ *    처음 보는 기기는 pending 으로 적혀 사장님이 [승인]하기 전에는 장부를 받지 못합니다
+ *    ({ok:false, error:'device_pending'}). 사장님 PIN(0525)을 보낸 기기는 자동 승인 + owner 보호.
+ *    owner 기기(이름 김태양)는 block·kick 요청에도 {ok:false, error:'cannot_kick_owner'} 만 돌려줍니다.
  *
  *  설치 : 스프레드시트 → 확장 프로그램 → Apps Script 에 이 파일 전체를 붙여넣고
  *         배포 → 새 배포 → 웹앱 (실행: 나 / 액세스: 모든 사용자) → 배포
@@ -22,9 +26,15 @@ var SPREADSHEET_ID = '1DjKKQT9K2ryDKjRL88B31pMhdqgqlzEX39uDbG8F4E4'; // 시트�
 var STAFF_NAMES  = ['김태양', '김설화', '이건엽', '권영한', '전국현'];   // 직원별 보기 탭을 미리 만들 이름들 (직원 5명)
 var CREATE_STAFF_TABS = true;            // 담당자 이름이 처음 등장할 때 직원별 보기 탭 자동 생성
 
-/* ===== 접속 기기 · 차단(추방) ===== */
+/* ===== 접속 기기 · 승인제 · 차단(추방) ===== */
 var DEVICE_SHEET = '_접속기기';          // 앱을 연 기기 기록 (숨김 탭 — 직접 고치지 말 것)
-var DEVICE_HEAD  = ['deviceId', '기기명', '담당자명', '최근접속', '최초접속', 'UA'];
+var DEVICE_HEAD  = ['deviceId', '기기명', '담당자명', '최근접속', '최초접속', 'UA', '상태', 'owner'];
+var DEVICE_BASE_COLS = 6;                // 승인제 이전 기기 탭의 여섯 칸 (기기명·담당자명·접속시각만 갱신)
+var ST_APPROVED  = 'approved';           // 승인됨 — 장부를 주고받는다
+var ST_PENDING   = 'pending';            // 승인 대기 — 사장님이 [승인]을 눌러야 들어온다
+var ST_BLOCKED   = 'blocked';            // 차단(추방)
+var OWNER_NAMES  = ['김태양'];            // 사장님 이름 — 이 이름의 기기는 절대 추방할 수 없다
+var OWNER_MARK   = 'Y';                  // owner 칸 표시
 var BLOCK_SHEET  = '_차단';              // 추방(차단) 목록 (숨김 탭 — 앱의 기기 관리 창에서만 바꾼다)
 var BLOCK_HEAD   = ['종류', '값', '표시이름', '차단시각', '차단한사람'];
 
@@ -66,16 +76,22 @@ function doGet(e) {
       var blk = checkBlocked_(dev);
       if (blk) {
         out = blockedOut_(blk);
-      } else if (action === 'list') {
-        touchDevice_(dev);
-        out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
-      } else if (action === 'ping') {
-        touchDevice_(dev);
-        var sh = getDataSheet_();
-        out = { ok: true, action: 'ping', sheet: SHEET_NAME,
-                count: Math.max(0, sh.getLastRow() - 1), serverTime: nowIso_() };
       } else {
-        throw new Error('지원하지 않는 요청입니다: ' + action);
+        // v32 — 기기 승인제: 처음 보는 기기·승인 대기 기기는 장부를 주지 않는다
+        var pend = checkApproval_(dev, p);
+        if (pend) {
+          out = pend;
+        } else if (action === 'list') {
+          touchDevice_(dev);
+          out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
+        } else if (action === 'ping') {
+          touchDevice_(dev);
+          var sh = getDataSheet_();
+          out = { ok: true, action: 'ping', sheet: SHEET_NAME,
+                  count: Math.max(0, sh.getLastRow() - 1), serverTime: nowIso_() };
+        } else {
+          throw new Error('지원하지 않는 요청입니다: ' + action);
+        }
       }
     }
   } catch (err) {
@@ -102,27 +118,43 @@ function doPost(e) {
     checkPin_(req.pin);
     var action = String(req.action || 'upsert');
     var dev = parseDevice_(req);
-    if (action === 'block' || action === 'unblock' || action === 'devices') {
+    if (action === 'block' || action === 'kick' || action === 'block_device' ||
+        action === 'unblock' || action === 'devices' ||
+        action === 'approve_device' || action === 'reject_device') {
       checkAdminPin_(req.adminPin, '기기 관리');
-      if (action === 'block') out = blockTarget_(req, dev);
-      else if (action === 'unblock') out = unblockTarget_(req);
-      else out = { ok: true, action: 'devices', devices: readDevices_(), blocks: readBlocks_(),
-                   staff: STAFF_NAMES.slice(), serverTime: nowIso_() };
+      if (action === 'block' || action === 'kick' || action === 'block_device') {
+        if (action !== 'block' && req.type == null) req.type = 'device';   // kick·block_device 는 기기 추방
+        out = blockTarget_(req, dev);
+      } else if (action === 'unblock') {
+        out = unblockTarget_(req);
+      } else if (action === 'approve_device') {
+        out = approveDevice_(req, dev);
+      } else if (action === 'reject_device') {
+        out = rejectDevice_(req, dev);
+      } else {
+        out = devicesOut_();
+      }
     } else {
       var blk = checkBlocked_(dev, req);
       if (blk) {
         out = blockedOut_(blk);
-      } else if (action === 'upsert') {
-        touchDevice_(dev);
-        out = upsert_(req.record || {});
-      } else if (action === 'delete') {
-        checkAdminPin_(req.adminPin);
-        out = remove_(req.id || (req.record && req.record.id));
-      } else if (action === 'list') {
-        touchDevice_(dev);
-        out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
       } else {
-        throw new Error('지원하지 않는 요청입니다: ' + action);
+        // v32 — 기기 승인제: 사장님이 [승인]하기 전에는 list·upsert 모두 막힌다
+        var pend = checkApproval_(dev, req);
+        if (pend) {
+          out = pend;
+        } else if (action === 'upsert') {
+          touchDevice_(dev);
+          out = upsert_(req.record || {});
+        } else if (action === 'delete') {
+          checkAdminPin_(req.adminPin);
+          out = remove_(req.id || (req.record && req.record.id));
+        } else if (action === 'list') {
+          touchDevice_(dev);
+          out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
+        } else {
+          throw new Error('지원하지 않는 요청입니다: ' + action);
+        }
       }
     }
   } catch (err) {
@@ -462,7 +494,215 @@ function sheetByName_(name, head) {
 function getDeviceSheet_() { return sheetByName_(DEVICE_SHEET, DEVICE_HEAD); }
 function getBlockSheet_() { return sheetByName_(BLOCK_SHEET, BLOCK_HEAD); }
 
-/** 기기 한 대를 기록하거나 최근 접속만 갱신한다 (실패해도 본 요청은 계속) */
+/* ---------------------------------------------------------
+   v32 — 기기 승인제
+   ---------------------------------------------------------
+   · 기기 탭 '_접속기기' 에 상태(approved / pending / blocked)와 owner 칸을 더했다.
+   · 처음 보는 기기는 pending 으로 적히고, 장부 레코드 없이 {ok:false, error:'device_pending'} 만 받는다.
+   · 사장님 PIN(0525)을 함께 보낸 기기는 자동 approved + owner 로 등록된다.
+   · 승인제 이전부터 쓰던 기기(상태 칸이 비어 있던 줄)는 모두 approved 로 옮겨져 그대로 쓴다.
+   · owner 기기(또는 이름이 김태양)는 추방·반려할 수 없다 — cannot_kick_owner.
+   --------------------------------------------------------- */
+
+/** 기기 탭 헤더를 8칸(상태·owner 포함)으로 맞춘다. 예전 6칸 탭은 기존 기기를 모두 승인으로 옮긴다. */
+function ensureDeviceHead_(sh) {
+  var need = DEVICE_HEAD.length;
+  var width = Math.max(sh.getLastColumn(), need);
+  var head = sh.getRange(1, 1, 1, width).getValues()[0].map(function (v) {
+    return String(v == null ? '' : v).trim();
+  });
+  if (head[6] === DEVICE_HEAD[6] && head[7] === DEVICE_HEAD[7]) return false;
+  var last = sh.getLastRow();
+  var block = [DEVICE_HEAD.slice()];
+  if (last >= 2) {
+    var vals = sh.getRange(2, 1, last - 1, width).getValues();
+    for (var i = 0; i < vals.length; i++) {
+      var line = vals[i].slice(0, need);
+      while (line.length < need) line.push('');
+      var id = String(line[0] == null ? '' : line[0]).trim();
+      if (!id) continue;
+      if (!String(line[6] || '').trim()) line[6] = ST_APPROVED;   // 승인제 이전 기기는 그대로 통과
+      if (!String(line[7] || '').trim() && OWNER_NAMES.indexOf(String(line[2] || '').trim()) >= 0) line[7] = OWNER_MARK;
+      block.push(line);
+    }
+  }
+  sh.getRange(1, 1, block.length, need).setNumberFormat('@').setValues(block);
+  sh.getRange(1, 1, 1, need).setFontWeight('bold').setBackground('#0B57D0').setFontColor('#FFFFFF');
+  sh.setFrozenRows(1);
+  return true;
+}
+
+/** 기기 탭 (헤더를 8칸으로 보장) */
+function deviceSheet_() {
+  var sh = getDeviceSheet_();
+  try { ensureDeviceHead_(sh); } catch (err) { /* 헤더 정리 실패해도 읽기는 계속 */ }
+  return sh;
+}
+
+function normStatus_(v) {
+  var s = String(v == null ? '' : v).trim().toLowerCase();
+  if (s === ST_PENDING || s === '대기' || s === '승인대기' || s === '승인 대기') return ST_PENDING;
+  if (s === ST_BLOCKED || s === '차단' || s === '차단됨' || s === 'block') return ST_BLOCKED;
+  return ST_APPROVED;   // 빈칸(승인제 이전 기기)·approved
+}
+
+function isOwnerMark_(v) {
+  var s = String(v == null ? '' : v).trim().toLowerCase();
+  return s === 'y' || s === 'yes' || s === 'o' || s === 'true' || s === '1' || s === 'owner' || s === '사장님';
+}
+
+/** owner 칸이 켜졌거나 이름이 사장님(김태양)인 기기 */
+function isOwnerDevice_(row) {
+  if (!row) return false;
+  if (isOwnerMark_(row.owner)) return true;
+  return OWNER_NAMES.indexOf(String(row.name || '').trim()) >= 0;
+}
+
+/** 기기 한 대의 지금 상태 (없으면 null) */
+function deviceRowOf_(deviceId) {
+  var id = String(deviceId || '').trim();
+  if (!id) return null;
+  var sh = null;
+  try { sh = deviceSheet_(); } catch (err) { return null; }
+  var last = sh.getLastRow();
+  if (last < 2) return null;
+  var tz = tz_();
+  var v = sh.getRange(2, 1, last - 1, DEVICE_HEAD.length).getValues();
+  for (var i = 0; i < v.length; i++) {
+    if (String(v[i][0] == null ? '' : v[i][0]).trim() === id) {
+      return {
+        row: i + 2,
+        deviceId: id,
+        label: String(v[i][1] || '').trim(),
+        name: String(v[i][2] || '').trim(),
+        lastSeen: stampText_(v[i][3], tz),
+        firstSeen: stampText_(v[i][4], tz),
+        ua: String(v[i][5] || '').trim(),
+        status: normStatus_(v[i][6]),
+        owner: isOwnerMark_(v[i][7]) ? OWNER_MARK : ''
+      };
+    }
+  }
+  return null;
+}
+
+/** 기기 한 줄을 상태·owner 까지 통째로 쓴다 */
+function writeDeviceRow_(sh, rowIdx, d) {
+  sh.getRange(rowIdx, 1, 1, DEVICE_HEAD.length).setNumberFormat('@').setValues([[
+    d.deviceId, d.label || '', d.name || '', d.lastSeen || '', d.firstSeen || d.lastSeen || '', d.ua || '',
+    d.status || ST_APPROVED, d.owner || ''
+  ]]);
+}
+
+/** 처음 보는 기기를 적는다 (있으면 그대로 둔다) */
+function registerDevice_(dev, status, owner) {
+  if (!dev || !dev.deviceId) return null;
+  var found = deviceRowOf_(dev.deviceId);
+  if (found) return found;
+  var sh = deviceSheet_();
+  var now = nowIso_();
+  var row = Math.max(sh.getLastRow() + 1, 2);
+  writeDeviceRow_(sh, row, {
+    deviceId: dev.deviceId, label: dev.label, name: dev.name, ua: dev.ua,
+    lastSeen: now, firstSeen: now, status: status || ST_PENDING, owner: owner || ''
+  });
+  return deviceRowOf_(dev.deviceId);
+}
+
+/** 기기의 상태·owner 만 바꾼다 (나머지 칸은 그대로) */
+function setDeviceRow_(deviceId, status, owner) {
+  var row = deviceRowOf_(deviceId);
+  if (!row) return false;
+  var sh = deviceSheet_();
+  row.status = status || row.status;
+  row.owner = (owner == null) ? row.owner : owner;
+  writeDeviceRow_(sh, row.row, row);
+  return true;
+}
+
+/** 사장님 PIN 을 함께 보낸 요청인가 */
+function adminReq_(src) {
+  var o = src || {};
+  return String(o.adminPin == null ? '' : o.adminPin).trim() === String(ADMIN_PIN);
+}
+
+function pendingOut_(deviceId) {
+  return {
+    ok: false, error: 'device_pending', pending: true, deviceId: String(deviceId || ''),
+    message: '사장님 승인을 기다리는 기기입니다.', serverTime: nowIso_()
+  };
+}
+
+function cannotKickOut_(row) {
+  return {
+    ok: false, error: 'cannot_kick_owner',
+    message: '사장님(김태양) 기기는 추방할 수 없습니다.',
+    deviceId: (row && row.deviceId) || '', serverTime: nowIso_()
+  };
+}
+
+/**
+ * 기기 승인 검사 — 통과면 null, 막아야 하면 그 응답.
+ * deviceId 가 없는 단순 curl 조회(?pin=5001&action=list)는 예전처럼 통과시킨다.
+ */
+function checkApproval_(dev, src) {
+  if (!dev || !dev.deviceId) return null;
+  var isAdmin = adminReq_(src);
+  var row = deviceRowOf_(dev.deviceId);
+  if (!row) {
+    if (isAdmin) { registerDevice_(dev, ST_APPROVED, OWNER_MARK); return null; }   // 사장님 PIN 을 아는 기기 = 사장님 폰
+    registerDevice_(dev, ST_PENDING, '');
+    return pendingOut_(dev.deviceId);
+  }
+  if (row.status === ST_BLOCKED) return blockedOut_({ type: 'device', value: dev.deviceId, label: row.label });
+  if (row.status === ST_PENDING) {
+    if (isAdmin) { setDeviceRow_(dev.deviceId, ST_APPROVED, row.owner || OWNER_MARK); return null; }
+    try { touchDevice_(dev); } catch (err) {}
+    return pendingOut_(dev.deviceId);
+  }
+  return null;
+}
+
+function devicesOut_() {
+  return { ok: true, action: 'devices', devices: readDevices_(), blocks: readBlocks_(),
+           staff: STAFF_NAMES.slice(), ownerNames: OWNER_NAMES.slice(), serverTime: nowIso_() };
+}
+
+/** 승인 대기 기기를 승인한다 — 사장님 PIN 필요 */
+function approveDevice_(req, dev) {
+  var target = String(req.value || req.deviceId || '').trim();
+  if (!target) throw new Error('승인할 기기를 지정해 주세요.');
+  var row = deviceRowOf_(target);
+  if (!row) throw new Error('그 기기를 찾을 수 없습니다. 그 기기에서 앱을 한 번 열어 주세요.');
+  var owner = row.owner;
+  // 사장님 PIN 을 누른 기기 자체를 승인하는 경우(= 새 사장님 폰) · 이름이 사장님이면 owner 로 보호
+  if (!isOwnerMark_(owner) && (target === String((dev && dev.deviceId) || '') || OWNER_NAMES.indexOf(row.name) >= 0)) {
+    owner = OWNER_MARK;
+  }
+  setDeviceRow_(target, ST_APPROVED, owner);
+  removeBlock_('device', target);
+  var out = devicesOut_();
+  out.action = 'approve_device';
+  out.deviceId = target;
+  out.owner = isOwnerMark_(owner) ? OWNER_MARK : '';
+  out.name = row.name;
+  out.label = row.label;
+  return out;
+}
+
+/** 승인 대기 기기를 반려(차단)한다 — 사장님 PIN 필요 · 사장님 기기는 반려 불가 */
+function rejectDevice_(req, dev) {
+  var copy = {};
+  for (var k in req) if (req.hasOwnProperty(k)) copy[k] = req[k];
+  copy.type = 'device';
+  copy.value = String(req.value || req.deviceId || '').trim();
+  if (!copy.value) throw new Error('반려할 기기를 지정해 주세요.');
+  var out = blockTarget_(copy, dev);
+  if (out && out.ok) out.action = 'reject_device';
+  return out;
+}
+
+/** 기기 한 대의 최근 접속만 갱신한다 (없으면 '대기'로 적는다 · 실패해도 본 요청은 계속) */
 function touchDevice_(dev) {
   if (!dev || !dev.deviceId) return;
   var lock = LockService.getScriptLock();
@@ -470,29 +710,20 @@ function touchDevice_(dev) {
   try { got = lock.tryLock(15000); } catch (err) { got = false; }
   if (!got) return;
   try {
-    var sh = getDeviceSheet_();
-    var last = sh.getLastRow();
+    var row = deviceRowOf_(dev.deviceId);
+    var sh = deviceSheet_();
     var now = nowIso_();
-    var row = 0;
-    if (last >= 2) {
-      var ids = sh.getRange(2, 1, last - 1, 1).getValues();
-      for (var i = 0; i < ids.length; i++) {
-        if (String(ids[i][0] == null ? '' : ids[i][0]).trim() === dev.deviceId) { row = i + 2; break; }
-      }
-    }
-    if (row > 0) {
-      var first = stampText_(sh.getRange(row, 5).getValue(), tz_()) || now;
-      var prevName = String(sh.getRange(row, 3).getValue() || '').trim();
-      sh.getRange(row, 1, 1, DEVICE_HEAD.length).setNumberFormat('@');
-      sh.getRange(row, 1, 1, DEVICE_HEAD.length).setValues([[
-        dev.deviceId, dev.label, dev.name || prevName, now, first, dev.ua
+    if (row) {
+      // 기기명·담당자명·최근접속만 — 상태·owner 는 건드리지 않는다
+      sh.getRange(row.row, 1, 1, DEVICE_BASE_COLS).setNumberFormat('@').setValues([[
+        row.deviceId, dev.label || row.label, dev.name || row.name, now, row.firstSeen || now, dev.ua || row.ua
       ]]);
     } else {
-      row = Math.max(last + 1, 2);
-      sh.getRange(row, 1, 1, DEVICE_HEAD.length).setNumberFormat('@');
-      sh.getRange(row, 1, 1, DEVICE_HEAD.length).setValues([[
-        dev.deviceId, dev.label, dev.name, now, now, dev.ua
-      ]]);
+      var r = Math.max(sh.getLastRow() + 1, 2);
+      writeDeviceRow_(sh, r, {
+        deviceId: dev.deviceId, label: dev.label, name: dev.name, ua: dev.ua,
+        lastSeen: now, firstSeen: now, status: ST_PENDING, owner: ''
+      });
     }
   } catch (err) {
     /* 기기 기록 실패는 본 요청에 영향 없음 */
@@ -501,11 +732,12 @@ function touchDevice_(dev) {
   }
 }
 
-/** 기기 목록 (최근 접속 순) */
+/** 기기 목록 (최근 접속 순 · 상태·owner 포함) */
 function readDevices_() {
   var sh = null;
   try { sh = getSpreadsheet_().getSheetByName(DEVICE_SHEET); } catch (err) { return []; }
   if (!sh) return [];
+  try { ensureDeviceHead_(sh); } catch (err) {}
   var last = sh.getLastRow();
   if (last < 2) return [];
   var tz = tz_();
@@ -520,7 +752,10 @@ function readDevices_() {
       name: String(v[i][2] || '').trim(),
       lastSeen: stampText_(v[i][3], tz),
       firstSeen: stampText_(v[i][4], tz),
-      ua: String(v[i][5] || '').trim()
+      ua: String(v[i][5] || '').trim(),
+      status: normStatus_(v[i][6]),
+      owner: isOwnerMark_(v[i][7]) ? OWNER_MARK : '',
+      ownerName: OWNER_NAMES.indexOf(String(v[i][2] || '').trim()) >= 0
     });
   }
   out.sort(function (a, b) { return String(b.lastSeen).localeCompare(String(a.lastSeen)); });
@@ -597,6 +832,12 @@ function checkBlocked_(dev, req) {
   }
   if (!deviceId && !names.length) return null;
 
+  // v32 — 기기 탭의 상태가 blocked 인 경우도 차단으로 본다
+  if (deviceId) {
+    var drow = deviceRowOf_(deviceId);
+    if (drow && drow.status === ST_BLOCKED) return { type: 'device', value: deviceId, label: drow.label };
+  }
+
   var b = readBlocks_();
   for (i = 0; i < b.device.length; i++) {
     if (deviceId && b.device[i].value === deviceId) {
@@ -630,11 +871,18 @@ function blockedOut_(info) {
   };
 }
 
-/** 기기/직원을 추방(차단)한다 — 관리자 PIN 필요 */
+/** 기기/직원을 추방(차단)한다 — 관리자 PIN 필요 · 사장님 기기·이름은 절대 불가 */
 function blockTarget_(req, dev) {
   var type = normBlockType_(req.type);
   var value = String(req.value == null ? '' : req.value).trim();
   if (!value) throw new Error('차단할 기기/직원을 지정해 주세요.');
+  // v32 — 사장님 기기(owner) · 사장님 이름은 추방 불가
+  if (type === 'device') {
+    var drow = deviceRowOf_(value);
+    if (isOwnerDevice_(drow)) return cannotKickOut_(drow);
+  } else if (OWNER_NAMES.indexOf(value) >= 0) {
+    return cannotKickOut_({ deviceId: '', name: value });
+  }
   var label = String(req.label || '').trim().slice(0, 60);
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) throw new Error('다른 작업이 진행 중입니다. 잠시 뒤 다시 시도해 주세요.');
@@ -643,17 +891,35 @@ function blockTarget_(req, dev) {
     var rows = readBlockRows_(sh);
     for (var i = 0; i < rows.length; i++) {
       if (normBlockType_(rows[i].kind) === type && rows[i].value === value) {
+        if (type !== 'staff') setDeviceRow_(value, ST_BLOCKED);
         return { ok: true, action: 'block', already: true, type: type, value: value,
-                 blocks: readBlocks_(), serverTime: nowIso_() };
+                 blocks: readBlocks_(), devices: readDevices_(), serverTime: nowIso_() };
       }
     }
     sh.appendRow([type === 'staff' ? '직원' : '기기', value, label,
                   nowIso_(), String((dev && dev.name) || req.by || '')]);
+    if (type !== 'staff') setDeviceRow_(value, ST_BLOCKED);
     return { ok: true, action: 'block', type: type, value: value, label: label,
-             blocks: readBlocks_(), serverTime: nowIso_() };
+             blocks: readBlocks_(), devices: readDevices_(), serverTime: nowIso_() };
   } finally {
     lock.releaseLock();
   }
+}
+
+/** 차단 탭에서 한 건을 지운다 (여러 줄이면 모두) */
+function removeBlock_(type, value) {
+  var sh = null;
+  try { sh = getSpreadsheet_().getSheetByName(BLOCK_SHEET); } catch (err) { sh = null; }
+  if (!sh) return 0;
+  var rows = readBlockRows_(sh);
+  var removed = 0;
+  for (var i = rows.length - 1; i >= 0; i--) {
+    if (normBlockType_(rows[i].kind) === type && rows[i].value === value) {
+      sh.deleteRow(rows[i].row);
+      removed++;
+    }
+  }
+  return removed;
 }
 
 /** 추방(차단) 해제 — 관리자 PIN 필요 */
@@ -664,20 +930,14 @@ function unblockTarget_(req) {
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) throw new Error('다른 작업이 진행 중입니다. 잠시 뒤 다시 시도해 주세요.');
   try {
-    var sh = null;
-    try { sh = getSpreadsheet_().getSheetByName(BLOCK_SHEET); } catch (err) { sh = null; }
-    if (!sh) return { ok: true, action: 'unblock', type: type, value: value, removed: 0,
-                      blocks: readBlocks_(), serverTime: nowIso_() };
-    var rows = readBlockRows_(sh);
-    var removed = 0;
-    for (var i = rows.length - 1; i >= 0; i--) {
-      if (normBlockType_(rows[i].kind) === type && rows[i].value === value) {
-        sh.deleteRow(rows[i].row);
-        removed++;
-      }
+    var removed = removeBlock_(type, value);
+    // v32 — 기기 상태도 다시 승인으로 (사장님 기기면 owner 는 그대로)
+    if (type !== 'staff') {
+      var drow = deviceRowOf_(value);
+      if (drow && drow.status === ST_BLOCKED) setDeviceRow_(value, ST_APPROVED);
     }
     return { ok: true, action: 'unblock', type: type, value: value, removed: removed,
-             blocks: readBlocks_(), serverTime: nowIso_() };
+             blocks: readBlocks_(), devices: readDevices_(), serverTime: nowIso_() };
   } finally {
     lock.releaseLock();
   }
@@ -798,5 +1058,6 @@ function setup() {
 /** 배포 주소를 다시 만들었을 때 확인용 */
 function whoami() {
   return { sheet: SHEET_NAME, pinLength: String(STORE_PIN).length, adminPinLength: String(ADMIN_PIN).length,
-           staff: STAFF_NAMES, deviceSheet: DEVICE_SHEET, blockSheet: BLOCK_SHEET };
+           staff: STAFF_NAMES, deviceSheet: DEVICE_SHEET, blockSheet: BLOCK_SHEET,
+           deviceHead: DEVICE_HEAD.slice(), ownerNames: OWNER_NAMES.slice(), approval: true };
 }
