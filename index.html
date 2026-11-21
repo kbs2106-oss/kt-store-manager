@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="description" content="KT 텔나라네트웍 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
-<title>KT 텔나라네트웍 칠금점 · 개통 관리 장부</title>
+<meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
+<title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
 <!-- PWA : 홈 화면 설치 -->
 <link rel="manifest" href="./manifest.webmanifest">
@@ -32,8 +32,8 @@
     --slate-600:#475569;
     --slate-500:#64748B;
     --slate-400:#94A3B8;
-    --line:#E4EAF2;
-    --line-strong:#D3DDEA;
+    --line:#E3EAF3;
+    --line-strong:#D2DCEA;
     --bg:#F4F7FB;
     --card:#FFFFFF;
     --green:#0E7C5A;
@@ -71,26 +71,35 @@
   /* ---------- top bar ---------- */
   .topbar{
     position:sticky;top:0;z-index:40;
-    background:rgba(255,255,255,.86);
+    background:rgba(255,255,255,.92);
     backdrop-filter:saturate(180%) blur(14px);
     -webkit-backdrop-filter:saturate(180%) blur(14px);
     border-bottom:1px solid var(--line);
   }
   .topbar-inner{
-    max-width:1280px;margin:0 auto;padding:12px 22px;
-    display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+    max-width:1280px;margin:0 auto;padding:9px 22px;
+    display:flex;align-items:center;gap:12px;
   }
-  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand{display:flex;align-items:center;gap:10px;min-width:0}
   .brand-mark{
-    width:40px;height:40px;border-radius:12px;flex:none;
-    background:linear-gradient(145deg,#0B57D0,#0A3E96);
-    color:#fff;font-weight:800;font-size:14px;letter-spacing:.02em;
+    width:37px;height:37px;border-radius:11px;flex:none;
+    background:linear-gradient(150deg,#0B57D0 0%,#06357F 100%);
+    color:#fff;font-weight:900;font-size:13px;letter-spacing:.02em;
     display:flex;align-items:center;justify-content:center;
-    box-shadow:0 6px 16px -8px rgba(11,87,208,.85);
+    box-shadow:0 8px 18px -11px rgba(11,87,208,.95);
   }
-  .brand-text h1{font-size:16px;font-weight:800;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .brand-text p{font-size:12px;color:var(--slate-500);font-weight:500;margin-top:1px}
-  .topbar-actions{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .brand-text{min-width:0}
+  .brand-text h1{font-size:16.5px;font-weight:800;letter-spacing:-.02em;line-height:1.25;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand-text p{font-size:11.5px;color:var(--slate-500);font-weight:600;margin-top:1px;letter-spacing:.02em}
+  .topbar-actions{display:flex;align-items:center;gap:7px;margin-left:auto;min-width:0;flex-wrap:wrap;justify-content:flex-end}
+  .btn-add{
+    height:40px;padding:0 16px;font-size:14px;font-weight:800;border-radius:11px;gap:7px;
+    box-shadow:0 10px 22px -13px rgba(11,87,208,.95), 0 1px 0 rgba(255,255,255,.25) inset;
+  }
+  .btn-add svg{width:16px;height:16px}
+  .topbar .role-badge,.topbar .sync-pill{height:27px}
+  .topbar .save-state{font-size:11px}
 
   /* ---------- buttons ---------- */
   .btn{
@@ -130,51 +139,56 @@
   .menu-sep{height:1px;background:var(--line);margin:6px 4px}
 
   /* ---------- layout ---------- */
-  .app{max-width:1280px;margin:0 auto;padding:22px 22px 56px}
+  .app{max-width:1280px;margin:0 auto;padding:18px 22px 56px}
   .card{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
     box-shadow:var(--shadow);
   }
-  section{margin-bottom:16px}
+  section{margin-bottom:12px}
 
-  /* ---------- KPI ---------- */
+  /* ---------- month + 요약 스트립 ---------- */
   .section-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
   .month-control{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .month-control label{font-size:12.5px;font-weight:700;color:var(--slate-500);letter-spacing:.02em}
-  .month-control input[type=month]{
-    height:34px;padding:0 10px;border-radius:9px;border:1px solid var(--line-strong);
-    background:#fff;font-size:13.5px;font-weight:600;color:var(--slate-700);
-  }
-  .month-control input[type=month]:focus{outline:none;box-shadow:0 0 0 3px rgba(11,87,208,.18);border-color:#9DBDF0}
-  .chip-btn{
-    height:30px;padding:0 11px;border-radius:999px;border:1px solid var(--line-strong);
-    background:#fff;font-size:12.5px;font-weight:600;color:var(--slate-600);
-  }
-  .chip-btn:hover{background:#F4F7FB}
-  .chip-btn.on{background:var(--blue-50);border-color:var(--blue-100);color:var(--blue-700)}
-  .save-state{margin-left:auto;font-size:12px;color:var(--slate-400);display:flex;align-items:center;gap:6px}
+  .month-control label{font-size:12px;font-weight:800;color:var(--slate-500);letter-spacing:.02em}
+  .month-control input[type=month]{height:32px;padding:0 9px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;font-size:13px;font-weight:700;color:var(--ink)}
+  .month-control input[type=month]:focus{outline:none;box-shadow:0 0 0 3px rgba(11,87,208,.16);border-color:#9DBDF0}
+  .chip-btn{height:29px;padding:0 10px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;font-size:12px;font-weight:700;color:var(--slate-600)}
+  .chip-btn:hover{background:#F4F7FB;border-color:#C3D1E3}
+  .chip-btn.on{background:var(--blue-50);border-color:#BBD7FB;color:var(--blue-700)}
+  .head-right{margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+  .save-state{font-size:11.5px;color:var(--slate-400);display:flex;align-items:center;gap:5px;white-space:nowrap}
   .dot{width:6px;height:6px;border-radius:50%;background:#22A06B;display:inline-block}
 
-  .kpi-grid{display:grid;grid-template-columns:1.15fr 1fr 1.35fr;gap:14px}
-  @media (max-width:1080px){.kpi-grid{grid-template-columns:1fr 1fr}.kpi-due{grid-column:1/-1}}
-  @media (max-width:640px){.kpi-grid{grid-template-columns:1fr}.kpi-due{grid-column:auto}}
-  .kpi{padding:18px 20px 16px;position:relative;overflow:hidden}
-  .kpi-label{font-size:12.5px;font-weight:700;color:var(--slate-500);letter-spacing:.01em;display:flex;align-items:center;gap:6px}
-  .kpi-value{display:flex;align-items:baseline;gap:5px;margin-top:8px;font-weight:800;letter-spacing:-.03em}
-  .kpi-value .num{font-size:34px;line-height:1.05}
-  .kpi-value .unit{font-size:14px;font-weight:700;color:var(--slate-500);letter-spacing:0}
-  .kpi-sub{font-size:12.5px;color:var(--slate-500);margin-top:6px}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
-  .chip{
-    display:inline-flex;align-items:center;gap:5px;border:1px solid transparent;
-    padding:4px 9px;border-radius:999px;font-size:12px;font-weight:700;
-    background:#F1F5F9;color:var(--slate-600);
-  }
+  .summary{padding:0;overflow:hidden;display:grid;grid-template-columns:auto minmax(0,1fr);align-items:stretch}
+  .sum-month{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:11px 14px;
+    border-right:1px solid var(--line);background:linear-gradient(180deg,#FCFDFF 0%,#F4F8FF 100%)}
+  .sum-month label{font-size:11.5px;font-weight:800;color:var(--slate-500);letter-spacing:.02em;white-space:nowrap}
+  .sum-month input[type=month]{height:31px;padding:0 8px;border-radius:8px;border:1px solid var(--line-strong);
+    background:#fff;font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+  .sum-month input[type=month]:focus{outline:none;box-shadow:0 0 0 3px rgba(11,87,208,.16);border-color:#9DBDF0}
+  .sum-quick{display:flex;gap:4px}
+  .sum-quick .chip-btn{height:28px;font-size:11.5px;padding:0 9px}
+  .sum-cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sum-cell{display:flex;flex-direction:column;justify-content:center;min-width:0;
+    padding:9px 15px;border-right:1px solid var(--line)}
+  .sum-cell:last-child{border-right:0}
+  .sum-label{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:var(--slate-500);letter-spacing:.01em;white-space:nowrap;overflow:hidden}
+  .sum-label .tag{font-size:10px;font-weight:800;color:var(--slate-400);background:#EEF2F8;border-radius:5px;padding:0 5px;letter-spacing:0;flex:none}
+  .sum-value{display:flex;align-items:baseline;gap:3px;margin-top:2px;font-weight:800;letter-spacing:-.035em;color:var(--ink)}
+  .sum-value b{font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
+  .sum-value i{font-style:normal;font-size:12px;font-weight:700;color:var(--slate-400);letter-spacing:0}
+  .sum-sub{font-size:11px;color:var(--slate-400);margin-top:2px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sum-chips{grid-column:1/-1;display:flex;align-items:center;gap:5px;padding:5px 14px;
+    border-top:1px solid var(--line);background:#FCFDFF;overflow-x:auto;scrollbar-width:none}
+  .sum-chips::-webkit-scrollbar{display:none}
+  .chips{display:flex;flex-wrap:wrap;gap:5px}
+  .chip{display:inline-flex;align-items:center;gap:4px;border:1px solid transparent;padding:2px 8px;
+    border-radius:999px;font-size:11.5px;font-weight:700;background:#F1F5F9;color:var(--slate-600);
+    white-space:nowrap;flex:none}
   button.chip{cursor:pointer}
   button.chip:hover{filter:brightness(.97)}
   .chip b{font-weight:800}
-  .chip.on{box-shadow:0 0 0 2px rgba(11,87,208,.18) inset}
-
+  .chip.on{box-shadow:0 0 0 1.5px rgba(11,87,208,.38) inset}
   .t-move{background:var(--blue-50);color:var(--blue-700)}
   .t-change{background:var(--violet-bg);color:var(--violet)}
   .t-new{background:var(--green-bg);color:var(--green)}
@@ -182,44 +196,61 @@
   .t-kids{background:var(--teal-bg);color:var(--teal)}
   .t-etc{background:#F1F5F9;color:var(--slate-600)}
 
-  .due-stats{display:flex;gap:8px;margin-top:10px}
-  .due-stat{
-    flex:1;text-align:left;border:1px solid var(--line);background:#FBFCFE;
-    border-radius:12px;padding:9px 12px;display:flex;align-items:baseline;gap:7px;transition:background .15s,border-color .15s;
-  }
-  .due-stat:hover{background:#F4F7FB;border-color:#C3D1E3}
-  .due-stat .due-num{font-size:21px;font-weight:800;letter-spacing:-.02em}
-  .due-stat .due-cap{font-size:12px;font-weight:600;color:var(--slate-500)}
-  .due-stat.overdue .due-num{color:var(--red)}
-  .due-stat.soon .due-num{color:var(--amber)}
-  .due-stat.on{border-color:#9DBDF0;background:var(--blue-50)}
-  .due-list{margin-top:10px;display:flex;flex-direction:column;gap:2px;min-height:20px}
-  .due-item{
-    display:flex;align-items:center;gap:8px;width:100%;text-align:left;
-    border:0;background:transparent;padding:6px 8px;border-radius:9px;font-size:13px;
-  }
-  .due-item:hover{background:#F4F7FB}
-  .due-item .due-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .due-item{flex-wrap:wrap;row-gap:3px}
-  .due-item .due-date{color:var(--slate-500);font-size:12px;font-variant-numeric:tabular-nums}
-  .due-item .due-kind{
-    flex:none;padding:1px 6px;border-radius:6px;font-size:10.5px;font-weight:800;letter-spacing:-.01em;
-  }
-  .due-kind.k-plan{background:var(--violet-bg);color:var(--violet)}
-  .due-kind.k-addon{background:var(--teal-bg);color:var(--teal)}
-  .due-item .due-what{
-    color:var(--slate-500);font-size:12px;font-weight:600;
-    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px;min-width:0;
-  }
-  .due-item .due-staff{
-    margin-left:auto;font-size:11px;font-weight:700;color:var(--slate-600);
-    background:#F1F5F9;border-radius:999px;padding:1px 7px;
-  }
+  /* ---------- 요금제·부가서비스 임박 알림 바 (접기/펼치기) ---------- */
+  .duebar{padding:0;overflow:hidden;transition:border-color .15s,box-shadow .15s}
+  .duebar.has-soon{border-color:#F0DFBB}
+  .duebar.has-late{border-color:#EFCBC4}
+  .duebar-top{display:flex;align-items:center;gap:8px;padding:8px 12px;flex-wrap:wrap}
+  .duebar-ico{width:28px;height:28px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;
+    background:#F1F5F9;color:var(--slate-500)}
+  .duebar.has-soon .duebar-ico{background:var(--amber-bg);color:var(--amber)}
+  .duebar.has-late .duebar-ico{background:var(--red-bg);color:var(--red)}
+  .duebar-ico svg{width:15px;height:15px}
+  .duebar-main{min-width:0;flex:1 1 170px}
+  .due-acts{display:flex;align-items:center;gap:6px;margin-left:auto;flex:none}
+  .duebar-title{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+    font-size:13px;font-weight:800;color:var(--ink);letter-spacing:-.01em;line-height:1.3}
+  .duebar-title .tag{font-size:10px;font-weight:800;color:var(--slate-500);background:#EEF2F8;border-radius:5px;padding:1px 5px;letter-spacing:0}
+  .duebar-sub{font-size:11.5px;font-weight:600;color:var(--slate-500);margin-top:1px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .duebar.has-late .duebar-sub{color:var(--red)}
+  .dstat{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 10px;border-radius:999px;
+    border:1px solid var(--line-strong);background:#fff;color:var(--slate-600);
+    font-size:11.5px;font-weight:700;flex:none;transition:background .15s,border-color .15s,box-shadow .15s}
+  .dstat:hover{background:#F7F9FC}
+  .dstat b{font-size:14px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--slate-400)}
+  .dstat.soon.has{border-color:#F3DDAE;background:var(--amber-bg);color:var(--amber)}
+  .dstat.soon.has b{color:var(--amber)}
+  .dstat.late.has{border-color:#F0C8C0;background:var(--red-bg);color:var(--red)}
+  .dstat.late.has b{color:var(--red)}
+  .dstat.on{box-shadow:0 0 0 2px rgba(11,87,208,.22)}
+  .due-toggle{flex:none;gap:5px;color:var(--slate-600);margin-left:2px}
+  .due-toggle .caret{width:13px;height:13px;transition:transform .16s}
+  .duebar.open .due-toggle .caret{transform:rotate(180deg)}
+  .due-panel{border-top:1px solid var(--line);background:#FCFDFF;max-height:330px;overflow:auto;overscroll-behavior:contain}
+  .due-head{position:sticky;top:0;z-index:1;display:grid;grid-template-columns:0.8fr 1.05fr 2.3fr 1.05fr 0.85fr 0.8fr;gap:8px;
+    padding:7px 14px;background:#F2F6FC;border-bottom:1px solid var(--line);
+    font-size:10.5px;font-weight:800;color:var(--slate-400);letter-spacing:.04em}
+  .duerow{display:grid;grid-template-columns:0.8fr 1.05fr 2.3fr 1.05fr 0.85fr 0.8fr;gap:8px;align-items:center;
+    width:100%;text-align:left;border:0;border-bottom:1px solid #EFF3F8;background:transparent;
+    padding:8px 14px;font-size:12.5px;color:var(--slate-700)}
+  .duerow:hover{background:#F4F8FF}
+  .duerow:last-child{border-bottom:0}
+  .duerow .dk{display:inline-flex;align-items:center;justify-content:center;padding:1px 6px;border-radius:6px;
+    font-size:10.5px;font-weight:800;white-space:nowrap;justify-self:start}
+  .duerow .k-plan{background:var(--violet-bg);color:var(--violet)}
+  .duerow .k-addon{background:var(--teal-bg);color:var(--teal)}
+  .duerow .dn{font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .duerow .dw{color:var(--slate-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .duerow .dd2{color:var(--slate-500);font-variant-numeric:tabular-nums;font-size:11.5px}
+  .duerow .dds{justify-self:start}
+  .duerow .ds{color:var(--slate-600);font-weight:700;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .due-empty{padding:20px 14px;text-align:center;font-size:12.5px;color:var(--slate-400);font-weight:600}
+
   .tag-period{
     display:inline-block;padding:0 5px;border-radius:5px;background:var(--blue-50);color:var(--blue-700);
     font-size:10.5px;font-weight:800;vertical-align:1px;
   }
-  .due-empty{font-size:12.5px;color:var(--slate-400);padding:4px 2px}
 
   .dd{display:inline-block;padding:1px 6px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
   .dd-soon{background:var(--amber-bg);color:var(--amber)}
@@ -227,12 +258,12 @@
   .dd-late{background:var(--red-bg);color:var(--red)}
 
   /* ---------- toolbar ---------- */
-  .toolbar{padding:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .search{position:relative;flex:1 1 260px;min-width:200px;display:flex;align-items:center}
-  .search svg{position:absolute;left:12px;width:16px;height:16px;color:var(--slate-400);pointer-events:none}
+  .toolbar{padding:9px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .search{position:relative;flex:1 1 240px;min-width:190px;display:flex;align-items:center}
+  .search svg{position:absolute;left:11px;width:15px;height:15px;color:var(--slate-400);pointer-events:none}
   .search input{
-    width:100%;height:38px;padding:0 34px 0 36px;border-radius:10px;border:1px solid var(--line-strong);
-    background:#FBFCFE;font-size:14px;
+    width:100%;height:36px;padding:0 32px 0 34px;border-radius:9px;border:1px solid var(--line-strong);
+    background:#FBFCFE;font-size:13.5px;
   }
   .search input:focus{outline:none;background:#fff;border-color:#9DBDF0;box-shadow:0 0 0 3px rgba(11,87,208,.15)}
   .search .clear{
@@ -242,23 +273,25 @@
   .search .clear.show{display:flex}
   .search .clear:hover{background:#EEF2F8;color:var(--slate-600)}
   select.filter{
-    height:38px;padding:0 30px 0 12px;border-radius:10px;border:1px solid var(--line-strong);
+    height:36px;padding:0 30px 0 11px;border-radius:9px;border:1px solid var(--line-strong);
     background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%2364748B' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 11px center;
     -webkit-appearance:none;appearance:none;font-size:13.5px;font-weight:600;color:var(--slate-700);
   }
   select.filter:focus{outline:none;border-color:#9DBDF0;box-shadow:0 0 0 3px rgba(11,87,208,.15)}
-  .check{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--slate-600);user-select:none;padding:0 4px;cursor:pointer}
-  .check input{width:16px;height:16px;accent-color:var(--blue-600);cursor:pointer}
-  .result-count{font-size:12.5px;color:var(--slate-500);font-weight:600;margin-left:auto;white-space:nowrap}
+  .check{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--slate-600);user-select:none;padding:0 3px;cursor:pointer}
+  .check input{width:15px;height:15px;accent-color:var(--blue-600);cursor:pointer}
+  .result-count{font-size:12px;color:var(--slate-500);font-weight:700;margin-left:auto;white-space:nowrap;
+    background:#F4F7FB;border-radius:7px;padding:3px 8px}
+  .toolbar .btn.sm{height:32px}
 
   /* ---------- table ---------- */
   .table-card{overflow:hidden}
-  .table-scroll{max-height:max(380px,calc(100vh - 360px));overflow:auto;overscroll-behavior:contain}
-  table.ledger{width:100%;border-collapse:separate;border-spacing:0;min-width:1220px;font-size:13.5px}
+  .table-scroll{max-height:max(360px,calc(100vh - 320px));overflow:auto;overscroll-behavior:contain}
+  table.ledger{width:100%;border-collapse:separate;border-spacing:0;min-width:1220px;font-size:13px}
   table.ledger th{
     position:sticky;top:0;z-index:2;
-    background:#F7F9FC;text-align:left;font-size:12px;font-weight:700;color:var(--slate-500);
-    letter-spacing:.02em;padding:11px 12px;border-bottom:1px solid var(--line);white-space:nowrap;
+    background:#F6F9FD;text-align:left;font-size:11.5px;font-weight:800;color:var(--slate-500);
+    letter-spacing:.03em;padding:9px 11px;border-bottom:1px solid var(--line);white-space:nowrap;
   }
   table.ledger th[data-sort]{cursor:pointer;user-select:none}
   table.ledger th[data-sort]:hover{background:#EFF4FA;color:var(--slate-700)}
@@ -266,22 +299,29 @@
   table.ledger th.sorted{color:var(--blue-700)}
   table.ledger th.sorted .arrow{opacity:1}
   table.ledger td{
-    padding:11px 12px;border-bottom:1px solid #EFF3F8;vertical-align:middle;
+    padding:9px 11px;border-bottom:1px solid #F0F4F9;vertical-align:middle;
     color:var(--slate-700);max-width:220px;
   }
-  table.ledger tbody tr:hover td{background:#FAFCFF}
+  table.ledger tbody tr:hover td{background:#F7FAFF}
   table.ledger tbody tr:last-child td{border-bottom:0}
   table.ledger tbody tr.due-row td{background:#FFFDF6}
   table.ledger tbody tr.due-row:hover td{background:#FFFAEC}
   td.nowrap{white-space:nowrap}
   td .ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .c-name{font-weight:700;color:var(--ink)}
-  .c-date{font-variant-numeric:tabular-nums;white-space:nowrap}
+  .c-name{font-weight:800;color:var(--ink);letter-spacing:-.01em}
+  .c-date{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
   .muted{color:var(--slate-400)}
-  .money{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink)}
+  .money{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink);letter-spacing:-.01em}
   th.money{text-align:right}
   .actions-col{width:88px;text-align:right}
   td.actions{text-align:right;white-space:nowrap;padding-right:10px}
+  /* 관리(수정·삭제) 열은 오른쪽에 고정 — 가로로 넓은 장부에서도 항상 보이게 */
+  table.ledger th.actions-col{position:sticky;right:0;z-index:3;background:#F6F9FD;
+    box-shadow:-10px 0 12px -12px rgba(15,23,42,.45)}
+  table.ledger td.actions{position:sticky;right:0;z-index:1;background:#fff;
+    box-shadow:-10px 0 12px -12px rgba(15,23,42,.35)}
+  table.ledger tbody tr:hover td.actions{background:#F7FAFF}
+  table.ledger tbody tr.due-row td.actions{background:#FFFDF6}
   .icon-btn{
     width:30px;height:30px;border-radius:8px;border:1px solid transparent;background:transparent;
     color:var(--slate-400);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;
@@ -290,7 +330,7 @@
   .icon-btn.del:hover{background:var(--red-bg);color:var(--red)}
   .icon-btn svg{width:15px;height:15px}
   .badge{
-    display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap;
+    display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;
   }
   .empty{padding:54px 24px;text-align:center}
   .empty[hidden]{display:none}
@@ -431,7 +471,7 @@
     padding:7px 12px !important;font-size:12px;font-weight:800;color:var(--blue-800);
     letter-spacing:.01em;
   }
-  tr.group-row .g-count{float:right;color:var(--slate-500);font-weight:700}
+  tr.group-row .g-count{margin-left:8px;color:var(--slate-500);font-weight:700;font-size:11.5px}
   tr.group-row .g-dow{color:var(--slate-500);font-weight:700}
 
   .view-compact table.ledger{font-size:12.5px}
@@ -473,7 +513,7 @@
     table.ledger tr.group-row{display:block;border:0;background:transparent;padding:0;margin:0}
     table.ledger tr.group-row td{display:block;background:transparent;padding:15px 16px 6px !important;font-size:12px}
     table.ledger tr.group-row td::before{content:"";display:none}
-    table.ledger tr.group-row .g-count{float:right}
+    table.ledger tr.group-row .g-count{float:none;margin-left:8px}
   }
 
   /* ---------- toast ---------- */
@@ -524,7 +564,6 @@
   }
   @media (max-width:520px){
     .btn.sm{padding:0 8px}
-    .save-state{width:100%;margin-left:0}
     .dlg-foot .grow{display:none}
   }
   /* ---------- PWA : 설치 · 홈 화면 앱 모드 · 모바일 편의 ---------- */
@@ -555,17 +594,17 @@
   /* 모바일 전용 메뉴 항목 (좁은 화면에서는 상단 버튼을 메뉴로 옮김) */
   .menu-mobile-only{display:none !important}
   @media (max-width:560px){
-    #templateBtn,#importBtn{display:none}
+    #templateBtn,#importBtn,#exportBtn{display:none}
     .menu-item.menu-mobile-only{display:block !important}
     .menu-sep.menu-mobile-only{display:block !important}
   }
 
   /* 노치·홈 인디케이터 대응 (viewport-fit=cover) */
-  .topbar-inner{padding-top:calc(12px + env(safe-area-inset-top))}
+  .topbar-inner{padding-top:calc(9px + env(safe-area-inset-top))}
   .app{padding-bottom:calc(56px + env(safe-area-inset-bottom))}
   #toast{bottom:calc(26px + env(safe-area-inset-bottom))}
   @media (max-width:900px){
-    .topbar-inner{padding-top:calc(10px + env(safe-area-inset-top))}
+    .topbar-inner{padding-top:calc(9px + env(safe-area-inset-top))}
     #toast{bottom:calc(86px + env(safe-area-inset-bottom))}
   }
 
@@ -575,9 +614,10 @@
     .btn.sm{height:38px;padding:0 12px}
     .chip-btn{height:36px}
     .icon-btn{width:38px;height:38px}
-    .search input,select.filter,.month-control input[type=month]{height:44px}
+    .search input,select.filter,.month-control input[type=month],.sum-month input[type=month]{height:44px}
     .field input,.field select{height:46px}
-    .due-stat{padding:11px 13px}
+    .dstat{height:34px}
+    .btn-add{height:44px}
   }
 
   /* 폰: 입력 시 화면이 확대되지 않도록 16px */
@@ -609,23 +649,68 @@
     table.ledger td.actions .icon-btn.del{color:#C6554A}
   }
 
-  /* 폰: KPI·월 선택을 압축해 장부 목록이 빨리 보이도록 */
+  /* 폰: 요약 스트립·임박 바·앱 바를 압축해 장부 목록이 빨리 보이도록 */
+  @media (max-width:420px){
+    .brand-mark{width:31px;height:31px;font-size:11px;border-radius:9px}
+    .brand-text h1{font-size:13.5px}
+    .brand-text p{display:none}
+    .btn-add{height:36px;padding:0 10px;font-size:12.5px;gap:5px}
+  }
+  @media (max-width:900px){
+    .app{padding:14px 12px 44px}
+    .topbar-inner{padding:9px 12px;gap:9px}
+    .brand{gap:9px;min-width:0;flex:0 1 auto}
+    .brand-mark{width:34px;height:34px;border-radius:10px;font-size:12px}
+    .brand-text h1{font-size:14.5px;white-space:nowrap}
+    .brand-text p{font-size:10.5px}
+    .btn-add{height:38px;padding:0 12px;font-size:13px;border-radius:10px}
+    .btn-add svg{width:15px;height:15px}
+    .topbar-actions{gap:6px;flex-wrap:nowrap;min-width:0}
+    .topbar-actions .btn{padding:0 10px;font-size:12.5px}
+    .topbar .role-badge,.topbar .sync-pill{height:25px;font-size:10.5px;padding:0 7px}
+    .topbar .rb-t{display:none}
+    table.ledger td.actions{position:static;box-shadow:none}
+    /* 모바일 '자세히 보기' 카드도 필드 줄을 촘촘하게 */
+    body.view-wide table.ledger td{padding:4px 0;border:0}
+    body.view-wide table.ledger td.money{padding:4px 0}
+  }
+  @media (max-width:700px){
+    .topbar .save-state{display:none}
+    .topbar .role-badge{display:none}
+  }
   @media (max-width:640px){
-    .kpi-grid{grid-template-columns:1fr 1fr;gap:10px}
-    .kpi-due{grid-column:1/-1}
-    .kpi{padding:14px 15px 13px}
-    .kpi-label{font-size:11.5px;letter-spacing:0;gap:4px}
-    .kpi-due .kpi-label span{display:none}
-    .kpi-value{margin-top:6px}
-    .kpi-value .num{font-size:24px}
-    .kpi-value .unit{font-size:12.5px}
-    .kpi-sub{font-size:11.5px;margin-top:4px}
-    .chips{margin-top:8px;gap:5px}
-    .due-list{margin-top:8px}
-    .month-control{gap:6px}
-    .month-control label{margin-right:2px}
-    .month-control input[type=month]{flex:1 1 128px;min-width:0;width:auto}
-    .section-head{margin-bottom:10px}
+    .summary{grid-template-columns:1fr}
+    .sum-month{border-right:0;border-bottom:1px solid var(--line);justify-content:space-between;padding:5px 11px;gap:5px}
+    .sum-cell{padding:7px 11px}
+    .sum-label{font-size:10.5px;gap:4px}
+    .sum-label .tag{display:none}
+    .sum-value b{font-size:18px}
+    .sum-value i{font-size:11px}
+    .sum-sub{font-size:10px}
+    .sum-chips{flex-wrap:nowrap;padding:6px 11px}
+    .chip{font-size:11px;padding:2px 7px}
+    .duebar-top{padding:8px 11px;gap:6px 8px}
+    .duebar-main{flex:1 1 calc(100% - 42px);min-width:0}
+    .duebar-title{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
+    .duebar-title .tag{display:none}
+    .duebar-sub{font-size:11px}
+    .due-acts{width:100%;justify-content:flex-end;gap:5px;margin-left:0}
+    .dstat{height:28px;padding:0 9px;font-size:11px;gap:4px}
+    .dstat b{font-size:13px}
+    .due-toggle{height:28px;padding:0 8px;font-size:11.5px}
+    .due-head{display:none}
+    .due-panel{max-height:60vh}
+    .duerow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;
+      grid-template-areas:"k n n d" "w w dd s";gap:3px 8px;padding:9px 11px;font-size:12px}
+    .duerow .dk{grid-area:k}
+    .duerow .dn{grid-area:n}
+    .duerow .dds{grid-area:d;justify-self:end}
+    .duerow .dw{grid-area:w;font-size:11.5px}
+    .duerow .dd2{grid-area:dd;font-size:11px;justify-self:end}
+    .duerow .ds{grid-area:s;justify-self:end;font-size:11px}
+    .toolbar{gap:7px;padding:8px 10px}
+    .result-count{order:9}
+    section{margin-bottom:12px}
   }
 
   @media print{
@@ -633,7 +718,7 @@
   }
 
   @media print{
-    .topbar-actions,.toolbar,.section-head,.actions-col,.due-list,.icon-btn,#toast{display:none !important}
+    .topbar-actions,.toolbar,.section-head,.actions-col,.due-toggle,.icon-btn,#toast{display:none !important}
     body{background:#fff}
     .card{box-shadow:none;border-color:#ddd}
     .table-scroll{max-height:none;overflow:visible}
@@ -647,26 +732,33 @@
     <div class="brand">
       <div class="brand-mark">KT</div>
       <div class="brand-text">
-        <h1>KT 텔나라네트웍 칠금점 · 개통 관리 장부</h1>
-        <p>충주 · 개통 · 요금제 변경 · 리베이트 관리</p>
+        <h1>충주 KT대리점 칠금점</h1>
+        <p>개통 관리 장부</p>
       </div>
     </div>
     <div class="topbar-actions">
       <button class="btn btn-ghost admin-only" id="templateBtn" title="빈 엑셀 양식(.xlsx)을 받습니다">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 2.5h6.5L16 7v10.5H5z"/><path d="M11 2.5V7h5"/><path d="M7.5 11h5M7.5 14h3"/></svg>
-        양식 받기
+        양식
       </button>
-      <button class="btn btn-ghost admin-only" id="importBtn">
+      <button class="btn btn-ghost admin-only" id="importBtn" title="엑셀 · CSV 파일을 장부로 가져옵니다">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13V3.5"/><path d="M6.5 6.5 10 3l3.5 3.5"/><path d="M4 12v3.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V12"/></svg>
-        엑셀 가져오기
+        가져오기
       </button>
-      <button class="btn btn-primary admin-only" id="exportBtn">
+      <button class="btn btn-ghost admin-only" id="exportBtn" title="지금 보이는 장부를 엑셀로 받습니다">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9.5"/><path d="M6.5 9.5 10 13l3.5-3.5"/><path d="M4 13v2.5A1.5 1.5 0 0 0 5.5 17h9a1.5 1.5 0 0 0 1.5-1.5V13"/></svg>
-        엑셀 내보내기
+        내보내기
       </button>
       <button class="btn btn-install" id="installBtn" type="button" hidden>
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="8" height="15" rx="1.8"/><path d="M9 15h2"/><path d="M10 5v4.5M8 8l2 2 2-2"/></svg>
         앱 설치
+      </button>
+      <span class="role-badge" id="roleBadge" title="관리자 모드에서만 엑셀·백업·삭제가 보입니다">👤 직원 모드</span>
+      <button type="button" class="sync-pill" id="syncPill" hidden><span class="sdot"></span><span id="syncPillText">공용 장부</span></button>
+      <div class="save-state"><span class="dot"></span><span id="saveState">저장됨</span></div>
+      <button class="btn btn-primary btn-add" id="addBtn">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M10 4.2v11.6M4.2 10h11.6"/></svg>
+        개통 등록
       </button>
       <details class="menu" id="moreMenu">
         <summary class="btn btn-ghost" role="button" aria-haspopup="menu">더보기
@@ -682,6 +774,7 @@
           <div class="menu-sep menu-mobile-only"></div>
           <button class="menu-item menu-mobile-only admin-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
           <button class="menu-item menu-mobile-only admin-only" id="importBtnMobile" role="menuitem">엑셀 · CSV 가져오기</button>
+          <button class="menu-item menu-mobile-only admin-only" id="exportBtnMobile" role="menuitem">엑셀 내보내기</button>
           <div class="menu-sep"></div>
           <button class="menu-item" id="installHintBtn" role="menuitem">앱 설치 · 홈 화면 추가</button>
           <div class="menu-sep"></div>
@@ -699,48 +792,64 @@
       작업한 내용을 잃지 않도록 <b>더보기 → JSON 백업 저장</b>으로 파일을 꼭 받아두세요.</div>
   </div>
 
-  <section>
-    <div class="section-head">
-      <div class="month-control">
-        <label for="monthInput">기준 월</label>
-        <input type="month" id="monthInput">
+  <section class="card summary">
+    <div class="sum-month">
+      <label for="monthInput">기준 월</label>
+      <input type="month" id="monthInput" lang="ko-KR">
+      <div class="sum-quick">
         <button class="chip-btn" id="thisMonthBtn">이번 달</button>
         <button class="chip-btn" id="allMonthBtn">전체 기간</button>
       </div>
-      <div class="head-right">
-        <span class="role-badge" id="roleBadge" title="관리자 모드에서만 엑셀·백업·삭제가 보입니다">👤 직원 모드</span>
-        <button type="button" class="sync-pill" id="syncPill" hidden><span class="sdot"></span><span id="syncPillText">공용 장부</span></button>
-        <div class="save-state"><span class="dot"></span><span id="saveState">저장됨</span></div>
+    </div>
+
+    <div class="sum-cells">
+      <div class="sum-cell">
+        <span class="sum-label">총 건수 <span class="tag" id="kpiMonthLabel">—</span></span>
+        <span class="sum-value"><b class="num" id="kpiTotal">0</b><i>건</i></span>
+        <span class="sum-sub" id="kpiTotalSub">이번 달 개통</span>
+      </div>
+      <div class="sum-cell">
+        <span class="sum-label">중고폰금액</span>
+        <span class="sum-value"><b class="num" id="kpiUsed">0</b><i>원</i></span>
+        <span class="sum-sub" id="kpiUsedSub">중고폰 매입·판매 합계</span>
+      </div>
+      <div class="sum-cell">
+        <span class="sum-label">리베이트</span>
+        <span class="sum-value"><b class="num" id="kpiRebate">0</b><i>원</i></span>
+        <span class="sum-sub" id="kpiRebateSub">기록을 추가하면 자동으로 합산됩니다</span>
       </div>
     </div>
 
-    <div class="kpi-grid">
-      <article class="card kpi">
-        <div class="kpi-label">총 개통</div>
-        <div class="kpi-value"><span class="num" id="kpiTotal">0</span><span class="unit">건</span></div>
-        <div class="kpi-sub" id="kpiMonthLabel">—</div>
-        <div class="chips" id="kpiBreakdown"></div>
-      </article>
+    <div class="chips sum-chips" id="kpiBreakdown"></div>
+  </section>
 
-      <article class="card kpi">
-        <div class="kpi-label">리베이트 합계</div>
-        <div class="kpi-value"><span class="num" id="kpiRebate">0</span><span class="unit">원</span></div>
-        <div class="kpi-sub" id="kpiRebateSub">건당 평균 0원</div>
-        <div class="kpi-sub" id="kpiUsedSub" hidden></div>
-      </article>
-
-      <article class="card kpi kpi-due">
-        <div class="kpi-label">요금제 변경 · 부가서비스 해지 예정 <span style="font-weight:600;color:var(--slate-400);font-size:11.5px">· 숫자를 누르면 해당 건만 보기</span></div>
-        <div class="due-stats">
-          <button class="due-stat soon" id="dueSoonStat" title="오늘부터 7일 이내 요금제 변경 / 부가서비스 해지 예정">
-            <span class="due-num num" id="dueSoonCount">0</span><span class="due-cap">7일 이내</span>
-          </button>
-          <button class="due-stat overdue" id="dueOverdueStat" title="요금제 변경 / 부가서비스 해지일자가 지난 건">
-            <span class="due-num num" id="dueOverdueCount">0</span><span class="due-cap">기한 지남</span>
-          </button>
-        </div>
-        <div class="due-list" id="dueList"></div>
-      </article>
+  <section class="card duebar" id="dueBar">
+    <div class="duebar-top">
+      <span class="duebar-ico" aria-hidden="true">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3a4.6 4.6 0 0 1 4.6 4.6c0 3.1 1.1 4.2 1.6 4.7H3.8c.5-.5 1.6-1.6 1.6-4.7A4.6 4.6 0 0 1 10 3z"/><path d="M8.2 15.4a1.9 1.9 0 0 0 3.6 0"/></svg>
+      </span>
+      <div class="duebar-main">
+        <div class="duebar-title">요금제 변경 · 부가서비스 해지 예정 <span class="tag">전 직원 공용</span></div>
+        <div class="duebar-sub" id="dueHint">예정된 요금제 변경 · 부가서비스 해지가 없습니다</div>
+      </div>
+      <div class="due-acts">
+        <button type="button" class="dstat soon" id="dueSoonStat" title="7일 이내 임박 건만 보기">
+          <b class="num" id="dueSoonCount">0</b><span>7일 이내</span>
+        </button>
+        <button type="button" class="dstat late" id="dueOverdueStat" title="기한이 지난 건만 보기">
+          <b class="num" id="dueOverdueCount">0</b><span>기한 지남</span>
+        </button>
+        <button type="button" class="btn btn-ghost sm due-toggle" id="dueToggle" aria-expanded="false" aria-controls="duePanel" title="전 직원의 변경·해지 예정 전체 보기">
+          <span id="dueToggleText">펼치기</span>
+          <svg class="caret" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8l5 5 5-5"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="due-panel" id="duePanel" hidden>
+      <div class="due-head" aria-hidden="true">
+        <span>구분</span><span>고객명</span><span>항목</span><span>날짜</span><span>D-Day</span><span>담당자</span>
+      </div>
+      <div id="dueList"></div>
     </div>
   </section>
 
@@ -756,14 +865,10 @@
     <select class="filter" id="staffFilter" aria-label="담당자 필터">
       <option value="">전체 담당자</option>
     </select>
-    <label class="check"><input type="checkbox" id="dueOnly"> 요금제·부가서비스 임박만</label>
+    <label class="check"><input type="checkbox" id="dueOnly"> 임박만</label>
     <button class="btn sm btn-ghost" id="resetFilters">초기화</button>
     <button class="chip-btn" id="viewToggle" title="목록 보기 방식을 바꿉니다">한눈에 보기</button>
     <span class="result-count" id="resultCount">0건</span>
-    <button class="btn btn-primary" id="addBtn">
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 4.5v11M4.5 10h11"/></svg>
-      개통 등록
-    </button>
   </section>
 
   <section class="card table-card">
@@ -1050,7 +1155,7 @@
   'use strict';
 
   /* =========================================================
-     KT 텔나라네트웍 칠금점 · 개통 관리 장부
+     충주 KT대리점 칠금점 · 개통 관리 장부
      단일 파일(index.html) 앱. 서버·빌드 없이 브라우저에서 바로 실행.
      데이터: localStorage 'kt_chilgeum_activations_v1'
      컬럼(순서 고정): 개통일 고객명 연락처 생년월일 개통유형 기종 요금제
@@ -1119,7 +1224,8 @@
     adminPin: '',
     editingId: null,
     pendingRows: null,
-    pendingKind: 'excel'
+    pendingKind: 'excel',
+    dueOpen: false
   };
 
   var $ = function (id) { return document.getElementById(id); };
@@ -1742,6 +1848,16 @@
     return state.records.filter(function (r) { return !m || monthOf(r.개통일) === m; });
   }
 
+  /* 임박 알림 바 펼침 상태 (이 화면에서만 유지) */
+  function applyDueOpen() {
+    if (!el.duePanel || !el.dueToggle) return;
+    var open = !!state.dueOpen;
+    el.duePanel.hidden = !open;
+    el.dueToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (el.dueToggleText) el.dueToggleText.textContent = open ? '접기' : '펼치기';
+    if (el.dueBar) el.dueBar.classList.toggle('open', open);
+  }
+
   /* ---------------- rendering ---------------- */
   function render() {
     renderKpis();
@@ -1756,7 +1872,8 @@
     var m = state.filters.month;
 
     el.kpiTotal.textContent = fmtNum(list.length);
-    el.kpiMonthLabel.textContent = monthLabel(m) + (m ? ' 기준' : '');
+    if (el.kpiMonthLabel) el.kpiMonthLabel.textContent = m ? monthLabel(m) : '전체 기간';
+    if (el.kpiTotalSub) el.kpiTotalSub.textContent = m ? '이번 달 개통 건수' : '전체 기간 개통 건수';
 
     // 유형별 건수
     var counts = {};
@@ -1791,13 +1908,11 @@
     el.kpiRebateSub.textContent = list.length
       ? '건당 평균 ' + fmtNum(Math.round(sum / list.length)) + '원 · ' + list.length + '건'
       : '기록을 추가하면 자동으로 합산됩니다';
+    if (el.kpiUsed) el.kpiUsed.textContent = fmtNum(usedSum);
     if (el.kpiUsedSub) {
-      if (usedSum) {
-        el.kpiUsedSub.hidden = false;
-        el.kpiUsedSub.innerHTML = '중고폰 판매 합계 <b>' + fmtNum(usedSum) + '원</b>';
-      } else {
-        el.kpiUsedSub.hidden = true;
-      }
+      el.kpiUsedSub.textContent = usedSum
+        ? '건당 평균 ' + fmtNum(Math.round(usedSum / list.length)) + '원'
+        : '중고폰 매입·판매 합계';
     }
 
     // 요금제 변경 · 부가서비스 해지 알림 (전 직원 공용)
@@ -1823,33 +1938,50 @@
     }
     el.dueSoonCount.textContent = fmtNum(soon);
     el.dueOverdueCount.textContent = fmtNum(late);
+    el.dueSoonStat.classList.toggle('has', soon > 0);
+    el.dueOverdueStat.classList.toggle('has', late > 0);
     el.dueSoonStat.classList.toggle('on', !!state.filters.due && state.filters.dueMode === 'soon');
     el.dueOverdueStat.classList.toggle('on', !!state.filters.due && state.filters.dueMode === 'late');
+    if (el.dueBar) {
+      el.dueBar.classList.toggle('has-soon', soon > 0);
+      el.dueBar.classList.toggle('has-late', late > 0);
+    }
+    if (el.dueHint) {
+      if (!soon && !late) {
+        el.dueHint.textContent = '예정된 요금제 변경 · 부가서비스 해지가 없습니다';
+      } else {
+        var parts = [];
+        if (late) parts.push('기한 지남 ' + fmtNum(late) + '건');
+        if (soon) parts.push('7일 이내 ' + fmtNum(soon) + '건');
+        el.dueHint.textContent = parts.join(' · ');
+      }
+    }
 
     upcoming.sort(function (a, b) { return a.d - b.d; });
+    renderDueList(upcoming);
+  }
+
+  // 펼쳤을 때: 전 직원의 요금제 변경 · 부가서비스 해지 예정 전체
+  function renderDueList(upcoming) {
+    if (!el.dueList) return;
     if (!upcoming.length) {
       el.dueList.innerHTML = '<p class="due-empty">예정된 요금제 변경 · 부가서비스 해지가 없습니다.</p>';
-    } else {
-      var html = '';
-      for (i = 0; i < Math.min(upcoming.length, 6); i++) {
-        var u = upcoming[i];
-        var label = ddLabel(u.d);
-        var ddCls = u.d < 0 ? 'dd-late' : (u.d === 0 ? 'dd-today' : 'dd-soon');
-        html += '<button type="button" class="due-item" data-due-item="1">' +
-          '<span class="due-kind ' + (u.kind === '요금제' ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
-          '<span class="due-name">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
-          '<span class="due-what">' + esc(u.what) + '</span>' +
-          '<span class="due-date">' + esc(String(u.date).slice(5)) + '</span>' +
-          '<span class="dd ' + ddCls + '">' + label + '</span>' +
-          (u.r.담당자 ? '<span class="due-staff">' + esc(u.r.담당자) + '</span>' : '') +
-          '</button>';
-      }
-      if (upcoming.length > 6) {
-        html += '<button type="button" class="due-item" data-due-item="1" style="color:var(--slate-500)">' +
-          '<span class="due-name">외 ' + (upcoming.length - 6) + '건 더 보기</span></button>';
-      }
-      el.dueList.innerHTML = html;
+      return;
     }
+    var html = '';
+    for (var i = 0; i < upcoming.length; i++) {
+      var u = upcoming[i];
+      var ddCls = u.d < 0 ? 'dd-late' : (u.d === 0 ? 'dd-today' : 'dd-soon');
+      html += '<button type="button" class="duerow" data-due-item="1">' +
+        '<span class="dk ' + (u.kind === '요금제' ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
+        '<span class="dn">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
+        '<span class="dw">' + esc(u.what) + '</span>' +
+        '<span class="dd2">' + esc(String(u.date)) + '</span>' +
+        '<span class="dds"><span class="dd ' + ddCls + '">' + ddLabel(u.d) + '</span></span>' +
+        '<span class="ds">' + (u.r.담당자 ? esc(u.r.담당자) : '—') + '</span>' +
+        '</button>';
+    }
+    el.dueList.innerHTML = html;
   }
 
   function dueCell(val) {
@@ -1970,14 +2102,17 @@
       el.ledger.style.display = 'none';
       el.emptyState.hidden = false;
       if (state.records.length === 0) {
+        var emptyNote = isAdmin()
+          ? '<p>오늘 개통 건부터 바로 적어보세요.<br>엑셀로 쓰던 장부가 있으면 그대로 가져올 수 있습니다.</p>'
+          : '<p>오늘 개통 건부터 바로 적어보세요.</p>';
         el.emptyState.innerHTML =
           '<div class="empty-illust"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="15" rx="2.5"/><path d="M3.5 9.5h17M8 14h4"/></svg></div>' +
           '<h3>아직 등록된 개통이 없습니다</h3>' +
-          '<p>오늘 개통 건부터 바로 적어보세요.<br>엑셀로 쓰던 장부가 있으면 그대로 가져올 수 있습니다.</p>' +
+          emptyNote +
           '<div class="row">' +
-          '<button type="button" class="btn btn-primary" data-empty="add">+ 첫 개통 등록</button>' +
-          '<button type="button" class="btn" data-empty="import">엑셀 가져오기</button>' +
-          '<button type="button" class="btn" data-empty="sample">샘플 데이터로 둘러보기</button>' +
+          '<button type="button" class="btn btn-primary" data-empty="add">+ 첫 개통 등록하기</button>' +
+          '<button type="button" class="btn admin-only" data-empty="import">엑셀 가져오기</button>' +
+          '<button type="button" class="btn admin-only" data-empty="sample">샘플 데이터 넣기</button>' +
           '</div>';
       } else {
         el.emptyState.innerHTML =
@@ -2107,7 +2242,9 @@
       el.adminLockBtn.textContent = admin ? '🔒 관리자 모드 잠그기' : '🔓 관리자 모드 잠금 해제';
     }
     if (el.roleBadge) {
-      el.roleBadge.textContent = admin ? '🔓 관리자' : '👤 직원 모드';
+      el.roleBadge.innerHTML = admin
+        ? '🔓 <span class="rb-t">관리자</span>'
+        : '👤 <span class="rb-t">직원 모드</span>';
       el.roleBadge.title = admin ? '관리자 모드입니다. 브라우저를 닫으면 자동으로 잠깁니다.' : '엑셀·백업·삭제는 관리자 모드에서만 보입니다.';
     }
     // 행 안의 삭제 버튼은 다시 그려야 반영된다
@@ -2696,6 +2833,10 @@
 
   /* ---------------- import ---------------- */
   function handleFile(file) {
+    if (!isAdmin()) {
+      toast('엑셀·CSV 가져오기는 관리자 모드에서만 됩니다.', true);
+      return;
+    }
     if (!file) return;
     var name = file.name || '';
     var lower = name.toLowerCase();
@@ -2805,7 +2946,7 @@
     var payload = {
       app: 'kt-store-manager',
       version: 1,
-      store: 'KT 텔나라네트웍 칠금점',
+      store: '충주 KT대리점 칠금점',
       exportedAt: new Date().toISOString(),
       count: state.records.length,
       records: state.records
@@ -2983,6 +3124,12 @@
     }
     el.dueSoonStat.addEventListener('click', function () { toggleDue('soon'); });
     el.dueOverdueStat.addEventListener('click', function () { toggleDue('late'); });
+    if (el.dueToggle) {
+      el.dueToggle.addEventListener('click', function () {
+        state.dueOpen = !state.dueOpen;
+        applyDueOpen();
+      });
+    }
     el.dueList.addEventListener('click', function (e) {
       if (e.target.closest && e.target.closest('[data-due-item]')) toggleDue('all');
     });
@@ -3025,15 +3172,16 @@
       window.addEventListener('resize', applyViewMode);
     }
 
-    // 빈 상태 버튼
+    // 빈 상태 버튼 — 샘플·가져오기는 관리자 모드 전용
     el.emptyState.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('button[data-empty]') : null;
       if (!b) return;
       var act = b.getAttribute('data-empty');
-      if (act === 'add') openEditor(null);
-      else if (act === 'import') el.fileInput.click();
+      if (act === 'add') { openEditor(null); return; }
+      if (act === 'reset') { el.resetFilters.click(); return; }
+      if (!isAdmin()) { toast('관리자 모드에서만 사용할 수 있습니다.', true); return; }
+      if (act === 'import') el.fileInput.click();
       else if (act === 'sample') insertSample();
-      else if (act === 'reset') el.resetFilters.click();
     });
 
     // 등록 / 수정
@@ -3180,6 +3328,7 @@
   }
 
   function insertSample() {
+    if (!isAdmin()) { toast('샘플 데이터는 관리자 모드에서만 넣을 수 있습니다.', true); return; }
     if (state.records.length) {
       askConfirm('샘플 데이터', '지금 장부에 샘플 9건을 추가할까요?<br>실제 데이터와 섞이니 확인 후 삭제해 주세요.', '추가')
         .then(function (ok) {
@@ -3225,14 +3374,21 @@
       storageWarn: $('storageWarn'),
       kpiTotal: $('kpiTotal'),
       kpiMonthLabel: $('kpiMonthLabel'),
+      kpiTotalSub: $('kpiTotalSub'),
       kpiBreakdown: $('kpiBreakdown'),
       kpiRebate: $('kpiRebate'),
       kpiRebateSub: $('kpiRebateSub'),
+      kpiUsed: $('kpiUsed'),
       dueSoonCount: $('dueSoonCount'),
       dueOverdueCount: $('dueOverdueCount'),
       dueSoonStat: $('dueSoonStat'),
       dueOverdueStat: $('dueOverdueStat'),
       dueList: $('dueList'),
+      dueBar: $('dueBar'),
+      duePanel: $('duePanel'),
+      dueToggle: $('dueToggle'),
+      dueToggleText: $('dueToggleText'),
+      dueHint: $('dueHint'),
       searchInput: $('searchInput'),
       clearSearch: $('clearSearch'),
       typeFilter: $('typeFilter'),
@@ -3317,6 +3473,7 @@
     loadRole();
     bindEvents();
     applyRole();
+    applyDueOpen();
     renderStaffChips(el.staffChips, $('f_staff'));
     applyViewMode();
     render();
@@ -3440,6 +3597,13 @@
     if (b) b.click();
   });
 
+  var expM = $('exportBtnMobile');
+  if (expM) expM.addEventListener('click', function () {
+    closeMenu();
+    var b = $('exportBtn');
+    if (b) b.click();
+  });
+
   var fab = $('fabAdd');
   if (fab) {
     fab.addEventListener('click', function () {
@@ -3447,7 +3611,7 @@
       if (b) b.click();
     });
 
-    /* 툴바의 “개통 등록” 버튼이 화면 밖(위)으로 사라졌을 때만 떠서 중복을 만들지 않음 */
+    /* 상단 바에 늘 붙어 있는 “개통 등록” 버튼을 쓸 수 없을 때만(화면에서 벗어났을 때) 떠서 중복을 만들지 않음 */
     var addBtnEl = $('addBtn');
     var narrow = window.matchMedia('(max-width:900px)');
     var syncFab = function () {
