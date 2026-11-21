@@ -169,10 +169,21 @@
   .sum-month input[type=month].is-all{opacity:.42}
   .sum-quick{display:flex;gap:4px}
   .sum-quick .chip-btn{height:28px;font-size:11.5px;padding:0 9px}
-  .sum-cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+  .sum-rows{grid-column:2;display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .sum-cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-column:auto}
+  body.role-staff .sum-cells{grid-template-columns:repeat(3,minmax(0,1fr))}
   .sum-cell{display:flex;flex-direction:column;justify-content:center;min-width:0;
     padding:9px 15px;border-right:1px solid var(--line)}
   .sum-cell:last-child{border-right:0}
+  /* 관리자 전용 정산 줄 — 총 순마진 · 추지·페이백 합계 */
+  .sum-cells.sum-net{border-top:1px solid var(--line);background:#FBFCFE}
+  .sum-cells.sum-money{grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);background:#FBFCFE}
+  .sum-money .sum-value b{font-size:21px}
+  .sum-cells.sum-net .sum-cell{padding-top:8px;padding-bottom:9px}
+  .sum-cells.sum-net .sum-value b{font-size:21px}
+  .sum-net .sum-label{color:#0F172A}
+  .sum-net .net-pos b{color:#0B6B4F}
+  .sum-net .net-neg b{color:#B42318}
   .sum-label{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:var(--slate-600);letter-spacing:.01em;white-space:nowrap;overflow:hidden}
   .sum-label .tag{font-size:10px;font-weight:800;color:var(--slate-400);background:#EEF2F8;border-radius:5px;padding:0 5px;letter-spacing:0;flex:none}
   .sum-value{display:flex;align-items:baseline;gap:3px;margin-top:2px;font-weight:800;letter-spacing:-.035em;color:var(--ink)}
@@ -197,11 +208,15 @@
   .t-wired{background:#D6F1F0;color:#0B5F63}
   .t-wired2{background:#E1E9F5;color:#2C456B}
   .t-kids{background:#D6F1F0;color:#0B5F63}
+  .t-used{background:#FFE9C7;color:#8A4B00}
+  .t-used2{background:#FFE0D6;color:#9A3412}
   .t-etc{background:#E7EDF6;color:#44536B}
   /* 복합 개통유형(무선 + 유선)은 배지 두 개를 나란히 */
   .type-badges{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;vertical-align:middle;max-width:100%}
 
   /* 오늘 · 이번 달 직원별 개통 건수 스트립 (요약 카드의 아래 줄) */
+  .so-chip.top{box-shadow:0 0 0 1.5px #C7D2FE inset;background:#EEF2FF}
+  .so-rank{font-style:normal;font-size:9.5px;font-weight:900;color:#3730A3;background:#E0E7FF;border-radius:5px;padding:0 4px;margin-right:3px}
   .sum-overview{grid-column:1/-1;display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;
     padding:6px 14px;border-top:1px solid var(--line);background:#FBFCFE}
   .so-part{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
@@ -231,15 +246,13 @@
     .sum-sub{display:none}
   }
   @media (max-width:640px){
-    /* 합계를 맨 앞에 크게, 나머지는 아래 두 줄로 */
-    .sum-cells{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+    /* 폰: 두 칸씩 쌓아 읽기 쉽게 (리베이트·순마진은 관리자만) */
+    .sum-cells{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
     .sum-overview{padding:6px 10px;gap:5px 10px}
     .so-total b{font-size:13px}
     .so-div{display:none}
-    .sum-cell{padding:7px 10px}
-    .sum-cell:nth-child(2){border-right:0}
-    .sum-cell:nth-child(3),.sum-cell:nth-child(4){border-top:1px solid var(--line)}
-    .sum-cell:nth-child(5){order:-1;grid-column:span 2;background:#FBFCFE}
+    .sum-cell{padding:7px 10px;border-top:1px solid var(--line)}
+    .sum-cell:nth-child(2n){border-right:0}
     .sum-value b{font-size:17px}
   }
 
@@ -422,6 +435,7 @@
   }
   /* 단말 보험 가입 — 목록·카드에서 바로 눈에 띄는 초록 배지 */
   .badge.ins-on{background:var(--green-bg);color:#0B5F45;border:1px solid #BFE3D3}
+  .badge.card-on{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE}
   .empty{padding:54px 24px;text-align:center}
   .empty[hidden]{display:none}
   .empty h3{font-size:16px;font-weight:800;margin-bottom:6px}
@@ -498,6 +512,7 @@
   /* 개통유형 — 무선 / 유선(인터넷·TV) 두 줄에서 고르기 */
   .type-group{display:flex;flex-direction:column;gap:8px;padding:9px 10px;
     border:1px solid var(--line-strong);border-radius:12px;background:#FCFDFF}
+  .type-group.bad{border-color:#DC2626;box-shadow:0 0 0 3px rgba(220,38,38,.14)}
   .type-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
   .type-row-label{flex:none;display:inline-flex;align-items:center;gap:4px;
     font-size:11px;font-weight:800;color:var(--slate-500);background:#EEF2F8;border-radius:6px;padding:2px 7px}
@@ -554,6 +569,24 @@
   .pbadge.c1{background:#FFF3D6;color:#8A5200;border-color:#F2DCA8}
   .pol-auto{display:inline-block;font-weight:800;color:#0B4AA2;background:#F0F7FF;border:1px solid #CFE3FA;border-radius:6px;padding:1px 5px;font-size:11px;white-space:nowrap}
   .pol-diff{display:block;font-size:10px;font-weight:800;color:#8A5200;margin-top:1px}
+  /* 순마진 · 추지·페이백 (관리자) */
+  .net-cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px;white-space:nowrap}
+  .net-v{font-weight:900;color:#0F172A;font-variant-numeric:tabular-nums}
+  .net-v.neg{color:#B42318}
+  .net-v.pos{color:#0B6B4F}
+  .net-sub{font-size:10px;font-weight:800;color:#8A5200}
+  .pay-cell{display:flex;flex-direction:column;align-items:flex-end;gap:1px;white-space:nowrap}
+  .pay-v{font-weight:800;color:#334155;font-variant-numeric:tabular-nums}
+  .pay-sub{font-size:10px;font-weight:700;color:var(--slate-500)}
+  .m-net{font-weight:900;color:#0F172A}
+  .m-net.neg{color:#B42318}
+  /* 주의 배지 — 12개월 약정 · 37K 미만 · SEG 하향 */
+  .risk-badges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+  .risk-badges[hidden]{display:none}
+  .risk-badge{display:inline-flex;align-items:center;gap:3px;font-size:10.5px;font-weight:800;line-height:1.25;
+    color:#8A4B00;background:#FFF3D6;border:1px solid #F0D28A;border-radius:6px;padding:2px 6px;white-space:nowrap}
+  .field .risk-badges{margin-top:4px}
+  .pv-item .risk-badges{margin-top:4px}
 
   .dlg-body.center{text-align:center;padding:24px 24px 8px}
   .dlg-msg{font-size:14px;color:var(--slate-600);line-height:1.7}
@@ -600,6 +633,15 @@
   @media (pointer:coarse){.staff-chip{height:36px}}
 
   /* ---------- 단말 보험 (미가입 / 가입 두 칸) ---------- */
+  .ins-chips.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
+  .none-chips{flex:none}
+  .none-chips .pchip.on{background:#0F172A;color:#fff;border-color:#0F172A}
+  .form-error b{font-weight:900}
+  .form-error .fe-sub{font-size:11.5px;font-weight:700;color:#8A5200}
+  .form-error.show{font-size:13.5px}
+  .card-box{margin-top:6px;display:flex;flex-direction:column;gap:6px}
+  .card-box[hidden]{display:none}
+  .card-box input{height:32px;border:1px solid var(--line-strong);border-radius:9px;padding:0 9px;font-size:13px;font-weight:600;background:#fff}
   .ins-chips{display:flex;gap:7px;flex-wrap:wrap}
   .ins-chip{
     height:34px;padding:0 16px;border-radius:9px;border:1px solid var(--line-strong);
@@ -1018,6 +1060,8 @@
   }
   @media (max-width:640px){
     .summary{grid-template-columns:1fr}
+    .sum-rows{grid-column:1/-1}
+    .sum-money,.sum-net{grid-template-columns:1fr 1fr}
     .sum-month{border-right:0;border-bottom:1px solid var(--line);justify-content:space-between;padding:5px 11px;gap:5px}
     .sum-cell{padding:7px 11px}
     .sum-label{font-size:11.5px;gap:4px}
@@ -1236,7 +1280,7 @@
           <button class="menu-item" id="syncOpenBtn" role="menuitem">공용 장부 연동 (Google 시트)</button>
           <button class="menu-item" id="adminLockBtn" role="menuitem">🔓 관리자 모드 잠금 해제</button>
           <button class="menu-item admin-only" id="devicesBtn" role="menuitem">🛡️ 직원 · 기기 관리 (추방)</button>
-          <button class="menu-item admin-only" id="priceBtn" role="menuitem">🏷️ 단가표 · 정책 계산표</button>
+          <button class="menu-item admin-only" id="priceBtn" role="menuitem">📋 정책 계산표 · 정산</button>
           <button class="menu-item" id="syncNowBtn" role="menuitem" hidden>지금 동기화</button>
           <div class="menu-sep menu-mobile-only"></div>
           <button class="menu-item menu-mobile-only admin-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
@@ -1269,6 +1313,7 @@
       </div>
     </div>
 
+    <div class="sum-rows">
     <div class="sum-cells">
       <div class="sum-cell">
         <span class="sum-label">총 건수 <span class="tag" id="kpiMonthLabel">—</span></span>
@@ -1276,25 +1321,65 @@
         <span class="sum-sub" id="kpiTotalSub">이번 달 개통</span>
       </div>
       <div class="sum-cell">
+        <span class="sum-label">무선 개통</span>
+        <span class="sum-value"><b class="num" id="kpiWirelessN">0</b><i>건</i></span>
+        <span class="sum-sub" id="kpiWirelessNSub">기변·번이·신규·중고</span>
+      </div>
+      <div class="sum-cell">
+        <span class="sum-label">유선 신규</span>
+        <span class="sum-value"><b class="num" id="kpiWiredNewN">0</b><i>건</i></span>
+        <span class="sum-sub" id="kpiWiredNewNSub">인터넷+TV 신규가입</span>
+      </div>
+      <div class="sum-cell">
+        <span class="sum-label">유선 약갱</span>
+        <span class="sum-value"><b class="num" id="kpiWiredRenewN">0</b><i>건</i></span>
+        <span class="sum-sub" id="kpiWiredRenewNSub">약정갱신</span>
+      </div>
+      <div class="sum-cell">
+        <span class="sum-label">제휴카드</span>
+        <span class="sum-value"><b class="num" id="kpiCardN">0</b><i>건</i></span>
+        <span class="sum-sub" id="kpiCardNSub">카드 판매 건수</span>
+      </div>
+    </div>
+
+    <!-- 관리자 전용 — 금액 KPI (직원 모드에서는 숨김) -->
+    <div class="sum-cells sum-money admin-only" id="sumMoneyRow">
+      <div class="sum-cell">
         <span class="sum-label">중고폰금액</span>
         <span class="sum-value"><b class="num" id="kpiUsed">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiUsedSub">중고폰 매입·판매 합계</span>
       </div>
-      <div class="sum-cell">
+      <div class="sum-cell admin-only">
         <span class="sum-label">무선 리베이트 <span class="tag">무선</span></span>
         <span class="sum-value"><b class="num" id="kpiRebateW">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiRebateWSub">기기변경·번호이동·신규가입</span>
       </div>
-      <div class="sum-cell">
+      <div class="sum-cell admin-only">
         <span class="sum-label">유선 리베이트 <span class="tag">유선</span></span>
         <span class="sum-value"><b class="num" id="kpiRebateL">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiRebateLSub">인터넷·TV 가입·약정갱신</span>
       </div>
-      <div class="sum-cell">
+      <div class="sum-cell admin-only">
         <span class="sum-label">리베이트 합계</span>
         <span class="sum-value"><b class="num" id="kpiRebate">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiRebateSub">무선 + 유선</span>
       </div>
+    </div>
+
+    <!-- 관리자 전용 — 총 순마진 · 추지·페이백 합계 -->
+    <div class="sum-cells sum-net admin-only" id="sumNetRow">
+      <div class="sum-cell" id="sumNetCell">
+        <span class="sum-label">총 순마진 <span class="tag">관리자</span></span>
+        <span class="sum-value"><b class="num" id="kpiNet">0</b><i>원</i></span>
+        <span class="sum-sub" id="kpiNetSub">리베이트 − 추지·페이백</span>
+      </div>
+      <div class="sum-cell" id="sumPayCell">
+        <span class="sum-label">추지·페이백 합계</span>
+        <span class="sum-value"><b class="num" id="kpiPay">0</b><i>원</i></span>
+        <span class="sum-sub" id="kpiPaySub">추가지원금 + 페이백(카드·입금)</span>
+      </div>
+    </div>
+
     </div>
 
     <!-- 오늘 · 이번 달 직원별 개통 건수 (리베이트 금액은 표시하지 않음) -->
@@ -1382,8 +1467,9 @@
             <th>부가서비스해지일자</th>
             <th>중고폰</th>
             <th class="money" data-sort="중고폰금액">중고폰금액<span class="arrow">▼</span></th>
-            <th class="money" data-sort="무선리베이트">무선 리베이트<span class="arrow">▼</span></th>
+            <th class="money admin-only" data-sort="무선리베이트">무선 리베이트<span class="arrow">▼</span></th>
             <th class="money" data-sort="유선리베이트">유선 리베이트<span class="arrow">▼</span></th>
+            <th class="money admin-only">순마진</th>
             <th>메모</th>
             <th>담당자</th>
             <th class="actions-col">관리</th>
@@ -1450,7 +1536,7 @@
           <label id="f_typeLabel">개통유형 <span class="opt">선택 · 무선·유선 각 1개</span></label>
           <input id="f_type" type="hidden" value="">
           <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
-          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
+          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
 
         <div class="field span2">
@@ -1460,21 +1546,8 @@
           <span class="hint">공시지원금으로 개통했으면 <b>단말할인</b>, 선택약정이면 <b>요금할인</b>. 요금할인만 인정되는 정책(MRA-02-01·MRA-04·MBA-02)이 있습니다.</span>
         </div>
 
-        <div class="field span2">
-          <label id="f_condLabel">정책 특수 조건 <span class="opt">선택 · 여러 개 가능</span></label>
-          <input id="f_cond" type="hidden" value="">
-          <div class="type-group cond-chips" id="condChips" role="group" aria-labelledby="f_condLabel"></div>
-          <span class="hint">중고 개통 · 장기고객 기변 · 512G 는 정책이 따로 인정됩니다. 직원 모드에서도 입력할 수 있습니다.</span>
-        </div>
-
-        <div class="field span2">
-          <div class="field-head">
-            <label for="f_plan">요금제(상품명) <span class="req">*</span></label>
-            <button type="button" class="field-pick" data-plan-pick="f_plan">요금제 선택</button>
-          </div>
-          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 베이직 + 지니 TV 에센스">
-          <div class="plan-suggest" id="sug_f_plan" role="listbox" aria-label="요금제 검색 결과"></div>
-        </div>
+        <!-- v16: 정책 특수 조건 줄은 없앴다. 예전 기록의 특수조건(중고결합·장기기변·512G)은 읽기 호환만 유지 -->
+        <input id="f_cond" type="hidden" value="">
 
         <div class="field span2">
           <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
@@ -1485,13 +1558,38 @@
         </div>
 
         <div class="field span2 ins-field">
-          <label id="f_insLabel">단말 보험 <span class="opt">선택 · 기본 미가입</span></label>
-          <input id="f_ins" type="hidden" value="미가입">
+          <label id="f_insLabel">단말 보험 <span class="req">*</span></label>
+          <input id="f_ins" type="hidden" value="">
           <div class="ins-chips" id="insChips" role="group" aria-labelledby="f_insLabel">
-            <button type="button" class="ins-chip on" data-ins="미가입" aria-pressed="true">미가입</button>
-            <button type="button" class="ins-chip" data-ins="가입" aria-pressed="false">가입</button>
+            <button type="button" class="ins-chip" data-ins="미가입" aria-pressed="false">미가입</button>
+            <button type="button" class="ins-chip" data-ins="파손" aria-pressed="false">파손</button>
+            <button type="button" class="ins-chip" data-ins="분실+파손" aria-pressed="false">분실+파손</button>
           </div>
-          <span class="hint">단말 보험(폰케어 등)에 가입했으면 '가입'을 누르세요. 시트·엑셀에도 함께 저장됩니다.</span>
+          <span class="hint">셋 중 하나를 골라야 저장됩니다. 시트에는 메모 표기([보험:파손])로 함께 나갑니다.</span>
+        </div>
+
+        <div class="field span2 card-field">
+          <label id="f_cardLabel">제휴카드 <span class="req">*</span></label>
+          <input id="f_card" type="hidden" value="">
+          <div class="ins-chips" id="cardChips" role="group" aria-labelledby="f_cardLabel">
+            <button type="button" class="ins-chip" data-card-sale="none" aria-pressed="false">미가입</button>
+            <button type="button" class="ins-chip" data-card-sale="sale" aria-pressed="false">판매(카드 선택)</button>
+          </div>
+          <div class="card-box" id="cardBox" hidden>
+            <div class="staff-chips card-chips" id="cardBrandChips"></div>
+            <input id="f_cardname" type="text" autocomplete="off" placeholder="카드명 (예: 우리카드 카드의정석)">
+          </div>
+          <span class="hint">제휴카드를 판매했으면 카드사를 고르세요. 시트에는 [카드:우리] 처럼 저장됩니다.</span>
+        </div>
+
+        <div class="field span2">
+          <div class="field-head">
+            <label for="f_plan">요금제(상품명) <span class="req">*</span></label>
+            <button type="button" class="field-pick" data-plan-pick="f_plan">요금제 선택</button>
+          </div>
+          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 베이직 + 지니 TV 에센스">
+          <div class="plan-suggest" id="sug_f_plan" role="listbox" aria-label="요금제 검색 결과"></div>
+          <div class="risk-badges" id="formRisk" hidden></div>
         </div>
 
         <!-- 바꿀 때만 쓰는 영역 — 요금제 변경 -->
@@ -1499,6 +1597,11 @@
           <div class="form-box-head">
             <span class="fb-title">요금제 변경</span>
             <span class="fb-note">바꿀 때만 선택</span>
+            <span class="grow"></span>
+            <input id="f_plan_none" type="hidden" value="">
+            <div class="period-chips none-chips" id="planNoneChips">
+              <button type="button" class="pchip" data-none="plan">변경 없음</button>
+            </div>
           </div>
 
           <div class="field">
@@ -1531,6 +1634,11 @@
           <div class="form-box-head">
             <span class="fb-title">부가서비스</span>
             <span class="fb-note">가입했을 때만 선택</span>
+            <span class="grow"></span>
+            <input id="f_addon_none" type="hidden" value="">
+            <div class="period-chips none-chips" id="addonNoneChips">
+              <button type="button" class="pchip" data-none="addon">미가입</button>
+            </div>
           </div>
 
           <div class="field">
@@ -1557,26 +1665,37 @@
         <div class="section-label">리베이트 · 중고폰</div>
 
         <!-- 정책 자동 계산 (관리자 전용 — 직원 모드에서는 통째로 숨김) -->
-        <div class="field span2 pv-box admin-only" id="pvBox" hidden>
+        <div class="field pv-box admin-only" id="pvBox" hidden>
           <div class="pv-head">
             <span class="pv-title">정책 자동 계산 <span class="pd-admin">관리자 전용</span></span>
             <label class="pv-ydum"><input type="checkbox" id="pvYDum"> 스쿨덤·Y덤 체크</label>
-            <button type="button" class="pv-apply" id="pvApply">무선 리베이트에 적용</button>
           </div>
           <div class="pv-body" id="pvBody"></div>
         </div>
 
-        <div class="field">
-          <label for="f_rebate_w">무선 리베이트 (원) <span class="opt">선택</span></label>
-          <input id="f_rebate_w" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-          <span class="hint">기기변경 · 번호이동 · 신규가입</span>
-          <div class="pt-hint" id="ptHintW" hidden></div>
+        <div class="field" style="display:none">
+          <input id="f_rebate_w" type="hidden" value="">
         </div>
         <div class="field">
           <label for="f_rebate_l">유선 리베이트 (원) <span class="opt">선택</span></label>
           <input id="f_rebate_l" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-          <span class="hint">인터넷+TV · 인터넷 약정갱신 · 단가표와 연동됩니다</span>
-          <div class="pt-hint" id="ptHintL" hidden></div>
+          <span class="hint">인터넷+TV · 인터넷 약정갱신</span>
+        </div>
+
+        <div class="field">
+          <label for="f_extra">추가지원금 (원) <span class="opt">선택</span></label>
+          <input id="f_extra" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+          <span class="hint">순마진에서 빠지는 금액</span>
+        </div>
+        <div class="field">
+          <label for="f_paycard">페이백 (카드결제) <span class="opt">선택</span></label>
+          <input id="f_paycard" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+          <span class="hint">카드로 돌려준 금액</span>
+        </div>
+        <div class="field">
+          <label for="f_paybank">페이백 (입금) <span class="opt">선택</span></label>
+          <input id="f_paybank" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
+          <span class="hint">계좌로 입금한 금액</span>
         </div>
 
         <div class="field">
@@ -1733,8 +1852,8 @@
 <dialog id="priceDialog" class="price-dlg">
   <div class="dlg-head">
     <div>
-      <h2>단가표 · 정책 계산표<span class="pd-admin">관리자 전용</span></h2>
-      <p>11월 KT 정책(MRA·MBA) · MRA 포인트 · 기종별 단가표를 한 자리에서 보고 고칩니다. 직원 모드에서는 보이지 않습니다.</p>
+      <h2>정책 계산표 · 정산<span class="pd-admin">관리자 전용</span></h2>
+      <p>11월 KT 정책(MRA·MBA) · MRA 포인트 · 이번 달 순마진 정산을 한 자리에서 보고 고칩니다. 직원 모드에서는 보이지 않습니다.</p>
     </div>
     <button type="button" class="dlg-close" id="pdClose" aria-label="닫기">×</button>
   </div>
@@ -1742,7 +1861,6 @@
     <button type="button" class="pv-tab on" data-pv-tab="sum">📊 정산 요약</button>
     <button type="button" class="pv-tab" data-pv-tab="policy">📋 정책 계산표</button>
     <button type="button" class="pv-tab" data-pv-tab="points">⭐ MRA 포인트</button>
-    <button type="button" class="pv-tab" data-pv-tab="price">🏷️ 단가표</button>
   </div>
   <div class="dlg-body">
 
@@ -1755,6 +1873,8 @@
         <span class="hint">개통일 기준 · 도도매 차감 반영 · 포인트는 차감 없음</span>
       </div>
       <div class="pv-cards">
+        <div class="pv-card"><span class="k">총 순마진</span><span class="v" id="pvNet">0<i>원</i></span></div>
+        <div class="pv-card"><span class="k">추지·페이백 합계</span><span class="v" id="pvPay">0<i>원</i></span></div>
         <div class="pv-card"><span class="k">총 정책 정산 예상액</span><span class="v" id="pvTotal">0<i>원</i></span></div>
         <div class="pv-card"><span class="k">총 MRA 포인트</span><span class="v" id="pvPoints">0.0<i>P</i></span></div>
         <div class="pv-card"><span class="k">무선 정책 대상</span><span class="v" id="pvCount">0<i>건</i></span></div>
@@ -1774,43 +1894,6 @@
       <div id="polPoints"></div>
     </div>
 
-    <!-- ---------- 단가표 (기존) ---------- -->
-    <div class="pv-panel" data-pv-panel="price" id="pvPanelPrice" hidden>
-      <!-- 일괄 붙여넣기 -->
-      <div class="pd-paste-box">
-        <div class="pd-sec-head">
-          <span class="pd-sec-title">일괄 붙여넣기</span>
-          <span class="pd-note">사진에서 뽑은 표를 그대로 붙여넣으면 한 번에 채워집니다</span>
-        </div>
-        <textarea id="pdPaste" spellcheck="false" placeholder="기종 / 기변 / 번이 / 신규&#10;갤럭시 S26 / 35 / 40 / 30&#10;아이폰 17 프로 / 40 / 45 / 35&#10;인터넷+TV 신규가입 / 30"></textarea>
-        <div class="pd-paste-foot">
-          <span class="hint">탭 · 쉼표 · 슬래시(/) 어느 것으로 나눠도 됩니다. 1~2자리는 만원으로 계산합니다(35 → 350,000원).</span>
-          <button type="button" class="btn sm" id="pdApplyPaste">표에 반영</button>
-        </div>
-        <div class="pd-paste-result" id="pdPasteResult" hidden></div>
-      </div>
-
-      <div class="pd-sec-head">
-        <span class="pd-sec-title">무선 단말기</span>
-        <span class="pd-note">22종 × 3유형 · 원 단위</span>
-      </div>
-      <div class="pd-table-wrap">
-        <table class="pd-table" id="pdWireless">
-          <thead>
-            <tr><th>기종</th><th>기기변경</th><th>번호이동</th><th>신규가입</th></tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <div class="pd-sec-head">
-        <span class="pd-sec-title">유선 (인터넷·TV)</span>
-        <span class="pd-note">3유형 · 원 단위</span>
-      </div>
-      <div class="pd-wired" id="pdWired"></div>
-
-      <div class="pd-summary" id="pdSummary"></div>
-    </div>
   </div>
   <div class="dlg-foot">
     <button type="button" class="btn btn-danger" id="pdClear">초기화</button>
@@ -1941,8 +2024,11 @@
      · 기존 구글 시트(20컴럼, Code.gs)를 고치지 않고도 직원끼리 공유되도록,
        시트로 보낼 때는 메모 칸 끝에 '[단말보험]' 표기를 붙이고,
        받을 때는 그 표기를 떼어 단말보험 값으로 복원한다. */
-  var INS_VALUES = ['미가입', '가입'];
-  var INS_MARK = '[단말보험]';
+  var INS_VALUES = ['미가입', '파손', '분실+파손'];   // v16: 3종 · 기본값 없음(직접 골라야 저장)
+  var INS_MARK = '[단말보험]';                        // 예전 표기(가입) — 읽기 호환
+  var INS_TAG = '[보험:';                             // [보험:파손] [보험:분실+파손]
+  var CARD_BRANDS = ['우리', '신한', '하나', '롯데', '현대', '삼성', 'KB국민', '기타'];
+  var CARD_TAG = '[카드:';
   /* 요금제 변경 · 부가서비스 해지 '완료 확인' — 같은 방식(시트 메모 표기)으로 공유한다
      · 앱 안: 요금제변경완료 / 부가서비스해지완료 = '완료' | ''
      · 시트 : 메모 칸 앞에 [요금완료] / [부가완료] */
@@ -1969,12 +2055,31 @@
     '장기기변': '[장기기변]', '512G': '[512G]'
   };
 
-  // 개통유형 — 무선 3개 / 유선(인터넷·TV) 3개
-  var WIRELESS_TYPES = ['기기변경','번호이동','신규가입'];
-  var WIRED_TYPES = ['인터넷+TV 신규가입','인터넷+TV 약정갱신','인터넷 약정갱신'];
+  /* 추가지원금 · 페이백 — 앱 전용 금액 항목(시트 20컴럼 유지용 메모 태그)
+     · 앱 안 : 추가지원금 / 페이백카드 / 페이백입금 (원 단위 숫자, 0 이면 없음)
+     · 시트   : 메모 칸에 [추지:150000] [페이백카드:100000] [페이백입금:50000] (0원이면 태그 자체를 생략)
+     · 화면 메모에서는 깔끔하게 떼어 내고, 입력 모달의 전용 칸으로 보여 준다 */
+  var PAY_TAGS = [
+    { key: '추지', field: '추가지원금' },
+    { key: '페이백카드', field: '페이백카드' },
+    { key: '페이백입금', field: '페이백입금' }
+  ];
+  var PAY_FIELDS = ['추가지원금', '페이백카드', '페이백입금'];
+
+  /* 주의 배지 기준 — 12개월 약정 · 37K 미만 ·스쿨잼/SEG 하향 */
+  var RISK_12 = /12\s*개월|약정\s*12|십이\s*개월/;
+  var RISK_SEG = /스쿨잼|스쿨\s*잼|SEG|세그|하향/i;
+
+  // 개통유형 — 무선 5개(중고신규·중고 MNP 포함) / 유선(인터넷·TV) 3개
+  //  · 중고신규 · 중고 MNP 는 무선 줄에서 바로 고른다(v16). 고르면 MBA-02 후불 정책과 도도매 차감이 자동 적용된다.
+  var WIRELESS_TYPES = ['기기변경', '번호이동', '신규가입', '중고신규', '중고MNP'];
+  var MRA_WIRELESS_TYPES = ['기기변경', '번호이동', '신규가입'];   // MRA(기본·모델·활력) 대상 무선 유형
+  var USED_TYPES = ['중고신규', '중고MNP'];                        // 중고·자급제 개통
+  var WIRED_TYPES = ['인터넷+TV 신규가입', '인터넷+TV 약정갱신', '인터넷 약정갱신'];
   var TYPES = WIRELESS_TYPES.concat(WIRED_TYPES);
   var TYPE_CLASS = {
     '기기변경':'t-change', '번호이동':'t-move', '신규가입':'t-new',
+    '중고신규':'t-used', '중고MNP':'t-used2',
     '인터넷+TV 신규가입':'t-net', '인터넷+TV 약정갱신':'t-wired', '인터넷 약정갱신':'t-wired2',
     // 예전 장부에 남아 있는 유형 (고르지는 못하지만 색·필터는 유지)
     '인터넷+TV':'t-net', '키즈폰':'t-kids', '기타':'t-etc'
@@ -2048,8 +2153,36 @@
       '지니 TV 탭4', '지니 TV 탭3', '지니 TV 탭2', 'AI 지니 TV 탭 모아진', '지니 TV 올인원 사운드바'
     ], function (n) { add('wired', '셋탑박스', n, 0); });
 
-    return rows;
+    return reorderMobilePlans(rows);
   })();
+
+  // 모바일 요금제 목록 순서 — 비진 요금제부터 (130K → 110K → 90K → 80K(베이직) → 낮은 요금제 내림차순)
+  //  · 같은 가격대 안에서는 기존 순서를 지키고, 그룹(초이스·베이직)도 비진 그룹이 먼저 온다
+  function reorderMobilePlans(rows) {
+    var mob = [], wired = [], i, r, catMax = {}, catFirst = {}, catIdx = 0;
+    for (i = 0; i < rows.length; i++) {
+      r = rows[i];
+      if (r.tab !== 'mobile') { wired.push(r); continue; }
+      mob.push(r);
+      if (catMax[r.cat] == null) { catMax[r.cat] = r.p || 0; catFirst[r.cat] = catIdx++; }
+      else if ((r.p || 0) > catMax[r.cat]) catMax[r.cat] = r.p || 0;
+    }
+    // 110K → 90K → 80K(베이직) → 그 외 내림차순. 120K·130K 는 맨 위 강조에서 빼고 맨 아래 참고용으로 둔다.
+    function band(p) {
+      if (p === 110000) return 0;
+      if (p === 90000) return 1;
+      if (p === 80000) return 2;
+      if (p > 110000) return 4;   // 130K·120K(초이스 더블) — 맨 아래
+      return 3;
+    }
+    mob.sort(function (a, b) {
+      return (band(a.p || 0) - band(b.p || 0)) ||
+        ((b.p || 0) - (a.p || 0)) ||                      // 같은 순위 안에서는 비진 것부터
+        (catFirst[a.cat] - catFirst[b.cat]) ||
+        (rows.indexOf(a) - rows.indexOf(b));
+    });
+    return mob.concat(wired);
+  }
   var PLAN_BY_ID = {};
   for (var pi0 = 0; pi0 < KT_PLANS.length; pi0++) PLAN_BY_ID[KT_PLANS[pi0].id] = KT_PLANS[pi0];
 
@@ -2089,7 +2222,6 @@
     adminPin: '',
     editingId: null,
     pendingRows: null,
-    pendingPriceTable: null,
     pendingKind: 'excel',
     dueOpen: false
   };
@@ -2296,16 +2428,37 @@
 
   function normalizeIns(v) {
     var s = String(v == null ? '' : v).replace(/\s/g, '');
-    if (!s) return '미가입';
-    if (/^(가입|가입함|y|yes|o|true|1|보험가입)$/i.test(s)) return '가입';
-    if (/미가입|미가|없음|no|n|x|false|0/i.test(s)) return '미가입';
-    return /가입/.test(s) ? '가입' : '미가입';
+    if (!s) return '';
+    if (/^분실/.test(s)) return '분실+파손';
+    if (/^파손/.test(s)) return '파손';
+    if (/^미가입|^미가$|^없음$|^no$|^n$|^x$|^false$|^0$|^미$/.test(s)) return '미가입';
+    if (/가입|^y$|^yes$|^o$|^true$|^1$/.test(s)) return '가입';   // 예전 값
+    return '';
   }
 
-  // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료])를 모두 떼어 내고 상태를 돌려준다
+  // 보험에 들었는가 — 파손 · 분실+파손 · (예전) 가입
+  function isInsured(v) {
+    var s = normalizeIns(v);
+    return s === '파손' || s === '분실+파손' || s === '가입';
+  }
+
+  function insLabel(v) {
+    var s = normalizeIns(v);
+    if (s === '가입') return '보험가입';
+    return s;
+  }
+
+  function normalizeCard(v) {
+    var s = String(v == null ? '' : v).trim();
+    if (!s) return '';
+    if (/^미판매|^미$|^없음$|^0$/.test(s)) return '미가입';
+    return s;
+  }
+
+  // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [] };
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '' };
     var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
@@ -2313,6 +2466,22 @@
       hit = true;
       out[tags[i][1]] = true;
       s = s.split(tags[i][0]).join(' ');
+    }
+    // 단말보험 3종 표기 [보험:파손] [보험:분실+파손] · 제휴카드 [카드:우리]
+    var reIns = /\[보험:\s*([^\]]*)\]/g;
+    s = s.replace(reIns, function (all, v) { hit = true; out.ins = normalizeIns(v); return ' '; });
+    var reCard = /\[카드:\s*([^\]]*)\]/g;
+    s = s.replace(reCard, function (all, v) { hit = true; out.card = normalizeCard(v); return ' '; });
+    // 추가지원금 · 페이백 금액 표기 [추지:150000] → 숫자로 복원
+    for (i = 0; i < PAY_TAGS.length; i++) {
+      var pk = PAY_TAGS[i].key, pf = PAY_TAGS[i].field;
+      var re = new RegExp('\\[' + pk + ':\\s*([-0-9,]*)\\]', 'g');
+      s = s.replace(re, function (all, num) {
+        hit = true;
+        var v = parseNumber(num);
+        out[pf] = (out[pf] || 0) + (v || 0);
+        return ' ';
+      });
     }
     // 할인 유형 · 정책 특수 조건 표기도 떼어 낸다
     for (i = 0; i < DISCOUNT_TYPES.length; i++) {
@@ -2355,15 +2524,27 @@
 
   // 시트 메모 칸에 쓸 값 — 상태 표기를 앞에 모아 붙이고 본문 메모는 뒤에 (중복 표기 방지)
   function sheetMemo(rec) {
-    var m = splitMemoTags(rec.메모).memo;
+    var t = splitMemoTags(rec.메모);
+    var m = t.memo;
     var head = [];
-    if (normalizeIns(rec.단말보험) === '가입') head.push(INS_MARK);
+    var ins = normalizeIns(rec.단말보험);
+    if (ins === '파손' || ins === '분실+파손') head.push(INS_TAG + ins + ']');
+    else if (ins === '가입') head.push(INS_MARK);
+    var card = normalizeCard(rec.제휴카드);
+    if (card) head.push(CARD_TAG + card + ']');
     if (normalizeDone(rec.요금제변경완료) === '완료') head.push(PLAN_DONE_MARK);
     if (normalizeDone(rec.부가서비스해지완료) === '완료') head.push(ADDON_DONE_MARK);
     var disc = normalizeDiscount(rec.할인유형);
     if (disc) head.push(DISCOUNT_MARK[disc]);
     var conds = condList(rec.특수조건), i;
     for (i = 0; i < conds.length; i++) head.push(COND_MARK[conds[i]]);
+    // 추가지원금 · 페이백 — 0원이면 태그를 넣지 않는다
+    for (i = 0; i < PAY_TAGS.length; i++) {
+      var pf = PAY_TAGS[i].field;
+      var pv = parseNumber(rec[pf]);
+      if (!pv) pv = parseNumber(t[pf]);
+      if (pv) head.push('[' + PAY_TAGS[i].key + ':' + pv + ']');
+    }
     if (!head.length) return m;
     return head.join(' ') + (m ? ' ' + m : '');
   }
@@ -2384,7 +2565,8 @@
     // 단말 보험 · 요금제 변경/부가서비스 해지 완료 — 시트 메모 표기를 떼어 내고 상태로 복원
     var tags = splitMemoTags(o.메모);
     o.메모 = tags.memo;
-    o.단말보험 = tags.ins ? '가입' : normalizeIns(o.단말보험);
+    o.단말보험 = tags.ins ? normalizeIns(tags.ins) : normalizeIns(o.단말보험);
+    o.제휴카드 = tags.card ? normalizeCard(tags.card) : normalizeCard(r && r.제휴카드);
     o.요금제변경완료 = tags.planDone ? '완료' : normalizeDone(r && r.요금제변경완료);
     o.부가서비스해지완료 = tags.addonDone ? '완료' : normalizeDone(r && r.부가서비스해지완료);
     // 할인 유형 · 정책 특수 조건 (메모 표기 → 값 복원)
@@ -2393,6 +2575,11 @@
     o.중고폰금액 = parseNumber(o.중고폰금액);
     o.무선리베이트 = parseNumber(o.무선리베이트);
     o.유선리베이트 = parseNumber(o.유선리베이트);
+    // 추가지원금 · 페이백 — 시트 메모 태그가 있으면 그 값(공용 장부)을, 없으면 저장된 값을 쓴다
+    for (var p = 0; p < PAY_TAGS.length; p++) {
+      var pf = PAY_TAGS[p].field;
+      o[pf] = tags[pf] != null ? parseNumber(tags[pf]) : parseNumber(r && r[pf]);
+    }
     if (!o.개통유형) o.개통유형 = '';
     // 하위 호환: 단일 리베이트뿐이면 유선 유형 → 유선리베이트, 그 밖 → 무선리베이트
     if (legacyRebate !== null && !o.무선리베이트 && !o.유선리베이트) {
@@ -2420,6 +2607,7 @@
   }
 
   function persist() {
+    invalidateMplus();
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state.records));
       el.storageWarn.classList.remove('show');
@@ -2937,7 +3125,7 @@
       toggleModel(b.getAttribute('data-model'));
     };
     var input = $('f_model');
-    if (input) input.addEventListener('input', function () { markModelChips(input.value); syncPriceHints(false); });
+    if (input) input.addEventListener('input', function () { markModelChips(input.value); refreshPolicy(false); updateFormRisk(); });
     markModelChips(input ? input.value : '');
   }
 
@@ -2951,7 +3139,7 @@
     else parts.push(name);
     input.value = parts.join(' + ');
     markModelChips(input.value);
-    syncPriceHints(true);
+    refreshPolicy(true); updateFormRisk();
   }
 
   function markModelChips(value) {
@@ -2974,152 +3162,10 @@
        이미 숫자가 있으면 '단가표 적용 (350,000원)' 칩으로 1탭 반영한다.
      · 금액은 기존 리베이트와 똑같이 '원' 단위. 붙여넣기에서 1~2자리는 만원으로 읽는다(35 → 350,000).
      ========================================================= */
-  var PRICE_KEY = 'kt_price_table_v1';
-  var priceTable = { wireless: {}, wired: {}, updatedAt: '' };
-
-  function priceNorm(s) {
-    return String(s == null ? '' : s).replace(/\s+/g, '').toLowerCase();
-  }
-
-  function emptyPriceTable() { return { wireless: {}, wired: {}, updatedAt: '' }; }
-
-  function normalizePriceTable(raw) {
-    var out = emptyPriceTable();
-    if (!raw || typeof raw !== 'object') return out;
-    var w = (raw.wireless && typeof raw.wireless === 'object') ? raw.wireless : {};
-    for (var dev in w) {
-      if (!Object.prototype.hasOwnProperty.call(w, dev)) continue;
-      var row = w[dev];
-      if (!row || typeof row !== 'object') continue;
-      var put = {};
-      for (var i = 0; i < WIRELESS_TYPES.length; i++) {
-        var v = parseNumber(row[WIRELESS_TYPES[i]]);
-        if (v > 0) put[WIRELESS_TYPES[i]] = v;
-      }
-      if (Object.keys(put).length) out.wireless[String(dev).trim()] = put;
-    }
-    var l = (raw.wired && typeof raw.wired === 'object') ? raw.wired : {};
-    for (var k = 0; k < WIRED_TYPES.length; k++) {
-      var lv = parseNumber(l[WIRED_TYPES[k]]);
-      if (lv > 0) out.wired[WIRED_TYPES[k]] = lv;
-    }
-    out.updatedAt = raw.updatedAt ? String(raw.updatedAt) : '';
-    return out;
-  }
-
-  function loadPriceTable() {
-    try {
-      var raw = localStorage.getItem(PRICE_KEY);
-      priceTable = normalizePriceTable(raw ? JSON.parse(raw) : null);
-    } catch (e) {
-      priceTable = emptyPriceTable();
-    }
-  }
-
-  function savePriceTable(next) {
-    priceTable = normalizePriceTable(next);
-    try {
-      localStorage.setItem(PRICE_KEY, JSON.stringify(priceTable));
-      return true;
-    } catch (e) {
-      toast('단가표를 저장하지 못했습니다. 저장 공간을 확인해 주세요.', true);
-      return false;
-    }
-  }
-
-  function priceCounts(tbl) {
-    var t = tbl || priceTable, w = 0, l = 0, dev, k;
-    for (dev in t.wireless) {
-      if (Object.prototype.hasOwnProperty.call(t.wireless, dev)) w += Object.keys(t.wireless[dev]).length;
-    }
-    for (k in t.wired) {
-      if (Object.prototype.hasOwnProperty.call(t.wired, k)) l += 1;
-    }
-    return { wireless: w, wired: l, total: w + l };
-  }
 
   // 기종 이름 → 단가표에 저장된 정확한 키 (공백·대소문자 무시)
-  function priceDeviceKey(name) {
-    var n = priceNorm(name);
-    if (!n) return '';
-    var keys = Object.keys(priceTable.wireless);
-    for (var i = 0; i < keys.length; i++) {
-      if (priceNorm(keys[i]) === n) return keys[i];
-    }
-    return '';
-  }
-
   // 기종 칸 값('갤럭시 S26' / '갤럭시 S26 + 인터넷 에센스')에서 무선 단가 찾기
-  function wirelessPrice(modelValue, type) {
-    if (!type || WIRELESS_TYPES.indexOf(type) < 0) return null;
-    var parts = modelParts(modelValue), i, key, v;
-    for (i = 0; i < parts.length; i++) {
-      key = priceDeviceKey(parts[i]);
-      if (!key) continue;
-      v = parseNumber(priceTable.wireless[key] && priceTable.wireless[key][type]);
-      if (v > 0) return { value: v, device: key, type: type };
-    }
-    return null;
-  }
-
-  function wiredPrice(type) {
-    if (!type || WIRED_TYPES.indexOf(type) < 0) return null;
-    var v = parseNumber(priceTable.wired[type]);
-    return v > 0 ? { value: v, type: type } : null;
-  }
-
   // 등록 창의 리베이트 칸에 정책(우선)·단가표 안내/적용 칩을 그린다
-  function syncPriceHints(autoFill) {
-    if (!el || !el.editDialog || !el.editDialog.open) return;
-    var slots = typeSlots($('f_type').value);
-    refreshPolicy(autoFill);
-    paintPriceHint('l', wiredPrice(slots.l), 'f_rebate_l', 'ptHintL', autoFill);
-  }
-
-  function paintPriceHint(kind, hit, inputId, hintId, autoFill) {
-    var box = $(hintId), input = $(inputId);
-    if (!box || !input) return;
-    var autoPrev = parseNumber(input.getAttribute('data-pt-auto'));
-    if (!hit) {
-      // 단가표에서 자동으로 넣었던 값은 유형·기종이 빠지면 같이 지운다 (직접 적은 값은 그대로)
-      if (autoPrev && parseNumber(input.value) === autoPrev) input.value = '';
-      input.removeAttribute('data-pt-auto');
-      box.hidden = true;
-      box.innerHTML = '';
-      box.setAttribute('data-val', '');
-      return;
-    }
-    var cur = parseNumber(input.value);
-    // 자동으로 채워 둔 값은 기종·유형을 바꾸면 새 단가로 따라간다
-    if (autoPrev && cur === autoPrev && cur !== hit.value && autoFill) {
-      input.value = fmtNum(hit.value);
-      cur = hit.value;
-    } else if (!cur && autoFill) {
-      input.value = fmtNum(hit.value);
-      cur = hit.value;
-    }
-    box.hidden = false;
-    box.setAttribute('data-val', String(hit.value));
-    if (cur === hit.value) {
-      input.setAttribute('data-pt-auto', String(hit.value));
-      box.innerHTML = '<span class="pt-same">단가표 ' + fmtNum(hit.value) + '원 적용됨</span>';
-      return;
-    }
-    input.removeAttribute('data-pt-auto');
-    box.innerHTML = '<button type="button" class="pt-apply" data-pt="' + kind + '">' +
-      '단가표 적용 (' + fmtNum(hit.value) + '원)</button>';
-  }
-
-  function applyPriceHint(kind) {
-    var box = $(kind === 'w' ? 'ptHintW' : 'ptHintL');
-    var input = $(kind === 'w' ? 'f_rebate_w' : 'f_rebate_l');
-    if (!box || !input) return;
-    var v = parseNumber(box.getAttribute('data-val'));
-    if (!v) return;
-    input.value = fmtNum(v);
-    syncPriceHints(false);
-  }
-
   /* =========================================================
      KT 정책 엔진 (2026년 11월 무선 정책 MRA·MBA + MRA 포인트)
      ---------------------------------------------------------
@@ -3136,7 +3182,7 @@
      ========================================================= */
   var POLICY_KEY = 'kt_policy_v1';
   // 도도매 차감 (개통유형별, 매칭 합계가 0원이면 차감하지 않는다)
-  var POLICY_CUT = { '신규가입': 40000, '번호이동': 30000, '기기변경': 30000 };
+  var POLICY_CUT = { '신규가입': 40000, '번호이동': 30000, '기기변경': 30000, '중고신규': 40000, '중고MNP': 30000 };
   var POL_TYPES = ['010', 'MNP', '기변'];
   var POL_TYPE_LABEL = { '010': '010(신규)', 'MNP': 'MNP(번호이동)', '기변': '기변' };
 
@@ -3447,6 +3493,21 @@
     return best;
   }
 
+  /* 키즈·주니어 요금제와 만 65세 이상(또는 시니어·복지 요금제)은
+     월정액이 37K 미만이어도 정책 계산에서 37K 이상 구간으로 인정한다 (v16) */
+  function planFloorOk(rec) {
+    var planTxt = String((rec && rec.요금제) || '');
+    if (/키즈|주니어|시니어|복지/.test(planTxt)) return true;
+    var age = ageAt(rec && rec.생년월일, rec && rec.개통일);
+    return age >= 65;
+  }
+
+  function planForPolicy(rec) {
+    var p = planMonthly(rec && rec.요금제);
+    if (p > 0 && p < 37000 && planFloorOk(rec)) return 37000;   // 37K 구간으로 올려 인정
+    return p;
+  }
+
   function mkey(s) {
     return String(s == null ? '' : s).replace(/\s+/g, '').replace(/\(.*?\)/g, '').toLowerCase();
   }
@@ -3494,6 +3555,76 @@
     return age;
   }
 
+  /* =========================================================
+     같은 고객 무선·유선 따로 등록 → M+I(+T) 결합 가점 자동 인식 (v16)
+     ---------------------------------------------------------
+     · 같은 고객명 + 연락처(숫자만), 연락처가 없으면 생년월일로 짝을 찾는다
+     · 유선 개통일 기준 M-3 ~ M (또는 같은 달) 안의 무선 건만 짝으로 본다
+     · 유선 건에서 1회만 가점(+3.5P 순신규 / +1.7P 약정갱신)을 더한다
+     · 한 건에 무선+유선이 같이 적혀 있으면 calcPoints 안에서 이미 계산되므로 짝에서 뺀다
+     ========================================================= */
+  var mplusCache = null;
+
+  function invalidateMplus() { mplusCache = null; }
+
+  function pairKeyOf(r) {
+    var name = String((r && r.고객명) || '').replace(/\s/g, '');
+    if (!name) return '';
+    var phone = String((r && r.연락처) || '').replace(/[^0-9]/g, '');
+    if (phone) return name + '|p:' + phone;
+    var birth = String((r && r.생년월일) || '').replace(/[^0-9]/g, '');
+    return name + '|' + (birth ? 'b:' + birth : 'n:');
+  }
+
+  function shiftMonth(iso, n) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
+    if (!m) return '';
+    var y = +m[1], mo = +m[2] - 1 + n, d = +m[3];
+    var ty = y + Math.floor(mo / 12);
+    mo = ((mo % 12) + 12) % 12;
+    var last = new Date(ty, mo + 1, 0).getDate();
+    return ty + '-' + pad2(mo + 1) + '-' + pad2(Math.min(d, last));
+  }
+
+  function mplusWindow(wireIso, wiredIso) {
+    var w = normalizeDate(wireIso), l = normalizeDate(wiredIso);
+    if (!w || !l) return false;
+    if (w.slice(0, 7) === l.slice(0, 7)) return true;      // 같은 달
+    return w <= l && w >= shiftMonth(l, -3);                // 유선 개통일 기준 M-3 ~ M
+  }
+
+  // 유선 건 id → 짝이 되는 무선 건 (가장 가까운 유선 건 하나와만 짝을 짓는다)
+  function mplusPairs() {
+    if (mplusCache) return mplusCache;
+    var wires = [], wireds = [], i, j, r;
+    for (i = 0; i < state.records.length; i++) {
+      r = state.records[i];
+      var slots = typeSlots(r.개통유형 || '');
+      if (slots.w && !slots.l) wires.push(r);
+      else if (slots.l && !slots.w) wireds.push(r);
+    }
+    var map = {}, used = {};
+    for (i = 0; i < wires.length; i++) {
+      var wk = pairKeyOf(wires[i]);
+      if (!wk) continue;
+      var best = null, bestIso = '';
+      for (j = 0; j < wireds.length; j++) {
+        if (used[wireds[j].id]) continue;
+        if (pairKeyOf(wireds[j]) !== wk) continue;
+        if (!mplusWindow(wires[i].개통일, wireds[j].개통일)) continue;
+        var lIso = normalizeDate(wireds[j].개통일) || '';
+        if (!best || lIso < bestIso) { best = wireds[j]; bestIso = lIso; }
+      }
+      if (best) { used[best.id] = true; map[best.id] = wires[i]; }
+    }
+    mplusCache = map;
+    return map;
+  }
+
+  function mplusPartnerFor(r) {
+    return mplusPairs()[r.id] || null;
+  }
+
   // 무선 포인트 (관리자 전용 표시)
   function calcPoints(rec, opts) {
     var o = opts || {};
@@ -3502,7 +3633,7 @@
     var slots = typeSlots(rec.개통유형 || '');
     var wtype = slots.w || '';
     var conds = condList(rec.특수조건);
-    var plan = planMonthly(rec.요금제);
+    var plan = planForPolicy(rec);
     var P = POLICY_DEFAULT.points;
     var i;
     function add(label, v, detail) {
@@ -3586,6 +3717,10 @@
       else if (tvKind === 'ess') add('TV 에센스·플러스', polPoint('wired|tvEss' + renew, W.tvEss[renew]), renew ? '약정갱신' : '순신규');
       if (WIRELESS_TYPES.indexOf(wtype) >= 0 && inKind) {
         add('무선+유선 결합 M+I(+T)', polPoint('wired|combMI' + renew, W.combMI[renew]), renew ? '약정갱신 · 결합 120일↑' : '순신규 · 결합 120일↑');
+      } else if (!wtype && inKind && mplusPartnerFor(rec)) {
+        // 같은 고객의 무선 건이 따로 등록된 경우 — 유선 건에서 1회만 결합 가점
+        add('무선+유선 결합 M+I(+T)', polPoint('wired|combMI' + renew, W.combMI[renew]),
+          (renew ? '약정갱신' : '순신규') + ' · 무선 건 따로 등록 · 결합 120일↑');
       }
     }
     out.total = Math.round(out.total * 10) / 10;
@@ -3615,14 +3750,17 @@
     res.segKey = pt.segKey;
     res.seg = pt.seg;
     if (WIRELESS_TYPES.indexOf(wtype) < 0) return res;
-    var plan = planMonthly(rec.요금제);
+    var plan = planForPolicy(rec);
     if (plan < 37000) {
       if (!plan) res.notes.push('요금제 월정액을 읽지 못해 무선 정책을 계산하지 못했습니다.');
       else res.notes.push('요금제가 37K 미만이라 무선 정책 대상이 아닙니다 (정책 기준 37K 이상).');
       return res;
     }
     var conds = res.conds, disc = res.discount;
-    var used = conds.indexOf('중고신규') >= 0 || conds.indexOf('중고MNP') >= 0;
+    // 중고·자급제 개통 — v16부터는 개통유형(중고신규·중고 MNP)으로 직접 고른다.
+    // 예전 기록처럼 특수조건에 적혀 있어도 그대로 인정한다(읽기 호환).
+    var usedKey = (wtype === '중고신규' || conds.indexOf('중고신규') >= 0) ? '중고신규'
+      : ((wtype === '중고MNP' || conds.indexOf('중고MNP') >= 0) ? '중고MNP' : '');
     var ti = wtype === '신규가입' ? 0 : wtype === '번호이동' ? 1 : 2;
     var typeKey = POL_TYPES[ti];
     function push(pol, row, seg, type, label, detail) {
@@ -3632,17 +3770,17 @@
       res.sum += v * POLICY_DEFAULT.unit;
     }
     if (!disc) res.notes.push('할인 유형(단말할인·요금할인)이 비어 있어 인정 여부를 가릴 수 없습니다. 정책 기준으로 계산했습니다.');
-    if (used) {
+    if (usedKey) {
       // 중고·자급제 개통 : MRA 는 대상이 아니고 MBA-02(후불)만 인정 (요금할인 적용)
-      if (conds.indexOf('중고결합') >= 0 && conds.indexOf('중고신규') < 0 && conds.indexOf('중고MNP') < 0) {
-        res.notes.push('중고결합은 중고신규·중고 MNP와 함께 골라야 인정됩니다.');
+      if (conds.indexOf('중고결합') >= 0) {
+        res.notes.push('중고결합은 MBA-02-02 결합 정책으로 함께 계산됩니다.');
       }
       if (disc !== '요금할인') {
         res.notes.push('중고 개통은 요금할인(선약)으로 개통해야 MBA-02 후불 정책이 인정됩니다.');
       } else {
         var mba = polById('MBA02');
         var segKey = segFor(plan, mba.segs);
-        var col = conds.indexOf('중고신규') >= 0 ? '010' : 'MNP';
+        var col = usedKey === '중고신규' ? '010' : 'MNP';
         if (segKey) {
           push(mba, mba.rows[0], segKey, col, 'MBA-02-01 SIMple 후불', segKey + ' 이상 · ' + col);
           if (conds.indexOf('중고결합') >= 0) {
@@ -3701,8 +3839,8 @@
     res.sum = Math.round(res.sum);
     if (res.sum > 0) {
       // 도도매 차감 : 신규(신규가입·중고신규) -40,000 / 번이·기변(번호이동·기기변경·중고MNP) -30,000
-      var isNew = wtype === '신규가입' || conds.indexOf('중고신규') >= 0;
-      res.cut = isNew ? 40000 : (POLICY_CUT[wtype] || 0);
+      var isNew = wtype === '신규가입' || usedKey === '중고신규';
+      res.cut = isNew ? 40000 : (POLICY_CUT[wtype] || (usedKey ? 30000 : 0));
       res.cutLabel = isNew ? '도도매 차감(신규)' : '도도매 차감(번이/기변)';
       res.total = Math.max(0, res.sum - res.cut);
       res.has = true;
@@ -3711,10 +3849,33 @@
   }
 
   /* ---------- 단가표 관리 창 ---------- */
+  // 정책 계산표 창 — 저장 / 초기화
+  function savePolicyFromDialog() {
+    if (!isAdmin()) { toast('정책 계산표는 관리자 모드에서만 저장할 수 있습니다.', true); return; }
+    if (!savePolicy(polCollect())) return;
+    if (el.priceDialog.open) el.priceDialog.close();
+    toast('정책 계산표를 저장했습니다. 개통 등록과 정산에 바로 반영됩니다.');
+    render();
+  }
+
+  function clearPolicyOverrides() {
+    if (!isAdmin()) { toast('정책 계산표는 관리자 모드에서만 바꿀 수 있습니다.', true); return; }
+    askConfirm('정책 계산표 초기화',
+      '고친 정책표 숫자를 모두 지우고 기본 KT 정책으로 돌아갈까요?', '초기화', true)
+      .then(function (ok) {
+        if (!ok) return;
+        savePolicy({});
+        renderPolTables();
+        renderPolPoints();
+        renderPolicySummary();
+        toast('정책표를 기본값으로 되돌렸습니다.');
+        render();
+      });
+  }
+
   function openPriceDialog() {
     if (!el.priceDialog) return;
     if (!isAdmin()) { openAdminDialog(); return; }
-    renderPriceDialog();
     renderPolTables();
     renderPolPoints();
     if ($('pvMonth')) $('pvMonth').value = currentMonth();
@@ -3881,7 +4042,7 @@
       list.push(r);
     }
     list.sort(function (a, b) { return String(b.개통일).localeCompare(String(a.개통일)); });
-    var total = 0, pts = 0, n = 0, html = '';
+    var total = 0, pts = 0, n = 0, html = '', netSum = 0, paySum = 0;
     for (i = 0; i < list.length; i++) {
       var rec = list[i];
       var c = calcPolicy(rec);
@@ -3889,6 +4050,9 @@
       var amount = manual || c.total;
       total += amount;
       pts += c.points;
+      var nm = netMargin(rec);
+      netSum += nm.total;
+      paySum += nm.payback;
       if (c.has) n++;
       var slots = typeSlots(rec.개통유형 || '');
       var head = '<div class="pv-item-top"><span class="nm">' + esc(rec.고객명 || '(이름 없음)') + '</span>' +
@@ -3898,7 +4062,8 @@
         (c.segKey ? ' · ' + c.segKey + '↑' : '') + '</span>';
       var am = '<span class="am">' + fmtNum(amount) + '원' + (manual && c.has && manual !== c.total ? ' (정책 ' + fmtNum(c.total) + ')' : '') + '</span>';
       var pp = c.points ? '<span class="pp">' + pText(c.points) + '</span>' : '';
-      head += am + pp + '</div>';
+      var nn = '<span class="am" title="순마진 = 무선 리베이트 + 유선 리베이트 + 중고폰 − 추지·페이백">순마진 <b>' + netText(rec) + '원</b></span>';
+      head += am + nn + pp + '</div>';
       var br = '<div class="br">';
       if (c.items.length) {
         br += c.items.map(function (x) { return esc(x.id) + ' <b>' + fmtNum(x.amount) + '</b>'; }).join(' + ');
@@ -3912,248 +4077,20 @@
       }
       br += '</div>';
       if (c.notes.length) br += '<div class="br" style="color:#8A5200">· ' + esc(c.notes.join(' · ')) + '</div>';
-      html += '<div class="pv-item">' + head + br + '</div>';
+      if (nm.payback) br += '<div class="br">추지 <b>' + fmtNum(nm.extra) + '</b> · 페이백 카드 <b>' + fmtNum(nm.card) + '</b> · 입금 <b>' + fmtNum(nm.bank) + '</b> = 추지·페이백 <b>' + fmtNum(nm.payback) + '원</b></div>';
+      html += '<div class="pv-item">' + head + br + riskBadgesHtml(rec) + '</div>';
     }
+    if ($('pvNet')) $('pvNet').innerHTML = (netSum < 0 ? '−' : '') + fmtNum(Math.abs(netSum)) + '<i>원</i>';
+    if ($('pvPay')) $('pvPay').innerHTML = fmtNum(paySum) + '<i>원</i>';
     if ($('pvTotal')) $('pvTotal').innerHTML = fmtNum(total) + '<i>원</i>';
     if ($('pvPoints')) $('pvPoints').innerHTML = (Math.round(pts * 10) / 10).toFixed(1) + '<i>P</i>';
     if ($('pvCount')) $('pvCount').innerHTML = n + '<i>건</i>';
     box.innerHTML = html || '<div class="pv-empty2">이 달에 등록된 개통이 없습니다.</div>';
   }
 
-  function pdValue(dev, type) {
-    var row = priceTable.wireless[dev];
-    var v = row ? parseNumber(row[type]) : 0;
-    return v > 0 ? fmtNum(v) : '';
-  }
-
-  function renderPriceDialog() {
-    var html = '', i, j;
-    for (i = 0; i < KT_DEVICES.length; i++) {
-      var dev = KT_DEVICES[i];
-      html += '<tr><td class="pd-dev" title="' + esc(dev) + '">' + esc(dev) + '</td>';
-      for (j = 0; j < WIRELESS_TYPES.length; j++) {
-        var t = WIRELESS_TYPES[j], v = pdValue(dev, t);
-        html += '<td><input class="pd-input' + (v ? ' on' : '') + '" type="text" inputmode="numeric" autocomplete="off"' +
-          ' data-dev="' + esc(dev) + '" data-wtype="' + esc(t) + '" value="' + v + '" placeholder="—"' +
-          ' aria-label="' + esc(dev + ' ' + t) + '"></td>';
-      }
-      html += '</tr>';
-    }
-    el.pdWireless.querySelector('tbody').innerHTML = html;
-
-    var wh = '';
-    for (i = 0; i < WIRED_TYPES.length; i++) {
-      var wt = WIRED_TYPES[i], wv = priceTable.wired[wt] ? fmtNum(priceTable.wired[wt]) : '';
-      wh += '<div class="pd-wcell"><label for="pdw' + i + '">' + esc(wt) + '<span class="pd-unit">원</span></label>' +
-        '<input id="pdw' + i + '" class="pd-input' + (wv ? ' on' : '') + '" type="text" inputmode="numeric" autocomplete="off"' +
-        ' data-wired="' + esc(wt) + '" value="' + wv + '" placeholder="—" aria-label="' + esc(wt) + '"></div>';
-    }
-    el.pdWired.innerHTML = wh;
-
-    el.pdPaste.value = '';
-    el.pdPasteResult.hidden = true;
-    el.pdPasteResult.className = 'pd-paste-result';
-    renderPdSummary();
-  }
-
   // 표에 지금 적혀 있는 값 모으기 (+ 비어 있는 칸 표시 정리)
-  function pdCollect() {
-    var tbl = { wireless: {}, wired: {}, updatedAt: priceTable.updatedAt || '' };
-    var inputs = el.pdWireless.querySelectorAll('input[data-dev]'), i;
-    for (i = 0; i < inputs.length; i++) {
-      var dev = inputs[i].getAttribute('data-dev');
-      var type = inputs[i].getAttribute('data-wtype');
-      var v = parseNumber(inputs[i].value);
-      inputs[i].classList.toggle('on', v > 0);
-      if (!v) continue;
-      if (!tbl.wireless[dev]) tbl.wireless[dev] = {};
-      tbl.wireless[dev][type] = v;
-    }
-    var winputs = el.pdWired.querySelectorAll('input[data-wired]');
-    for (i = 0; i < winputs.length; i++) {
-      var wt = winputs[i].getAttribute('data-wired');
-      var wv = parseNumber(winputs[i].value);
-      winputs[i].classList.toggle('on', wv > 0);
-      if (wv > 0) tbl.wired[wt] = wv;
-    }
-    return tbl;
-  }
-
-  function renderPdSummary() {
-    if (!el.pdSummary) return null;
-    var t = pdCollect();
-    var c = priceCounts(t);
-    el.pdSummary.innerHTML = c.total
-      ? '지금 표에 적힌 단가 <b>' + c.total + '칸</b> (무선 ' + c.wireless + ' · 유선 ' + c.wired + ') — <b>저장</b>을 눌러야 이 기기에 남습니다.'
-      : '아직 적힌 단가가 없습니다. 위에 표를 붙여넣거나 표에 직접 입력한 뒤 <b>저장</b>을 누르세요. 비워 두면 자동 입력도 하지 않습니다.';
-    return t;
-  }
-
-  function savePriceFromDialog() {
-    if (!isAdmin()) { toast('단가표는 관리자 모드에서만 저장할 수 있습니다.', true); return; }
-    var t = pdCollect();
-    t.updatedAt = new Date().toISOString();
-    if (!savePriceTable(t)) return;
-    if (!savePolicy(polCollect())) return;
-    var c = priceCounts();
-    if (el.priceDialog.open) el.priceDialog.close();
-    toast(c.total
-      ? '단가표 ' + c.total + '칸 · 정책표를 저장했습니다. 개통 등록과 정산에 바로 반영됩니다.'
-      : '단가표를 비웠습니다. 정책표는 저장했습니다.');
-    render();
-    syncPriceHints(false);
-  }
-
-  function clearPriceTable() {
-    if (!isAdmin()) { toast('단가표는 관리자 모드에서만 바꿀 수 있습니다.', true); return; }
-    askConfirm('단가표 · 정책표 초기화',
-      '저장된 단가표와 고친 정책표 숫자를 모두 지우고 기본 KT 정책으로 돌아갈까요?<br>개통 등록의 단가표 자동 입력도 함께 멈춥니다.', '초기화', true)
-      .then(function (ok) {
-        if (!ok) return;
-        savePriceTable(emptyPriceTable());
-        savePolicy({});
-        renderPriceDialog();
-        renderPolTables();
-        renderPolPoints();
-        renderPolicySummary();
-        toast('단가표를 초기화하고 정책표를 기본값으로 되돌렸습니다.');
-        syncPriceHints(false);
-      });
-  }
-
   /* 붙여넣기 표 읽기 — 탭 · 쉼표 · 슬래시 · 두 칸 이상 공백으로 나뉜 줄을 읽는다.
      1~2자리 숫자는 만원으로 계산한다(35 → 350,000원). 머리글 줄(기종/기변/번이/신규)은 순서만 읽는다. */
-  function priceNamePrefixLen(line, name) {
-    var chars = String(name).replace(/\s+/g, '').split('');
-    if (!chars.length) return -1;
-    var re = new RegExp('^\\s*' + chars.map(function (c) {
-      return c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }).join('\\s*'), 'i');
-    var m = re.exec(line);
-    return m ? m[0].length : -1;
-  }
-
-  function priceAmounts(s) {
-    var out = [], re = /(\d[\d,]*(?:\.\d+)?)\s*(만)?/g, m;
-    while ((m = re.exec(String(s || ''))) !== null) {
-      var num = parseFloat(String(m[1]).replace(/,/g, ''));
-      if (!isFinite(num) || num <= 0) continue;
-      var val = m[2] ? Math.round(num * 10000) : num;
-      if (val <= 99) val = val * 10000;     // 35 → 350,000 (만원 단위로 적은 값)
-      out.push(val);
-      if (out.length >= 8) break;
-    }
-    return out;
-  }
-
-  function parsePricePaste(text) {
-    var res = { wireless: {}, wired: {}, filled: 0, wCells: 0, lCells: 0, skipped: [], header: '' };
-    var names = [], i;
-    for (i = 0; i < KT_DEVICES.length; i++) names.push({ name: KT_DEVICES[i], kind: 'w' });
-    for (i = 0; i < WIRED_TYPES.length; i++) names.push({ name: WIRED_TYPES[i], kind: 'l' });
-    // KT_DEVICES 에 없는 이름도 이미 저장된 단가표 키라면 받아 준다
-    var stored = Object.keys(priceTable.wireless);
-    for (i = 0; i < stored.length; i++) {
-      var dup = false;
-      for (var s = 0; s < names.length; s++) if (priceNorm(names[s].name) === priceNorm(stored[i])) { dup = true; break; }
-      if (!dup) names.push({ name: stored[i], kind: 'w' });
-    }
-    names.sort(function (a, b) { return b.name.length - a.name.length; });
-
-    var order = WIRELESS_TYPES.slice();   // 머리글에 적힌 열 순서
-    var lines = String(text || '').split(/\r?\n/);
-    for (var li = 0; li < lines.length; li++) {
-      var line = lines[li].replace(/\u00a0/g, ' ').trim();
-      if (!line) continue;
-      line = line.replace(/^\s*\d+\s*[.)]\s*/, '');   // '1. ' 같은 번호 제거
-
-      var amounts = priceAmounts(line);
-      // 머리글 줄 — 숫자가 없으면 열 순서만 읽고 넘어간다
-      if (!amounts.length) {
-        var cols = [], words = line.split(/\t|,|\/|\s{2,}/);
-        for (i = 0; i < words.length; i++) {
-          var w = priceNorm(words[i]);
-          if (!w) continue;
-          if (/^(기종|단말기|모델|모델명|기기|상품|구분)$/.test(w)) continue;
-          if (/기기변경|기변/.test(w)) cols.push('기기변경');
-          else if (/번호이동|번이/.test(w)) cols.push('번호이동');
-          else if (/신규/.test(w)) cols.push('신규가입');
-        }
-        if (cols.length >= 2) { order = cols; res.header = cols.join(' / '); }
-        continue;
-      }
-
-      // 줄 앞의 이름 찾기 — 가장 긴 이름부터
-      var hit = null, rest = '';
-      for (i = 0; i < names.length; i++) {
-        var len = priceNamePrefixLen(line, names[i].name);
-        if (len > 0) { hit = names[i]; rest = line.slice(len); break; }
-      }
-      if (!hit) {
-        res.skipped.push(line.split(/\t|,|\/|\s{2,}/)[0].trim().slice(0, 14) || line.slice(0, 14));
-        continue;
-      }
-      var vals = priceAmounts(rest);
-      if (!vals.length) continue;
-      if (hit.kind === 'l') {
-        res.wired[hit.name] = vals[0];
-        res.lCells += 1;
-        continue;
-      }
-      var row = res.wireless[hit.name] || (res.wireless[hit.name] = {});
-      for (i = 0; i < vals.length && i < order.length; i++) {
-        if (row[order[i]]) continue;
-        row[order[i]] = vals[i];
-        res.wCells += 1;
-      }
-    }
-    res.filled = res.wCells + res.lCells;
-    return res;
-  }
-
-  function applyPricePaste() {
-    if (!isAdmin()) { toast('단가표는 관리자 모드에서만 바꿀 수 있습니다.', true); return; }
-    var text = el.pdPaste.value || '';
-    if (!text.trim()) {
-      pdPasteMsg('붙여넣은 내용이 없습니다.', true);
-      return;
-    }
-    var parsed = parsePricePaste(text);
-    var inputs = el.pdWireless.querySelectorAll('input[data-dev]'), i;
-    for (i = 0; i < inputs.length; i++) {
-      var dev = inputs[i].getAttribute('data-dev');
-      var type = inputs[i].getAttribute('data-wtype');
-      var row = parsed.wireless[dev];
-      if (row && row[type]) inputs[i].value = fmtNum(row[type]);
-    }
-    var winputs = el.pdWired.querySelectorAll('input[data-wired]');
-    for (i = 0; i < winputs.length; i++) {
-      var wt = winputs[i].getAttribute('data-wired');
-      if (parsed.wired[wt]) winputs[i].value = fmtNum(parsed.wired[wt]);
-    }
-    renderPdSummary();
-
-    if (!parsed.filled) {
-      pdPasteMsg('기종과 금액을 찾지 못했습니다. 예) 갤럭시 S26\t35\t40\t30 처럼 한 줄에 기종과 금액을 적어 주세요.', true);
-      return;
-    }
-    var msg = '표에 <b>' + parsed.filled + '칸</b>을 반영했습니다 (무선 ' + parsed.wCells + ' · 유선 ' + parsed.lCells + ').';
-    if (parsed.header) msg += ' 열 순서: ' + esc(parsed.header) + '.';
-    if (parsed.skipped.length) {
-      msg += '<br>목록에 없는 이름 ' + parsed.skipped.length + '개는 건너뛰었습니다: ' + esc(parsed.skipped.slice(0, 3).join(', ')) +
-        (parsed.skipped.length > 3 ? ' 외' : '');
-    }
-    msg += '<br>아직 저장 전입니다 — 아래 <b>저장</b>을 누르세요.';
-    pdPasteMsg(msg, false);
-  }
-
-  function pdPasteMsg(html, isErr) {
-    if (!el.pdPasteResult) return;
-    el.pdPasteResult.innerHTML = html;
-    el.pdPasteResult.className = 'pd-paste-result' + (isErr ? ' err' : '');
-    el.pdPasteResult.hidden = false;
-  }
-
   /* ---------------- 단말 보험 칩 (미가입 · 가입) ----------------
      · 두 칸 중 하나만 선택된다 (기본 미가입)
      · 값은 hidden #f_ins 에 담겨 저장된다 */
@@ -4179,7 +4116,7 @@
     if (!t) return;
     var cur = normalizeDiscount($('f_discount').value);
     renderDiscChips(cur === t ? '' : t);
-    syncPriceHints(true);
+    refreshPolicy(true); updateFormRisk();
   }
 
   function renderCondChips(list) {
@@ -4202,7 +4139,7 @@
     var at = cur.indexOf(key);
     if (at >= 0) cur.splice(at, 1); else cur.push(key);
     renderCondChips(cur);
-    syncPriceHints(true);
+    refreshPolicy(true); updateFormRisk();
   }
 
   // 표·폰 카드에 붙는 할인유형 · 특수조건 배지
@@ -4269,93 +4206,64 @@
     body.innerHTML = html;
   }
 
-  // 무선 리베이트 칸 : 정책 단가 우선, 없으면 단가표 → 안내/1탭 칩
-  function paintRebateHint(calc, autoFill) {
-    var box = $('ptHintW'), input = $('f_rebate_w');
-    if (!box || !input) return;
-    var autoPrev = parseNumber(input.getAttribute('data-pt-auto'));
-    var cur = parseNumber(input.value);
-    var slots = typeSlots($('f_type').value);
-    var price = wirelessPrice($('f_model').value, slots.w);
-    var polTotal = (calc && calc.has) ? calc.total : 0;
-
-    // 1) 우리가 넣어 둔 값(또는 빈 칸)은 조건이 바뀌면 따라간다 — 직접 적은 값은 건드리지 않는다
-    var owned = !!(autoPrev && cur === autoPrev);
-    if (owned && polTotal && cur !== polTotal) {
-      input.value = fmtNum(polTotal);
-      cur = polTotal;
-    } else if (owned && !polTotal && price && cur !== price.value) {
-      input.value = fmtNum(price.value);
-      cur = price.value;
-    } else if (!cur) {
-      if (polTotal) input.value = fmtNum(polTotal);
-      else if (price) input.value = fmtNum(price.value);
-      cur = parseNumber(input.value);
-    }
-
-    // 2) 안내
-    if (polTotal && cur === polTotal) {
-      input.setAttribute('data-pt-auto', String(polTotal));
-      box.hidden = false;
-      box.setAttribute('data-val', String(polTotal));
-      box.setAttribute('data-src', 'pol');
-      box.innerHTML = '<span class="pt-same">정책 ' + fmtNum(polTotal) + '원 적용됨</span>' +
-        (isAdmin() ? '<span class="pt-same">MRA ' + pText(calc.points) + '</span>' : '');
-      return;
-    }
-    if (!polTotal && price && cur === price.value) {
-      input.setAttribute('data-pt-auto', String(price.value));
-      box.hidden = false;
-      box.setAttribute('data-val', String(price.value));
-      box.setAttribute('data-src', 'price');
-      box.innerHTML = '<span class="pt-same">단가표 ' + fmtNum(price.value) + '원 적용됨</span>';
-      return;
-    }
-    if (polTotal) {
-      input.removeAttribute('data-pt-auto');
-      box.hidden = false;
-      box.setAttribute('data-val', String(polTotal));
-      box.setAttribute('data-src', 'pol');
-      box.innerHTML = '<button type="button" class="pt-apply" data-pt="w">정책 단가 적용 (' + fmtNum(polTotal) + '원)</button>';
-      return;
-    }
-    if (price) {
-      input.removeAttribute('data-pt-auto');
-      box.hidden = false;
-      box.setAttribute('data-val', String(price.value));
-      box.setAttribute('data-src', 'price');
-      box.innerHTML = '<button type="button" class="pt-apply" data-pt="w">단가표 적용 (' + fmtNum(price.value) + '원)</button>';
-      return;
-    }
-    // 정책도 단가표도 없으면 : 자동으로 넣었던 값만 정리한다
-    if (autoPrev && cur === autoPrev) input.value = '';
-    input.removeAttribute('data-pt-auto');
-    box.hidden = true;
-    box.innerHTML = '';
-    box.setAttribute('data-val', '');
-    box.setAttribute('data-src', '');
-  }
-
   // 등록 창의 무선 리베이트 · 정책 미리보기를 한 번에 다시 그린다
-  function refreshPolicy(autoFill) {
+  function refreshPolicy() {
     if (!el || !el.editDialog || !el.editDialog.open) return null;
     var rec = formPolicyRecord();
     var calc = calcPolicy(rec);
     paintPolicyPreview(calc, rec);
-    paintRebateHint(calc, autoFill);
-    var btn = $('pvApply');
-    if (btn) btn.disabled = !calc.has;
     return calc;
   }
 
-  function applyPolicyToRebate() {
-    var input = $('f_rebate_w');
-    if (!input) return;
-    var calc = calcPolicy(formPolicyRecord());
-    if (!calc.has) { toast('지금 조건에 맞는 무선 정책이 없습니다.', true); return; }
-    input.value = fmtNum(calc.total);
-    refreshPolicy(false);
-    toast('정책 단가 ' + fmtNum(calc.total) + '원을 무선 리베이트에 넣었습니다.');
+  // 등록 창의 주의 배지 — 12개월 약정 · 37K 미만 · 스쿨잼/SEG 하향
+  function updateFormRisk() {
+    var box = $('formRisk');
+    if (!box) return;
+    var rec = {
+      개통유형: $('f_type') ? $('f_type').value : '',
+      요금제: $('f_plan') ? $('f_plan').value : '',
+      변경요금제: $('f_newplan') ? $('f_newplan').value : '',
+      메모: $('f_memo') ? $('f_memo').value : '',
+      부가서비스: $('f_addon') ? $('f_addon').value : '',
+      특수조건: $('f_cond') ? $('f_cond').value : ''
+    };
+    var list = riskList(rec);
+    if (!list.length) { box.hidden = true; box.innerHTML = ''; return; }
+    var html = '';
+    for (var i = 0; i < list.length; i++) html += '<span class="risk-badge">⚠️ ' + esc(list[i]) + '</span>';
+    box.innerHTML = html;
+    box.hidden = false;
+  }
+
+  function renderCardBrands() {
+    var box = $('cardBrandChips');
+    if (!box) return;
+    var html = '';
+    for (var i = 0; i < CARD_BRANDS.length; i++) {
+      html += '<button type="button" class="chip' + (CARD_BRANDS[i] === '기타' ? '' : '') +
+        '" data-card-brand="' + esc(CARD_BRANDS[i]) + '">' + esc(CARD_BRANDS[i]) + '</button>';
+    }
+    box.innerHTML = html;
+  }
+
+  // 제휴카드 — '없음' 또는 카드명. 판매를 고르면 카드사 칩·입력칸이 열린다
+  function setCardChips(v) {
+    var val = normalizeCard(v);
+    if (val === '미판매') val = '미가입';
+    var input = $('f_card');
+    var box = $('cardBox');
+    var sale = !!val && val !== '미가입';
+    var saleBtn = document.querySelector('#cardChips button[data-card-sale="sale"]');
+    var noneBtn = document.querySelector('#cardChips button[data-card-sale="none"]');
+    if (noneBtn) { noneBtn.classList.toggle('on', val === '미가입'); noneBtn.setAttribute('aria-pressed', val === '미가입' ? 'true' : 'false'); }
+    if (saleBtn) { saleBtn.classList.toggle('on', sale); saleBtn.setAttribute('aria-pressed', sale ? 'true' : 'false'); }
+    if (input) input.value = val || '';
+    if (box) box.hidden = !sale;
+    if ($('f_cardname')) $('f_cardname').value = sale ? val : '';
+    var chips = document.querySelectorAll('#cardBrandChips button[data-card-brand]');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.toggle('on', sale && chips[i].getAttribute('data-card-brand') === val);
+    }
   }
 
   function setInsChips(v) {
@@ -4364,7 +4272,7 @@
     if (input) input.value = val;
     var box = $('insChips');
     if (!box) return;
-    var chips = box.querySelectorAll('button[data-ins]');
+    var chips = document.querySelectorAll('#insChips button[data-ins]');
     for (var i = 0; i < chips.length; i++) {
       var on = chips[i].getAttribute('data-ins') === val;
       chips[i].classList.toggle('on', on);
@@ -5062,6 +4970,7 @@
 
   /* ---------------- rendering ---------------- */
   function render() {
+    invalidateMplus();
     renderKpis();
     renderOverview();
     renderTable();
@@ -5106,8 +5015,11 @@
     }
     items.sort(function (a, b) { return b.c - a.c || a.i - b.i; });
     var html = '';
+    var top = items.length > 1 && items[0].c > items[1].c;
     for (i = 0; i < items.length; i++) {
-      html += '<span class="so-chip' + (items[i].c ? '' : ' zero') + '">' +
+      var isTop = top && i === 0;
+      html += '<span class="so-chip' + (items[i].c ? '' : ' zero') + (isTop ? ' top' : '') + '">' +
+        (isTop ? '<i class="so-rank">1위</i>' : '') +
         esc(items[i].n) + ' <b>' + fmtNum(items[i].c) + '</b></span>';
     }
     return html;
@@ -5168,6 +5080,26 @@
     el.kpiTotal.textContent = fmtNum(list.length);
     if (el.kpiMonthLabel) el.kpiMonthLabel.textContent = m ? monthLabel(m) : '전체 기간';
     if (el.kpiTotalSub) el.kpiTotalSub.textContent = m ? '이번 달 개통 건수' : '전체 기간 개통 건수';
+
+    // 실적 건수 4종 — 돈이 아니라 건수만 보여 준다(직원 모드 기본)
+    var nWireless = 0, nWiredNew = 0, nWiredRenew = 0, nCard = 0;
+    for (i = 0; i < list.length; i++) {
+      var rr0 = list[i];
+      var sl0 = typeSlots(rr0.개통유형 || '');
+      if (sl0.w) nWireless++;
+      var parts0 = typeParts(rr0.개통유형 || '');
+      for (j = 0; j < parts0.length; j++) {
+        if (parts0[j] === '인터넷+TV 신규가입') nWiredNew++;
+        else if (parts0[j] === '인터넷+TV 약정갱신' || parts0[j] === '인터넷 약정갱신') nWiredRenew++;
+      }
+      var cd = normalizeCard(rr0.제휴카드);
+      if (cd && cd !== '미가입') nCard++;
+    }
+    if (el.kpiWirelessN) el.kpiWirelessN.textContent = fmtNum(nWireless);
+    if (el.kpiWiredNewN) el.kpiWiredNewN.textContent = fmtNum(nWiredNew);
+    if (el.kpiWiredRenewN) el.kpiWiredRenewN.textContent = fmtNum(nWiredRenew);
+    if (el.kpiCardN) el.kpiCardN.textContent = fmtNum(nCard);
+    if (el.kpiCardNSub) el.kpiCardNSub.textContent = nCard ? '카드 판매 ' + nCard + '건' : '카드 판매 건수';
 
     // 유형별 건수 — 복합(무선 + 유선)은 들어 있는 유형마다 하나씩 센다
     var counts = {};
@@ -5232,6 +5164,34 @@
       el.kpiUsedSub.textContent = usedSum
         ? '건당 평균 ' + fmtNum(Math.round(usedSum / list.length)) + '원'
         : '중고폰 매입·판매 합계';
+    }
+
+    // 관리자 전용 — 총 순마진 · 추지·페이백 합계
+    if (el.kpiNet) {
+      var netSum = 0, paySum = 0, extraSum = 0, cardSum = 0, bankSum = 0, negN = 0;
+      for (i = 0; i < list.length; i++) {
+        var nm = netMargin(list[i]);
+        netSum += nm.total;
+        paySum += nm.payback;
+        extraSum += nm.extra;
+        cardSum += nm.card;
+        bankSum += nm.bank;
+        if (nm.total < 0) negN++;
+      }
+      el.kpiNet.textContent = (netSum < 0 ? '−' : '') + fmtNum(Math.abs(netSum));
+      if (el.sumNetCell) el.sumNetCell.className = 'sum-cell ' + (netSum < 0 ? 'net-neg' : 'net-pos');
+      if (el.kpiNetSub) {
+        el.kpiNetSub.textContent = list.length
+          ? '리베이트 ' + fmtNum(sumAll + usedSum) + ' − 추지·페이백 ' + fmtNum(paySum) + (negN ? ' · 마이너스 ' + negN + '건' : '')
+          : '리베이트 − 추지·페이백';
+      }
+      if (el.kpiPay) el.kpiPay.textContent = fmtNum(paySum);
+      if (el.kpiPaySub) {
+        el.kpiPaySub.textContent = paySum
+          ? '추지 ' + fmtNum(extraSum) + ' · 카드 ' + fmtNum(cardSum) + ' · 입금 ' + fmtNum(bankSum)
+          : '추가지원금 + 페이백(카드·입금)';
+        el.kpiPaySub.title = el.kpiPaySub.textContent;
+      }
     }
 
     // 요금제 변경 · 부가서비스 해지 알림 (전 직원 공용)
@@ -5363,7 +5323,7 @@
       ? esc(key) + (weekdayKo(key) ? ' <span class="g-dow">(' + weekdayKo(key) + ')</span>' : '')
       : '날짜 없음';
     var line = staffLineText(staffMap);
-    return '<tr class="group-row"><td colspan="19"><span class="g-date">' + label +
+    return '<tr class="group-row"><td colspan="20"><span class="g-date">' + label +
       '</span><span class="g-count">총 ' + count + '건</span>' +
       (line ? '<span class="g-staff">' + esc(line) + '</span>' : '') +
       '</td></tr>';
@@ -5404,6 +5364,16 @@
       '</button>';
   }
 
+  // 표의 순마진 칸 (관리자 전용)
+  function netCellHtml(r) {
+    var n = netMargin(r);
+    var cls = n.total < 0 ? ' neg' : (n.total > 0 ? ' pos' : '');
+    var html = '<span class="net-cell"><span class="net-v' + cls + '">' +
+      (n.total < 0 ? '−' : '') + fmtNum(Math.abs(n.total)) + '</span>';
+    if (n.payback) html += '<span class="net-sub">−추지·페이백 ' + fmtNum(n.payback) + '</span>';
+    return html + '</span>';
+  }
+
   // 장부 표·폰 카드의 무선 리베이트 칸 — 관리자 모드에서는 비어 있어도 정책 자동 계산값을 보여 준다
   function wirelessRebateView(r) {
     var manual = Number(r.무선리베이트) || 0;
@@ -5429,17 +5399,86 @@
     var v = wirelessRebateView(r);
     var w = v.manual, l = Number(r.유선리베이트) || 0;
     var auto = (!w && isAdmin()) ? v.auto : 0;
+    if (!isAdmin()) return l ? '유 ' + fmtNum(l) + '원' : '';   // 직원 모드에서는 무선 리베이트를 보여 주지 않는다
     if (w && l) return '무 ' + fmtNum(w) + ' · 유 ' + fmtNum(l);
     if (l && !w) return fmtNum(l) + '원';
     if (auto) return '정책 ' + fmtNum(auto) + '원';
     return fmtNum(w) + '원';
   }
 
+  /* =========================================================
+     추가지원금 · 페이백 · 순마진 (v16 · 관리자 전용 계산)
+     · 순마진 = 무선 리베이트(정책 자동 또는 기존 수동값) + 유선 리베이트 + 중고폰 판매금액
+                − 추가지원금 − 페이백(카드결제) − 페이백(입금)
+     ========================================================= */
+  function paybackSum(r) {
+    return (Number(r.추가지원금) || 0) + (Number(r.페이백카드) || 0) + (Number(r.페이백입금) || 0);
+  }
+
+  function netMargin(r) {
+    var v = wirelessRebateView(r);
+    var w = v.manual || v.auto;
+    var l = Number(r.유선리베이트) || 0;
+    var used = Number(r.중고폰금액) || 0;
+    var extra = Number(r.추가지원금) || 0;
+    var card = Number(r.페이백카드) || 0;
+    var bank = Number(r.페이백입금) || 0;
+    return {
+      wireless: w, auto: !v.manual && v.auto, wired: l, used: used,
+      extra: extra, card: card, bank: bank, payback: extra + card + bank,
+      total: w + l + used - extra - card - bank
+    };
+  }
+
+  // 순마진 숫자 — 관리자 모드에서만 금액으로 보인다
+  function netText(r) {
+    var n = netMargin(r);
+    return (n.total < 0 ? '−' : '') + fmtNum(Math.abs(n.total));
+  }
+
+  function payText(r) {
+    var n = netMargin(r);
+    var parts = [];
+    if (n.extra) parts.push('추지 ' + fmtNum(n.extra));
+    if (n.card) parts.push('카드 ' + fmtNum(n.card));
+    if (n.bank) parts.push('입금 ' + fmtNum(n.bank));
+    return parts.join(' · ');
+  }
+
+  /* 주의 배지 — 12개월 약정 · 37K 미만 · 스쿨잼/SEG 하향 */
+  function riskList(r) {
+    var out = [];
+    var slots = typeSlots(r.개통유형 || '');
+    var plan = planMonthly(r.요금제);
+    var txt = [r.요금제, r.변경요금제, r.메모, r.부가서비스, r.특수조건].join(' ');
+    // 키즈·주니어·시니어·복지(만 65세 이상)는 37K 미만이어도 정책 인정 → 경고하지 않는다
+    if (slots.w && plan > 0 && plan < 37000 && !planFloorOk(r)) out.push('37K 미만: 기본지급 제외(30K) 확인');
+    if (RISK_12.test(txt)) out.push('12개월 약정: 유지기간·기본지급 확인');
+    if (RISK_SEG.test(txt)) out.push('스쿨잼 · SEG 하향 주의');
+    return out;
+  }
+
+  function riskBadgesHtml(r) {
+    var list = riskList(r);
+    if (!list.length) return '';
+    var html = '';
+    for (var i = 0; i < list.length; i++) html += '<span class="risk-badge">⚠️ ' + esc(list[i]) + '</span>';
+    return '<span class="risk-badges">' + html + '</span>';
+  }
+
   // 단말 보험 — 가입이면 초록 배지, 미가입이면 '-'
   function insBadgeHtml(v) {
-    return normalizeIns(v) === '가입'
-      ? '<span class="badge ins-on">보험가입</span>'
-      : '<span class="muted">—</span>';
+    var s = normalizeIns(v);
+    if (isInsured(s)) return '<span class="badge ins-on">' + esc(insLabel(s)) + '</span>';
+    if (s === '미가입') return '<span class="muted">미가입</span>';
+    return '<span class="muted">—</span>';
+  }
+
+  // 제휴카드 배지 (판매한 카드사 이름까지)
+  function cardBadgeHtml(v) {
+    var s = normalizeCard(v);
+    if (!s || s === '미가입') return '';
+    return '<span class="badge card-on">카드 ' + esc(s) + '</span>';
   }
 
   // 모바일 '간단히 보기' 카드 : 두 줄 요약 + 탭하면 상세
@@ -5461,9 +5500,11 @@
         '</div>' +
         '<div class="m-line2">' +
           '<span class="m-model">' + (r.기종 ? esc(r.기종) : '<span class="muted">기종 없음</span>') + '</span>' +
-          (normalizeIns(r.단말보험) === '가입' ? '<span class="m-ins">단말보험 가입</span>' : '') +
+          (isInsured(r.단말보험) ? '<span class="m-ins">보험 ' + esc(insLabel(r.단말보험)) + '</span>' : '') +
+          (cardBadgeHtml(r.제휴카드) ? '<span class="m-ins">카드 ' + esc(normalizeCard(r.제휴카드)) + '</span>' : '') +
           policyBadgesHtml(r) +
           '<span class="m-money">' + rebateText(r) + '</span>' +
+          (isAdmin() ? '<span class="m-net' + (netMargin(r).total < 0 ? ' neg' : '') + '">순 ' + netText(r) + '</span>' : '') +
           (r.담당자 ? '<span class="m-staff">' + esc(r.담당자) + '</span>' : '') +
         '</div>' +
       '</div>' +
@@ -5476,13 +5517,18 @@
         mRow('부가서비스', r.부가서비스 ? esc(r.부가서비스) : '') +
         mRow('부가서비스유지', r.부가서비스유지 ? esc(r.부가서비스유지) : '') +
         mDueRow('부가서비스 해지', 'addon', r) +
-        mRow('단말보험', normalizeIns(r.단말보험) === '가입' ? '<span class="badge ins-on">보험가입</span>' : '')
+        mRow('단말보험', normalizeIns(r.단말보험) ? insBadgeHtml(r.단말보험) : '')
+        + mRow('제휴카드', normalizeCard(r.제휴카드) ? esc(normalizeCard(r.제휴카드)) : '')
         + mRow('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
         mRow('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
-        mRow('무선 리베이트', wirelessRebateView(r).manual ? fmtNum(r.무선리베이트) + '원'
-          : (isAdmin() && wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) +
+        (isAdmin() ? mRow('무선 리베이트', wirelessRebateView(r).manual ? fmtNum(r.무선리베이트) + '원'
+          : (wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) : '') +
         mRow('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') +
-        mRow('메모', r.메모 ? esc(r.메모) : '') +
+        (isAdmin() ? mRow('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
+        (isAdmin() ? mRow('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' : '') : '') +
+        (isAdmin() ? mRow('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' : '') : '') +
+        (isAdmin() ? mRow('순마진', '<b>' + netText(r) + '원</b>') : '') +
+        mRow('메모', r.메모 ? esc(r.메모) : '') + riskBadgesHtml(r) +
         mRow('담당자', r.담당자 ? esc(r.담당자) : '') +
         '<div class="m-actions">' + rowActionButtons(r) + '</div>' +
       '</div>' +
@@ -5590,7 +5636,7 @@
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
         '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span>' + policyBadgesHtml(r) + '</td>' +
-        '<td data-label="단말보험" class="ins-cell">' + insBadgeHtml(r.단말보험) + '</td>' +
+        '<td data-label="단말보험" class="ins-cell">' + insBadgeHtml(r.단말보험) + cardBadgeHtml(r.제휴카드) + '</td>' +
         '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="변경요금제"><span class="ellip" title="' + esc(r.변경요금제) + '">' + (r.변경요금제 ? esc(r.변경요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="요금제변경일자" class="nowrap">' + changeDateCell(r) + '</td>' +
@@ -5598,9 +5644,10 @@
         '<td data-label="부가서비스해지일자" class="nowrap">' + addonDateCell(r) + '</td>' +
         '<td data-label="중고폰"><span class="ellip" title="' + esc(r.중고폰) + '">' + (r.중고폰 ? esc(r.중고폰) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="중고폰금액" class="money">' + (r.중고폰금액 ? fmtNum(r.중고폰금액) : '<span class="muted">—</span>') + '</td>' +
-        '<td data-label="무선 리베이트" class="money">' + wirelessRebateCell(r) + '</td>' +
+        '<td data-label="무선 리베이트" class="money admin-only">' + wirelessRebateCell(r) + '</td>' +
         '<td data-label="유선 리베이트" class="money">' + (r.유선리베이트 ? fmtNum(r.유선리베이트) : '<span class="muted">—</span>') + '</td>' +
-        '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="순마진" class="money admin-only">' + netCellHtml(r) + '</td>' +
+        '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span>' + riskBadgesHtml(r) + '</td>' +
         '<td data-label="담당자" class="nowrap">' + (r.담당자 ? esc(r.담당자) : '<span class="muted">—</span>') + '</td>' +
         '<td class="actions">' + rowActionButtons(r) + '</td>' +
       '</tr>';
@@ -5998,7 +6045,7 @@
     if (isWiredType(t)) slots.l = (slots.l === t) ? '' : t;
     else slots.w = (slots.w === t) ? '' : t;
     renderTypeChips(joinTypeParts(slots.w, slots.l));
-    syncPriceHints(true);
+    refreshPolicy(true); updateFormRisk();
   }
 
   function applyTypeHint() {
@@ -6011,10 +6058,51 @@
     else if (slots.w) hint.textContent = '무선 개통입니다. 요금제 변경은 바꿀 때만 입력하면 됩니다.';
     else hint.textContent = '무선은 최대 1개, 유선은 최대 1개 — 두 줄을 함께 골라 한 건으로 저장할 수 있습니다.';
     hint.classList.toggle('both', both);
-    // 동시 개통이면 무선·유선 리베이트 두 칸을 살짝 강조
-    var fw = $('f_rebate_w'), fl = $('f_rebate_l');
-    if (fw && fw.parentNode) fw.parentNode.classList.toggle('hl', both);
+    // 동시 개통이면 유선 리베이트 칸을 살짝 강조 (무선은 정책이 자동 계산)
+    var fl = $('f_rebate_l');
     if (fl && fl.parentNode) fl.parentNode.classList.toggle('hl', both);
+  }
+
+  /* 요금제 변경 '변경 없음' · 부가서비스 '미가입' — 둘 중 하나는 반드시 골라야 저장된다 */
+  function planNoneOn() { return $('f_plan_none') && $('f_plan_none').value === '변경 없음'; }
+  function addonNoneOn() { return $('f_addon_none') && $('f_addon_none').value === '미가입'; }
+
+  function paintNoneChips() {
+    var p = document.querySelector('#planNoneChips button[data-none="plan"]');
+    if (p) { p.classList.toggle('on', planNoneOn()); p.setAttribute('aria-pressed', planNoneOn() ? 'true' : 'false'); }
+    var a = document.querySelector('#addonNoneChips button[data-none="addon"]');
+    if (a) { a.classList.toggle('on', addonNoneOn()); a.setAttribute('aria-pressed', addonNoneOn() ? 'true' : 'false'); }
+  }
+
+  function clearPlanChange() {
+    $('f_newplan').value = '';
+    $('f_newdate').value = '';
+    period.plan = 'none';
+    paintPeriodChips();
+    var badge = $('planExpect');
+    if (badge) badge.hidden = true;
+  }
+
+  function clearAddon() {
+    $('f_addon').value = '';
+    $('f_addondate').value = '';
+    period.addon = 'none';
+    paintPeriodChips();
+    var badge = $('addonExpect');
+    if (badge) badge.hidden = true;
+  }
+
+  function toggleNoneChip(kind) {
+    if (kind === 'plan') {
+      var on = !planNoneOn();
+      $('f_plan_none').value = on ? '변경 없음' : '';
+      if (on) clearPlanChange();
+    } else {
+      var on2 = !addonNoneOn();
+      $('f_addon_none').value = on2 ? '미가입' : '';
+      if (on2) clearAddon();
+    }
+    paintNoneChips();
   }
 
   function openEditor(rec) {
@@ -6032,11 +6120,15 @@
     renderTypeChips(r.개통유형 || '');
     applyTypeHint();
     renderDiscChips(r.할인유형 || '');
-    renderCondChips(r.특수조건 || '');
+    $('f_cond').value = condText(condList(r.특수조건 || ''));   // v16: 예전 기록의 특수조건은 값으로만 보존
     if ($('pvYDum')) $('pvYDum').checked = false;
     $('f_model').value = r.기종 || '';
     markModelChips($('f_model').value);
     setInsChips(r.단말보험);
+    setCardChips(r.제휴카드 || '');
+    $('f_plan_none').value = '';
+    $('f_addon_none').value = '';
+    paintNoneChips();
     $('f_plan').value = r.요금제 || '';
     $('f_newplan').value = r.변경요금제 || '';
     $('f_newdate').value = normalizeDate(r.요금제변경일자) || '';
@@ -6052,6 +6144,9 @@
     $('f_usedprice').value = r.중고폰금액 ? fmtNum(r.중고폰금액) : '';
     $('f_rebate_w').value = r.무선리베이트 ? fmtNum(r.무선리베이트) : '';
     $('f_rebate_l').value = r.유선리베이트 ? fmtNum(r.유선리베이트) : '';
+    $('f_extra').value = r.추가지원금 ? fmtNum(r.추가지원금) : '';
+    $('f_paycard').value = r.페이백카드 ? fmtNum(r.페이백카드) : '';
+    $('f_paybank').value = r.페이백입금 ? fmtNum(r.페이백입금) : '';
     $('f_memo').value = r.메모 || '';
     $('f_staff').value = r.담당자 || (rec ? '' : (sync.name || ''));
     markStaffChips(el.staffChips, $('f_staff').value);
@@ -6061,7 +6156,8 @@
     el.editDialog.showModal();
     // 새 등록이면 단가표의 기준 금액을 비어 있는 리베이트 칸에 먼저 넣어 준다
     // (수정할 때는 기존 금액을 바꾸지 않고 '단가표 적용' 칩만 보여 준다)
-    syncPriceHints(!rec);
+    refreshPolicy(false);
+    updateFormRisk();
     setTimeout(function () {
       var a = document.activeElement;
       if (!a || a === document.body || a === el.editDialog) {
@@ -6086,11 +6182,27 @@
     // 필수 = 개인정보(고객명·연락처·생년월일) + 요금제 (+ 개통일)
     // 요금제 변경·리베이트·유형은 바꿀 때만 넣는 선택 항목이다.
     var need = [], i;
+    var typeVal = $('f_type').value;
+    var slots = typeSlots(typeVal);
+    var modelVal = $('f_model').value.trim();
     if (!name) need.push({ label: '고객명', el: $('f_name') });
     if (!phone) need.push({ label: '연락처', el: $('f_phone') });
     if (!birth) need.push({ label: '생년월일', el: $('f_birth') });
     if (!plan) need.push({ label: '요금제', el: $('f_plan') });
     if (!date) need.push({ label: '개통일', el: $('f_date') });
+    // v16 — 개통유형은 필수, 무선이면 할인유형 필수, 일반 무선(기변·번이·신규)이면 기종 필수
+    //       (중고신규·중고MNP·유선 단독은 기종 없이도 저장할 수 있다)
+    if (!slots.w && !slots.l) need.push({ label: '개통유형', el: $('typeChips') });
+    if (slots.w && !normalizeDiscount($('f_discount').value)) need.push({ label: '할인유형', el: $('discChips') });
+    if (MRA_WIRELESS_TYPES.indexOf(slots.w) >= 0 && !modelVal) need.push({ label: '기종', el: $('f_model') });
+    // 무선 개통이면 단말보험(3종)과 제휴카드(없음/카드명)를 반드시 고른다 — 유선 단독은 예외
+    if (slots.w && !normalizeIns($('f_ins').value)) need.push({ label: '단말보험', el: $('insChips') });
+    if (slots.w && !normalizeCard($('f_card').value)) need.push({ label: '제휴카드', el: $('cardChips') });
+    // 요금제 변경 · 부가서비스 — '변경 없음'/'미가입'을 골랐거나, 내용을 적었을 때만 저장된다
+    var hasPlanChange = !!($('f_newplan').value.trim() || $('f_newdate').value || (period.plan && period.plan !== 'none'));
+    if (!planNoneOn() && !hasPlanChange) need.push({ label: '요금제 변경', el: $('planNoneChips') });
+    var hasAddon = !!($('f_addon').value.trim() || $('f_addondate').value || (period.addon && period.addon !== 'none'));
+    if (!addonNoneOn() && !hasAddon) need.push({ label: '부가서비스', el: $('addonNoneChips') });
 
     if (need.length) {
       var labels = [];
@@ -6098,7 +6210,7 @@
         labels.push(need[i].label);
         need[i].el.classList.add('bad');
       }
-      el.formError.innerHTML = '필수 항목을 입력해 주세요 · <b>' + esc(labels.join(', ')) + '</b>';
+      el.formError.innerHTML = '⚠️ 미입력 항목: <b>' + esc(labels.join(', ')) + '</b><br><span class="fe-sub">표시된 칸을 채우거나 골라 주세요.</span>';
       el.formError.classList.add('show');
       try {
         need[0].el.focus();
@@ -6115,6 +6227,7 @@
       개통유형: $('f_type').value,
       기종: $('f_model').value.trim(),
       단말보험: normalizeIns($('f_ins').value),
+      제휴카드: normalizeCard($('f_card').value),
       할인유형: normalizeDiscount($('f_discount').value),
       특수조건: condText(condList($('f_cond').value)),
       요금제: plan,
@@ -6129,6 +6242,9 @@
       중고폰금액: parseNumber($('f_usedprice').value),
       무선리베이트: parseNumber($('f_rebate_w').value),
       유선리베이트: parseNumber($('f_rebate_l').value),
+      추가지원금: parseNumber($('f_extra').value),
+      페이백카드: parseNumber($('f_paycard').value),
+      페이백입금: parseNumber($('f_paybank').value),
       메모: $('f_memo').value.trim(),
       담당자: $('f_staff').value.trim()
     };
@@ -6187,17 +6303,23 @@
       $('f_addondate').value = '';
       period.plan = 'none';
       period.addon = 'none';
+      $('f_plan_none').value = '';
+      $('f_addon_none').value = '';
+      paintNoneChips();
       paintPeriodChips();
       $('f_used').value = '';
       $('f_usedprice').value = '';
       $('f_rebate_w').value = '';
       $('f_rebate_l').value = '';
+      $('f_extra').value = '';
+      $('f_paycard').value = '';
+      $('f_paybank').value = '';
       $('f_memo').value = '';
       renderDiscChips('');
-      renderCondChips([]);
+      $('f_cond').value = '';
       if ($('pvYDum')) $('pvYDum').checked = false;
       $('f_name').focus();
-      syncPriceHints(true);
+      refreshPolicy(true); updateFormRisk();
     } else {
       el.editDialog.close();
     }
@@ -6347,6 +6469,7 @@
       if (hasTv) return '인터넷+TV 신규가입';
       return s; // '인터넷' 처럼 애매한 표기는 원문 유지
     }
+    if (/중고|자급제/.test(n)) return /번호이동|번이|mnp/i.test(n) ? '중고MNP' : '중고신규';
     if (/번호이동|번이/.test(n)) return '번호이동';
     if (/기기변경|기변/.test(n)) return '기기변경';
     if (/신규/.test(n)) return '신규가입';
@@ -6580,12 +6703,6 @@
     var rows = state.pendingRows || [];
     if (!rows.length) { el.importDialog.close(); return; }
 
-    // 백업 파일에 단가표가 들어 있었으면 기록과 함께 되살린다
-    if (state.pendingPriceTable) {
-      savePriceTable(state.pendingPriceTable);
-      state.pendingPriceTable = null;
-    }
-
     if (mode === 'replace') {
       var oldIds = state.records.map(function (r) { return r.id; });
       state.records = rows.map(function (r) { return normalizeRecord(r); });
@@ -6634,21 +6751,18 @@
 
   /* ---------------- JSON backup ---------------- */
   function jsonBackup() {
-    var pc = priceCounts();
-    if (!state.records.length && !pc.total) { toast('백업할 데이터가 없습니다.', true); return; }
+    if (!state.records.length) { toast('백업할 데이터가 없습니다.', true); return; }
     var payload = {
       app: 'kt-store-manager',
-      version: 1,
+      version: 2,
       store: '충주 KT대리점 칠금점',
       exportedAt: new Date().toISOString(),
       count: state.records.length,
-      // 기종별 단가표도 함께 백업한다 (다른 기기에서 복원하면 그대로 살아난다)
-      priceTable: priceTable,
       records: state.records
     };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8;' });
     downloadBlob(blob, 'KT개통장부_백업_' + todayISO() + '.json');
-    toast(state.records.length + '건' + (pc.total ? ' · 단가표 ' + pc.total + '칸' : '') + '을 백업 파일로 저장했습니다.');
+    toast(state.records.length + '건을 백업 파일로 저장했습니다.');
   }
 
   function jsonRestore(file) {
@@ -6660,24 +6774,12 @@
         var arr = Array.isArray(data) ? data : (data && Array.isArray(data.records) ? data.records : null);
         if (!arr) throw new Error('백업 파일 형식이 아닙니다.');
         var recs = arr.map(normalizeRecord);
-        // 단가표만 들어 있는 백업(기록 0건)이면 단가표만 바로 되살린다
-        if (!recs.length && data && data.priceTable) {
-          savePriceTable(normalizePriceTable(data.priceTable));
-          var pcOnly = priceCounts();
-          if (!pcOnly.total) throw new Error('백업 파일에 데이터가 없습니다.');
-          toast('백업의 단가표 ' + pcOnly.total + '칸을 복원했습니다.');
-          return;
-        }
         if (!recs.length) throw new Error('백업 파일에 데이터가 없습니다.');
         state.pendingRows = recs;
-        // 단가표가 들어 있는 백업이면 복원을 누를 때 함께 되살린다
-        state.pendingPriceTable = data && data.priceTable ? normalizePriceTable(data.priceTable) : null;
-        var pc = state.pendingPriceTable ? priceCounts(state.pendingPriceTable) : null;
         $('iTitle').textContent = '백업 복원';
         $('iSub').textContent = '백업에 들어 있는 기록으로 장부를 채웁니다.';
         $('iMsg').innerHTML = '백업 파일에서 <b>' + recs.length + '건</b>을 찾았습니다.<br>' +
-          '현재 장부에는 <b>' + state.records.length + '건</b>이 저장되어 있습니다.' +
-          (pc && pc.total ? '<br>기종별 단가표 <b>' + pc.total + '칸</b>도 함께 복원됩니다.' : '');
+          '현재 장부에는 <b>' + state.records.length + '건</b>이 저장되어 있습니다.';
         $('iAdd').textContent = '기존에 추가';
         $('iReplace').style.display = '';
         el.importDialog.showModal();
@@ -6791,9 +6893,8 @@
     if (el.priceDialog) {
       if (el.pdClose) el.pdClose.addEventListener('click', function () { el.priceDialog.close(); });
       if (el.pdCancel) el.pdCancel.addEventListener('click', function () { el.priceDialog.close(); });
-      if (el.pdSave) el.pdSave.addEventListener('click', savePriceFromDialog);
-      if (el.pdClear) el.pdClear.addEventListener('click', clearPriceTable);
-      if (el.pdApplyPaste) el.pdApplyPaste.addEventListener('click', applyPricePaste);
+      if (el.pdSave) el.pdSave.addEventListener('click', savePolicyFromDialog);
+      if (el.pdClear) el.pdClear.addEventListener('click', clearPolicyOverrides);
       // 정책 계산표 탭 · 정산 월
       if ($('pdTabs')) {
         $('pdTabs').addEventListener('click', function (e) {
@@ -7011,7 +7112,6 @@
         toggleCondChip(b.getAttribute('data-cond'));
       });
     }
-    if ($('pvApply')) $('pvApply').addEventListener('click', applyPolicyToRebate);
     if ($('pvYDum')) $('pvYDum').addEventListener('change', function () { refreshPolicy(false); });
     // 요금제를 치는 동안에도 정책 계산이 따라오게 (입력 200ms 뒤)
     var polTimer = null;
@@ -7056,7 +7156,9 @@
         var b = e.target.closest ? e.target.closest('button[data-period]') : null;
         if (!b) return;
         var v = b.getAttribute('data-period');
-        if (kind === 'plan') period.plan = v; else period.addon = v;
+        if (kind === 'plan') { period.plan = v; $('f_plan_none').value = ''; }
+        else { period.addon = v; $('f_addon_none').value = ''; }
+        paintNoneChips();
         applyPeriod(kind);
         if (v === 'custom') {
           var input = kind === 'plan' ? $('f_newdate') : $('f_addondate');
@@ -7066,6 +7168,32 @@
     }
     bindPeriod(el.planPeriodChips, 'plan');
     bindPeriod(el.addonPeriodChips, 'addon');
+
+    // '변경 없음' · '미가입' 1탭 칩
+    if ($('planNoneChips')) $('planNoneChips').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-none]') : null;
+      if (b) toggleNoneChip('plan');
+    });
+    if ($('addonNoneChips')) $('addonNoneChips').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-none]') : null;
+      if (b) toggleNoneChip('addon');
+    });
+    ['f_newplan', 'f_newdate'].forEach(function (id) {
+      $(id).addEventListener('input', function () {
+        if ($(id).value) { $('f_plan_none').value = ''; paintNoneChips(); }
+      });
+      $(id).addEventListener('change', function () {
+        if ($(id).value) { $('f_plan_none').value = ''; paintNoneChips(); }
+      });
+    });
+    ['f_addon', 'f_addondate'].forEach(function (id) {
+      $(id).addEventListener('input', function () {
+        if ($(id).value) { $('f_addon_none').value = ''; paintNoneChips(); }
+      });
+      $(id).addEventListener('change', function () {
+        if ($(id).value) { $('f_addon_none').value = ''; paintNoneChips(); }
+      });
+    });
 
     // 개통일을 바꾸면 선택한 기간에 맞춰 다시 계산 (+ 정책 계산도)
     $('f_date').addEventListener('change', function () { recalcPeriods(); refreshPolicy(false); });
@@ -7093,17 +7221,17 @@
     });
 
     // 금액(무선·유선 리베이트 · 중고폰금액) 콤마 포맷
-    ['f_rebate_w', 'f_rebate_l', 'f_usedprice'].forEach(function (id) {
+    ['f_rebate_w', 'f_rebate_l', 'f_usedprice', 'f_extra', 'f_paycard', 'f_paybank'].forEach(function (id) {
       $(id).addEventListener('input', function () {
         var neg = /^-/.test(this.value);
         var d = this.value.replace(/[^0-9]/g, '');
         if (!d) {
           this.value = neg ? '-' : '';
-          if (id !== 'f_usedprice') syncPriceHints(false);
+          if (id !== 'f_usedprice') refreshPolicy(false); updateFormRisk();
           return;
         }
         this.value = (neg ? '-' : '') + Number(d).toLocaleString('ko-KR');
-        if (id !== 'f_usedprice') syncPriceHints(false);
+        if (id !== 'f_usedprice') refreshPolicy(false); updateFormRisk();
       });
     });
 
@@ -7111,6 +7239,9 @@
     $('f_birth').addEventListener('input', function () {
       this.value = this.value.replace(/[^0-9-]/g, '').slice(0, 10);
     });
+
+    // 주의 배지(12개월·37K 미만·SEG) — 입력할 때마다 다시
+    el.editForm.addEventListener('input', function () { updateFormRisk(); });
 
     // 필수 칸을 채우면 빨간 표시·안내를 바로 지운다
     el.editForm.addEventListener('input', function (e) {
@@ -7125,8 +7256,6 @@
     el.editDialog.addEventListener('cancel', function () { state.editingId = null; hidePlanSuggest(); });
     el.editDialog.addEventListener('close', hidePlanSuggest);
     el.editDialog.addEventListener('click', function (e) {
-      var pt = e.target.closest ? e.target.closest('button[data-pt]') : null;
-      if (pt) { applyPriceHint(pt.getAttribute('data-pt')); return; }
       if (e.target === el.editDialog) el.editDialog.close();
     });
 
@@ -7140,11 +7269,11 @@
       if (e.target === el.confirmDialog) closeConfirm(false);
     });
 
-    el.importDialog.addEventListener('cancel', function () { state.pendingRows = null; state.pendingPriceTable = null; });
+    el.importDialog.addEventListener('cancel', function () { state.pendingRows = null; });
     el.importDialog.addEventListener('click', function (e) {
-      if (e.target === el.importDialog) { el.importDialog.close(); state.pendingRows = null; state.pendingPriceTable = null; }
+      if (e.target === el.importDialog) { el.importDialog.close(); state.pendingRows = null; }
     });
-    $('iCancel').addEventListener('click', function () { el.importDialog.close(); state.pendingRows = null; state.pendingPriceTable = null; });
+    $('iCancel').addEventListener('click', function () { el.importDialog.close(); state.pendingRows = null; });
     $('iAdd').addEventListener('click', function () { applyImport('add'); });
     $('iReplace').addEventListener('click', function () { applyImport('replace'); });
 
@@ -7300,6 +7429,18 @@
       mlist: $('mlist'),
       viewToggle: $('viewToggle'),
       kpiUsedSub: $('kpiUsedSub'),
+      kpiWirelessN: $('kpiWirelessN'),
+      kpiWiredNewN: $('kpiWiredNewN'),
+      kpiWiredRenewN: $('kpiWiredRenewN'),
+      kpiCardN: $('kpiCardN'),
+      kpiCardNSub: $('kpiCardNSub'),
+      kpiNet: $('kpiNet'),
+      kpiNetSub: $('kpiNetSub'),
+      kpiPay: $('kpiPay'),
+      kpiPaySub: $('kpiPaySub'),
+      sumNetCell: $('sumNetCell'),
+      sumPayCell: $('sumPayCell'),
+      formRisk: $('formRisk'),
       planPeriodChips: $('planPeriodChips'),
       typeChips: $('typeChips'),
       adminLockBtn: $('adminLockBtn'),
@@ -7348,15 +7489,9 @@
       dvRefresh: $('dvRefresh'),
       dvDone: $('dvDone'),
       dvClose: $('dvClose'),
-      /* 단가표 관리 */
+      /* 정책 계산표 · 정산 */
       priceBtn: $('priceBtn'),
       priceDialog: $('priceDialog'),
-      pdPaste: $('pdPaste'),
-      pdPasteResult: $('pdPasteResult'),
-      pdApplyPaste: $('pdApplyPaste'),
-      pdWireless: $('pdWireless'),
-      pdWired: $('pdWired'),
-      pdSummary: $('pdSummary'),
       pdSave: $('pdSave'),
       pdCancel: $('pdCancel'),
       pdClear: $('pdClear'),
@@ -7372,7 +7507,6 @@
 
     loadSync();
     loadDevice();
-    loadPriceTable();
     loadPolicy();
     state.records = blockedStored() ? [] : loadRecords();
     state.filters.month = currentMonth();
@@ -7386,12 +7520,48 @@
     applyDueOpen();
     renderStaffChips(el.staffChips, $('f_staff'));
     renderModelChips();
-    setInsChips('미가입');
+    setInsChips('');
     var insBox = $('insChips');
     if (insBox) insBox.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('button[data-ins]') : null;
       if (!b) return;
       setInsChips(b.getAttribute('data-ins'));
+    });
+    renderCardBrands();
+    setCardChips('');
+    var cardBox = $('cardChips');
+    if (cardBox) cardBox.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-card-sale]') : null;
+      if (!b) return;
+      var act = b.getAttribute('data-card-sale');
+      if (act === 'none') { setCardChips('미가입'); return; }
+      var cur = normalizeCard($('f_card').value);
+      setCardChips(cur && cur !== '미가입' ? cur : '');
+      var sale = document.querySelector('#cardChips button[data-card-sale="sale"]');
+      if (sale) { sale.classList.add('on'); sale.setAttribute('aria-pressed', 'true'); }
+      if ($('cardBox')) $('cardBox').hidden = false;
+      var name = $('f_cardname');
+      if (name) { try { name.focus(); } catch (err) {} }
+    });
+    var brandBox = $('cardBrandChips');
+    if (brandBox) brandBox.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-card-brand]') : null;
+      if (!b) return;
+      var brand = b.getAttribute('data-card-brand');
+      if (brand === '기타') {
+        if ($('f_cardname')) { $('f_cardname').value = ''; try { $('f_cardname').focus(); } catch (err) {} }
+        $('f_card').value = '';
+        var chips = document.querySelectorAll('#cardBrandChips button[data-card-brand]');
+        for (var i = 0; i < chips.length; i++) chips[i].classList.toggle('on', chips[i] === b);
+        return;
+      }
+      setCardChips(brand);
+    });
+    if ($('f_cardname')) $('f_cardname').addEventListener('input', function () {
+      var v = String(this.value || '').trim();
+      $('f_card').value = v;
+      var chips = document.querySelectorAll('#cardBrandChips button[data-card-brand]');
+      for (var i = 0; i < chips.length; i++) chips[i].classList.remove('on');
     });
     renderPlanPickerBody();
     applyViewMode();
