@@ -584,6 +584,26 @@
   .easy-filter.on .ef-count{background:rgba(255,255,255,.92);color:#8A4B00}
   .easy-filter:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
 
+  /* ---------- v34 — ⭐ 권매·쉬움 기간 범위 1탭 토글 (이 달만 / 전체 기간) ----------
+     알약 버튼 바로 옆에 붙어 한 덩어리로 보이고, 켜 두었을 때만 나타난다 */
+  .easy-group{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+  .easy-scope{
+    display:inline-flex;align-items:center;gap:2px;height:32px;padding:2px;
+    border-radius:999px;border:1px solid #F0C97A;background:#FFFDF4;
+  }
+  .easy-scope .es-btn{
+    display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 9px;border:0;border-radius:999px;
+    background:transparent;color:#8A6A2A;font-family:inherit;font-size:11.5px;font-weight:800;
+    line-height:1;white-space:nowrap;cursor:pointer;
+  }
+  .easy-scope .es-btn:hover{background:#FFF1CF;color:#7A4E00}
+  .easy-scope .es-n{background:rgba(217,119,6,.13);color:#8A4B00;border-radius:999px;padding:2px 6px;font-size:10.5px;font-weight:900}
+  .easy-scope .es-btn.on{background:linear-gradient(180deg,#FFB020 0%,#F08C00 100%);color:#fff;box-shadow:0 1px 5px rgba(217,119,6,.3)}
+  .easy-scope .es-btn.on .es-n{background:rgba(255,255,255,.92);color:#8A4B00}
+  .easy-scope .es-btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
+  .easy-scope.na{opacity:.55}
+  .easy-scope.na .es-btn{cursor:not-allowed}
+
   /* v30 — 관리자 전용 미기재 확인 필터 + 배지 (v33: 용어 미기재) */
   .miss-filter{
     display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 11px;border-radius:999px;
@@ -1371,6 +1391,8 @@
     .search input,select.filter,.month-control input[type=month],.sum-month input[type=month]{height:44px}
     .field input,.field select{height:46px}
     .dstat{height:34px}
+    .easy-scope{height:36px}
+    .easy-scope .es-btn{height:30px}
     .btn-add{height:44px}
   }
 
@@ -1895,10 +1917,19 @@
       <option value="">전체 담당자</option>
     </select>
     <label class="check" title="오늘(D-DAY) · 기한 지남 알림 대상만 보기"><input type="checkbox" id="dueOnly"> 알림만</label>
-    <!-- v25 — ⭐ 권매·쉬움만 보기 (눈에 띄는 앰버 알약 버튼 · 건수는 지금 월/필터 기준) -->
-    <button type="button" class="easy-filter" id="easyFilter" aria-pressed="false" title="권매·쉬움 체크된 고객만 보기">
-      <span class="ef-star" aria-hidden="true">★</span><span>권매·쉬움만</span><span class="ef-count" id="easyFilterCount">0건</span>
-    </button>
+    <!-- v25 — ⭐ 권매·쉬움만 보기 (눈에 띄는 앰버 알약 버튼 · 건수는 지금 월/필터 기준)
+         v34 — 켜 두었을 때 바로 옆에 [이 달만 (N건)] / [전체 기간 (M건)] 1탭 전환 -->
+    <div class="easy-group">
+      <button type="button" class="easy-filter" id="easyFilter" aria-pressed="false" title="권매·쉬움 체크된 고객만 보기">
+        <span class="ef-star" aria-hidden="true">★</span><span>권매·쉬움만</span><span class="ef-count" id="easyFilterCount">0건</span>
+      </button>
+      <div class="easy-scope" id="easyScope" role="group" aria-label="권매·쉬움 기간 범위" hidden>
+        <button type="button" class="es-btn on" id="easyScopeMonth" data-easy-scope="month" aria-pressed="true"
+                title="이 달 기록만 봅니다"><span class="es-l" id="easyScopeMonthLabel">이 달만</span><span class="es-n" id="easyScopeMonthN">0건</span></button>
+        <button type="button" class="es-btn" id="easyScopeAll" data-easy-scope="all" aria-pressed="false"
+                title="모든 달 기록에서 봅니다"><span class="es-l">전체 기간</span><span class="es-n" id="easyScopeAllN">0건</span></button>
+      </div>
+    </div>
     <!-- v30 — 관리자 전용 ⚠️ 미기재 확인 (v33: 리베이트·중고폰 금액만 · 추지·페이백 제외) -->
     <button type="button" class="miss-filter admin-only" id="missingFilter" aria-pressed="false"
             title="관리자 전용 — 무선·유선 리베이트와 중고폰 금액이 비어 있는 건만 모아 봅니다">
@@ -3330,7 +3361,8 @@
 
   var state = {
     records: [],
-    filters: { q: '', month: '', type: '', staff: '', due: false, dueMode: 'all', easy: false, missing: false },
+    // v34 — easyScope: 권매·쉬움만의 기간 범위('month' 이 달만 | 'all' 전체 기간) · easyMonth: 마지막으로 보던 달
+    filters: { q: '', month: '', type: '', staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: '', missing: false },
     sort: { key: '개통일', dir: 'desc' },
     view: 'compact',
     role: 'staff',
@@ -7003,13 +7035,20 @@
   }
 
   /* ---------------- filtering / sorting ---------------- */
-  function visibleRecords(ignoreEasy, ignoreMissing) {
+  function visibleRecords(ignoreEasy, ignoreMissing, forceMonth) {
     var f = state.filters;
     var q = f.q.trim().toLowerCase();
     // v26 — 검색어가 있을 때는 기준 월과 상관없이 state.records 전체 기간에서 찾는다.
     //        검색어를 지우면(빈칸) 다시 기준 월 목록으로 돌아온다.
     var allSearch = !!q && !f.due;
-    var month = f.due ? '' : (allSearch ? '' : f.month);   // 임박 보기에서는 월 필터를 무시
+    // v34 — ⭐ 권매·쉬움 [전체 기간] 토글을 켜 두면 기준 월을 넘어 모든 달에서 모은다
+    var easyAll = !ignoreEasy && f.easy && easyScopeNow() === 'all';
+    // forceMonth 를 주면 그 달(빈 문자열 = 전체 기간)로 강제한다 — 건수(이 달/전체) 계산용
+    var month;
+    if (f.due || allSearch) month = '';            // 임박 보기·전체 검색에서는 월 필터를 무시
+    else if (forceMonth !== undefined) month = forceMonth || '';
+    else if (easyAll) month = '';
+    else month = f.month;
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
       if (f.type && !typeHasPart(r.개통유형, f.type)) return false;
@@ -7058,12 +7097,45 @@
   }
 
   /* v25 — ⭐ 권매·쉬움 건수 : 지금 걸린 월·검색·유형·담당자·알림 필터 기준
-     (권매·쉬움 필터 자신은 빼고 센다 → 켜 두어도 버튼에 전체 건수가 보인다) */
-  function easySaleCount() {
-    var base = visibleRecords(true);
+     (권매·쉬움 필터 자신은 빼고 센다 → 켜 두어도 버튼에 전체 건수가 보인다)
+     v34 — 기간 범위(이 달만/전체 기간)는 easyScopeNow() 를 따라간다 */
+
+  // v34 — 지금 적용 중인 권매·쉬움 기간 범위
+  function easyScopeNow() {
+    if (!state.filters.easy) return 'month';
+    if (!state.filters.month) return 'all';          // 기준 월이 '전체 기간'이면 범위도 전체
+    return state.filters.easyScope === 'all' ? 'all' : 'month';
+  }
+
+  // v34 — '이 달만' 쪽이 가리키는 달 (마지막으로 보던 달 · 없으면 이번 달)
+  function easyMonthKey() {
+    return state.filters.easyMonth || state.filters.month || currentMonth();
+  }
+
+  function countEasy(list) {
     var n = 0;
-    for (var i = 0; i < base.length; i++) if (isEasy(base[i].권매쉬움)) n++;
+    for (var i = 0; i < list.length; i++) if (isEasy(list[i]['권매쉬움'])) n++;
     return n;
+  }
+
+  function easySaleCount() {
+    return countEasy(visibleRecords(true, false, easyListMonth()));
+  }
+
+  // 지금 목록이 보는 기간(권매·쉬움 범위 반영) — 버튼 건수와 목록 건수를 맞추는 데 쓴다
+  function easyListMonth() {
+    var f = state.filters;
+    if (f.due) return '';
+    if (String(f.q || '').trim()) return '';
+    return easyScopeNow() === 'all' ? '' : f.month;
+  }
+
+  // v34 — 토글 두 칸의 건수 (① 마지막으로 보던 달 ② 전체 기간)
+  function easyScopeCounts() {
+    return {
+      month: countEasy(visibleRecords(true, false, easyMonthKey())),
+      all: countEasy(visibleRecords(true, false, ''))
+    };
   }
 
   // 필터 버튼의 건수·켜짐·색 상태를 한곳에서 맞춘다
@@ -7071,13 +7143,51 @@
     if (!el.easyFilter) return;
     var n = easySaleCount();
     var on = !!state.filters.easy;
+    var scopeAll = easyScopeNow() === 'all';
     if (el.easyFilterCount) el.easyFilterCount.textContent = n + '건';
     el.easyFilter.classList.toggle('on', on);
     el.easyFilter.classList.toggle('zero', n === 0 && !on);
     el.easyFilter.setAttribute('aria-pressed', on ? 'true' : 'false');
     el.easyFilter.title = on
-      ? '⭕ 권매·쉬움 필터 켜짐 — 다시 누르면 전체 목록'
-      : '⭐ 권매·쉬움 체크된 고객만 보기 (현재 ' + n + '건)';
+      ? '⭕ 권매·쉬움 켜짐 — ' + (scopeAll ? '전체 기간' : monthLabel(state.filters.month)) +
+        ' ' + n + '건을 보는 중 · 다시 누르면 전체 목록'
+      : '⭐ 권매·쉬움 체크된 고객만 보기 (현재 ' + (scopeAll ? '전체 기간' : monthLabel(state.filters.month)) + ' ' + n + '건)';
+  }
+
+  /* v34 — ⭐ 켜 두었을 때 옆에 붙는 [이 달만 (N건)] / [전체 기간 (M건)] 1탭 토글
+     · 검색 중이거나 '알림만' 보기에서는 기간(월) 구분이 의미가 없어 흐리게 + 잠금
+     · 상단 기준 월을 바꾸면 setMonthFilter 가 easyScope 를 따라 바꿔 준다 */
+  function renderEasyScope() {
+    if (!el.easyScope) return;
+    var f = state.filters;
+    var on = !!f.easy;
+    el.easyScope.hidden = !on;
+    if (!on) return;
+    var c = easyScopeCounts();
+    var scope = easyScopeNow();
+    var mk = easyMonthKey();
+    var isCur = mk === currentMonth();
+    if (el.easyScopeMonthLabel) {
+      el.easyScopeMonthLabel.textContent = isCur ? '이 달만' : (Number(mk.slice(5, 7)) + '월만');
+    }
+    if (el.easyScopeMonthN) el.easyScopeMonthN.textContent = c.month + '건';
+    if (el.easyScopeAllN) el.easyScopeAllN.textContent = c.all + '건';
+    el.easyScopeMonth.classList.toggle('on', scope === 'month');
+    el.easyScopeAll.classList.toggle('on', scope === 'all');
+    el.easyScopeMonth.setAttribute('aria-pressed', scope === 'month' ? 'true' : 'false');
+    el.easyScopeAll.setAttribute('aria-pressed', scope === 'all' ? 'true' : 'false');
+    var qNow = String(f.q || '').trim();
+    var na = !!f.due || !!qNow;
+    el.easyScope.classList.toggle('na', na);
+    el.easyScopeMonth.disabled = na;
+    el.easyScopeAll.disabled = na;
+    var naWhy = f.due
+      ? '‘알림만’ 보기에서는 기간 구분 없이 모입니다 — 알림만을 꺼면 달별로 볼 수 있습니다'
+      : '검색 중에는 기준 월과 상관없이 전체 기간에서 찾습니다 — 검색어를 지우면 달별로 볼 수 있습니다';
+    el.easyScopeMonth.title = na ? naWhy
+      : monthLabel(mk) + ' 기록 중 권매·쉬움 ' + c.month + '건만 봅니다';
+    el.easyScopeAll.title = na ? naWhy
+      : '모든 달 기록 중 권매·쉬움 ' + c.all + '건을 봅니다 (상단 기준 월과 상관없이)';
   }
 
   /* ---------- v30 — 미기재 확인 (관리자 전용) · v33 사양 ----------
@@ -7924,12 +8034,17 @@
     }
     // v25 — ⭐ 권매·쉬움 필터 버튼의 건수·켜짐 색을 목록을 다시 그릴 때마다 맞춘다
     renderEasyFilter();
+    // v34 — 옆의 기간 범위 토글(이 달만/전체 기간) 건수·잠금도 같이
+    renderEasyScope();
     // v30 — ⚠️ 미기재 확인 버튼도 같이
     renderMissingFilter();
     if (state.filters.missing) scopeTag = scopeTag ? scopeTag + ' · 미기재' : '미기재';
     // 필터가 켜져 있을 때는 목록과 버튼 건수가 반드시 같아야 한다 (같은 rows 를 쓴다)
     if (state.filters.missing && el.missingCount && isAdmin()) el.missingCount.textContent = rows.length + '건';
-    if (state.filters.easy) scopeTag = scopeTag ? scopeTag + ' · 권매·쉬움' : '권매·쉬움';
+    if (state.filters.easy) {
+      var easyTag = '권매·쉬움' + (easyScopeNow() === 'all' ? ' · 전체 기간' : '');
+      scopeTag = scopeTag ? scopeTag + ' · ' + easyTag : easyTag;
+    }
     // v26 — 전체 기간 검색 중이라는 것을 건수 자리에 분명히 적는다 (상단 KPI 는 기준 월 그대로)
     var searchAll = !!state.filters.q.trim() && !state.filters.due;
     if (searchAll) scopeTag = scopeTag ? scopeTag + ' · 전체 기간 검색' : '전체 기간 검색';
@@ -8108,6 +8223,10 @@
   function setMonthFilter(ym) {
     var hadQ = clearSearchTerm();
     state.filters.month = ym || '';
+    // v34 — 상단 기준 월을 바꾸면 권매·쉬움 기간 범위도 자연스럽게 따라간다
+    //        특정 월 → '이 달만' / 전체 기간 → '전체 기간'
+    state.filters.easyScope = ym ? 'month' : 'all';
+    if (ym) state.filters.easyMonth = ym;
     render();
     if (hadQ) {
       toast('검색어를 지우고 ' + (ym ? monthLabel(ym) : '전체 기간') + ' 보기로 이동했습니다.');
@@ -9708,13 +9827,15 @@
     var rows = visibleRecords();
     if (!rows.length) { toast('내보낼 데이터가 없습니다.', true); return; }
 
+    // v34 — ⭐ 권매·쉬움을 '전체 기간'으로 보고 있으면 파일 이름·안내도 전체 기간으로
+    var easyAllScope = !!state.filters.easy && easyScopeNow() === 'all';
     var monthTag = state.filters.due
       ? (state.filters.dueMode === 'late' ? '기한지남' : (state.filters.dueMode === 'soon' ? '오늘' : '알림대상'))
-      : (state.filters.month || '전체');
+      : (easyAllScope ? '전체' : (state.filters.month || '전체'));
     var base = 'KT개통장부_' + monthTag + '_' + todayISO().replace(/-/g, '') + '_' + rows.length + '건';
     var scopeLabel = state.filters.due
       ? (state.filters.dueMode === 'late' ? '기한 지난' : (state.filters.dueMode === 'soon' ? '오늘' : '알림 대상'))
-      : monthLabel(state.filters.month);
+      : (easyAllScope ? '전체 기간' : monthLabel(state.filters.month));
 
     if (!hasXLSX()) {
       exportCsv(rows, base + '.csv');
@@ -10046,9 +10167,34 @@
       state.filters.dueMode = 'all';
       render();
     });
-    // v25 — ⭐ 권매·쉬움만 (1탭 토글)
+    // v25 — ⭐ 권매·쉬움만 (1탭 토글) · v34 켤 때는 지금 기준 월 범위에서 시작
     if (el.easyFilter) el.easyFilter.addEventListener('click', function () {
       state.filters.easy = !state.filters.easy;
+      if (state.filters.easy) {
+        state.filters.easyScope = state.filters.month ? 'month' : 'all';
+        if (state.filters.month) state.filters.easyMonth = state.filters.month;
+      }
+      render();
+    });
+    // v34 — ⭐ 옆 [이 달만] / [전체 기간] 1탭 전환
+    if (el.easyScope) el.easyScope.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-easy-scope]') : null;
+      if (!b || b.disabled) return;
+      var sc = b.getAttribute('data-easy-scope');
+      if (sc === 'all') {
+        state.filters.easyScope = 'all';
+        render();
+        return;
+      }
+      // 이 달만 — 기준 월이 '전체 기간'이면 마지막으로 보던 달로 이동해 보여 준다
+      if (!state.filters.month) {
+        var ym = easyMonthKey();
+        state.filters.easyScope = 'month';
+        setMonthFilter(ym);
+        toast(monthLabel(ym) + ' 권매·쉬움만 보기로 이동했습니다.');
+        return;
+      }
+      state.filters.easyScope = 'month';
       render();
     });
     // v30 — ⚠️ 미기재 확인 (관리자 전용 · 1탭 토글)
@@ -10062,7 +10208,7 @@
       }
     });
     el.resetFilters.addEventListener('click', function () {
-      state.filters = { q: '', month: currentMonth(), type: '', staff: '', due: false, dueMode: 'all', easy: false, missing: false };
+      state.filters = { q: '', month: currentMonth(), type: '', staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: currentMonth(), missing: false };
       el.searchInput.value = '';
       el.clearSearch.classList.remove('show');
       render();
@@ -10776,6 +10922,12 @@
       dueOnly: $('dueOnly'),
       easyFilter: $('easyFilter'),
       easyFilterCount: $('easyFilterCount'),
+      easyScope: $('easyScope'),
+      easyScopeMonth: $('easyScopeMonth'),
+      easyScopeMonthLabel: $('easyScopeMonthLabel'),
+      easyScopeMonthN: $('easyScopeMonthN'),
+      easyScopeAll: $('easyScopeAll'),
+      easyScopeAllN: $('easyScopeAllN'),
       missingFilter: $('missingFilter'),
       missingCount: $('missingCount'),
       resetFilters: $('resetFilters'),
@@ -10895,6 +11047,7 @@
     loadPolicy();
     state.records = blockedStored() ? [] : loadRecords();
     state.filters.month = currentMonth();
+    state.filters.easyMonth = currentMonth();
 
     // 유형 필터 옵션은 renderFilterUi() 안에서 무선/유선으로 묶어 만든다
 
