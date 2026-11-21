@@ -179,6 +179,57 @@
   .month-nav .mn-text.is-all{color:var(--slate-500);font-weight:700}
   .sum-quick{display:flex;gap:4px}
   .sum-quick .chip-btn{height:28px;font-size:11.5px;padding:0 9px}
+  /* v26 — 기준 월(2026년 11월)을 누르면 연도·월 1탭 점프 팝업 */
+  .month-nav .mn-text{border:0;background:transparent;cursor:pointer;padding:0 5px;border-radius:6px;
+    display:inline-flex;align-items:center;justify-content:center;gap:4px;height:25px}
+  .month-nav .mn-text:hover{background:#EFF4FB;color:var(--blue-700)}
+  .month-nav .mn-text:focus-visible{outline:none;box-shadow:0 0 0 2px rgba(11,87,208,.35)}
+  .month-nav .mn-text::after{content:'\25BE';font-size:9px;color:var(--slate-400);line-height:1}
+  .month-nav .mn-text[aria-expanded="true"]{background:#E4EFFF;color:var(--blue-700)}
+  .month-nav .mn-text[aria-expanded="true"]::after{color:var(--blue-700)}
+
+  .mjp{position:fixed;left:0;top:0;z-index:90;width:304px;max-width:calc(100vw - 16px);
+    padding:11px 11px 10px;border:1px solid var(--line-strong);border-radius:15px;background:#fff;
+    box-shadow:0 26px 54px -20px rgba(15,23,42,.42),0 2px 8px rgba(15,23,42,.08);
+    animation:mjp-in .13s ease-out}
+  .mjp[hidden]{display:none}
+  @keyframes mjp-in{from{opacity:.4;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .mjp-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px}
+  .mjp-ybtn{width:32px;height:28px;border:1px solid var(--line-strong);border-radius:8px;background:#fff;
+    color:var(--slate-500);font-size:10px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .mjp-ybtn:hover:not([disabled]){background:#EFF4FB;color:var(--blue-700);border-color:#C3D1E3}
+  .mjp-ybtn[disabled]{opacity:.32;cursor:default}
+  .mjp-year{flex:1;text-align:center;font-size:15.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em;
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .mjp-years{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:9px;padding-bottom:9px;border-bottom:1px solid var(--line)}
+  .mjp-yr{height:27px;padding:0 10px;border-radius:8px;border:1px solid var(--line-strong);background:#fff;
+    font-size:11.5px;font-weight:800;color:var(--slate-600);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .mjp-yr:hover{background:#F4F8FF;border-color:#C3D1E3}
+  .mjp-yr.on{background:var(--blue-50);border-color:#BBD7FB;color:var(--blue-700)}
+  .mjp-months{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .mjp-m{position:relative;height:38px;border-radius:10px;border:1px solid var(--line-strong);background:#fff;
+    font-size:12.5px;font-weight:800;color:var(--slate-600);display:flex;align-items:center;justify-content:center;
+    gap:3px;font-variant-numeric:tabular-nums}
+  .mjp-m:hover{background:#F4F8FF;border-color:#C3D1E3;color:var(--blue-700)}
+  .mjp-m.now{border-color:#BBD7FB;background:var(--blue-50);color:var(--blue-700)}
+  .mjp-m.on{background:var(--blue-600);border-color:var(--blue-600);color:#fff;box-shadow:0 6px 14px -8px rgba(11,87,208,.9)}
+  .mjp-m.on:hover{background:var(--blue-700);color:#fff}
+  .mjp-m.on.now{background:var(--blue-600);color:#fff}
+  .mjp-c{font-size:9.5px;font-weight:800;color:var(--slate-400);line-height:1}
+  .mjp-m.on .mjp-c{color:#CFE0FF}
+  .mjp-m.now .mjp-c{color:#6E93CC}
+  .mjp-m.no-recs .mjp-c{display:none}
+  .mjp-foot{display:flex;gap:6px;margin-top:9px}
+  .mjp-act{flex:1;height:31px;border-radius:9px;border:1px solid var(--line-strong);background:#fff;
+    font-size:12px;font-weight:800;color:var(--slate-600)}
+  .mjp-act:hover{background:#F4F7FB;border-color:#C3D1E3}
+  @media (max-width:420px){ .mjp{width:calc(100vw - 20px)} }
+
+  /* v26 — 검색어가 있으면 기준 월과 무관하게 전체 기간에서 찾는다 */
+  .search-scope{order:12;flex:1 1 100%;font-size:11.5px;font-weight:700;color:var(--blue-700);line-height:1.45}
+  .search-scope[hidden]{display:none}
+  .search-scope b{font-weight:800}
+  .result-count.is-allsearch{color:var(--blue-700)}
   .sum-rows{grid-column:2;display:flex;flex-direction:column;justify-content:center;min-width:0}
   .sum-cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-column:auto}
   body.role-staff .sum-cells{grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -1449,7 +1500,8 @@
       <div class="month-nav" role="group" aria-label="기준 월 선택">
         <button type="button" class="mn-btn" id="monthPrev" aria-label="이전 달">◀</button>
         <input type="hidden" id="monthInput" value="">
-        <span class="mn-text" id="monthShow" aria-live="polite">—</span>
+        <button type="button" class="mn-text" id="monthShow" aria-live="polite"
+          aria-haspopup="dialog" aria-expanded="false" title="눌러서 연도·월로 바로 이동">—</button>
         <button type="button" class="mn-btn" id="monthNext" aria-label="다음 달">▶</button>
       </div>
       <div class="sum-quick">
@@ -1600,6 +1652,8 @@
       <input id="searchInput" type="search" placeholder="고객명 · 연락처 · 기종 · 메모 검색" autocomplete="off">
       <button class="clear" id="clearSearch" title="검색 지우기" aria-label="검색 지우기">×</button>
     </div>
+    <!-- v26 — 검색 중에는 기준 월과 상관없이 전체 기간에서 찾는다는 안내 -->
+    <span class="search-scope" id="searchScopeHint" hidden></span>
     <select class="filter" id="typeFilter" aria-label="개통유형 필터">
       <option value="">전체 유형</option>
     </select>
@@ -2220,6 +2274,21 @@
 
 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,text/csv" style="display:none">
 <input type="file" id="jsonInput" accept=".json,application/json" style="display:none">
+<!-- v26 — 연도·월 1탭 점프 팝업 (기준 월 버튼을 누르면 열린다 · body 에 붙여 카드 넘침에 가리지 않게) -->
+<div class="mjp" id="monthJumpPop" role="dialog" aria-label="연도·월 바로 가기" hidden>
+  <div class="mjp-top">
+    <button type="button" class="mjp-ybtn" id="mjpYearPrev" aria-label="이전 연도">◀</button>
+    <span class="mjp-year" id="mjpYear" aria-live="polite">—</span>
+    <button type="button" class="mjp-ybtn" id="mjpYearNext" aria-label="다음 연도">▶</button>
+  </div>
+  <div class="mjp-years" id="mjpYears"></div>
+  <div class="mjp-months" id="mjpMonths"></div>
+  <div class="mjp-foot">
+    <button type="button" class="mjp-act" id="mjpThis">이번 달</button>
+    <button type="button" class="mjp-act" id="mjpAll">전체 기간</button>
+  </div>
+</div>
+
 <div id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
@@ -5614,7 +5683,10 @@
   function visibleRecords(ignoreEasy) {
     var f = state.filters;
     var q = f.q.trim().toLowerCase();
-    var month = f.due ? '' : f.month;   // 임박 보기에서는 월 필터를 무시
+    // v26 — 검색어가 있을 때는 기준 월과 상관없이 state.records 전체 기간에서 찾는다.
+    //        검색어를 지우면(빈칸) 다시 기준 월 목록으로 돌아온다.
+    var allSearch = !!q && !f.due;
+    var month = f.due ? '' : (allSearch ? '' : f.month);   // 임박 보기에서는 월 필터를 무시
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
       if (f.type && typeParts(r.개통유형).indexOf(f.type) < 0) return false;
@@ -6339,7 +6411,11 @@
     // v25 — ⭐ 권매·쉬움 필터 버튼의 건수·켜짐 색을 목록을 다시 그릴 때마다 맞춘다
     renderEasyFilter();
     if (state.filters.easy) scopeTag = scopeTag ? scopeTag + ' · 권매·쉬움' : '권매·쉬움';
+    // v26 — 전체 기간 검색 중이라는 것을 건수 자리에 분명히 적는다 (상단 KPI 는 기준 월 그대로)
+    var searchAll = !!state.filters.q.trim() && !state.filters.due;
+    if (searchAll) scopeTag = scopeTag ? scopeTag + ' · 전체 기간 검색' : '전체 기간 검색';
     el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') + rows.length + '건';
+    el.resultCount.classList.toggle('is-allsearch', searchAll);
     el.footCount.textContent = state.records.length + '건 저장됨';
 
     // 정렬 화살표
@@ -6372,10 +6448,18 @@
           '<button type="button" class="btn admin-only" data-empty="sample">샘플 데이터 넣기</button>' +
           '</div>';
       } else {
+        // v26 — 검색어가 있으면 전체 기간(모든 달)에서 찾은 결과라고 알려 준다
+        var qNow = state.filters.q.trim();
+        var emptyTitle = qNow && !state.filters.due
+          ? '“' + esc(qNow) + '” 검색 결과가 없습니다'
+          : '조건에 맞는 개통이 없습니다';
+        var emptyBody = qNow && !state.filters.due
+          ? '<p>기준 달과 상관없이 <b>전체 기간</b>에서 찾았지만 없습니다.<br>이름·번호 일부만 넣어 보세요.</p>'
+          : '<p>검색어나 필터를 바꿔보세요.</p>';
         el.emptyState.innerHTML =
           '<div class="empty-illust"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8 20 20"/></svg></div>' +
-          '<h3>조건에 맞는 개통이 없습니다</h3>' +
-          '<p>검색어나 필터를 바꿔보세요.</p>' +
+          '<h3>' + emptyTitle + '</h3>' +
+          emptyBody +
           '<div class="row"><button type="button" class="btn" data-empty="reset">필터 초기화</button></div>';
       }
       return;
@@ -6465,6 +6549,147 @@
     el.clearSearch.classList.toggle('show', !!state.filters.q);
     el.thisMonthBtn.classList.toggle('on', state.filters.month === currentMonth());
     el.allMonthBtn.classList.toggle('on', !state.filters.month);
+    // v26 — 전체 기간 검색 안내 (기준 월을 보는 중인데 검색어 때문에 전체 기간을 찾고 있을 때만)
+    updateSearchScopeHint();
+  }
+
+  /* ---------------- v26 — 연도·월 1탭 점프 + 전체 기간 검색 ----------------
+     · `2026년 11월` 버튼을 누르면 연도(◀ 2026년 ▶ + 연도 칩) · 1~12월 12칸 팝업이 열린다.
+       달을 고르면 그 달 기록으로 바로 이동(검색어가 남아 있으면 지우고 이동을 알린다).
+     · 검색어가 있으면 기준 월과 상관없이 전체 기간을 찾고, 지우면 기준 월로 복귀(visibleRecords).
+  */
+  var searchTimer = null;
+  var mjpState = { open: false, year: 0 };
+
+  // 검색어가 기준 월을 넘어 전체 기간을 찾고 있음을 알리는 작은 안내 줄
+  function updateSearchScopeHint() {
+    if (!el.searchScopeHint) return;
+    var qHint = String(state.filters.q || '').trim();
+    var scopeOn = !!qHint && !state.filters.due && !!state.filters.month;
+    el.searchScopeHint.hidden = !scopeOn;
+    if (scopeOn) {
+      el.searchScopeHint.innerHTML = '<b>전체 기간에서 찾는 중</b> — 검색어를 지우면 ' +
+        esc(monthLabel(state.filters.month)) + ' 목록으로 돌아갑니다.';
+    }
+  }
+
+  // 검색어만 지우기 (지웠으면 true)
+  function clearSearchTerm() {
+    if (searchTimer) { clearTimeout(searchTimer); searchTimer = null; }
+    var had = !!String(state.filters.q || '').trim();
+    state.filters.q = '';
+    if (el.searchInput && el.searchInput.value) el.searchInput.value = '';
+    if (el.clearSearch) el.clearSearch.classList.remove('show');
+    return had;
+  }
+
+  // 기준 월 바꾸기 — 달을 움직일 때 검색어가 남아 있으면 지우고 왜 바뀌었는지 알린다
+  function setMonthFilter(ym) {
+    var hadQ = clearSearchTerm();
+    state.filters.month = ym || '';
+    render();
+    if (hadQ) {
+      toast('검색어를 지우고 ' + (ym ? monthLabel(ym) : '전체 기간') + ' 보기로 이동했습니다.');
+    }
+  }
+
+  // 연도 범위 = 데이터에 있는 가장 오랜 연도 ~ 올해 + 1 (기록이 없으면 올해-2 ~ 올해+1)
+  function mjpYears() {
+    var cy = new Date().getFullYear();
+    var min = cy - 2, max = cy + 1, i, y;
+    for (i = 0; i < state.records.length; i++) {
+      y = Number(String(state.records[i].개통일 || '').slice(0, 4));
+      if (y && y < min) min = y;
+      if (y && y > max) max = y;
+    }
+    var sel = state.filters.month ? Number(state.filters.month.slice(0, 4)) : 0;
+    if (sel) { if (sel < min) min = sel; if (sel > max) max = sel; }
+    var out = [];
+    for (y = min; y <= max; y++) out.push(y);
+    return out;
+  }
+
+  // 그 해 달별 건수 — 어떤 달에 기록이 있는지 팝업에서 바로 보이게
+  function mjpMonthCounts(year) {
+    var map = {}, i, d;
+    for (i = 0; i < state.records.length; i++) {
+      d = String(state.records[i].개통일 || '');
+      if (Number(d.slice(0, 4)) !== year) continue;
+      var mm = d.slice(5, 7);
+      if (mm) map[mm] = (map[mm] || 0) + 1;
+    }
+    return map;
+  }
+
+  function mjpRender() {
+    var pop = el.monthJumpPop;
+    if (!pop) return;
+    var years = mjpYears();
+    if (years.indexOf(mjpState.year) < 0) {
+      mjpState.year = state.filters.month ? Number(state.filters.month.slice(0, 4)) : new Date().getFullYear();
+      if (years.indexOf(mjpState.year) < 0) mjpState.year = years[years.length - 1];
+    }
+    var i;
+    if (el.mjpYear) el.mjpYear.textContent = mjpState.year + '년';
+    if (el.mjpYearPrev) el.mjpYearPrev.disabled = mjpState.year <= years[0];
+    if (el.mjpYearNext) el.mjpYearNext.disabled = mjpState.year >= years[years.length - 1];
+    var html = '';
+    for (i = 0; i < years.length; i++) {
+      html += '<button type="button" class="mjp-yr' + (years[i] === mjpState.year ? ' on' : '') +
+        '" data-mjp-year="' + years[i] + '" aria-pressed="' + (years[i] === mjpState.year ? 'true' : 'false') +
+        '">' + years[i] + '년</button>';
+    }
+    if (el.mjpYears) el.mjpYears.innerHTML = html;
+
+    var counts = mjpMonthCounts(mjpState.year);
+    var sel = state.filters.month;
+    var cur = currentMonth();
+    html = '';
+    for (var m = 1; m <= 12; m++) {
+      var ym = mjpState.year + '-' + pad2(m);
+      var n = counts[pad2(m)] || 0;
+      var cls = 'mjp-m' + (n ? '' : ' no-recs') + (sel === ym ? ' on' : '') + (cur === ym ? ' now' : '');
+      html += '<button type="button" class="' + cls + '" data-mjp-month="' + m + '"' +
+        (sel === ym ? ' aria-current="date"' : '') +
+        ' aria-label="' + mjpState.year + '년 ' + m + '월' + (n ? ' · ' + n + '건' : ' · 기록 없음') + '">' +
+        '<span>' + m + '월</span>' + (n ? '<span class="mjp-c">' + n + '</span>' : '') + '</button>';
+    }
+    if (el.mjpMonths) el.mjpMonths.innerHTML = html;
+  }
+
+  function mjpPosition() {
+    var pop = el.monthJumpPop, btn = el.monthShow;
+    if (!pop || !btn) return;
+    var r = btn.getBoundingClientRect();
+    var w = pop.offsetWidth || 304, h = pop.offsetHeight || 320;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    var left = Math.max(8, Math.min(r.left + r.width / 2 - w / 2, vw - w - 8));
+    var top = r.bottom + 6;
+    if (top + h > vh - 8) top = Math.max(8, r.top - h - 6);
+    pop.style.left = Math.round(left) + 'px';
+    pop.style.top = Math.round(top) + 'px';
+  }
+
+  function mjpOpen() {
+    var pop = el.monthJumpPop;
+    if (!pop) return;
+    mjpState.year = state.filters.month ? Number(state.filters.month.slice(0, 4)) : new Date().getFullYear();
+    mjpRender();
+    pop.hidden = false;
+    mjpState.open = true;
+    if (el.monthShow) el.monthShow.setAttribute('aria-expanded', 'true');
+    mjpPosition();
+  }
+
+  function mjpClose(focusBack) {
+    var pop = el.monthJumpPop;
+    if (!pop || pop.hidden) return;
+    pop.hidden = true;
+    mjpState.open = false;
+    if (el.monthShow) {
+      el.monthShow.setAttribute('aria-expanded', 'false');
+      if (focusBack) { try { el.monthShow.focus(); } catch (e) {} }
+    }
   }
 
   // 유형 필터 — 무선 / 유선(인터넷·TV) / (예전 유형) 으로 묶어서
@@ -7726,22 +7951,21 @@
 
   /* ---------------- events ---------------- */
   function bindEvents() {
-    // 검색
-    var searchTimer = null;
+    // 검색 — v26: 검색어가 있으면 기준 월과 무관하게 전체 기간을 찾는다(visibleRecords)
     el.searchInput.addEventListener('input', function () {
       var v = this.value;
       el.clearSearch.classList.toggle('show', !!v);
       clearTimeout(searchTimer);
       searchTimer = setTimeout(function () {
+        searchTimer = null;
         state.filters.q = v;
         renderTable();
+        updateSearchScopeHint();
       }, 120);
     });
     el.clearSearch.addEventListener('click', function () {
-      el.searchInput.value = '';
-      state.filters.q = '';
-      el.clearSearch.classList.remove('show');
-      renderTable();
+      clearSearchTerm();
+      render();
       el.searchInput.focus();
     });
 
@@ -7754,25 +7978,69 @@
       return y + '-' + pad2(m);
     }
     if (el.monthInput) el.monthInput.addEventListener('change', function () {
-      state.filters.month = this.value;
-      render();
+      setMonthFilter(this.value);
     });
     if ($('monthPrev')) $('monthPrev').addEventListener('click', function () {
-      state.filters.month = shiftMonth(state.filters.month, -1);
-      render();
+      setMonthFilter(shiftMonth(state.filters.month, -1));
     });
     if ($('monthNext')) $('monthNext').addEventListener('click', function () {
-      state.filters.month = shiftMonth(state.filters.month, 1);
-      render();
+      setMonthFilter(shiftMonth(state.filters.month, 1));
     });
     el.thisMonthBtn.addEventListener('click', function () {
-      state.filters.month = currentMonth();
-      render();
+      setMonthFilter(currentMonth());
     });
     el.allMonthBtn.addEventListener('click', function () {
-      state.filters.month = '';
-      render();
+      setMonthFilter('');
     });
+
+    // v26 — `2026년 11월` 버튼 → 연도·월 1탭 점프 팝업
+    if (el.monthShow) {
+      el.monthShow.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (mjpState.open) mjpClose(); else mjpOpen();
+      });
+    }
+    if (el.monthJumpPop) {
+      el.monthJumpPop.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var b = e.target && e.target.closest ? e.target.closest('button') : null;
+        if (!b) return;
+        if (b.hasAttribute('data-mjp-year')) {
+          mjpState.year = Number(b.getAttribute('data-mjp-year'));
+          mjpRender();
+          return;
+        }
+        if (b.hasAttribute('data-mjp-month')) {
+          var mo = Number(b.getAttribute('data-mjp-month'));
+          var ym = mjpState.year + '-' + pad2(mo);
+          mjpClose();
+          setMonthFilter(ym);
+          return;
+        }
+        if (b.id === 'mjpYearPrev' || b.id === 'mjpYearNext') {
+          var ys = mjpYears();
+          var idx = ys.indexOf(mjpState.year) + (b.id === 'mjpYearPrev' ? -1 : 1);
+          if (idx >= 0 && idx < ys.length) { mjpState.year = ys[idx]; mjpRender(); }
+          return;
+        }
+        if (b.id === 'mjpThis') { mjpClose(); setMonthFilter(currentMonth()); return; }
+        if (b.id === 'mjpAll') { mjpClose(); setMonthFilter(''); return; }
+      });
+    }
+    // 바깥을 누르거나 Esc · 다른 곳으로 스크롤하면 닫는다
+    document.addEventListener('click', function (e) {
+      if (!mjpState.open) return;
+      if (el.monthJumpPop && el.monthJumpPop.contains(e.target)) return;
+      if (el.monthShow && el.monthShow.contains(e.target)) return;
+      mjpClose();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!mjpState.open) return;
+      if (e.key === 'Escape') { mjpClose(true); }
+    });
+    window.addEventListener('scroll', function () { if (mjpState.open) mjpClose(); }, true);
+    window.addEventListener('resize', function () { if (mjpState.open) mjpPosition(); });
 
     // 유형 / 임박
     el.typeFilter.addEventListener('change', function () {
@@ -8340,6 +8608,14 @@
       monthShow: $('monthShow'),
       thisMonthBtn: $('thisMonthBtn'),
       allMonthBtn: $('allMonthBtn'),
+      // v26 — 연도·월 점프 팝업 + 전체 기간 검색 안내
+      monthJumpPop: $('monthJumpPop'),
+      mjpYear: $('mjpYear'),
+      mjpYears: $('mjpYears'),
+      mjpMonths: $('mjpMonths'),
+      mjpYearPrev: $('mjpYearPrev'),
+      mjpYearNext: $('mjpYearNext'),
+      searchScopeHint: $('searchScopeHint'),
       saveState: $('saveState'),
       footCount: $('footCount'),
       storageWarn: $('storageWarn'),

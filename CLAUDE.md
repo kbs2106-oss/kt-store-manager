@@ -146,6 +146,21 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     이름·연락처뿐 아니라 **개통일을 다른 달로 바꿔도** 배너가 바로 내려간다(`clearDupGuardIfFree`).
   - 테스트 `qa-kt/v25_easy_sale_test.py` · 스크린샷 `downloads/개통장부-v25-권매쉬움-모달.png` · `downloads/개통장부-v25-권매쉬움-필터목록.png`.
   - 중복 차단 당월 기준 테스트는 `qa-kt/v24_duplicate_guard_test.py` 의 **G** 구역(같은 달 차단 / 다른 달 통과).
+- **v26 — 연도·월 1탭 점프 팝업 + 검색 시 전체 기간 자동 검색** (1~2년 전 기록을 몇 번의 탭으로 찾는다):
+  - **기준 월 버튼**: `#monthShow` 가 `<span>` → **`<button>`**(`aria-haspopup="dialog"` · `aria-expanded`, 오른쪽 `▾` 는 `::after` 라 글자에는 안 들어간다 — 기존 테스트의 `text_content` 비교 유지). 누르면 팝업 토글.
+  - **팝업 `#monthJumpPop`**(`role="dialog"`, `body` 바로 아래 · `position:fixed` — 요약 카드의 `overflow:hidden` 에 가리지 않게):
+    - 연도 줄: `◀ 2024년 ▶`(`#mjpYearPrev`·`#mjpYear`·`#mjpYearNext`, 범위 밖이면 `disabled`) + **연도 칩 `#mjpYears`**(`.mjp-yr`).
+      연도 범위는 **`mjpYears()`** = 데이터의 가장 오랜 연도 ~ **올해+1**(기록이 없으면 올해-2 ~ 올해+1, 고른 달의 해도 범위에 포함).
+    - 달 칸: **`#mjpMonths` 에 1월~12월 12칸**(`.mjp-m`, 4열). 그 해의 **달별 건수**를 작게 표시(`mjpMonthCounts()`, 0건은 숨김) → 어느 달에 기록이 있는지 보고 바로 고른다.
+      고른 달은 `.on`(파란 채움 · `aria-current`), 이번 달은 `.now`(연한 파란 테두리).
+    - 아래 `이번 달`(`#mjpThis`) · `전체 기간`(`#mjpAll`) 버튼. 팝업은 **바깥 클릭 · `Esc` · 스크롤**로 닫히고, 위치는 `mjpPosition()` 이 버튼 아래(화면 밖이면 위)로 잡는다.
+    - 달을 고르면 **`setMonthFilter(YYYY-MM)`** → 그 달 기록만 보인다. 기존 `◀`·`▶`·`이번 달`·`전체 기간` 버튼도 모두 `setMonthFilter()` 를 거친다(동작 그대로).
+  - **검색 = 전체 기간**: `visibleRecords()` 는 **검색어(`f.q`)가 있으면 기준 월을 무시**하고 `state.records` 전체를 찾는다(`allSearch`). 검색어를 지우면 다시 기준 월 목록(`f.month`)으로 복귀.
+    유형·담당자·알림·권매·쉬움 필터는 검색과 함께 그대로 적용된다. **상단 KPI 는 기준 월 그대로**(`kpiRecords()` 미변경).
+  - **표시**: `#resultCount` 가 **`전체 기간 검색 · N건`**(`.is-allsearch`), 툴바 아래 안내 줄 **`#searchScopeHint`**(`updateSearchScopeHint()` — `전체 기간에서 찾는 중 — 검색어를 지우면 2026년 11월 목록으로 돌아갑니다.`),
+    검색 결과가 없으면 빈 화면 문구가 **`“검색어” 검색 결과가 없습니다 / 기준 달과 상관없이 전체 기간에서 찾았지만 없습니다.`** 로 바뀐다.
+  - **달을 움직이면 검색어는 지운다**: `setMonthFilter()` 가 `clearSearchTerm()` 으로 검색어를 비우고(남아 있었다면) `검색어를 지우고 2024년 3월 보기로 이동했습니다.` 토스트 — 전체 기간 검색 때문에 달 이동이 무효로 보이는 것을 막는다.
+  - 테스트 `qa-kt/v26_month_jump_search_test.py` · 스크린샷 `downloads/개통장부-v26-연월점프.png` · `downloads/개통장부-v26-전체검색.png`.
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
 ---
@@ -339,7 +354,9 @@ kt-store-manager/
 | `staffLineText(map)` | 날짜 그룹 머리글용 한 줄 요약 `'김태양 2 · 김설화 1'` |
 | `renderTable()` | 날짜 그룹 머리글 + 표 + 폰용 카드(`#mlist`) 렌더 |
 | `renderTypeFilter()` | 유형 필터를 무선 / 유선 / (예전 유형) 묶음으로 다시 그린다 |
-| `visibleRecords()` | 검색·월·유형·담당자·알림 필터 + 정렬. v25: `visibleRecords(true)` 면 `권매·쉬움` 조건만 건너뜀(건수 계산용) |
+| `visibleRecords()` | 검색·월·유형·담당자·알림 필터 + 정렬. v25: `visibleRecords(true)` 면 `권매·쉬움` 조건만 건너뜀(건수 계산용) · v26: 검색어가 있으면 **기준 월을 무시하고 전체 기간**에서 찾음 |
+| `mjpYears()` / `mjpMonthCounts()` / `mjpRender()` / `mjpOpen()` / `mjpClose()` / `mjpPosition()` | v26 — 연도·월 점프 팝업 그리기(연도 범위·달별 건수)·열고 닫기·버튼 아래 위치 |
+| `setMonthFilter(ym)` / `clearSearchTerm()` / `updateSearchScopeHint()` | v26 — 기준 월 바꾸기(검색어가 있으면 지우고 토스트) · 검색어만 비우기 · `#searchScopeHint` 안내 |
 | `easySaleCount()` / `renderEasyFilter()` / `easyBadgeHtml()` | v25 — `⭐ 권매·쉬움만` 건수·켜짐 상태 · 폰카드/표 배지 |
 | `easyOn()` / `setEasyChip()` | v25 모달 `메모` 위 `✓ 권매·쉬움` 1탭 토글 |
 | `mcardHtml(r)` | 폰 카드 2줄 요약 + 펼침 상세 |
@@ -550,6 +567,10 @@ kt-store-manager/
     저장 → 시트 메모에 `[권매쉬움]` 이 붙고(20컬럼 그대로) 새로고침·시트 왕복 뒤에도 체크가 살아 있는지,
     툴바 **`★ 권매·쉬움만 N건`** 을 누르면 체크된 고객만 남고(건수는 월·검색·담당자 필터 기준) 다시 누르면 전체로 돌아오는지,
     폰 카드(`.m-line1`)·표 `고객명` 칸에만 `★ 권매·쉬움` 배지가 뜨고, `초기화` 로 필터가 꺼지는지
+19. **연도·월 점프 + 전체 기간 검색(v26)**: `2026년 11월` 을 누르면 팝업이 열리고 **연도 칩/`◀ ▶` + 1~12월 12칸**이 보이는지,
+    `2024년` → `4월` 을 고르면 그 달 기록만 남고(`◀`·`▶`·`이번 달`·`전체 기간` 도 그대로 동작),
+    `2026년 11월` 을 보는 상태에서 검색창에 2년 전 고객명·번호를 넣으면 **기준 월과 상관없이 바로 잡히고** `#resultCount` 가 `전체 기간 검색 · N건` 인지,
+    검색어를 지우면 다시 기준 월 목록으로 돌아오는지(상단 KPI 는 기준 월 그대로), 달을 옮기면 검색어가 지워지며 토스트가 뜨는지
 
 ---
 
