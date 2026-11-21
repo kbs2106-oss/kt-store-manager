@@ -173,12 +173,12 @@
   .sum-cell{display:flex;flex-direction:column;justify-content:center;min-width:0;
     padding:9px 15px;border-right:1px solid var(--line)}
   .sum-cell:last-child{border-right:0}
-  .sum-label{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:var(--slate-500);letter-spacing:.01em;white-space:nowrap;overflow:hidden}
+  .sum-label{display:flex;align-items:center;gap:5px;font-size:11.5px;font-weight:800;color:var(--slate-600);letter-spacing:.01em;white-space:nowrap;overflow:hidden}
   .sum-label .tag{font-size:10px;font-weight:800;color:var(--slate-400);background:#EEF2F8;border-radius:5px;padding:0 5px;letter-spacing:0;flex:none}
   .sum-value{display:flex;align-items:baseline;gap:3px;margin-top:2px;font-weight:800;letter-spacing:-.035em;color:var(--ink)}
   .sum-value b{font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
   .sum-value i{font-style:normal;font-size:12px;font-weight:700;color:var(--slate-400);letter-spacing:0}
-  .sum-sub{font-size:11px;color:var(--slate-400);margin-top:2px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sum-sub{font-size:11.5px;color:var(--slate-500);margin-top:2px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sum-chips{grid-column:1/-1;display:flex;align-items:center;gap:5px;padding:5px 14px;
     border-top:1px solid var(--line);background:#FCFDFF;overflow-x:auto;scrollbar-width:none}
   .sum-chips::-webkit-scrollbar{display:none}
@@ -190,14 +190,14 @@
   button.chip:hover{filter:brightness(.97)}
   .chip b{font-weight:800}
   .chip.on{box-shadow:0 0 0 1.5px rgba(11,87,208,.38) inset}
-  .t-move{background:var(--blue-50);color:var(--blue-700)}
-  .t-change{background:var(--violet-bg);color:var(--violet)}
-  .t-new{background:var(--green-bg);color:var(--green)}
-  .t-net{background:var(--amber-bg);color:var(--amber)}
-  .t-wired{background:var(--teal-bg);color:var(--teal)}
-  .t-wired2{background:#E8EEF7;color:#3A5372}
-  .t-kids{background:var(--teal-bg);color:var(--teal)}
-  .t-etc{background:#F1F5F9;color:var(--slate-600)}
+  .t-move{background:#E1EDFF;color:#0B4AA2}
+  .t-change{background:#EAE4FE;color:#5527B0}
+  .t-new{background:#D8F4E6;color:#0B6B4F}
+  .t-net{background:#FCEBCB;color:#8A5200}
+  .t-wired{background:#D6F1F0;color:#0B5F63}
+  .t-wired2{background:#E1E9F5;color:#2C456B}
+  .t-kids{background:#D6F1F0;color:#0B5F63}
+  .t-etc{background:#E7EDF6;color:#44536B}
   /* 복합 개통유형(무선 + 유선)은 배지 두 개를 나란히 */
   .type-badges{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;vertical-align:middle;max-width:100%}
 
@@ -252,10 +252,10 @@
   .due-toggle .caret{width:13px;height:13px;transition:transform .16s}
   .duebar.open .due-toggle .caret{transform:rotate(180deg)}
   .due-panel{border-top:1px solid var(--line);background:#FCFDFF;max-height:330px;overflow:auto;overscroll-behavior:contain}
-  .due-head{position:sticky;top:0;z-index:1;display:grid;grid-template-columns:0.8fr 1.05fr 2.3fr 1.05fr 0.85fr 0.8fr;gap:8px;
+  .due-head{position:sticky;top:0;z-index:1;display:grid;grid-template-columns:0.7fr 1fr 2.0fr 1fr 0.8fr 0.6fr 0.95fr;gap:8px;
     padding:7px 14px;background:#F2F6FC;border-bottom:1px solid var(--line);
-    font-size:10.5px;font-weight:800;color:var(--slate-400);letter-spacing:.04em}
-  .duerow{display:grid;grid-template-columns:0.8fr 1.05fr 2.3fr 1.05fr 0.85fr 0.8fr;gap:8px;align-items:center;
+    font-size:11px;font-weight:800;color:#64748B;letter-spacing:.04em}
+  .duerow{display:grid;grid-template-columns:0.7fr 1fr 2.0fr 1fr 0.8fr 0.6fr 0.95fr;gap:8px;align-items:center;
     width:100%;text-align:left;border:0;border-bottom:1px solid #EFF3F8;background:transparent;
     padding:8px 14px;font-size:12.5px;color:var(--slate-700)}
   .duerow:hover{background:#F4F8FF}
@@ -265,10 +265,20 @@
   .duerow .k-plan{background:var(--violet-bg);color:var(--violet)}
   .duerow .k-addon{background:var(--teal-bg);color:var(--teal)}
   .duerow .dn{font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .duerow .dw{color:var(--slate-500);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-  .duerow .dd2{color:var(--slate-500);font-variant-numeric:tabular-nums;font-size:11.5px}
+  .duerow .dw{color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
+  .duerow .dd2{color:#475569;font-variant-numeric:tabular-nums;font-size:12px}
   .duerow .dds{justify-self:start}
-  .duerow .ds{color:var(--slate-600);font-weight:700;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .duerow .ds{color:var(--slate-600);font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .duerow .db{justify-self:end}
+  /* 해지 완료 / 변경 완료 — 누르는 버튼은 파란 테두리, 완료된 상태(dd-done)만 초록 */
+  .mini-done{height:26px;padding:0 8px;border-radius:8px;border:1px solid #C3D6F2;background:#fff;
+    color:#0B4AA2;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer}
+  .mini-done:hover{background:var(--blue-50);border-color:#9DBDF0}
+  @media (pointer:coarse){.mini-done{height:34px;padding:0 13px;font-size:12.5px}}
+  .m-due-date{font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+  /* 표의 변경일자·해지일자 칸: 날짜(배지) 위, 완료 버튼 아래 */
+  .due-stack{display:inline-flex;flex-direction:column;align-items:flex-start;gap:3px}
+  .due-top{white-space:nowrap}
   .due-empty{padding:20px 14px;text-align:center;font-size:12.5px;color:var(--slate-400);font-weight:600}
 
   .tag-period{
@@ -276,10 +286,13 @@
     font-size:10.5px;font-weight:800;vertical-align:1px;
   }
 
-  .dd{display:inline-block;padding:1px 6px;border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.01em;white-space:nowrap}
-  .dd-soon{background:var(--amber-bg);color:var(--amber)}
-  .dd-today{background:#FFE8E5;color:var(--red)}
-  .dd-late{background:var(--red-bg);color:var(--red)}
+  .dd{display:inline-block;padding:2px 7px;border-radius:7px;font-size:11.5px;font-weight:900;letter-spacing:.01em;white-space:nowrap}
+  .dd-soon{background:#FFEDCB;color:#8A5200}
+  .dd-today{background:#FFDCD6;color:#B42318}
+  .dd-late{background:#FEE4E2;color:#B42318}
+  /* 완료 표시 — 버튼으로도 쓰인다 (다시 누르면 되돌리기) */
+  .dd-done{background:var(--green-bg);color:#0B5F45;border:1px solid #BFE3D3;font-weight:800;cursor:pointer}
+  .dd-done:hover{background:#D3F0E2}
 
   /* ---------- toolbar ---------- */
   .toolbar{padding:9px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -317,11 +330,11 @@
   .table-scroll::-webkit-scrollbar-thumb:hover{background:#AFC1D6}
   .table-scroll::-webkit-scrollbar-track{background:#FBFCFE}
   .table-scroll{scrollbar-width:thin;scrollbar-color:#C9D6E6 #FBFCFE}
-  table.ledger{width:100%;border-collapse:separate;border-spacing:0;min-width:1340px;font-size:13px}
+  table.ledger{width:100%;border-collapse:separate;border-spacing:0;min-width:1430px;font-size:13px}
   table.ledger th{
     position:sticky;top:0;z-index:2;
-    background:#F6F9FD;text-align:left;font-size:11.5px;font-weight:800;color:var(--slate-500);
-    letter-spacing:.03em;padding:9px 11px;border-bottom:1px solid var(--line);white-space:nowrap;
+    background:#F6F9FD;text-align:left;font-size:12px;font-weight:800;color:#475569;
+    letter-spacing:.03em;padding:10px 9px;border-bottom:1px solid var(--line);white-space:nowrap;
   }
   table.ledger th[data-sort]{cursor:pointer;user-select:none}
   table.ledger th[data-sort]:hover{background:#EFF4FA;color:var(--slate-700)}
@@ -329,7 +342,7 @@
   table.ledger th.sorted{color:var(--blue-700)}
   table.ledger th.sorted .arrow{opacity:1}
   table.ledger td{
-    padding:9px 11px;border-bottom:1px solid #F0F4F9;vertical-align:middle;
+    padding:9px 10px;border-bottom:1px solid #F0F4F9;vertical-align:middle;
     color:var(--slate-700);max-width:220px;
   }
   table.ledger tbody tr:hover td{background:#F7FAFF}
@@ -337,17 +350,19 @@
   table.ledger tbody tr.due-row td{background:#FFFDF6}
   table.ledger tbody tr.due-row:hover td{background:#FFFAEC}
   td.nowrap{white-space:nowrap}
+  /* 담당자 칸은 이름이 잘리지 않게 최소 폭을 준다 */
+  table.ledger td[data-label="담당자"]{min-width:62px}
   /* 긴 글 칸은 말줄임으로 폭을 묶어, 넓은 화면에서 18열이 한 번에 보이게 */
   table.ledger td[data-label="기종"],table.ledger td[data-label="요금제"],
-  table.ledger td[data-label="변경요금제"],table.ledger td[data-label="부가서비스"]{max-width:150px}
-  table.ledger td[data-label="메모"]{max-width:180px}
+  table.ledger td[data-label="변경요금제"],table.ledger td[data-label="부가서비스"]{max-width:118px}
+  table.ledger td[data-label="메모"]{max-width:128px}
   td .ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .c-name{font-weight:800;color:var(--ink);letter-spacing:-.01em}
-  .c-date{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
-  .muted{color:var(--slate-400)}
+  .c-date{font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:700;color:var(--ink)}
+  .muted{color:#9AA6B8}
   .money{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink);letter-spacing:-.01em}
   th.money{text-align:right}
-  .actions-col{width:78px;text-align:right}
+  .actions-col{width:62px;text-align:right}
   td.actions{text-align:right;white-space:nowrap;padding-right:10px}
   /* 관리(수정·삭제) 열은 오른쪽에 고정 — 가로로 넓은 장부에서도 항상 보이게 */
   table.ledger th.actions-col{position:sticky;right:0;z-index:3;background:#F6F9FD;
@@ -369,8 +384,10 @@
   .icon-btn.del:hover{background:var(--red-bg);color:var(--red)}
   .icon-btn svg{width:15px;height:15px}
   .badge{
-    display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;
+    display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap;
   }
+  /* 단말 보험 가입 — 목록·카드에서 바로 눈에 띄는 초록 배지 */
+  .badge.ins-on{background:var(--green-bg);color:#0B5F45;border:1px solid #BFE3D3}
   .empty{padding:54px 24px;text-align:center}
   .empty[hidden]{display:none}
   .empty h3{font-size:16px;font-weight:800;margin-bottom:6px}
@@ -513,6 +530,18 @@
   .switch-row{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:var(--slate-700);padding:2px 0}
   .switch-row input{width:17px;height:17px;accent-color:var(--blue-600)}
   @media (pointer:coarse){.staff-chip{height:36px}}
+
+  /* ---------- 단말 보험 (미가입 / 가입 두 칸) ---------- */
+  .ins-chips{display:flex;gap:7px;flex-wrap:wrap}
+  .ins-chip{
+    height:34px;padding:0 16px;border-radius:9px;border:1px solid var(--line-strong);
+    background:#fff;font-size:13px;font-weight:700;color:var(--slate-600);
+  }
+  .ins-chip:hover{background:#F4F7FB}
+  .ins-chip.on{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700);font-weight:800}
+  .ins-chip.on::before{content:"✓ ";font-weight:900}
+  .ins-chip.on[data-ins="가입"]{background:var(--green-bg);border-color:#7FCBAE;color:#0B5F45}
+  @media (pointer:coarse){.ins-chip{height:40px;padding:0 19px;font-size:13.5px}}
 
   /* ---------- 관리자/직원 모드 ---------- */
   body.role-staff .admin-only{display:none !important}
@@ -706,9 +735,9 @@
   tr.group-row .g-count{margin-left:8px;color:var(--slate-500);font-weight:700;font-size:11.5px}
   tr.group-row .g-dow{color:var(--slate-500);font-weight:700}
 
-  .view-compact table.ledger{font-size:12.5px}
-  .view-compact table.ledger th{padding:8px 8px;font-size:11px}
-  .view-compact table.ledger td{padding:6px 8px}
+  .view-compact table.ledger{font-size:13px}
+  .view-compact table.ledger th{padding:8px 7px;font-size:11.5px}
+  .view-compact table.ledger td{padding:7px 7px}
   .view-wide table.ledger{font-size:14px}
   .view-wide table.ledger th{padding:13px 14px;font-size:12.5px}
   .view-wide table.ledger td{padding:13px 14px}
@@ -718,23 +747,25 @@
   .mlist{display:none}
   .mgroup-head{display:flex;align-items:center;gap:8px;padding:14px 16px 7px;font-size:12px;font-weight:800;color:var(--blue-800)}
   .mgroup-head .g-count{margin-left:auto;color:var(--slate-500);font-weight:700}
-  .mcard{border:1px solid var(--line);border-radius:14px;margin:0 12px 8px;background:#fff;overflow:hidden}
+  .mcard{border:1px solid var(--line);border-radius:14px;margin:0 12px 10px;background:#fff;overflow:hidden;
+    box-shadow:0 1px 2px rgba(15,23,42,.05)}
   .mcard.due{border-color:#F0E2BE;background:#FFFDF6}
   .mcard.open{border-color:#BBD7FB;box-shadow:0 10px 24px -20px rgba(11,87,208,.9)}
-  .mcard-main{padding:10px 13px;cursor:pointer}
+  .mcard-main{padding:12px 14px;cursor:pointer}
   .m-line1{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
-  .m-name{font-size:15px;font-weight:800;letter-spacing:-.01em;color:var(--ink)}
+  .m-name{font-size:16.5px;font-weight:800;letter-spacing:-.01em;color:#0B1220}
   .m-caret{margin-left:auto;color:var(--slate-400);font-size:11px;transition:transform .15s}
   .mcard.open .m-caret{transform:rotate(180deg)}
-  .m-line2{display:flex;align-items:center;gap:8px;margin-top:3px;font-size:12.5px;color:var(--slate-500);min-width:0}
-  .m-model{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-  .m-money{margin-left:auto;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .m-staff{flex:none;color:var(--slate-600);font-weight:700;background:#F1F5F9;border-radius:999px;padding:1px 8px;font-size:11.5px}
-  .mcard-detail{display:none;border-top:1px solid var(--line);padding:9px 13px 11px;background:#FCFDFF}
+  .m-line2{display:flex;align-items:center;gap:7px;margin-top:5px;font-size:13px;color:#475569;min-width:0}
+  .m-model{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;font-weight:600;color:#334155}
+  .m-money{margin-left:auto;font-weight:800;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .m-staff{flex:none;color:#475569;font-weight:700;background:#EEF3F9;border-radius:999px;padding:1px 8px;font-size:12px}
+  .m-ins{flex:none;color:#0B5F45;font-weight:800;background:var(--green-bg);border:1px solid #BFE3D3;border-radius:999px;padding:1px 8px;font-size:12px;white-space:nowrap}
+  .mcard-detail{display:none;border-top:1px solid var(--line);padding:10px 14px 12px;background:#FCFDFF}
   .mcard.open .mcard-detail{display:block}
-  .m-row{display:flex;gap:10px;padding:3px 0;font-size:12.5px;line-height:1.45}
-  .m-k{flex:none;width:92px;color:var(--slate-400);font-weight:700}
-  .m-v{flex:1;min-width:0;color:var(--slate-700);word-break:break-word}
+  .m-row{display:flex;gap:10px;padding:4px 0;font-size:13px;line-height:1.5}
+  .m-k{flex:none;width:96px;color:#64748B;font-weight:700}
+  .m-v{flex:1;min-width:0;color:#1E293B;font-weight:600;word-break:break-word}
   .m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
   .m-actions .icon-btn{width:34px;height:34px;background:#F3F7FC;border-color:var(--line);color:var(--slate-500)}
   .m-actions .icon-btn.del{color:#C6554A}
@@ -746,6 +777,11 @@
     table.ledger tr.group-row td{display:block;background:transparent;padding:15px 16px 6px !important;font-size:12px}
     table.ledger tr.group-row td::before{content:"";display:none}
     table.ledger tr.group-row .g-count{float:none;margin-left:8px}
+  }
+
+  @media (max-width:560px){
+    /* 폰에서는 상단 뱃지를 숨겨 상호가 잘리지 않게 (연결 상태는 아래 안내줄에 그대로) */
+    .topbar .sync-pill,.topbar .role-badge{display:none}
   }
 
   /* ---------- toast ---------- */
@@ -784,7 +820,7 @@
       display:flex;align-items:flex-start;gap:12px;padding:5px 0;border:0;max-width:none;
     }
     table.ledger td::before{
-      content:attr(data-label);flex:none;width:92px;font-size:12px;font-weight:700;color:var(--slate-400);
+      content:attr(data-label);flex:none;width:96px;font-size:12.5px;font-weight:700;color:#64748B;
       padding-top:1px;
     }
     table.ledger td.actions{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;justify-content:flex-end}
@@ -914,9 +950,9 @@
     .summary{grid-template-columns:1fr}
     .sum-month{border-right:0;border-bottom:1px solid var(--line);justify-content:space-between;padding:5px 11px;gap:5px}
     .sum-cell{padding:7px 11px}
-    .sum-label{font-size:10.5px;gap:4px}
+    .sum-label{font-size:11.5px;gap:4px}
     .sum-label .tag{display:none}
-    .sum-value b{font-size:18px}
+    .sum-value b{font-size:20px}
     .sum-value i{font-size:11px}
     .sum-sub{font-size:10px}
     .sum-chips{flex-wrap:nowrap;padding:6px 11px}
@@ -925,7 +961,7 @@
     .duebar-main{flex:1 1 calc(100% - 42px);min-width:0}
     .duebar-title{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
     .duebar-title .tag{display:none}
-    .duebar-sub{font-size:11px}
+    .duebar-sub{font-size:12px;color:#475569}
     .due-acts{width:100%;justify-content:flex-end;gap:5px;margin-left:0}
     .dstat{height:28px;padding:0 9px;font-size:11px;gap:4px}
     .dstat b{font-size:13px}
@@ -933,13 +969,14 @@
     .due-head{display:none}
     .due-panel{max-height:60vh}
     .duerow{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;
-      grid-template-areas:"k n n d" "w w dd s";gap:3px 8px;padding:9px 11px;font-size:12px}
+      grid-template-areas:"k n n d" "w w dd s" ". . . b";gap:3px 8px;padding:9px 11px;font-size:12.5px}
     .duerow .dk{grid-area:k}
-    .duerow .dn{grid-area:n}
+    .duerow .dn{grid-area:n;font-size:13.5px}
     .duerow .dds{grid-area:d;justify-self:end}
-    .duerow .dw{grid-area:w;font-size:11.5px}
-    .duerow .dd2{grid-area:dd;font-size:11px;justify-self:end}
-    .duerow .ds{grid-area:s;justify-self:end;font-size:11px}
+    .duerow .dw{grid-area:w;font-size:12px}
+    .duerow .dd2{grid-area:dd;font-size:11.5px;justify-self:end}
+    .duerow .ds{grid-area:s;justify-self:end;font-size:11.5px}
+    .duerow .db{grid-area:b;justify-self:end;margin-top:2px}
     .toolbar{gap:7px;padding:8px 10px}
     .result-count{order:9}
     section{margin-bottom:12px}
@@ -1090,7 +1127,7 @@
     </div>
     <div class="due-panel" id="duePanel" hidden>
       <div class="due-head" aria-hidden="true">
-        <span>구분</span><span>고객명</span><span>항목</span><span>날짜</span><span>D-Day</span><span>담당자</span>
+        <span>구분</span><span>고객명</span><span>항목</span><span>날짜</span><span>D-Day</span><span>담당자</span><span></span>
       </div>
       <div id="dueList"></div>
     </div>
@@ -1125,6 +1162,7 @@
             <th>생년월일</th>
             <th>개통유형</th>
             <th>기종</th>
+            <th>단말보험</th>
             <th>요금제</th>
             <th>변경요금제</th>
             <th>요금제변경일자</th>
@@ -1220,6 +1258,16 @@
           <span class="hint">단말기를 누르면 바로 들어갑니다. 다시 누르면 빠지고, 인터넷·TV 상품은 직접 입력해도 됩니다.</span>
         </div>
 
+        <div class="field span2 ins-field">
+          <label id="f_insLabel">단말 보험 <span class="opt">선택 · 기본 미가입</span></label>
+          <input id="f_ins" type="hidden" value="미가입">
+          <div class="ins-chips" id="insChips" role="group" aria-labelledby="f_insLabel">
+            <button type="button" class="ins-chip on" data-ins="미가입" aria-pressed="true">미가입</button>
+            <button type="button" class="ins-chip" data-ins="가입" aria-pressed="false">가입</button>
+          </div>
+          <span class="hint">단말 보험(폰케어 등)에 가입했으면 '가입'을 누르세요. 시트·엑셀에도 함께 저장됩니다.</span>
+        </div>
+
         <!-- 바꿀 때만 쓰는 영역 — 요금제 변경 -->
         <div class="form-box" id="planBox">
           <div class="form-box-head">
@@ -1248,7 +1296,7 @@
               <input id="f_newdate" type="date">
               <span class="expect-badge" id="planExpect" hidden></span>
             </div>
-            <span class="hint">4·6개월 = 개통일 기준 자동 계산 · 7일 이내면 알림</span>
+            <span class="hint">4개월 = 개통일 +124일 · 6개월 = 개통일 +184일 · 7일 이내면 알림</span>
           </div>
         </div>
 
@@ -1276,7 +1324,7 @@
               <input id="f_addondate" type="date">
               <span class="expect-badge" id="addonExpect" hidden></span>
             </div>
-            <span class="hint">유지기간을 누르면 개통일 기준으로 해지일자가 자동 계산됩니다</span>
+            <span class="hint">유지기간을 누르면 개통일 기준으로 해지일자가 자동 계산됩니다 (4개월 +124일 · 6개월 +184일)</span>
           </div>
         </div>
 
@@ -1513,6 +1561,8 @@
      컬럼(순서 고정): 개통일 고객명 연락처 생년월일 개통유형 기종 요금제
                       변경요금제 요금제변경일자 부가서비스 … 중고폰금액
                       무선리베이트 유선리베이트 메모
+     단말보험(미가입/가입) · 요금제변경완료 · 부가서비스해지완료는 앱 전용 항목.
+     구글 시트(Code.gs 20컴럼)에는 메모 앞의 [단말보험]/[요금완료]/[부가완료] 표기로만 나간다.
      ========================================================= */
 
   var STORAGE_KEY = 'kt_chilgeum_activations_v1';
@@ -1541,9 +1591,10 @@
   // (신모델 출시 시 추가, 2년 지난 구형·KT 요금제 변동은 이 목록만 고친다)
   var KT_DEVICES = [
     '갤럭시 S26', '갤럭시 S26+', '갤럭시 S26 울트라', '갤럭시 S26 FE',
-    '갤럭시 Z 폴드8', '갤럭시 Z 플립8',
-    '갤럭시 점프5', '갤럭시 A37', '갤럭시 A18 LTE', '갤럭시 A17', '시나모롤 키즈폰', '클래식 폴더',
-    '아이폰 18', '아이폰 18 에어', '아이폰 18 프로', '아이폰 18 프로 맥스',
+    '갤럭시 Z 폴드8', '갤럭시 Z 폴드8 울트라', '갤럭시 Z 플립8',
+    '갤럭시 점프5', '갤럭시 A37', '갤럭시 A18 LTE', '갤럭시 A17',
+    '폼폼푸린 키즈폰', '시나모롤 키즈폰', '클래식 폴더',
+    '아이폰 18 프로', '아이폰 18 프로 맥스', '아이폰 듀오',
     '아이폰 17', '아이폰 17 에어', '아이폰 17 프로', '아이폰 17 프로 맥스'
   ];
 
@@ -1553,9 +1604,21 @@
   var BLOCK_KEY = 'kt_chilgeum_blocked_v1';
 
   // 엑셀/CSV 헤더 순서 — 리베이트는 무선/유선 두 칸으로 나뉜다
-  var HEADERS = ['개통일','고객명','연락처','생년월일','개통유형','기종','요금제','변경요금제','요금제변경일자','부가서비스','부가서비스유지','부가서비스해지일자','중고폰','중고폰금액','무선리베이트','유선리베이트','메모'];
+  var HEADERS = ['개통일','고객명','연락처','생년월일','개통유형','기종','단말보험','요금제','변경요금제','요금제변경일자','부가서비스','부가서비스유지','부가서비스해지일자','중고폰','중고폰금액','무선리베이트','유선리베이트','메모'];
   // 금액(숫자)으로 다루는 컬럼
   var MONEY_COLS = ['중고폰금액', '무선리베이트', '유선리베이트'];
+
+  /* 단말 보험 가입 여부 — 앱 전용 항목(미가입 / 가입)
+     · 기존 구글 시트(20컴럼, Code.gs)를 고치지 않고도 직원끼리 공유되도록,
+       시트로 보낼 때는 메모 칸 끝에 '[단말보험]' 표기를 붙이고,
+       받을 때는 그 표기를 떼어 단말보험 값으로 복원한다. */
+  var INS_VALUES = ['미가입', '가입'];
+  var INS_MARK = '[단말보험]';
+  /* 요금제 변경 · 부가서비스 해지 '완료 확인' — 같은 방식(시트 메모 표기)으로 공유한다
+     · 앱 안: 요금제변경완료 / 부가서비스해지완료 = '완료' | ''
+     · 시트 : 메모 칸 앞에 [요금완료] / [부가완료] */
+  var PLAN_DONE_MARK = '[요금완료]';
+  var ADDON_DONE_MARK = '[부가완료]';
 
   // 개통유형 — 무선 3개 / 유선(인터넷·TV) 3개
   var WIRELESS_TYPES = ['기기변경','번호이동','신규가입'];
@@ -1642,7 +1705,7 @@
   for (var pi0 = 0; pi0 < KT_PLANS.length; pi0++) PLAN_BY_ID[KT_PLANS[pi0].id] = KT_PLANS[pi0];
 
   // 엑셀 컬럼 너비
-  var COL_W = {'개통일':12,'고객명':14,'연락처':16,'생년월일':14,'개통유형':18,'기종':20,'요금제':22,'변경요금제':22,'요금제변경일자':16,'부가서비스':22,'부가서비스유지':14,'부가서비스해지일자':16,'중고폰':20,'중고폰금액':13,'무선리베이트':14,'유선리베이트':14,'메모':34};
+  var COL_W = {'개통일':12,'고객명':14,'연락처':16,'생년월일':14,'개통유형':18,'기종':20,'단말보험':12,'요금제':22,'변경요금제':22,'요금제변경일자':16,'부가서비스':22,'부가서비스유지':14,'부가서비스해지일자':16,'중고폰':20,'중고폰금액':13,'무선리베이트':14,'유선리베이트':14,'메모':34};
 
   // 가져오기 헤더 별칭 (정규화된 문자열 기준)
   var ALIASES = {
@@ -1652,6 +1715,7 @@
     '생년월일': ['생년월일','생일','출생일','생년월일6자리','생년월일8자리'],
     '개통유형': ['개통유형','개통구분','유형','구분','개통종류'],
     '기종': ['기종','단말기','단말기명','모델','모델명','기기'],
+    '단말보험': ['단말보험','보험','단말보험가입','보험가입','보험가입여부','단말보험여부'],
     '요금제': ['요금제','현재요금제','요금상품'],
     '변경요금제': ['변경요금제','변경요금','변경상품'],
     '요금제변경일자': ['요금제변경일자','변경일자','요금제변경일','변경예정일','요금제변경'],
@@ -1849,6 +1913,65 @@
     return /인터넷|TV|티비|iptv/i.test(s);
   }
 
+  /* ---------------- 단말 보험 (미가입 / 가입) ----------------
+     · 앱 안에서는 '단말보험' 항목으로 다니고,
+     · 기존 구글 시트(20컴럼)에는 메모 칸의 '[단말보험]' 표기로만 실려 나간다.
+     · 화면(메모 입력난)에는 표기가 보이지 않게 떼어 낸다. */
+  function normalizeIns(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '');
+    if (!s) return '미가입';
+    if (/^(가입|가입함|y|yes|o|true|1|보험가입)$/i.test(s)) return '가입';
+    if (/미가입|미가|없음|no|n|x|false|0/i.test(s)) return '미가입';
+    return /가입/.test(s) ? '가입' : '미가입';
+  }
+
+  // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료])를 모두 떼어 내고 상태를 돌려준다
+  function splitMemoTags(memo) {
+    var s = String(memo == null ? '' : memo);
+    var out = { memo: s, ins: false, planDone: false, addonDone: false };
+    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone']];
+    var hit = false;
+    for (var i = 0; i < tags.length; i++) {
+      if (s.indexOf(tags[i][0]) < 0) continue;
+      hit = true;
+      out[tags[i][1]] = true;
+      s = s.split(tags[i][0]).join(' ');
+    }
+    // 표기가 있을 때만 공백을 정리한다 (평범한 메모는 그대로 둔다)
+    out.memo = hit ? s.replace(/\s{2,}/g, ' ').trim() : s;
+    return out;
+  }
+
+  function normalizeDone(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '').toLowerCase();
+    if (!s) return '';
+    return /^(완료|완료됨|done|y|yes|o|true|1)$/.test(s) ? '완료' : '';
+  }
+
+  // 요금제 변경 · 부가서비스 해지는 완전히 따로 — 완료 표시된 항목은 임박 알림·강조에서 빠진다
+  function planPending(r) {
+    if (normalizeDone(r.요금제변경완료) === '완료') return null;
+    return daysFromToday(r.요금제변경일자);
+  }
+  function addonPending(r) {
+    if (normalizeDone(r.부가서비스해지완료) === '완료') return null;
+    return daysFromToday(r.부가서비스해지일자);
+  }
+  function doneOf(r, kind) {
+    return normalizeDone(kind === 'plan' ? r.요금제변경완료 : r.부가서비스해지완료) === '완료';
+  }
+
+  // 시트 메모 칸에 쓸 값 — 상태 표기를 앞에 모아 붙이고 본문 메모는 뒤에 (중복 표기 방지)
+  function sheetMemo(rec) {
+    var m = splitMemoTags(rec.메모).memo;
+    var head = [];
+    if (normalizeIns(rec.단말보험) === '가입') head.push(INS_MARK);
+    if (normalizeDone(rec.요금제변경완료) === '완료') head.push(PLAN_DONE_MARK);
+    if (normalizeDone(rec.부가서비스해지완료) === '완료') head.push(ADDON_DONE_MARK);
+    if (!head.length) return m;
+    return head.join(' ') + (m ? ' ' + m : '');
+  }
+
   function normalizeRecord(r) {
     var o = { id: (r && r.id) || uid(), createdAt: (r && r.createdAt) || Date.now() };
     // 예전 장부의 단일 '리베이트' 값 (있으면 무선/유선으로 나눠 담는다)
@@ -1862,6 +1985,12 @@
     o.요금제변경일자 = normalizeDate(o.요금제변경일자);
     o.부가서비스해지일자 = normalizeDate(o.부가서비스해지일자);
     o.연락처 = formatPhone(o.연락처);
+    // 단말 보험 · 요금제 변경/부가서비스 해지 완료 — 시트 메모 표기를 떼어 내고 상태로 복원
+    var tags = splitMemoTags(o.메모);
+    o.메모 = tags.memo;
+    o.단말보험 = tags.ins ? '가입' : normalizeIns(o.단말보험);
+    o.요금제변경완료 = tags.planDone ? '완료' : normalizeDone(r && r.요금제변경완료);
+    o.부가서비스해지완료 = tags.addonDone ? '완료' : normalizeDone(r && r.부가서비스해지완료);
     o.중고폰금액 = parseNumber(o.중고폰금액);
     o.무선리베이트 = parseNumber(o.무선리베이트);
     o.유선리베이트 = parseNumber(o.유선리베이트);
@@ -2147,13 +2276,24 @@
       });
   }
 
+  // 시트로 보낼 레코드 — 단말보험은 메모 표기로 옮겨 담는다 (Code.gs 20컴럼 그대로 씀)
+  function sheetRecord(rec) {
+    var out = {}, k;
+    for (k in rec) if (rec.hasOwnProperty(k)) out[k] = rec[k];
+    out.메모 = sheetMemo(rec);
+    delete out.단말보험;
+    delete out.요금제변경완료;
+    delete out.부가서비스해지완료;
+    return out;
+  }
+
   function pushItem(item) {
     var info = deviceInfo();
     var payload = {
       pin: sync.pin,
       action: item.op,
       id: item.id || (item.rec && item.rec.id) || '',
-      record: item.rec || null,
+      record: item.rec ? sheetRecord(item.rec) : null,
       deviceId: info.deviceId,
       device: info.device,
       name: (item.rec && item.rec.담당자) || info.name,
@@ -2196,6 +2336,9 @@
     for (var i = 0; i < HEADERS.length; i++) snap[HEADERS[i]] = rec[HEADERS[i]];
     snap.담당자 = rec.담당자 || '';
     snap.수정일시 = rec.수정일시 || new Date().toISOString();
+    snap.단말보험 = normalizeIns(rec.단말보험);
+    snap.요금제변경완료 = normalizeDone(rec.요금제변경완료);
+    snap.부가서비스해지완료 = normalizeDone(rec.부가서비스해지완료);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
 
@@ -2418,6 +2561,23 @@
     var chips = box.querySelectorAll('button[data-model]');
     for (var i = 0; i < chips.length; i++) {
       chips[i].classList.toggle('on', parts.indexOf(chips[i].getAttribute('data-model')) >= 0);
+    }
+  }
+
+  /* ---------------- 단말 보험 칩 (미가입 · 가입) ----------------
+     · 두 칸 중 하나만 선택된다 (기본 미가입)
+     · 값은 hidden #f_ins 에 담겨 저장된다 */
+  function setInsChips(v) {
+    var val = normalizeIns(v);
+    var input = $('f_ins');
+    if (input) input.value = val;
+    var box = $('insChips');
+    if (!box) return;
+    var chips = box.querySelectorAll('button[data-ins]');
+    for (var i = 0; i < chips.length; i++) {
+      var on = chips[i].getAttribute('data-ins') === val;
+      chips[i].classList.toggle('on', on);
+      chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
     }
   }
 
@@ -3060,8 +3220,8 @@
       if (f.staff && (r.담당자 || '') !== f.staff) return false;
       if (f.due) {
         var ds = [];
-        var dp = daysFromToday(r.요금제변경일자);
-        var da = daysFromToday(r.부가서비스해지일자);
+        var dp = planPending(r);
+        var da = addonPending(r);
         if (dp !== null) ds.push(dp);
         if (da !== null) ds.push(da);
         if (!ds.length) return false;
@@ -3075,6 +3235,7 @@
       }
       if (q) {
         var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.부가서비스, r.중고폰, r.메모, r.개통유형, r.담당자].join(' ').toLowerCase();
+        if (normalizeIns(r.단말보험) === '가입') hay += ' 단말보험 보험가입 가입';
         if (hay.indexOf(q) < 0) return false;
       }
       return true;
@@ -3189,7 +3350,7 @@
     var soon = 0, late = 0, upcoming = [];
     for (i = 0; i < state.records.length; i++) {
       var rr = state.records[i];
-      var dPlan = daysFromToday(rr.요금제변경일자);
+      var dPlan = planPending(rr);
       if (dPlan !== null) {
         if (dPlan < 0) late++; else if (dPlan <= 7) soon++;
         if (dPlan <= 7) upcoming.push({
@@ -3197,7 +3358,7 @@
           what: rr.변경요금제 || '요금제 변경', date: rr.요금제변경일자
         });
       }
-      var dAdd = daysFromToday(rr.부가서비스해지일자);
+      var dAdd = addonPending(rr);
       if (dAdd !== null) {
         if (dAdd < 0) late++; else if (dAdd <= 7) soon++;
         if (dAdd <= 7) upcoming.push({
@@ -3242,14 +3403,18 @@
     for (var i = 0; i < upcoming.length; i++) {
       var u = upcoming[i];
       var ddCls = u.d < 0 ? 'dd-late' : (u.d === 0 ? 'dd-today' : 'dd-soon');
-      html += '<button type="button" class="duerow" data-due-item="1">' +
-        '<span class="dk ' + (u.kind === '요금제' ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
+      var isPlan = u.kind === '요금제';
+      html += '<div class="duerow" data-due-item="1" role="button" tabindex="0">' +
+        '<span class="dk ' + (isPlan ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
         '<span class="dn">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
         '<span class="dw">' + esc(u.what) + '</span>' +
         '<span class="dd2">' + esc(String(u.date)) + '</span>' +
         '<span class="dds"><span class="dd ' + ddCls + '">' + ddLabel(u.d) + '</span></span>' +
         '<span class="ds">' + (u.r.담당자 ? esc(u.r.담당자) : '—') + '</span>' +
-        '</button>';
+        '<span class="db"><button type="button" class="mini-done" data-act="done" data-kind="' + (isPlan ? 'plan' : 'addon') +
+          '" data-id="' + esc(u.r.id) + '" title="누르면 알림에서 빠지고 모든 직원 기기에 표시됩니다">' +
+          (isPlan ? '변경 완료' : '해지 완료') + '</button></span>' +
+        '</div>';
     }
     el.dueList.innerHTML = html;
   }
@@ -3264,9 +3429,26 @@
     return '<span class="c-date">' + esc(val) + '</span>' + badge;
   }
 
-  function changeDateCell(r) {
-    return dueCell(r.요금제변경일자 || '');
+  // 목록 표의 변경일자·해지일자 칸 — 둘은 완전히 별개 (각자의 날짜·완료 버튼·배지)
+  function dueStatusHtml(r, kind) {
+    var isPlan = kind === 'plan';
+    var val = isPlan ? r.요금제변경일자 : r.부가서비스해지일자;
+    var label = isPlan ? '변경 완료' : '해지 완료';
+    if (!val) return '<span class="muted">—</span>';
+    var btn = '<button type="button" class="mini-done" data-act="done" data-kind="' + kind + '" data-id="' + esc(r.id) + '">' + label + '</button>';
+    if (doneOf(r, kind)) {
+      return '<span class="due-stack"><span class="due-top">' + esc(val) + '</span>' +
+        '<button type="button" class="dd dd-done" data-act="done" data-kind="' + kind + '" data-id="' + esc(r.id) + '" title="완료 표시를 되돌립니다">' + label + '</button></span>';
+    }
+    var d = daysFromToday(val);
+    var due = (d !== null && d <= 7)
+      ? '<span class="due-top">' + dueCell(val) + '</span>' + btn
+      : dueCell(val);
+    return '<span class="due-stack">' + due + '</span>';
   }
+
+  function changeDateCell(r) { return dueStatusHtml(r, 'plan'); }
+  function addonDateCell(r) { return dueStatusHtml(r, 'addon'); }
 
   function ddLabel(d) {
     return d < 0 ? (Math.abs(d) + '일 지남') : (d === 0 ? 'D-DAY' : 'D-' + d);
@@ -3284,13 +3466,34 @@
     var label = key
       ? esc(key) + (weekdayKo(key) ? ' <span class="g-dow">(' + weekdayKo(key) + ')</span>' : '')
       : '날짜 없음';
-    return '<tr class="group-row"><td colspan="18"><span class="g-date">' + label +
+    return '<tr class="group-row"><td colspan="19"><span class="g-date">' + label +
       '</span><span class="g-count">' + count + '건</span></td></tr>';
   }
 
   function mRow(label, val) {
     return '<div class="m-row"><span class="m-k">' + label + '</span><span class="m-v">' +
       (val ? val : '<span class="muted">—</span>') + '</span></div>';
+  }
+
+  // 모바일 카드 상세 — 요금제 변경 / 부가서비스 해지를 각각 따로 (날짜·D-Day·완료 버튼)
+  function mDueRow(label, kind, r) {
+    var isPlan = kind === 'plan';
+    var val = isPlan ? r.요금제변경일자 : r.부가서비스해지일자;
+    if (!val) return '';
+    var done = doneOf(r, kind);
+    var d = daysFromToday(val);
+    var body = '<span class="m-due-date">' + esc(val) + '</span>';
+    if (done) {
+      body += ' <button type="button" class="dd dd-done" data-act="done" data-kind="' + kind + '" data-id="' + esc(r.id) + '">' +
+        (isPlan ? '변경 완료' : '해지 완료') + '</button>';
+    } else {
+      if (d !== null && d <= 7) {
+        body += ' <span class="dd ' + (d < 0 ? 'dd-late' : d === 0 ? 'dd-today' : 'dd-soon') + '">' + ddLabel(d) + '</span>' +
+          ' <button type="button" class="mini-done" data-act="done" data-kind="' + kind + '" data-id="' + esc(r.id) + '">' +
+          (isPlan ? '변경 완료' : '해지 완료') + '</button>';
+      }
+    }
+    return '<div class="m-row"><span class="m-k">' + label + '</span><span class="m-v">' + body + '</span></div>';
   }
 
   function rowActionButtons(r) {
@@ -3310,10 +3513,17 @@
     return fmtNum(w) + '원';
   }
 
+  // 단말 보험 — 가입이면 초록 배지, 미가입이면 '-'
+  function insBadgeHtml(v) {
+    return normalizeIns(v) === '가입'
+      ? '<span class="badge ins-on">보험가입</span>'
+      : '<span class="muted">—</span>';
+  }
+
   // 모바일 '간단히 보기' 카드 : 두 줄 요약 + 탭하면 상세
   function mcardHtml(r) {
-    var d = daysFromToday(r.요금제변경일자);
-    var ad = daysFromToday(r.부가서비스해지일자);
+    var d = planPending(r);
+    var ad = addonPending(r);
     var ddBadge = '';
     if (d !== null && d < 0) ddBadge = '<span class="dd dd-late">요금제 ' + Math.abs(d) + '일 지남</span>';
     else if (d === 0) ddBadge = '<span class="dd dd-today">요금제 D-DAY</span>';
@@ -3331,6 +3541,7 @@
         '</div>' +
         '<div class="m-line2">' +
           '<span class="m-model">' + (r.기종 ? esc(r.기종) : '<span class="muted">기종 없음</span>') + '</span>' +
+          (normalizeIns(r.단말보험) === '가입' ? '<span class="m-ins">단말보험 가입</span>' : '') +
           '<span class="m-money">' + rebateText(r) + '</span>' +
           (r.담당자 ? '<span class="m-staff">' + esc(r.담당자) + '</span>' : '') +
         '</div>' +
@@ -3340,11 +3551,12 @@
         mRow('생년월일', r.생년월일 ? esc(r.생년월일) : '') +
         mRow('요금제', r.요금제 ? esc(r.요금제) : '') +
         mRow('변경요금제', r.변경요금제 ? esc(r.변경요금제) : '') +
-        mRow('변경일자', r.요금제변경일자 ? changeDateCell(r) : '') +
+        mDueRow('요금제 변경일', 'plan', r) +
         mRow('부가서비스', r.부가서비스 ? esc(r.부가서비스) : '') +
         mRow('부가서비스유지', r.부가서비스유지 ? esc(r.부가서비스유지) : '') +
-        mRow('부가서비스해지', r.부가서비스해지일자 ? dueCell(r.부가서비스해지일자) : '') +
-        mRow('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
+        mDueRow('부가서비스 해지', 'addon', r) +
+        mRow('단말보험', normalizeIns(r.단말보험) === '가입' ? '<span class="badge ins-on">보험가입</span>' : '')
+        + mRow('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
         mRow('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
         mRow('무선 리베이트', r.무선리베이트 ? fmtNum(r.무선리베이트) + '원' : '') +
         mRow('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') +
@@ -3429,8 +3641,8 @@
     var lastGroup = null;
     for (i = 0; i < rows.length; i++) {
       var r = rows[i];
-      var d = daysFromToday(r.요금제변경일자);
-      var ad0 = daysFromToday(r.부가서비스해지일자);
+      var d = planPending(r);
+      var ad0 = addonPending(r);
       var rowCls = ((d !== null && d <= 7) || (ad0 !== null && ad0 <= 7)) ? ' class="due-row"' : '';
 
       if (groupByDate) {
@@ -3451,11 +3663,12 @@
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
         '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="단말보험" class="ins-cell">' + insBadgeHtml(r.단말보험) + '</td>' +
         '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="변경요금제"><span class="ellip" title="' + esc(r.변경요금제) + '">' + (r.변경요금제 ? esc(r.변경요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="요금제변경일자" class="nowrap">' + changeDateCell(r) + '</td>' +
         '<td data-label="부가서비스"><span class="ellip" title="' + esc(r.부가서비스) + '">' + (r.부가서비스 ? esc(r.부가서비스) : '<span class="muted">—</span>') + (r.부가서비스유지 ? ' <span class="tag-period">' + esc(r.부가서비스유지) + '</span>' : '') + '</span></td>' +
-        '<td data-label="부가서비스해지일자" class="nowrap">' + dueCell(r.부가서비스해지일자) + '</td>' +
+        '<td data-label="부가서비스해지일자" class="nowrap">' + addonDateCell(r) + '</td>' +
         '<td data-label="중고폰"><span class="ellip" title="' + esc(r.중고폰) + '">' + (r.중고폰 ? esc(r.중고폰) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="중고폰금액" class="money">' + (r.중고폰금액 ? fmtNum(r.중고폰금액) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="무선 리베이트" class="money">' + (r.무선리베이트 ? fmtNum(r.무선리베이트) : '<span class="muted">—</span>') + '</td>' +
@@ -3651,6 +3864,48 @@
       : (compact ? '눌러서 넓게 보기' : '눌러서 한눈에 보기');
   }
 
+  /* ---------------- 해지 완료 / 변경 완료 확인 ----------------
+     · 요금제 변경과 부가서비스 해지는 서로 따로 — 각자 버튼으로 완료/되돌리기
+     · 완료 상태도 시트 메모 표기([요금완료]/[부가완료])로 모든 기기에 공유된다 */
+  function findRecordById(id) {
+    for (var i = 0; i < state.records.length; i++) {
+      if (state.records[i].id === id) return state.records[i];
+    }
+    return null;
+  }
+
+  function handleDoneClick(btn, rec) {
+    rec = rec || findRecordById(btn.getAttribute('data-id'));
+    if (!rec) return;
+    var kind = btn.getAttribute('data-kind') || 'plan';
+    var isPlan = kind === 'plan';
+    var label = isPlan ? '요금제 변경' : '부가서비스 해지';
+    var done = doneOf(rec, kind);
+    askConfirm(
+      done ? label + ' 완료 되돌리기' : label + ' 완료 확인',
+      done
+        ? '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' + label + ' 완료 표시를 되돌릴까요?<br>다시 임박 알림에 나타납니다.'
+        : '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' + label + '을(를) 완료로 표시할까요?<br>' +
+          '임박 알림에서 빠지고, 다른 직원 기기·구글 시트에도 함께 표시됩니다.',
+      done ? '되돌리기' : '완료 표시'
+    ).then(function (ok) { if (ok) applyDone(rec.id, kind, !done); });
+  }
+
+  function applyDone(id, kind, done) {
+    var rec = findRecordById(id);
+    if (!rec) return;
+    if (kind === 'plan') rec.요금제변경완료 = done ? '완료' : '';
+    else rec.부가서비스해지완료 = done ? '완료' : '';
+    rec.수정일시 = new Date().toISOString();
+    persist();
+    render();
+    toast(done
+      ? (kind === 'plan' ? '요금제 변경을 완료로 표시했습니다.' : '부가서비스 해지를 완료로 표시했습니다.')
+      : (kind === 'plan' ? '요금제 변경 완료 표시를 되돌렸습니다.' : '부가서비스 해지 완료 표시를 되돌렸습니다.'));
+    queueUpsert(rec);
+    syncAfterChange();
+  }
+
   function handleRowAct(btn) {
     if (!btn) return;
     var id = btn.getAttribute('data-id');
@@ -3659,8 +3914,11 @@
       if (state.records[i].id === id) { rec = state.records[i]; break; }
     }
     if (!rec) return;
-    if (btn.getAttribute('data-act') === 'edit') {
+    var act = btn.getAttribute('data-act');
+    if (act === 'edit') {
       openEditor(rec);
+    } else if (act === 'done') {
+      handleDoneClick(btn, rec);
     } else {
       askConfirm('기록 삭제', '<b>' + esc(rec.고객명 || '이름 없음') + '</b> 고객의 ' +
         esc(rec.개통일 || '') + ' 개통 기록을 삭제할까요?<br>삭제한 기록은 되돌릴 수 없습니다.',
@@ -3696,22 +3954,26 @@
   /* ---------------- 기간 자동계산 (4개월 / 6개월) ---------------- */
   var period = { plan: 'none', addon: 'none' };
 
-  // 개통일 + N개월 (말일 보정: 1/31 + 1개월 → 2/28·29)
-  function addMonths(iso, n) {
+  // 4개월 = 개통일 +124일 · 6개월 = 개통일 +184일 (매장 기준 유지일수 — 달력 개월 계산이 아니다)
+  var PERIOD_DAYS = { '4': 124, '6': 184 };
+
+  function addDays(iso, days) {
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ''));
     if (!m) return '';
-    var y = +m[1], mo = +m[2] - 1, d = +m[3];
-    var total = mo + Number(n);
-    var ty = y + Math.floor(total / 12);
-    var tm = ((total % 12) + 12) % 12;
-    var last = new Date(ty, tm + 1, 0).getDate();
-    return ty + '-' + pad2(tm + 1) + '-' + pad2(Math.min(d, last));
+    var d = new Date(+m[1], +m[2] - 1, +m[3]);
+    if (isNaN(d.getTime())) return '';
+    d.setDate(d.getDate() + Number(days));
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  }
+
+  function periodDate(iso, p) {
+    return PERIOD_DAYS[p] ? addDays(iso, PERIOD_DAYS[p]) : '';
   }
 
   function inferPeriod(dateVal, baseIso) {
     if (!dateVal) return 'none';
-    if (baseIso && dateVal === addMonths(baseIso, 4)) return '4';
-    if (baseIso && dateVal === addMonths(baseIso, 6)) return '6';
+    if (baseIso && dateVal === periodDate(baseIso, '4')) return '4';
+    if (baseIso && dateVal === periodDate(baseIso, '6')) return '6';
     return 'custom';
   }
 
@@ -3741,7 +4003,7 @@
       if ((m.p === '4' || m.p === '6') && val) {
         m.badge.innerHTML = '<b>' + esc(val) + '</b> 예정';
         m.badge.hidden = false;
-        m.badge.setAttribute('title', '개통일 + ' + m.p + '개월');
+        m.badge.setAttribute('title', '개통일 + ' + PERIOD_DAYS[m.p] + '일');
       } else {
         m.badge.hidden = true;
         m.badge.innerHTML = '';
@@ -3755,7 +4017,7 @@
     var input = kind === 'plan' ? $('f_newdate') : $('f_addondate');
     if (!input) return;
     if (val === '4' || val === '6') {
-      input.value = addMonths($('f_date').value || todayISO(), Number(val));
+      input.value = periodDate($('f_date').value || todayISO(), val);
     } else if (val === 'none') {
       input.value = '';
     }
@@ -3764,10 +4026,10 @@
 
   function recalcPeriods() {
     if (period.plan === '4' || period.plan === '6') {
-      $('f_newdate').value = addMonths($('f_date').value || todayISO(), Number(period.plan));
+      $('f_newdate').value = periodDate($('f_date').value || todayISO(), period.plan);
     }
     if (period.addon === '4' || period.addon === '6') {
-      $('f_addondate').value = addMonths($('f_date').value || todayISO(), Number(period.addon));
+      $('f_addondate').value = periodDate($('f_date').value || todayISO(), period.addon);
     }
     renderExpect();
   }
@@ -3841,6 +4103,7 @@
     applyTypeHint();
     $('f_model').value = r.기종 || '';
     markModelChips($('f_model').value);
+    setInsChips(r.단말보험);
     $('f_plan').value = r.요금제 || '';
     $('f_newplan').value = r.변경요금제 || '';
     $('f_newdate').value = normalizeDate(r.요금제변경일자) || '';
@@ -3915,6 +4178,7 @@
       생년월일: birth,
       개통유형: $('f_type').value,
       기종: $('f_model').value.trim(),
+      단말보험: normalizeIns($('f_ins').value),
       요금제: plan,
       변경요금제: $('f_newplan').value.trim(),
       요금제변경일자: normalizeDate($('f_newdate').value),
@@ -3944,8 +4208,14 @@
         if (state.records[i].id === state.editingId) { idx = i; break; }
       }
       if (idx >= 0) {
-        data.id = state.records[idx].id;
-        data.createdAt = state.records[idx].createdAt;
+        var before = state.records[idx];
+        data.id = before.id;
+        data.createdAt = before.createdAt;
+        // 날짜를 그대로 두고 저장하면 완료 표시는 유지, 날짜를 새로 고치면 다시 알림 대상으로
+        data.요금제변경완료 = normalizeDate(data.요금제변경일자) === normalizeDate(before.요금제변경일자)
+          ? normalizeDone(before.요금제변경완료) : '';
+        data.부가서비스해지완료 = normalizeDate(data.부가서비스해지일자) === normalizeDate(before.부가서비스해지일자)
+          ? normalizeDone(before.부가서비스해지완료) : '';
         state.records[idx] = normalizeRecord(data);
         persist();
         render();
@@ -4468,13 +4738,13 @@
       return dt.getFullYear() + '-' + pad2(dt.getMonth() + 1) + '-' + pad2(dt.getDate());
     }
     var base = [
-      { 개통일: day(2), 고객명: '김민수', 담당자: '김태양', 연락처: '010-2345-6789', 생년월일: '880312', 개통유형: '번호이동', 기종: '갤럭시 S25', 요금제: '5G 슬림 55,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 무선리베이트: 350000, 메모: 'SKT에서 이동 · 가족결합' },
-      { 개통일: day(3), 고객명: '이서연', 담당자: '김설화', 연락처: '010-3456-7890', 생년월일: '1995-07-21', 개통유형: '기기변경', 기종: '아이폰 17 프로', 요금제: '5G 프리미엄 68,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '반납', 중고폰금액: 0, 무선리베이트: 420000, 메모: '기존 회선 유지' },
+      { 개통일: day(2), 고객명: '김민수', 담당자: '김태양', 연락처: '010-2345-6789', 생년월일: '880312', 개통유형: '번호이동', 기종: '갤럭시 S26', 단말보험: '가입', 요금제: '5G 슬림 55,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '', 무선리베이트: 350000, 메모: 'SKT에서 이동 · 가족결합' },
+      { 개통일: day(3), 고객명: '이서연', 담당자: '김설화', 연락처: '010-3456-7890', 생년월일: '1995-07-21', 개통유형: '기기변경', 기종: '아이폰 17 프로', 단말보험: '가입', 요금제: '5G 프리미엄 68,000', 변경요금제: '', 요금제변경일자: '', 부가서비스: '안심보험', 부가서비스유지: '4개월', 부가서비스해지일자: rel(3), 중고폰: '반납', 중고폰금액: 0, 무선리베이트: 420000, 메모: '기존 회선 유지' },
       { 개통일: day(5), 고객명: '박준호', 담당자: '이건엽', 연락처: '010-4567-8901', 생년월일: '011105', 개통유형: '신규가입', 기종: '갤럭시 A56', 요금제: '5G 베이직 33,000', 변경요금제: '', 요금제변경일자: '', 중고폰: '미사용', 무선리베이트: 250000, 메모: '학생 · 첫 개통' },
       { 개통일: day(6), 고객명: '강민서', 담당자: '김태양', 연락처: '010-2468-1357', 생년월일: '910523', 개통유형: '번호이동 + 인터넷+TV 신규가입', 기종: '갤럭시 S25 + 인터넷 에센스', 요금제: '5G 슬림 55,000 / 인터넷+TV 38,500', 무선리베이트: 350000, 유선리베이트: 280000, 메모: '무선 + 유선 동시 개통' },
       { 개통일: day(7), 고객명: '최유진', 담당자: '권영한', 연락처: '010-5678-9012', 생년월일: '790420', 개통유형: '인터넷+TV 신규가입', 기종: '인터넷 에센스 + TV 베이직', 요금제: '인터넷+TV 38,500', 유선리베이트: 300000, 메모: '설치 완료 · 약정 3년' },
       { 개통일: day(9), 고객명: '정하늘', 담당자: '김태양', 연락처: '010-6789-0123', 생년월일: '140902', 개통유형: '인터넷+TV 약정갱신', 기종: '인터넷 에센스 + TV 베이직', 요금제: '인터넷+TV 38,500', 유선리베이트: 120000, 메모: '약정 만료 갱신' },
-      { 개통일: day(11), 고객명: '한지우', 담당자: '김설화', 연락처: '010-7890-1234', 생년월일: '1992-11-02', 개통유형: '번호이동', 기종: '아이폰 16', 요금제: '5G 스탠다드 48,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(5), 중고폰: '매입 15만', 중고폰금액: 150000, 무선리베이트: 380000, 메모: '한 달 뒤 요금제 상향 예정' },
+      { 개통일: day(11), 고객명: '한지우', 담당자: '김설화', 연락처: '010-7890-1234', 생년월일: '1992-11-02', 개통유형: '번호이동', 기종: '아이폰 16', 단말보험: '가입', 요금제: '5G 스탠다드 48,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(5), 중고폰: '매입 15만', 중고폰금액: 150000, 무선리베이트: 380000, 메모: '한 달 뒤 요금제 상향 예정' },
       { 개통일: day(13), 고객명: '오세훈', 담당자: '이건엽', 연락처: '010-8901-2345', 생년월일: '850618', 개통유형: '기기변경', 기종: '갤럭시 S24', 요금제: '5G 슬림 55,000', 변경요금제: '5G 프리미엄 68,000', 요금제변경일자: rel(3), 중고폰: '반납', 무선리베이트: 330000, 메모: '' },
       { 개통일: day(15), 고객명: '윤가은', 담당자: '권영한', 연락처: '010-9012-3456', 생년월일: '990227', 개통유형: '신규가입', 기종: '갤럭시 A36', 요금제: '5G 베이직 33,000', 변경요금제: '5G 슬림 55,000', 요금제변경일자: rel(-2), 중고폰: '', 무선리베이트: 240000, 메모: '요금제 변경 상담 필요' },
       { 개통일: day(17), 고객명: '서도윤', 담당자: '김태양', 연락처: '010-1234-5678', 생년월일: '730810', 개통유형: '인터넷 약정갱신', 기종: '인터넷 에센스', 요금제: '인터넷 27,500', 유선리베이트: 180000, 메모: '인터넷 단독 약정갱신' }
@@ -4628,6 +4898,8 @@
       });
     }
     el.dueList.addEventListener('click', function (e) {
+      var doneBtn = e.target.closest ? e.target.closest('button[data-act="done"]') : null;
+      if (doneBtn) { handleDoneClick(doneBtn); return; }
       if (e.target.closest && e.target.closest('[data-due-item]')) toggleDue('all');
     });
 
@@ -5043,6 +5315,13 @@
     applyDueOpen();
     renderStaffChips(el.staffChips, $('f_staff'));
     renderModelChips();
+    setInsChips('미가입');
+    var insBox = $('insChips');
+    if (insBox) insBox.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-ins]') : null;
+      if (!b) return;
+      setInsChips(b.getAttribute('data-ins'));
+    });
     renderPlanPickerBody();
     applyViewMode();
     render();
