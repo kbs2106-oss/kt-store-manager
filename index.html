@@ -549,6 +549,33 @@
   .easy-chip.on .ec-tick{color:#FFF8E1}
   .easy-chip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
   .field .hint b.nw{white-space:nowrap}
+  /* ---------- v27 — 중고 결합 여부 (중고신규·중고MNP 를 골랐을 때만 열린다) ----------
+     필수 선택이라 눈에 띄게 앰버 박스로 두고, [단독] 은 먹색 / [결합 적용] 은 파란 채움으로 구분한다 */
+  #usedComboWrap{
+    padding:11px 13px 10px;border:1px solid #F3DDAE;border-radius:14px;
+    background:linear-gradient(180deg,#FFFBF0 0%,#FFFDF8 100%);
+  }
+  #usedComboWrap[hidden]{display:none !important}
+  #usedComboWrap > label{color:#7A4A00}
+  #usedComboWrap > label .opt{color:#B98A2E}
+  .combo-chips{display:flex;gap:7px;flex-wrap:wrap}
+  .combo-chips .pchip{height:36px;padding:0 14px;font-size:13px;font-weight:800;border-color:#E3C27A;color:#7A4A00;background:#FFFDF8}
+  .combo-chips .pchip:hover{background:#FFF4D8;border-color:#DE9B0C}
+  .combo-chips .pchip .mc{font-size:11px;font-weight:900;opacity:.85;margin-left:2px}
+  .combo-chips .pchip.on[data-used-combo="단독"]{background:#0F172A;border-color:#0F172A;color:#fff}
+  .combo-chips .pchip.on[data-used-combo="결합"]{
+    background:linear-gradient(180deg,#3B82F6 0%,#2563EB 100%);border-color:#1D4ED8;color:#fff;
+    box-shadow:0 2px 8px rgba(37,99,235,.28);
+  }
+  .combo-chips .pchip.on .mc{opacity:.95}
+  .combo-chips .pchip:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(240,140,0,.3)}
+  .combo-chips.unpicked .pchip{border-style:dashed;border-color:#DE9B0C}
+  .combo-chips.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
+  #usedComboHint{color:#8A5200}
+  #usedComboHint .uc-warn{color:#B42318}
+  @media (pointer:coarse){.combo-chips .pchip{height:40px;padding:0 16px;font-size:13.5px}}
+  /* 표·폰 카드의 중고결합 배지 — MBA-02-02 결합 금액이 들어간 건 */
+  .pbadge.c2{background:#E7F1FF;color:#0B4AA2;border-color:#C4D9F7;font-weight:900}
   .empty{padding:54px 24px;text-align:center}
   .empty[hidden]{display:none}
   .empty h3{font-size:16px;font-weight:800;margin-bottom:6px}
@@ -1777,6 +1804,19 @@
           <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP·2ND, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
 
+        <!-- v27 — 중고신규·중고MNP 를 골랐을 때만: 중고 결합 여부 (MBA-02-02 결합 수수료 누락 방지 · 필수) -->
+        <div class="field span2" id="usedComboWrap" hidden>
+          <label id="f_usedcomboLabel">중고 결합 여부 <span class="req">*</span> <span class="opt">중고신규·중고MNP · 필수</span></label>
+          <input id="f_usedcombo" type="hidden" value="">
+          <div class="period-chips combo-chips" id="usedComboChips" role="group" aria-labelledby="f_usedcomboLabel">
+            <button type="button" class="pchip" data-used-combo="단독" aria-pressed="false"
+                    title="중고 단독 개통 — MBA-02-02 결합 수수료가 붙지 않습니다">단독(미결합)</button>
+            <button type="button" class="pchip" data-used-combo="결합" aria-pressed="false"
+                    title="SIMple 후불 결합 — MBA-02-02 결합 금액이 무선 리베이트에 자동 합산됩니다">결합 적용<span class="mc">+MBA-02-02</span></button>
+          </div>
+          <span class="hint" id="usedComboHint">중고신규·중고MNP 는 결합 여부를 반드시 골라야 저장됩니다. <b>결합 적용</b>이면 MBA-02-02 결합 금액이 리베이트에 자동 합산되고 시트에는 <b>[중고결합]</b> 표기로 나갑니다.</span>
+        </div>
+
         <div class="field span2">
           <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
           <input id="f_model" type="text" autocomplete="off" list="modelList" placeholder="예) 갤럭시 S26 / 아이폰 17 프로">
@@ -2400,6 +2440,8 @@
     '중고신규': '[중고신규]', '중고MNP': '[중고MNP]', '중고결합': '[중고결합]',
     '장기기변': '[장기기변]', '512G': '[512G]'
   };
+  // v27 — 중고 결합 여부 칩이 켜고 끄는 특수조건 키 (MBA-02-02 결합 수수료)
+  var USED_COMBO_KEY = '중고결합';
 
   /* 추가지원금 · 페이백 — 앱 전용 금액 항목(시트 20컴럼 유지용 메모 태그)
      · 앱 안 : 추가지원금 / 페이백카드 / 페이백입금 (원 단위 숫자, 0 이면 없음)
@@ -4724,6 +4766,7 @@
     if (!t) return;
     var cur = normalizeDiscount($('f_discount').value);
     renderDiscChips(cur === t ? '' : t);
+    paintUsedComboHint();   // v27 — 결합 적용 + 요금할인 여부 안내를 바로 갱신
     refreshPolicy(true); updateFormRisk();
   }
 
@@ -4758,7 +4801,9 @@
     var html = '<span class="pol-badges">';
     if (disc) html += '<span class="pbadge ' + (disc === '요금할인' ? 'd2' : 'd1') + '">' +
       (disc === '요금할인' ? '요금할인' : '단말할인') + '</span>';
-    for (var i = 0; i < conds.length; i++) html += '<span class="pbadge c1">' + esc(conds[i]) + '</span>';
+    for (var i = 0; i < conds.length; i++) html += (conds[i] === USED_COMBO_KEY
+      ? '<span class="pbadge c2" title="중고 결합 · MBA-02-02 SIMple 후불 결합 금액 포함">중고결합</span>'
+      : '<span class="pbadge c1">' + esc(conds[i]) + '</span>');
     return html + '</span>';
   }
 
@@ -4940,6 +4985,82 @@
       chip.classList.toggle('on', !!on);
       chip.setAttribute('aria-pressed', on ? 'true' : 'false');
     }
+  }
+
+  /* ---------- 중고 결합 여부 (v27) — 중고신규·중고MNP 를 골랐을 때만 열리는 필수 선택 ----------
+     · 단독(미결합) / 결합 적용(+MBA-02-02) 2개 칩, 한쪽만 선택
+     · 결합 = 특수조건 '중고결합' → calcPolicy() 가 MBA-02-02 를 자동 합산,
+       시트에는 메모 [중고결합] 표기로만 나간다(20컬럼 그대로) */
+
+  // 중고 2종(중고신규·중고MNP)일 때만 이 칸이 열린다
+  function usedComboTypeOn() {
+    var w = typeSlots($('f_type') ? $('f_type').value : '').w;
+    return w === '중고신규' || w === '중고MNP';
+  }
+
+  // 고른 값 : '단독' | '결합' | '' (아직 안 고름)
+  function usedComboPickValue() {
+    var v = $('f_usedcombo') ? $('f_usedcombo').value : '';
+    return (v === '결합' || v === '단독') ? v : '';
+  }
+
+  function usedComboOn() {
+    return usedComboPickValue() === '결합';
+  }
+
+  function paintUsedComboChips() {
+    var box = $('usedComboChips');
+    if (!box) return;
+    var v = usedComboPickValue();
+    var chips = box.querySelectorAll('button[data-used-combo]');
+    for (var i = 0; i < chips.length; i++) {
+      var on = chips[i].getAttribute('data-used-combo') === v;
+      chips[i].classList.toggle('on', on);
+      chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    box.classList.toggle('unpicked', !v);
+    paintUsedComboHint();
+  }
+
+  function paintUsedComboHint() {
+    var h = $('usedComboHint');
+    if (!h) return;
+    var v = usedComboPickValue();
+    if (v === '결합') {
+      h.innerHTML = '<b>결합 적용</b> — 무선 리베이트에 <b>MBA-02-02 SIMple 후불 결합</b> 금액이 바로 합쳐집니다. '
+        + '시트에는 메모 <b>[중고결합]</b> 표기로 나갑니다.'
+        + (normalizeDiscount($('f_discount') ? $('f_discount').value : '') === '요금할인'
+          ? '' : ' <b class="uc-warn">요금할인(선약) 개통에만 MBA-02-02 가 인정됩니다.</b>');
+    } else if (v === '단독') {
+      h.innerHTML = '<b>단독(미결합)</b> — MBA-02-02 결합 수수료는 붙지 않고 시트에도 <b>[중고결합]</b> 표기가 나가지 않습니다.';
+    } else {
+      h.innerHTML = '중고 개통은 결합 여부를 <b>반드시</b> 골라야 저장됩니다. <b>결합 적용</b>이면 MBA-02-02 결합 금액이 리베이트에 자동 합산됩니다.';
+    }
+  }
+
+  // v : '단독' | '결합' | '' — 결합일 때만 특수조건에 '중고결합' 을 넣고 뺀다
+  function setUsedCombo(v) {
+    var val = (v === '결합') ? '결합' : (v === '단독') ? '단독' : '';
+    var input = $('f_usedcombo');
+    if (input) input.value = val;
+    var cur = condList($('f_cond') ? $('f_cond').value : '');
+    var at = cur.indexOf(USED_COMBO_KEY);
+    if (val === '결합' && at < 0) cur.push(USED_COMBO_KEY);
+    if (val !== '결합' && at >= 0) cur.splice(at, 1);
+    if ($('f_cond')) $('f_cond').value = condText(cur);
+    paintUsedComboChips();
+    refreshPolicy(true); updateFormRisk();
+  }
+
+  // 개통유형이 바뀔 때마다 — 중고 2종이 아니면 숨기고 값도 해제한다.
+  //   clear=false 는 수정 모달을 열 때(예전 기록의 특수조건을 함부로 지우지 않는다)
+  function syncUsedComboField(clear) {
+    var wrap = $('usedComboWrap');
+    if (!wrap) return;
+    var on = usedComboTypeOn();
+    wrap.hidden = !on;
+    if (!on && clear !== false) setUsedCombo('');
+    else paintUsedComboChips();
   }
 
   /* ---------- 성별 · 주민번호 뒷자리 첫 번호 (v21) ---------- */
@@ -6379,6 +6500,9 @@
         (isForeign(r.외국인) ? mRow('고객 구분', '외국인') : '') +
         mRowOpt('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
         mRowOpt('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
+        // v27 — 중고 결합 여부: 결합 적용 건만 한 줄로 보인다(카드 2번째 줄 배지와 같은 정보)
+        (condList(r.특수조건).indexOf(USED_COMBO_KEY) >= 0
+          ? mRow('중고 결합', '<span class="pbadge c2">결합 적용</span> <span class="muted">+MBA-02-02</span>') : '') +
         (isAdmin() ? mRow('무선 리베이트', wirelessRebateView(r).manual ? fmtNum(r.무선리베이트) + '원'
           : (wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) : '') +
         (isAdmin() ? mRowOpt('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') : '') +
@@ -7062,6 +7186,7 @@
     if (planSug && planSug.input) showPlanSuggest(planSug.input);
     syncWiredPlanField();
     syncWiredGiftField(true);   // 유선 유형을 모두 해제하면 숨기고 값을 비운다
+    syncUsedComboField(true);   // v27 — 중고 유형을 해제하면 [중고 결합 여부]도 숨기고 값을 비운다
     refreshPolicy(true); updateFormRisk();
   }
 
@@ -7179,6 +7304,12 @@
     applyTypeHint();
     renderDiscChips(r.할인유형 || '');
     $('f_cond').value = condText(condList(r.특수조건 || ''));   // v16: 예전 기록의 특수조건은 값으로만 보존
+    // v27 — 저장된 특수조건에 [중고결합] 이 있으면 '결합 적용', 없으면 '단독(미결합)' 으로 열린다(기존 기록 호환).
+    //   새 등록은 아무 것도 고르지 않은 채로 열려 한 번은 직접 고르게 한다.
+    if ($('f_usedcombo')) {
+      var hadCombo = condList($('f_cond').value).indexOf(USED_COMBO_KEY) >= 0;
+      $('f_usedcombo').value = hadCombo ? '결합' : (rec && usedComboTypeOn() ? '단독' : '');
+    }
     if ($('pvYDum')) $('pvYDum').checked = false;
     $('f_model').value = r.기종 || '';
     markModelChips($('f_model').value);
@@ -7187,6 +7318,9 @@
     setEasyChip(isEasy(r.권매쉬움));
     setGenderChips(r.성별 || '');
     setCardChips(r.제휴카드 || '');
+    // v27 — 중고 결합 여부 칸: 중고 2종이면 보이고, 아니면 숨긴다(수정 시 예전 값은 지우지 않는다)
+    syncUsedComboField(false);
+    paintUsedComboChips();
     $('f_plan_none').value = '';
     $('f_addon_none').value = '';
     paintNoneChips();
@@ -7271,6 +7405,9 @@
     if (!slots.w && !slots.l) need.push({ label: '개통유형', el: $('typeChips') });
     // v19 — 유선 개통유형을 골랐으면 유선 요금제 칸도 반드시 채운다
     if (slots.l && !planL) need.push({ label: '유선 요금제', el: $('f_plan_l') });
+    // v27 — 중고신규·중고MNP 는 [중고 결합 여부]를 반드시 고른다 (MBA-02-02 수수료 누락 방지)
+    if ((slots.w === '중고신규' || slots.w === '중고MNP') && !usedComboPickValue())
+      need.push({ label: '중고 결합 여부', el: $('usedComboChips') });
     // v19 — 2ND(세컨드 디바이스) 단독이면 할인유형·단말보험·제휴카드는 선택 항목이다
     var only2nd = slots.w === '2ND' && !slots.l;
     if (slots.w && !only2nd && !normalizeDiscount($('f_discount').value)) need.push({ label: '할인유형', el: $('discChips') });
@@ -7445,6 +7582,10 @@
       $('f_memo').value = '';
       renderDiscChips('');
       $('f_cond').value = '';
+      // v27 — 다음 고객은 결합 여부를 다시 고르게 한다(개통유형은 유지되므로 칸은 그대로 보인다)
+      if ($('f_usedcombo')) $('f_usedcombo').value = '';
+      paintUsedComboChips();
+      syncUsedComboField(false);
       setForeignChip(false);
       setGenderChips('');
       setEasyChip(false);
@@ -8794,6 +8935,15 @@
     setEasyChip(false);
     var easyBox = $('easyChip');
     if (easyBox) easyBox.addEventListener('click', function () { setEasyChip(!easyOn()); });
+    // v27 — 중고 결합 여부: 단일 선택(필수) — 다른 칸을 누르면 교체되고, 다시 눌러도 해제하지 않는다
+    var comboBox = $('usedComboChips');
+    if (comboBox) comboBox.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-used-combo]') : null;
+      if (!b) return;
+      setUsedCombo(b.getAttribute('data-used-combo'));
+    });
+    syncUsedComboField(false);
+    paintUsedComboChips();
     var foreignBox = $('foreignChips');
     if (foreignBox) foreignBox.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('button[data-foreign]') : null;
