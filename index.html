@@ -538,6 +538,87 @@
   /* ---------- 요금제 빠른 선택 (숫자 검색 · 칩 선택창) ---------- */
   .field-head{display:flex;align-items:center;gap:8px}
   .field-head label{flex:1 1 auto;min-width:0}
+
+  /* 요금제(상품명) 넓은 칸 + 기종 칸을 한 줄에 */
+  .field-pair{display:grid;grid-template-columns:minmax(0,2.1fr) minmax(0,1fr);gap:12px 14px;align-items:start}
+  @media (max-width:560px){.field-pair{grid-template-columns:1fr}}
+
+  /* 바꿀 때만 쓰는 영역 — 연한 카드 박스로 구분 */
+  .form-box{
+    grid-column:1/-1;display:flex;flex-direction:column;gap:10px;margin:1px 0;
+    border:1px solid #E2ECF9;border-radius:14px;padding:11px 13px 12px;
+    background:linear-gradient(180deg,#F7FAFF 0%,#FCFDFF 100%);
+  }
+  .form-box-head{display:flex;align-items:center;gap:8px}
+  .form-box-head .fb-title{font-size:12px;font-weight:800;color:var(--slate-600);letter-spacing:.02em}
+  .form-box-head .fb-note{
+    flex:none;font-size:10.5px;font-weight:800;color:var(--blue-700);background:#fff;
+    border:1px solid #D3E4FB;border-radius:999px;padding:2px 8px;
+  }
+  .form-box-head::after{content:"";flex:1;height:1px;background:#E4EDF9}
+  .form-box .field label{color:var(--slate-500)}
+
+  /* 4·6개월 자동 계산 결과 — 한눈에 보이는 날짜 배지 */
+  .expect-badge{
+    display:inline-flex;align-items:center;gap:6px;flex:none;height:34px;padding:0 12px;
+    border-radius:10px;background:var(--blue-600);color:#fff;font-size:13.5px;font-weight:800;
+    font-variant-numeric:tabular-nums;letter-spacing:.01em;box-shadow:0 3px 9px rgba(11,87,208,.24);
+  }
+  .expect-badge[hidden]{display:none}
+  .expect-badge::before{content:"";width:6px;height:6px;border-radius:50%;background:#A7CCFF}
+  .expect-badge b{font-weight:800;letter-spacing:.02em}
+
+  /* 접근 차단(추방) 잠금 화면 */
+  .lock-screen{
+    position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;padding:22px;
+    background:linear-gradient(180deg,#F8FAFF 0%,#EDF2FA 100%);
+  }
+  .lock-screen[hidden]{display:none}
+  body.is-blocked{overflow:hidden}
+  .lock-card{
+    width:min(430px,100%);background:#fff;border:1px solid var(--line);border-radius:20px;
+    box-shadow:var(--shadow-lg);padding:26px 22px 22px;text-align:center;
+  }
+  .lock-card .lock-ico{
+    width:58px;height:58px;margin:0 auto 12px;border-radius:17px;background:var(--red-bg);color:var(--red);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .lock-card .lock-ico svg{width:28px;height:28px}
+  .lock-card h2{font-size:17px;font-weight:800;color:var(--ink);line-height:1.45}
+  .lock-card p{font-size:12.5px;color:var(--slate-500);line-height:1.65;margin-top:9px}
+  .lock-card .lock-meta{font-size:11.5px;color:var(--slate-400);margin-top:10px}
+  .lock-card .btn{margin-top:16px;width:100%}
+
+  /* 기기 · 직원 관리 */
+  .devices-dlg{width:min(680px,calc(100vw - 24px))}
+  .dv-sec{margin:2px 0 14px}
+  .dv-sec h3{font-size:12.5px;font-weight:800;color:var(--slate-600);margin:0 0 7px;display:flex;align-items:center;gap:7px}
+  .dv-sec h3 .cnt{font-size:11px;font-weight:800;color:var(--blue-700);background:var(--blue-50);border-radius:999px;padding:1px 8px}
+  .dv-list{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff}
+  .dv-row{display:grid;grid-template-columns:1fr 1.3fr 1.15fr auto auto;gap:8px;align-items:center;
+    padding:8px 10px;border-top:1px solid var(--line);font-size:12px}
+  .dv-row:first-child{border-top:0}
+  .dv-row.head{background:#F6F9FE;font-size:11px;font-weight:800;color:var(--slate-500)}
+  .dv-row .who{font-weight:800;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .dv-row .dev{color:var(--slate-600);font-weight:600;min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .dv-row .seen{color:var(--slate-400);font-size:11.5px;font-variant-numeric:tabular-nums}
+  .dv-badge{display:inline-block;font-size:10.5px;font-weight:800;border-radius:999px;padding:2px 7px;white-space:nowrap}
+  .dv-badge.on{background:var(--green-bg);color:#0B5F45}
+  .dv-badge.off{background:var(--red-bg);color:var(--red)}
+  .dv-badge.mine{background:var(--blue-50);color:var(--blue-700);margin-left:4px}
+  .dv-btn{height:28px;padding:0 10px;border-radius:8px;border:1px solid #F3C9C2;background:#FFF7F5;
+    color:var(--red);font-size:11.5px;font-weight:800;white-space:nowrap;justify-self:end}
+  .dv-btn.bad{border-color:#C7DBF4;background:#F5F9FF;color:var(--blue-700)}
+  .dv-empty{font-size:12px;color:var(--slate-400);padding:12px;line-height:1.6}
+  @media (max-width:520px){
+    .dv-row{grid-template-columns:minmax(0,1fr) auto;row-gap:1px}
+    .dv-row.head{display:none}
+    .dv-row .st{display:none}
+    .dv-row .who{grid-column:1/2}
+    .dv-row .dev{grid-column:1/2;font-size:11.5px}
+    .dv-row .seen{grid-column:1/2;font-size:11px}
+    .dv-row .dv-btn{grid-row:1/4;grid-column:2/3;align-self:center}
+  }
   .field-pick{
     flex:none;height:24px;padding:0 10px;border-radius:999px;border:1px solid #C9D8EC;
     background:#F4F9FF;color:var(--blue-700);font-size:11.5px;font-weight:800;
@@ -921,6 +1002,7 @@
           <div class="menu-sep"></div>
           <button class="menu-item" id="syncOpenBtn" role="menuitem">공용 장부 연동 (Google 시트)</button>
           <button class="menu-item" id="adminLockBtn" role="menuitem">🔓 관리자 모드 잠금 해제</button>
+          <button class="menu-item admin-only" id="devicesBtn" role="menuitem">🛡️ 직원 · 기기 관리 (추방)</button>
           <button class="menu-item" id="syncNowBtn" role="menuitem" hidden>지금 동기화</button>
           <div class="menu-sep menu-mobile-only"></div>
           <button class="menu-item menu-mobile-only admin-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
@@ -1120,64 +1202,82 @@
           <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
           <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
-        <div class="field">
-          <label for="f_model">기종 <span class="opt">선택</span></label>
-          <input id="f_model" type="text" autocomplete="off" placeholder="예) 갤럭시 S25 / 인터넷 에센스">
-        </div>
 
-        <div class="field">
+        <div class="field span2">
           <div class="field-head">
             <label for="f_plan">요금제(상품명) <span class="req">*</span></label>
             <button type="button" class="field-pick" data-plan-pick="f_plan">요금제 선택</button>
           </div>
-          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 에센스">
+          <input id="f_plan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 베이직 + 지니 TV 에센스">
           <div class="plan-suggest" id="sug_f_plan" role="listbox" aria-label="요금제 검색 결과"></div>
         </div>
 
-        <div class="section-label">요금제 변경 <span class="note">선택 · 바꿀 때만 입력</span></div>
-
         <div class="field span2">
-          <div class="field-head">
-            <label for="f_newplan">변경요금제 <span class="opt">선택</span></label>
-            <button type="button" class="field-pick" data-plan-pick="f_newplan">요금제 선택</button>
-          </div>
-          <input id="f_newplan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 에센스">
-          <div class="plan-suggest" id="sug_f_newplan" role="listbox" aria-label="변경요금제 검색 결과"></div>
+          <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
+          <input id="f_model" type="text" autocomplete="off" list="modelList" placeholder="예) 갤럭시 S26 / 아이폰 17 프로">
+          <datalist id="modelList"></datalist>
+          <div class="staff-chips model-chips" id="modelChips"></div>
+          <span class="hint">단말기를 누르면 바로 들어갑니다. 다시 누르면 빠지고, 인터넷·TV 상품은 직접 입력해도 됩니다.</span>
         </div>
 
-        <div class="field span2">
-          <label for="f_newdate">요금제변경일자 <span class="opt">선택</span></label>
-          <div class="period-row">
-            <div class="period-chips" id="planPeriodChips">
-              <button type="button" class="pchip" data-period="none">없음</button>
-              <button type="button" class="pchip" data-period="4">4개월</button>
-              <button type="button" class="pchip" data-period="6">6개월</button>
-              <button type="button" class="pchip" data-period="custom">직접입력</button>
+        <!-- 바꿀 때만 쓰는 영역 — 요금제 변경 -->
+        <div class="form-box" id="planBox">
+          <div class="form-box-head">
+            <span class="fb-title">요금제 변경</span>
+            <span class="fb-note">바꿀 때만 선택</span>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="f_newplan">변경요금제 <span class="opt">선택</span></label>
+              <button type="button" class="field-pick" data-plan-pick="f_newplan">요금제 선택</button>
             </div>
-            <input id="f_newdate" type="date">
+            <input id="f_newplan" type="text" autocomplete="off" placeholder="예) 90 · 베이직 · 인터넷 베이직 + 지니 TV 에센스">
+            <div class="plan-suggest" id="sug_f_newplan" role="listbox" aria-label="변경요금제 검색 결과"></div>
           </div>
-          <span class="hint">4·6개월 = 개통일 기준 자동 계산 · 7일 이내면 알림</span>
-        </div>
 
-        <div class="section-label">부가서비스 <span class="note">선택</span></div>
-
-        <div class="field span2">
-          <label for="f_addon">부가서비스 <span class="opt">선택</span></label>
-          <input id="f_addon" type="text" autocomplete="off" placeholder="예) 안심보험 / 워치 요금제 / 시즌 패스">
-        </div>
-
-        <div class="field span2">
-          <label for="f_addondate">부가서비스 유지기간 · 해지일자 <span class="opt">선택</span></label>
-          <div class="period-row">
-            <div class="period-chips" id="addonPeriodChips">
-              <button type="button" class="pchip" data-period="none">없음</button>
-              <button type="button" class="pchip" data-period="4">4개월</button>
-              <button type="button" class="pchip" data-period="6">6개월</button>
-              <button type="button" class="pchip" data-period="custom">직접입력</button>
+          <div class="field">
+            <label for="f_newdate">요금제변경일자 <span class="opt">선택</span></label>
+            <div class="period-row">
+              <div class="period-chips" id="planPeriodChips">
+                <button type="button" class="pchip" data-period="none">없음</button>
+                <button type="button" class="pchip" data-period="4">4개월</button>
+                <button type="button" class="pchip" data-period="6">6개월</button>
+                <button type="button" class="pchip" data-period="custom">직접입력</button>
+              </div>
+              <input id="f_newdate" type="date">
+              <span class="expect-badge" id="planExpect" hidden></span>
             </div>
-            <input id="f_addondate" type="date">
+            <span class="hint">4·6개월 = 개통일 기준 자동 계산 · 7일 이내면 알림</span>
           </div>
-          <span class="hint">유지기간을 누르면 개통일 기준으로 해지일자가 자동 계산됩니다</span>
+        </div>
+
+        <!-- 바꿀 때만 쓰는 영역 — 부가서비스 -->
+        <div class="form-box" id="addonBox">
+          <div class="form-box-head">
+            <span class="fb-title">부가서비스</span>
+            <span class="fb-note">가입했을 때만 선택</span>
+          </div>
+
+          <div class="field">
+            <label for="f_addon">부가서비스 <span class="opt">선택</span></label>
+            <input id="f_addon" type="text" autocomplete="off" placeholder="예) 안심보험 / 워치 요금제 / 시즌 패스">
+          </div>
+
+          <div class="field">
+            <label for="f_addondate">부가서비스 유지기간 · 해지일자 <span class="opt">선택</span></label>
+            <div class="period-row">
+              <div class="period-chips" id="addonPeriodChips">
+                <button type="button" class="pchip" data-period="none">없음</button>
+                <button type="button" class="pchip" data-period="4">4개월</button>
+                <button type="button" class="pchip" data-period="6">6개월</button>
+                <button type="button" class="pchip" data-period="custom">직접입력</button>
+              </div>
+              <input id="f_addondate" type="date">
+              <span class="expect-badge" id="addonExpect" hidden></span>
+            </div>
+            <span class="hint">유지기간을 누르면 개통일 기준으로 해지일자가 자동 계산됩니다</span>
+          </div>
         </div>
 
         <div class="section-label">리베이트 · 중고폰</div>
@@ -1316,6 +1416,33 @@
   </div>
 </dialog>
 
+<!-- ===================== 직원 · 기기 관리 (관리자) ===================== -->
+<dialog id="devicesDialog" class="devices-dlg">
+  <div class="dlg-head">
+    <div>
+      <h2>직원 · 기기 관리</h2>
+      <p>추방(차단)하면 그 기기·직원은 앱을 열어도 장부가 보이지 않고 입력도 되지 않습니다. 언제든 풀 수 있습니다.</p>
+    </div>
+    <button type="button" class="dlg-close" id="dvClose" aria-label="닫기">×</button>
+  </div>
+  <div class="dlg-body">
+    <div class="sync-status" id="dvStatus">불러오는 중…</div>
+    <div class="dv-sec">
+      <h3>접속한 기기 <span class="cnt" id="dvDevCount">0</span></h3>
+      <div class="dv-list" id="dvDevices"></div>
+    </div>
+    <div class="dv-sec">
+      <h3>직원 이름 <span class="cnt" id="dvStaffCount">0</span></h3>
+      <div class="dv-list" id="dvStaff"></div>
+    </div>
+  </div>
+  <div class="dlg-foot">
+    <button type="button" class="btn" id="dvRefresh">새로고침</button>
+    <span class="grow"></span>
+    <button type="button" class="btn" id="dvDone">닫기</button>
+  </div>
+</dialog>
+
 <!-- ===================== 공용 장부 연동 (Google 시트) ===================== -->
 <dialog id="syncDialog">
   <div class="dlg-head">
@@ -1358,6 +1485,18 @@
   </div>
 </dialog>
 
+<div class="lock-screen" id="lockScreen" hidden>
+  <div class="lock-card">
+    <div class="lock-ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.4"/><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7"/><path d="M12 14.5v2.4"/></svg>
+    </div>
+    <h2>관리자에 의해 접근이 제한되었습니다</h2>
+    <p>이 기기에서는 장부 열람과 입력이 모두 막혀 있습니다.<br>이전에 저장된 장부도 이 기기에서 지워졌습니다.</p>
+    <p class="lock-meta" id="lockMeta"></p>
+    <button type="button" class="btn btn-primary" id="lockRetry">다시 확인</button>
+  </div>
+</div>
+
 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,text/csv" style="display:none">
 <input type="file" id="jsonInput" accept=".json,application/json" style="display:none">
 <div id="toast" role="status" aria-live="polite"></div>
@@ -1396,7 +1535,21 @@
   };
 
   // 매장 직원 — 담당자 빠른 선택용 (다른 이름도 직접 입력 가능)
-  var STAFF_LIST = ['김태양', '김설화', '이건엽', '권영한'];
+  var STAFF_LIST = ['김태양', '김설화', '이건엽', '권영한', '전국현'];
+
+  // 기종 빠른 선택 — 최근 2년 이내 KT 주력 단말기만 유지한다
+  // (신모델 출시 시 추가, 2년 지난 구형·KT 요금제 변동은 이 목록만 고친다)
+  var KT_DEVICES = [
+    '갤럭시 S26', '갤럭시 S26+', '갤럭시 S26 울트라',
+    '갤럭시 Z 폴드8', '갤럭시 Z 플립8',
+    '갤럭시 점프5', '갤럭시 A18 LTE', '시나모롤 키즈폰', '클래식 폴더',
+    '아이폰 17', '아이폰 17 에어', '아이폰 17 프로', '아이폰 17 프로 맥스'
+  ];
+
+  // 이 기기를 구분하는 고유 ID — 관리자가 기기를 추방(차단)할 때 쓴다
+  var DEVICE_KEY = 'kt_chilgeum_device_v1';
+  // 차단(추방) 당한 기기임을 기억하는 표시 — 새로고침해도 잠금 화면을 유지
+  var BLOCK_KEY = 'kt_chilgeum_blocked_v1';
 
   // 엑셀/CSV 헤더 순서 — 리베이트는 무선/유선 두 칸으로 나뉜다
   var HEADERS = ['개통일','고객명','연락처','생년월일','개통유형','기종','요금제','변경요금제','요금제변경일자','부가서비스','부가서비스유지','부가서비스해지일자','중고폰','중고폰금액','무선리베이트','유선리베이트','메모'];
@@ -1786,6 +1939,131 @@
 
   function syncOn() { return !!(sync.enabled && sync.url && sync.pin); }
 
+  /* =========================================================
+     이 기기 식별 (기기 추방/차단)
+     ---------------------------------------------------------
+     · 처음 연 브라우저마다 deviceId 를 하나 만들어 localStorage 에 보관
+     · 동기화 요청(list/save)마다 deviceId·기기명·내 이름을 함께 보낸다
+     · 서버가 blocked:true 를 주면 로컬 장부를 비우고 잠금 화면
+     ========================================================= */
+  var device = null;
+
+  function deviceLabel() {
+    var ua = String((navigator && navigator.userAgent) || '');
+    var os = '기기';
+    if (/iPhone/.test(ua)) os = '아이폰';
+    else if (/iPad/.test(ua)) os = '아이패드';
+    else if (/Android/.test(ua)) os = /Mobile/.test(ua) ? '안드로이드 폰' : '안드로이드 태블릿';
+    else if (/Windows/.test(ua)) os = '윈도우 PC';
+    else if (/Macintosh/.test(ua)) os = '맥';
+    else if (/CrOS/.test(ua)) os = '크롬북';
+    else if (/Linux/.test(ua)) os = '리눅스 PC';
+    var br = '';
+    if (/SamsungBrowser/.test(ua)) br = '삼성 인터넷';
+    else if (/Edg\//.test(ua)) br = '엣지';
+    else if (/Chrome\//.test(ua)) br = '크롬';
+    else if (/Firefox\//.test(ua)) br = '파이어폭스';
+    else if (/Safari\//.test(ua)) br = '사파리';
+    var app = '';
+    try {
+      if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) app = ' 앱';
+    } catch (e) {}
+    return os + (br ? ' · ' + br + app : '');
+  }
+
+  function loadDevice() {
+    try {
+      var d = JSON.parse(localStorage.getItem(DEVICE_KEY) || 'null');
+      if (d && d.id) {
+        device = { id: String(d.id), label: String(d.label || '') || deviceLabel(), ua: String(d.ua || '') };
+        return device;
+      }
+    } catch (e) {}
+    device = {
+      id: 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      label: deviceLabel(),
+      ua: String((navigator && navigator.userAgent) || '').slice(0, 190)
+    };
+    try { localStorage.setItem(DEVICE_KEY, JSON.stringify(device)); } catch (e) {}
+    return device;
+  }
+
+  function deviceInfo() {
+    if (!device) loadDevice();
+    return { deviceId: device.id, device: device.label, ua: device.ua, name: sync.name || '' };
+  }
+
+  function blockedStored() {
+    try { return !!localStorage.getItem(BLOCK_KEY); } catch (e) { return false; }
+  }
+
+  function clearBlocked() {
+    try { localStorage.removeItem(BLOCK_KEY); } catch (e) {}
+    showLock(false);
+  }
+
+  function showLock(on) {
+    var box = $('lockScreen');
+    if (!box) return;
+    box.hidden = !on;
+    document.body.classList.toggle('is-blocked', !!on);
+    if (!on) return;
+    var meta = $('lockMeta');
+    if (!meta) return;
+    var m = {};
+    try { m = JSON.parse(localStorage.getItem(BLOCK_KEY) || '{}') || {}; } catch (e) { m = {}; }
+    var when = m.at ? String(m.at).slice(0, 10) : '';
+    meta.innerHTML = when
+      ? '확인 일시 ' + esc(when) + ' · 사장님(관리자)에게 이 화면을 보여 주세요.'
+      : '사장님(관리자)에게 문의해 주세요.';
+  }
+
+  // 서버가 차단 응답을 주면 → 로컬 장부를 지우고 잠금 화면
+  function onBlocked(info) {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    state.records = [];
+    state.editingId = null;
+    sync.pending = [];
+    saveSync();
+    try {
+      localStorage.setItem(BLOCK_KEY, JSON.stringify({
+        at: new Date().toISOString(),
+        type: (info && info.blockType) || '',
+        value: (info && info.blockValue) || ''
+      }));
+    } catch (e) {}
+    try { if (el.editDialog && el.editDialog.open) el.editDialog.close(); } catch (e) {}
+    try { if (el.devicesDialog && el.devicesDialog.open) el.devicesDialog.close(); } catch (e) {}
+    try { render(); } catch (e) {}
+    showLock(true);
+  }
+
+  function blockedError() {
+    var e = new Error('관리자에 의해 접근이 제한되었습니다.');
+    e.blocked = true;
+    return e;
+  }
+
+  // 잠금 화면의 ‘다시 확인’ — 차단이 풀렸으면 잠금을 해제하고 새로 시작
+  function recheckBlock(quiet) {
+    var btn = $('lockRetry');
+    if (btn && !quiet) { btn.disabled = true; btn.textContent = '확인 중…'; }
+    function done() { if (btn && !quiet) { btn.disabled = false; btn.textContent = '다시 확인'; } }
+    if (!syncOn()) {
+      done();
+      if (!quiet) toast('연동 설정이 없습니다. 사장님(관리자)에게 문의해 주세요.', true);
+      return;
+    }
+    pullList().then(function () {
+      clearBlocked();
+      if (quiet) { state.records = loadRecords(); render(); }
+      else location.reload();
+    }).catch(function (err) {
+      done();
+      if (!quiet) toast(String((err && err.message) || '아직 차단 상태입니다.'), true);
+    });
+  }
+
   function buildUrl(base, params) {
     var q = [];
     for (var k in params) if (params.hasOwnProperty(k)) {
@@ -1848,14 +2126,20 @@
   }
 
   function pullList(base, pin) {
+    var info = deviceInfo();
     var target = buildUrl(base || sync.url, {
       pin: (pin == null ? sync.pin : pin),
       action: 'list',
-      t: String(Date.now())
+      t: String(Date.now()),
+      deviceId: info.deviceId,
+      device: info.device,
+      name: info.name,
+      ua: info.ua
     });
     return fetchJson(target, { method: 'GET', cache: 'no-store', redirect: 'follow' })
       .catch(function () { return jsonpGet(target); })
       .then(function (data) {
+        if (data && data.blocked) { onBlocked(data); throw blockedError(); }
         if (!data || data.ok !== true) throw new Error((data && data.error) || '공용 장부 응답 오류');
         var rows = Array.isArray(data.records) ? data.records : [];
         return rows.map(normalizeRecord);
@@ -1863,11 +2147,16 @@
   }
 
   function pushItem(item) {
+    var info = deviceInfo();
     var payload = {
       pin: sync.pin,
       action: item.op,
       id: item.id || (item.rec && item.rec.id) || '',
-      record: item.rec || null
+      record: item.rec || null,
+      deviceId: info.deviceId,
+      device: info.device,
+      name: (item.rec && item.rec.담당자) || info.name,
+      ua: info.ua
     };
     if (item.op === 'delete') payload.adminPin = state.adminPin || '';
     var body = JSON.stringify(payload);
@@ -1877,6 +2166,7 @@
       body: body,
       redirect: 'follow'
     }).then(function (data) {
+      if (data && data.blocked) { onBlocked(data); throw blockedError(); }
       if (data && data.ok === true) return data;
       throw new Error((data && data.error) || '저장 실패');
     });
@@ -1981,7 +2271,9 @@
         syncing = false;
         saveSync();
         renderSyncUi();
-        if (!o.quietFail) toast('공용 장부 연결 실패 · 이 기기에는 저장됐습니다', true);
+        if (!o.quietFail && !(err && err.blocked)) {
+          toast('공용 장부 연결 실패 · 이 기기에는 저장됐습니다', true);
+        }
         return false;
       });
   }
@@ -2070,6 +2362,61 @@
     var chips = box.querySelectorAll('button[data-staff]');
     for (var i = 0; i < chips.length; i++) {
       chips[i].classList.toggle('on', chips[i].getAttribute('data-staff') === v);
+    }
+  }
+
+  /* ---------------- 기종 빠른 선택 (최근 2년 KT 주력 단말기) ----------------
+     · 칩을 누르면 기종 칸에 들어가고, 다시 누르면 빠진다
+     · 이미 다른 기기·유선 상품이 있으면 ' + '로 이어 붙인다 (예: 갤럭시 S26 + 인터넷 에센스)
+     · 직접 입력도 그대로 가능 (datalist 로 타이핑 제안) */
+  function modelParts(value) {
+    return String(value || '').split(/\s*\+\s*/).map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  function renderModelChips() {
+    var box = $('modelChips');
+    if (!box) return;
+    var html = '';
+    for (var i = 0; i < KT_DEVICES.length; i++) {
+      html += '<button type="button" class="staff-chip" data-model="' + esc(KT_DEVICES[i]) + '">' +
+        esc(KT_DEVICES[i]) + '</button>';
+    }
+    box.innerHTML = html;
+    var dl = $('modelList');
+    if (dl) {
+      var opts = '';
+      for (var j = 0; j < KT_DEVICES.length; j++) opts += '<option value="' + esc(KT_DEVICES[j]) + '"></option>';
+      dl.innerHTML = opts;
+    }
+    box.onclick = function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-model]') : null;
+      if (!b) return;
+      toggleModel(b.getAttribute('data-model'));
+    };
+    var input = $('f_model');
+    if (input) input.addEventListener('input', function () { markModelChips(input.value); });
+    markModelChips(input ? input.value : '');
+  }
+
+  // 한 번 누르면 넣기, 다시 누르면 빼기 — 나머지 직접 입력값은 그대로 둔다
+  function toggleModel(name) {
+    var input = $('f_model');
+    if (!input) return;
+    var parts = modelParts(input.value);
+    var at = parts.indexOf(name);
+    if (at >= 0) parts.splice(at, 1);
+    else parts.push(name);
+    input.value = parts.join(' + ');
+    markModelChips(input.value);
+  }
+
+  function markModelChips(value) {
+    var box = $('modelChips');
+    if (!box) return;
+    var parts = modelParts(value);
+    var chips = box.querySelectorAll('button[data-model]');
+    for (var i = 0; i < chips.length; i++) {
+      chips[i].classList.toggle('on', parts.indexOf(chips[i].getAttribute('data-model')) >= 0);
     }
   }
 
@@ -2513,6 +2860,191 @@
     runSync({ quiet: true }).then(function (ok) {
       updateSyncDialogStatus();
       toast(ok ? '지금 동기화했습니다.' : '동기화 실패 · 이 기기에는 저장돼 있습니다', !ok);
+    });
+  }
+
+  /* =========================================================
+     직원 · 기기 관리 (관리자 0525 전용)
+     ---------------------------------------------------------
+     · 서버(Code.gs)의 '_접속기기' 목록과 '_차단' 목록을 받아 보여 준다
+     · 기기 또는 직원 이름을 추방(차단) / 차단 해제
+     ========================================================= */
+  var dvState = { devices: [], blocks: { device: [], staff: [] }, staff: [] };
+
+  function blockMap(list) {
+    var m = {};
+    for (var i = 0; i < (list || []).length; i++) m[list[i].value] = list[i];
+    return m;
+  }
+
+  function dvSeenText(iso) {
+    var s = String(iso || '');
+    var m = /(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/.exec(s);
+    if (!m) return s.slice(0, 10) || '—';
+    var t = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]).getTime();
+    var diff = Date.now() - t, rel = '';
+    if (diff >= 0) {
+      if (diff < 60000) rel = '방금';
+      else if (diff < 3600000) rel = Math.floor(diff / 60000) + '분 전';
+      else if (diff < 86400000) rel = Math.floor(diff / 3600000) + '시간 전';
+      else if (diff < 604800000) rel = Math.floor(diff / 86400000) + '일 전';
+    }
+    return m[1] + '-' + m[2] + '-' + m[3] + ' ' + m[4] + ':' + m[5] + (rel ? ' · ' + rel : '');
+  }
+
+  function dvRequest(action, extra) {
+    var info = deviceInfo();
+    var payload = {
+      pin: sync.pin, action: action, adminPin: state.adminPin || '',
+      deviceId: info.deviceId, device: info.device, name: info.name, ua: info.ua
+    };
+    for (var k in (extra || {})) if (extra.hasOwnProperty(k)) payload[k] = extra[k];
+    return fetchJson(sync.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+      redirect: 'follow'
+    }).then(function (data) {
+      if (data && data.blocked) { onBlocked(data); throw blockedError(); }
+      if (data && data.ok === true) return data;
+      throw new Error((data && data.error) || '요청에 실패했습니다.');
+    });
+  }
+
+  function openDevicesDialog() {
+    if (!el.devicesDialog) return;
+    if (!isAdmin()) { openAdminDialog(); return; }
+    el.dvDevices.innerHTML = '';
+    el.dvStaff.innerHTML = '';
+    el.dvDevCount.textContent = '0';
+    el.dvStaffCount.textContent = '0';
+    el.dvStatus.className = 'sync-status';
+    el.dvStatus.innerHTML = '불러오는 중…';
+    if (el.devicesDialog.open) el.devicesDialog.close();
+    el.devicesDialog.showModal();
+    loadDevices();
+  }
+
+  function loadDevices() {
+    if (!syncOn()) {
+      el.dvStatus.className = 'sync-status err';
+      el.dvStatus.innerHTML = '공용 장부 연동이 꺼져 있습니다. <b>더보기 → 공용 장부 연동</b>에서 주소·매장 PIN 을 먼저 저장해 주세요.';
+      el.dvDevices.innerHTML = '<p class="dv-empty">연동하면 이 기기와 직원 기기가 여기에 표시됩니다.</p>';
+      dvState = { devices: [], blocks: { device: [], staff: [] }, staff: STAFF_LIST.slice() };
+      renderDevices();
+      return Promise.resolve(false);
+    }
+    el.dvStatus.className = 'sync-status';
+    el.dvStatus.innerHTML = '불러오는 중…';
+    return dvRequest('devices').then(function (data) {
+      dvState = {
+        devices: Array.isArray(data.devices) ? data.devices : [],
+        blocks: data.blocks || { device: [], staff: [] },
+        staff: Array.isArray(data.staff) && data.staff.length ? data.staff : STAFF_LIST.slice()
+      };
+      renderDevices();
+      el.dvStatus.className = 'sync-status ok';
+      el.dvStatus.innerHTML = '서버(구글 시트)와 연결됨 · 기기 <b>' + dvState.devices.length + '대</b> · 차단 <b>' +
+        (dvState.blocks.device.length + dvState.blocks.staff.length) + '건</b>';
+      return true;
+    }).catch(function (err) {
+      el.dvStatus.className = 'sync-status err';
+      el.dvStatus.innerHTML = '불러오지 못했습니다: <b>' + esc(String((err && err.message) || err)) + '</b>';
+      return false;
+    });
+  }
+
+  function renderDevices() {
+    var bd = blockMap(dvState.blocks.device), bs = blockMap(dvState.blocks.staff);
+    var mine = deviceInfo().deviceId;
+    var i, html = '';
+
+    html = '<div class="dv-row head"><span>담당자</span><span>기기</span><span>최근 접속</span><span>상태</span><span></span></div>';
+    var devs = dvState.devices.slice();
+    for (i = 0; i < devs.length; i++) {
+      var d = devs[i];
+      var blocked = !!bd[d.deviceId];
+      html += '<div class="dv-row" data-dv-row="' + esc(d.deviceId) + '">' +
+        '<span class="who">' + esc(d.name || '이름 없음') +
+          (d.deviceId === mine ? '<span class="dv-badge mine">이 기기</span>' : '') + '</span>' +
+        '<span class="dev">' + esc(d.label || '기기') + '</span>' +
+        '<span class="seen">' + esc(dvSeenText(d.lastSeen)) + '</span>' +
+        '<span class="st">' + (blocked
+          ? '<span class="dv-badge off">차단됨</span>'
+          : '<span class="dv-badge on">사용 중</span>') + '</span>' +
+        '<button type="button" class="dv-btn' + (blocked ? ' bad' : '') + '" data-dv-act="' +
+          (blocked ? 'unblock' : 'block') + '" data-dv-type="device" data-dv-value="' + esc(d.deviceId) +
+          '" data-dv-label="' + esc(d.label || '') + '">' +
+          (blocked ? '차단 해제' : '추방(차단)') + '</button>' +
+        '</div>';
+    }
+    el.dvDevices.innerHTML = devs.length
+      ? html
+      : '<p class="dv-empty">아직 기록된 기기가 없습니다. 직원이 앱을 한 번 열면 자동으로 표시됩니다.</p>';
+    el.dvDevCount.textContent = String(devs.length);
+
+    var names = dvState.staff.slice();
+    for (i = 0; i < dvState.devices.length; i++) {
+      var n = String(dvState.devices[i].name || '').trim();
+      if (n && names.indexOf(n) < 0) names.push(n);
+    }
+    html = '<div class="dv-row head"><span>이름</span><span>현재 사용 기기</span><span></span><span>상태</span><span></span></div>';
+    for (i = 0; i < names.length; i++) {
+      var nm = names[i];
+      var off = !!bs[nm];
+      var used = 0, labels = [];
+      for (var k = 0; k < dvState.devices.length; k++) {
+        if (String(dvState.devices[k].name || '') === nm) {
+          used++;
+          if (labels.length < 2) labels.push(dvState.devices[k].label || '기기');
+        }
+      }
+      html += '<div class="dv-row" data-dv-row="staff:' + esc(nm) + '">' +
+        '<span class="who">' + esc(nm) + '</span>' +
+        '<span class="dev">' + (used ? esc(labels.join(', ')) + (used > 2 ? ' 외 ' + (used - 2) + '대' : '') : '—') + '</span>' +
+        '<span class="seen"></span>' +
+        '<span class="st">' + (off
+          ? '<span class="dv-badge off">차단됨</span>'
+          : '<span class="dv-badge on">사용 중</span>') + '</span>' +
+        '<button type="button" class="dv-btn' + (off ? ' bad' : '') + '" data-dv-act="' +
+          (off ? 'unblock' : 'block') + '" data-dv-type="staff" data-dv-value="' + esc(nm) +
+          '" data-dv-label="' + esc(nm) + '">' +
+          (off ? '차단 해제' : '추방(차단)') + '</button>' +
+        '</div>';
+    }
+    el.dvStaff.innerHTML = html;
+    el.dvStaffCount.textContent = String(names.length);
+  }
+
+  function blockTarget(type, value, label) {
+    var what = type === 'staff' ? ('직원 “' + value + '”') : ('기기 “' + (label || value) + '”');
+    askConfirm('추방(차단) 확인',
+      what + '의 접근을 막을까요?<br>차단하면 이 기기·직원은 앱을 열어도 장부가 보이지 않고 입력도 되지 않습니다.<br>' +
+      '<b>언제든 ‘차단 해제’로 풀 수 있습니다.</b>',
+      '추방(차단)', true).then(function (ok) {
+      if (!ok) return;
+      dvRequest('block', { type: type, value: value, label: label || '' }).then(function (data) {
+        dvState.blocks = data.blocks || dvState.blocks;
+        renderDevices();
+        toast(what.replace(/“|”/g, '') + ' 접근을 차단했습니다.');
+      }).catch(function (err) {
+        toast(String((err && err.message) || '차단하지 못했습니다.'), true);
+      });
+    });
+  }
+
+  function unblockTarget(type, value) {
+    var what = type === 'staff' ? ('직원 “' + value + '”') : '기기 “' + value + '”';
+    dvRequest('unblock', { type: type, value: value }).then(function (data) {
+      dvState.blocks = data.blocks || dvState.blocks;
+      renderDevices();
+      if (data.removed === 0) {
+        toast(what.replace(/“|”/g, '') + '은(는) 이미 차단이 풀려 있습니다.');
+      } else {
+        toast(what.replace(/“|”/g, '') + ' 차단을 풀었습니다.');
+      }
+    }).catch(function (err) {
+      toast(String((err && err.message) || '차단을 풀지 못했습니다.'), true);
     });
   }
 
@@ -3192,6 +3724,28 @@
         chips[i].classList.toggle('on', chips[i].getAttribute('data-period') === cur[k]);
       }
     }
+    renderExpect();
+  }
+
+  // 4·6개월을 고르면 계산된 예정 날짜를 배지로 바로 보여 준다
+  function renderExpect() {
+    var map = [
+      { badge: $('planExpect'), p: period.plan, input: $('f_newdate') },
+      { badge: $('addonExpect'), p: period.addon, input: $('f_addondate') }
+    ];
+    for (var i = 0; i < map.length; i++) {
+      var m = map[i];
+      if (!m.badge) continue;
+      var val = m.input ? String(m.input.value || '') : '';
+      if ((m.p === '4' || m.p === '6') && val) {
+        m.badge.innerHTML = '<b>' + esc(val) + '</b> 예정';
+        m.badge.hidden = false;
+        m.badge.setAttribute('title', '개통일 + ' + m.p + '개월');
+      } else {
+        m.badge.hidden = true;
+        m.badge.innerHTML = '';
+      }
+    }
   }
 
   // 선택한 기간에 맞춰 날짜 칸을 채운다
@@ -3214,6 +3768,7 @@
     if (period.addon === '4' || period.addon === '6') {
       $('f_addondate').value = addMonths($('f_date').value || todayISO(), Number(period.addon));
     }
+    renderExpect();
   }
 
   /* ---------------- editor ---------------- */
@@ -3284,6 +3839,7 @@
     renderTypeChips(r.개통유형 || '');
     applyTypeHint();
     $('f_model').value = r.기종 || '';
+    markModelChips($('f_model').value);
     $('f_plan').value = r.요금제 || '';
     $('f_newplan').value = r.변경요금제 || '';
     $('f_newdate').value = normalizeDate(r.요금제변경일자) || '';
@@ -3996,6 +4552,28 @@
     });
     if (el.syncPill) el.syncPill.addEventListener('click', function () { openSyncDialog(); });
     if (el.adminLockBtn) el.adminLockBtn.addEventListener('click', function () { closeMenu(); onAdminLockClick(); });
+    if (el.devicesBtn) el.devicesBtn.addEventListener('click', function () { closeMenu(); openDevicesDialog(); });
+    if (el.devicesDialog) {
+      if (el.dvClose) el.dvClose.addEventListener('click', function () { el.devicesDialog.close(); });
+      if (el.dvDone) el.dvDone.addEventListener('click', function () { el.devicesDialog.close(); });
+      if (el.dvRefresh) el.dvRefresh.addEventListener('click', function () { loadDevices(); });
+      el.devicesDialog.addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('button[data-dv-act]') : null;
+        if (b) {
+          var act = b.getAttribute('data-dv-act');
+          var type = b.getAttribute('data-dv-type');
+          var value = b.getAttribute('data-dv-value') || '';
+          var label = b.getAttribute('data-dv-label') || '';
+          if (act === 'block') blockTarget(type, value, label);
+          else if (act === 'unblock') unblockTarget(type, value);
+          return;
+        }
+        if (e.target === el.devicesDialog) el.devicesDialog.close();
+      });
+      el.devicesDialog.addEventListener('cancel', function () { /* ESC 로 닫힘 */ });
+    }
+    var lockBtn = $('lockRetry');
+    if (lockBtn) lockBtn.addEventListener('click', function () { recheckBlock(false); });
     if (el.adminOk) el.adminOk.addEventListener('click', tryUnlockAdmin);
     if (el.adminCancel) el.adminCancel.addEventListener('click', function () { el.adminDialog.close(); });
     if (el.adminClose) el.adminClose.addEventListener('click', function () { el.adminDialog.close(); });
@@ -4427,6 +5005,20 @@
       sName: $('s_name'),
       sEnabled: $('s_enabled'),
       syncStaffChips: $('syncStaffChips'),
+      modelChips: $('modelChips'),
+      modelList: $('modelList'),
+      planExpect: $('planExpect'),
+      addonExpect: $('addonExpect'),
+      devicesBtn: $('devicesBtn'),
+      devicesDialog: $('devicesDialog'),
+      dvStatus: $('dvStatus'),
+      dvDevices: $('dvDevices'),
+      dvStaff: $('dvStaff'),
+      dvDevCount: $('dvDevCount'),
+      dvStaffCount: $('dvStaffCount'),
+      dvRefresh: $('dvRefresh'),
+      dvDone: $('dvDone'),
+      dvClose: $('dvClose'),
       syncOpenBtn: $('syncOpenBtn'),
       syncNowBtn: $('syncNowBtn'),
       syncNowBtn2: $('syncNowBtn2'),
@@ -4437,7 +5029,8 @@
     };
 
     loadSync();
-    state.records = loadRecords();
+    loadDevice();
+    state.records = blockedStored() ? [] : loadRecords();
     state.filters.month = currentMonth();
 
     // 유형 필터 옵션은 renderFilterUi() 안에서 무선/유선으로 묶어 만든다
@@ -4448,10 +5041,17 @@
     applyRole();
     applyDueOpen();
     renderStaffChips(el.staffChips, $('f_staff'));
+    renderModelChips();
     renderPlanPickerBody();
     applyViewMode();
     render();
     renderSyncUi();
+
+    // 차단(추방)된 기기면 장부를 열지 않고 잠금 화면만 보여 준다
+    if (blockedStored()) {
+      showLock(true);
+      setTimeout(function () { if (blockedStored()) recheckBlock(true); }, 900);
+    }
 
     // 첫 방문 안내 (데이터 없을 때만)
     if (!state.records.length) {
@@ -4459,7 +5059,7 @@
     }
 
     // 앱을 열면 최신 공용 장부를 먼저 받아온다
-    if (syncOn()) {
+    if (syncOn() && !blockedStored()) {
       setTimeout(function () { runSync({ quiet: true }); }, 600);
     }
   }

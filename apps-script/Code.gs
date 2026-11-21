@@ -5,6 +5,8 @@
  *  · 메인 시트(SHEET_NAME = '전체_통합') 한 곳에 모든 직원 기록이 쌓입니다.
  *  · '담당자' 열로 직원을 구분하고, 직원별 보기 탭은 FILTER 로 자동 생성됩니다.
  *  · 앱(kt-store-manager)에서 매장 PIN 을 함께 보내야 읽기/쓰기가 됩니다.
+ *  · 앱을 연 기기는 숨김 탭 '_접속기기' 에, 추방(차단)한 기기·직원은 '_차단' 에 기록됩니다.
+ *    차단된 기기/직원은 list·upsert 요청에 {ok:false, blocked:true} 만 받고 데이터는 받지 못합니다.
  *
  *  설치 : 스프레드시트 → 확장 프로그램 → Apps Script 에 이 파일 전체를 붙여넣고
  *         배포 → 새 배포 → 웹앱 (실행: 나 / 액세스: 모든 사용자) → 배포
@@ -17,8 +19,14 @@ var SHEET_NAME   = '전체_통합';          // 메인(통합) 시트 이름 —
 var STORE_PIN    = '5001';               // 매장 접속 PIN (조회·등록·수정)
 var ADMIN_PIN    = '0525';               // 사장님(관리자) PIN — 삭제·엑셀·백업은 이 PIN 이 있어야
 var SPREADSHEET_ID = '1DjKKQT9K2ryDKjRL88B31pMhdqgqlzEX39uDbG8F4E4'; // 시트에 붙여 만든 경우 비워도 됨
-var STAFF_NAMES  = ['김태양', '김설화', '이건엽', '권영한'];   // 직원별 보기 탭을 미리 만들 이름들 (직원 4명)
+var STAFF_NAMES  = ['김태양', '김설화', '이건엽', '권영한', '전국현'];   // 직원별 보기 탭을 미리 만들 이름들 (직원 5명)
 var CREATE_STAFF_TABS = true;            // 담당자 이름이 처음 등장할 때 직원별 보기 탭 자동 생성
+
+/* ===== 접속 기기 · 차단(추방) ===== */
+var DEVICE_SHEET = '_접속기기';          // 앱을 연 기기 기록 (숨김 탭 — 직접 고치지 말 것)
+var DEVICE_HEAD  = ['deviceId', '기기명', '담당자명', '최근접속', '최초접속', 'UA'];
+var BLOCK_SHEET  = '_차단';              // 추방(차단) 목록 (숨김 탭 — 앱의 기기 관리 창에서만 바꾼다)
+var BLOCK_HEAD   = ['종류', '값', '표시이름', '차단시각', '차단한사람'];
 
 /* ===== 컬럼 (순서 고정) ===== */
 var COLS = ['id', '개통일', '고객명', '연락처', '생년월일', '개통유형', '기종', '요금제',
@@ -40,7 +48,7 @@ var WIRED_TYPES = ['인터넷+TV 신규가입', '인터넷+TV 약정갱신', '�
    웹앱 진입점
    ========================================================= */
 
-/** 조회 : {URL}?pin=5001&action=list  (JSONP 는 &callback=함수명) */
+/** 조회 : {URL}?pin=5001&action=list&deviceId=…  (JSONP 는 &callback=함수명) */
 function doGet(e) {
   var p = (e && e.parameter) || {};
   var cb = String(p.callback || '');
@@ -48,14 +56,27 @@ function doGet(e) {
   try {
     checkPin_(p.pin);
     var action = String(p.action || 'list');
-    if (action === 'list') {
-      out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
-    } else if (action === 'ping') {
-      var sh = getDataSheet_();
-      out = { ok: true, action: 'ping', sheet: SHEET_NAME,
-              count: Math.max(0, sh.getLastRow() - 1), serverTime: nowIso_() };
+    var dev = parseDevice_(p);
+    if (action === 'devices') {
+      // 기기 관리 창(관리자 전용) — 기기·차단 목록은 관리자 PIN 이 있어야 보인다
+      checkAdminPin_(p.adminPin, '기기 관리');
+      out = { ok: true, action: 'devices', devices: readDevices_(), blocks: readBlocks_(),
+              staff: STAFF_NAMES.slice(), serverTime: nowIso_() };
     } else {
-      throw new Error('지원하지 않는 요청입니다: ' + action);
+      var blk = checkBlocked_(dev);
+      if (blk) {
+        out = blockedOut_(blk);
+      } else if (action === 'list') {
+        touchDevice_(dev);
+        out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
+      } else if (action === 'ping') {
+        touchDevice_(dev);
+        var sh = getDataSheet_();
+        out = { ok: true, action: 'ping', sheet: SHEET_NAME,
+                count: Math.max(0, sh.getLastRow() - 1), serverTime: nowIso_() };
+      } else {
+        throw new Error('지원하지 않는 요청입니다: ' + action);
+      }
     }
   } catch (err) {
     out = { ok: false, error: errMessage_(err) };
@@ -63,7 +84,11 @@ function doGet(e) {
   return jsonOut_(out, cb);
 }
 
-/** 저장/삭제 : 본문 {"pin":"5001","action":"upsert"|"delete","record":{…},"id":"…"} */
+/**
+ * 저장/삭제/기기관리 : 본문
+ *   {"pin":"5001","action":"upsert"|"delete"|"list","record":{…},"id":"…","deviceId":"…"}
+ *   {"pin":"5001","action":"devices"|"block"|"unblock","adminPin":"0525","type":"device"|"staff","value":"…"}
+ */
 function doPost(e) {
   var req = {};
   try {
@@ -76,15 +101,29 @@ function doPost(e) {
   try {
     checkPin_(req.pin);
     var action = String(req.action || 'upsert');
-    if (action === 'upsert') {
-      out = upsert_(req.record || {});
-    } else if (action === 'delete') {
-      checkAdminPin_(req.adminPin);
-      out = remove_(req.id || (req.record && req.record.id));
-    } else if (action === 'list') {
-      out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
+    var dev = parseDevice_(req);
+    if (action === 'block' || action === 'unblock' || action === 'devices') {
+      checkAdminPin_(req.adminPin, '기기 관리');
+      if (action === 'block') out = blockTarget_(req, dev);
+      else if (action === 'unblock') out = unblockTarget_(req);
+      else out = { ok: true, action: 'devices', devices: readDevices_(), blocks: readBlocks_(),
+                   staff: STAFF_NAMES.slice(), serverTime: nowIso_() };
     } else {
-      throw new Error('지원하지 않는 요청입니다: ' + action);
+      var blk = checkBlocked_(dev, req);
+      if (blk) {
+        out = blockedOut_(blk);
+      } else if (action === 'upsert') {
+        touchDevice_(dev);
+        out = upsert_(req.record || {});
+      } else if (action === 'delete') {
+        checkAdminPin_(req.adminPin);
+        out = remove_(req.id || (req.record && req.record.id));
+      } else if (action === 'list') {
+        touchDevice_(dev);
+        out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
+      } else {
+        throw new Error('지원하지 않는 요청입니다: ' + action);
+      }
     }
   } catch (err) {
     out = { ok: false, error: errMessage_(err) };
@@ -96,9 +135,11 @@ function doPost(e) {
    인증 · 공통
    ========================================================= */
 
-function checkAdminPin_(pin) {
+function checkAdminPin_(pin, what) {
   var got = String(pin == null ? '' : pin).trim();
-  if (got !== String(ADMIN_PIN)) throw new Error('삭제는 관리자 PIN이 있어야 됩니다.');
+  if (got !== String(ADMIN_PIN)) {
+    throw new Error((what || '삭제') + '은(는) 관리자 PIN이 있어야 됩니다.');
+  }
 }
 
 function checkPin_(pin) {
@@ -374,6 +415,275 @@ function writeRow_(sh, idx, rowIdx, rec) {
 }
 
 /* =========================================================
+   접속 기기 · 추방(차단)
+   ---------------------------------------------------------
+   · 앱을 연 기기는 숨김 탭 '_접속기기' 에 한 줄로 남는다.
+   · 관리자(0525)가 앱에서 추방한 기기/직원은 '_차단' 에 쌓인다.
+   · 차단된 기기·직원에게는 데이터를 전혀 내려주지 않고
+     { ok:false, blocked:true } 만 돌려준다.
+   ========================================================= */
+
+/** 앱이 보낸 기기 정보 (없으면 null) */
+function parseDevice_(src) {
+  var o = src || {};
+  var id = String(o.deviceId || '').trim();
+  if (!id) return null;
+  return {
+    deviceId: id.slice(0, 80),
+    label: String(o.device || o.deviceLabel || '').trim().slice(0, 60),
+    name: String(o.name || o.담당자 || '').trim().slice(0, 30),
+    ua: String(o.ua || '').trim().slice(0, 200)
+  };
+}
+
+/** 날짜/시간 셀을 문자열로 (Date 로 바뀌었어도 시:분까지) */
+function stampText_(v, tz) {
+  if (v instanceof Date) {
+    if (isNaN(v.getTime())) return '';
+    return Utilities.formatDate(v, tz, "yyyy-MM-dd'T'HH:mm:ss");
+  }
+  return String(v == null ? '' : v).trim();
+}
+
+/** 숨김 보조 탭 (없으면 만들고 숨긴다) */
+function sheetByName_(name, head) {
+  var ss = getSpreadsheet_();
+  var sh = ss.getSheetByName(name);
+  if (!sh) {
+    sh = ss.insertSheet(name);
+    sh.getRange(1, 1, 1, head.length).setValues([head.slice()])
+      .setFontWeight('bold').setBackground('#0B57D0').setFontColor('#FFFFFF');
+    sh.setFrozenRows(1);
+    try { sh.hideSheet(); } catch (err) {}
+  }
+  return sh;
+}
+
+function getDeviceSheet_() { return sheetByName_(DEVICE_SHEET, DEVICE_HEAD); }
+function getBlockSheet_() { return sheetByName_(BLOCK_SHEET, BLOCK_HEAD); }
+
+/** 기기 한 대를 기록하거나 최근 접속만 갱신한다 (실패해도 본 요청은 계속) */
+function touchDevice_(dev) {
+  if (!dev || !dev.deviceId) return;
+  var lock = LockService.getScriptLock();
+  var got = false;
+  try { got = lock.tryLock(15000); } catch (err) { got = false; }
+  if (!got) return;
+  try {
+    var sh = getDeviceSheet_();
+    var last = sh.getLastRow();
+    var now = nowIso_();
+    var row = 0;
+    if (last >= 2) {
+      var ids = sh.getRange(2, 1, last - 1, 1).getValues();
+      for (var i = 0; i < ids.length; i++) {
+        if (String(ids[i][0] == null ? '' : ids[i][0]).trim() === dev.deviceId) { row = i + 2; break; }
+      }
+    }
+    if (row > 0) {
+      var first = stampText_(sh.getRange(row, 5).getValue(), tz_()) || now;
+      var prevName = String(sh.getRange(row, 3).getValue() || '').trim();
+      sh.getRange(row, 1, 1, DEVICE_HEAD.length).setNumberFormat('@');
+      sh.getRange(row, 1, 1, DEVICE_HEAD.length).setValues([[
+        dev.deviceId, dev.label, dev.name || prevName, now, first, dev.ua
+      ]]);
+    } else {
+      row = Math.max(last + 1, 2);
+      sh.getRange(row, 1, 1, DEVICE_HEAD.length).setNumberFormat('@');
+      sh.getRange(row, 1, 1, DEVICE_HEAD.length).setValues([[
+        dev.deviceId, dev.label, dev.name, now, now, dev.ua
+      ]]);
+    }
+  } catch (err) {
+    /* 기기 기록 실패는 본 요청에 영향 없음 */
+  } finally {
+    try { lock.releaseLock(); } catch (err2) {}
+  }
+}
+
+/** 기기 목록 (최근 접속 순) */
+function readDevices_() {
+  var sh = null;
+  try { sh = getSpreadsheet_().getSheetByName(DEVICE_SHEET); } catch (err) { return []; }
+  if (!sh) return [];
+  var last = sh.getLastRow();
+  if (last < 2) return [];
+  var tz = tz_();
+  var v = sh.getRange(2, 1, last - 1, DEVICE_HEAD.length).getValues();
+  var out = [];
+  for (var i = 0; i < v.length; i++) {
+    var id = String(v[i][0] == null ? '' : v[i][0]).trim();
+    if (!id) continue;
+    out.push({
+      deviceId: id,
+      label: String(v[i][1] || '').trim(),
+      name: String(v[i][2] || '').trim(),
+      lastSeen: stampText_(v[i][3], tz),
+      firstSeen: stampText_(v[i][4], tz),
+      ua: String(v[i][5] || '').trim()
+    });
+  }
+  out.sort(function (a, b) { return String(b.lastSeen).localeCompare(String(a.lastSeen)); });
+  return out;
+}
+
+/** 차단 탭의 줄들 */
+function readBlockRows_(sh) {
+  var last = sh.getLastRow();
+  if (last < 2) return [];
+  var tz = tz_();
+  var v = sh.getRange(2, 1, last - 1, Math.max(sh.getLastColumn(), BLOCK_HEAD.length)).getValues();
+  var out = [];
+  for (var i = 0; i < v.length; i++) {
+    var kind = String(v[i][0] || '').trim();
+    var val = String(v[i][1] == null ? '' : v[i][1]).trim();
+    if (!kind || !val) continue;
+    out.push({
+      row: i + 2, kind: kind, value: val,
+      label: String(v[i][2] || '').trim(),
+      at: stampText_(v[i][3], tz),
+      by: String(v[i][4] || '').trim()
+    });
+  }
+  return out;
+}
+
+function normBlockType_(t) {
+  var s = String(t == null ? '' : t).trim();
+  if (s === 'staff' || s === '직원' || s === '이름') return 'staff';
+  return 'device';
+}
+
+/** 차단 목록 { device:[…], staff:[…] } — 차단 탭이 없으면 빈 목록 */
+function readBlocks_() {
+  var res = { device: [], staff: [] };
+  var sh = null;
+  try { sh = getSpreadsheet_().getSheetByName(BLOCK_SHEET); } catch (err) { return res; }
+  if (!sh) return res;
+  var rows = readBlockRows_(sh);
+  for (var i = 0; i < rows.length; i++) {
+    if (normBlockType_(rows[i].kind) === 'staff') res.staff.push(rows[i]);
+    else res.device.push(rows[i]);
+  }
+  return res;
+}
+
+/** 이 기기에서 접속한 마지막 담당자명 (직원 이름 차단에 함께 쓴다) */
+function deviceName_(deviceId) {
+  if (!deviceId) return '';
+  var sh = null;
+  try { sh = getSpreadsheet_().getSheetByName(DEVICE_SHEET); } catch (err) { return ''; }
+  if (!sh) return '';
+  var last = sh.getLastRow();
+  if (last < 2) return '';
+  var v = sh.getRange(2, 1, last - 1, 3).getValues();
+  for (var i = 0; i < v.length; i++) {
+    if (String(v[i][0] == null ? '' : v[i][0]).trim() === deviceId) {
+      return String(v[i][2] || '').trim();
+    }
+  }
+  return '';
+}
+
+/** 이 요청이 차단된 기기/직원인가? → {type, value, label} 또는 null */
+function checkBlocked_(dev, req) {
+  var deviceId = dev && dev.deviceId ? dev.deviceId : '';
+  var names = [], i;
+  if (dev && dev.name) names.push(dev.name);
+  if (req) {
+    if (req.name) names.push(String(req.name).trim());
+    var rec = req.record || null;
+    if (rec && rec.담당자) names.push(String(rec.담당자).trim());
+  }
+  if (!deviceId && !names.length) return null;
+
+  var b = readBlocks_();
+  for (i = 0; i < b.device.length; i++) {
+    if (deviceId && b.device[i].value === deviceId) {
+      return { type: 'device', value: deviceId, label: b.device[i].label };
+    }
+  }
+  if (b.staff.length) {
+    if (deviceId) {
+      var recorded = deviceName_(deviceId);
+      if (recorded) names.push(recorded);
+    }
+    for (i = 0; i < b.staff.length; i++) {
+      for (var n = 0; n < names.length; n++) {
+        if (names[n] && names[n] === b.staff[i].value) {
+          return { type: 'staff', value: names[n], label: b.staff[i].label };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+/** 차단된 요청에 돌려주는 응답 — 기록(records)은 절대 싣지 않는다 */
+function blockedOut_(info) {
+  return {
+    ok: false, blocked: true,
+    error: '관리자에 의해 접근이 제한되었습니다.',
+    blockType: (info && info.type) || '',
+    blockValue: (info && info.value) || '',
+    serverTime: nowIso_()
+  };
+}
+
+/** 기기/직원을 추방(차단)한다 — 관리자 PIN 필요 */
+function blockTarget_(req, dev) {
+  var type = normBlockType_(req.type);
+  var value = String(req.value == null ? '' : req.value).trim();
+  if (!value) throw new Error('차단할 기기/직원을 지정해 주세요.');
+  var label = String(req.label || '').trim().slice(0, 60);
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) throw new Error('다른 작업이 진행 중입니다. 잠시 뒤 다시 시도해 주세요.');
+  try {
+    var sh = getBlockSheet_();
+    var rows = readBlockRows_(sh);
+    for (var i = 0; i < rows.length; i++) {
+      if (normBlockType_(rows[i].kind) === type && rows[i].value === value) {
+        return { ok: true, action: 'block', already: true, type: type, value: value,
+                 blocks: readBlocks_(), serverTime: nowIso_() };
+      }
+    }
+    sh.appendRow([type === 'staff' ? '직원' : '기기', value, label,
+                  nowIso_(), String((dev && dev.name) || req.by || '')]);
+    return { ok: true, action: 'block', type: type, value: value, label: label,
+             blocks: readBlocks_(), serverTime: nowIso_() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/** 추방(차단) 해제 — 관리자 PIN 필요 */
+function unblockTarget_(req) {
+  var type = normBlockType_(req.type);
+  var value = String(req.value == null ? '' : req.value).trim();
+  if (!value) throw new Error('차단을 풀 기기/직원을 지정해 주세요.');
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) throw new Error('다른 작업이 진행 중입니다. 잠시 뒤 다시 시도해 주세요.');
+  try {
+    var sh = null;
+    try { sh = getSpreadsheet_().getSheetByName(BLOCK_SHEET); } catch (err) { sh = null; }
+    if (!sh) return { ok: true, action: 'unblock', type: type, value: value, removed: 0,
+                      blocks: readBlocks_(), serverTime: nowIso_() };
+    var rows = readBlockRows_(sh);
+    var removed = 0;
+    for (var i = rows.length - 1; i >= 0; i--) {
+      if (normBlockType_(rows[i].kind) === type && rows[i].value === value) {
+        sh.deleteRow(rows[i].row);
+        removed++;
+      }
+    }
+    return { ok: true, action: 'unblock', type: type, value: value, removed: removed,
+             blocks: readBlocks_(), serverTime: nowIso_() };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/* =========================================================
    저장 · 삭제
    ========================================================= */
 
@@ -487,5 +797,6 @@ function setup() {
 
 /** 배포 주소를 다시 만들었을 때 확인용 */
 function whoami() {
-  return { sheet: SHEET_NAME, pinLength: String(STORE_PIN).length, adminPinLength: String(ADMIN_PIN).length, staff: STAFF_NAMES };
+  return { sheet: SHEET_NAME, pinLength: String(STORE_PIN).length, adminPinLength: String(ADMIN_PIN).length,
+           staff: STAFF_NAMES, deviceSheet: DEVICE_SHEET, blockSheet: BLOCK_SHEET };
 }
