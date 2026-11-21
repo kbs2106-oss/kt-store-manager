@@ -293,13 +293,18 @@ function migrateSheet_(sh) {
     rows.push(line);
   }
 
-  sh.clear();
-  writeHeader_(sh, 1, COLS.length);
+  // 헤더 + 데이터를 한 번에 새 순서로 덮어쓴다 (clear 후 쓰기보다 중간에 끼어들 틈이 적다)
+  var block = [COLS.slice()].concat(rows);
+  sh.getRange(1, 1, block.length, COLS.length).setValues(block);
+  sh.getRange(1, 1, 1, COLS.length)
+    .setFontWeight('bold')
+    .setBackground('#0B57D0')
+    .setFontColor('#FFFFFF');
+  sh.setFrozenRows(1);
   var idx = headerMap_(sh);
   for (var t = 0; t < TEXT_COLS.length; t++) {
     sh.getRange(2, idx.map[TEXT_COLS[t]] + 1, Math.max(rows.length, 1)).setNumberFormat('@');
   }
-  if (rows.length) sh.getRange(2, 1, rows.length, COLS.length).setValues(rows);
   return true;
 }
 
