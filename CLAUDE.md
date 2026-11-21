@@ -328,7 +328,8 @@ kt-store-manager/
 | `typeParts()` / `joinTypeParts()` / `typeSlots()` | `"번호이동 + 인터넷+TV 신규가입"` ↔ 조각 배열/무선·유선 칸 변환 |
 | `typeBadgesHtml()` | 복합 유형을 배지 2개로 그린다(표·폰 카드 공통) |
 | `isWiredType(t)` | 유선(인터넷·TV) 유형인지 판별 (예전 '인터넷+TV' 포함, 복합 값은 조각 단위로) |
-| `collectForm()` / `saveForm()` | 입력 수집·필수 검사·저장 (+동기화 큐). v19: 추지·페이백·중고폰 `미기입/미반납` · 유선 요금제 검증 |
+| `collectForm()` / `saveForm()` | 입력 수집·필수 검사·저장 (+동기화 큐). v19: 추지·페이백·중고폰 `미기입/미반납` · 유선 요금제 검증 · v24: 명의+번호 중복 차단 |
+| `normName()` / `digitsOf()` / `findDuplicateRecord()` | v24 — 고객명 공백 정리·연락처 숫자만 비교, 같은 명의+같은 번호의 기존 기록 찾기(수정 중 자기 자신 제외) |
 | `payNoneOn()/setPayNone()/paintPayNone()/togglePayNone()` | v19 추지·페이백·중고폰 `미기입`/`미반납` 칩 상태·모양 |
 | `syncWiredPlanField()/planPartsForType()` | v19 유선 개통유형일 때만 유선 요금제 칸 열기 · 저장값을 무선/유선 칸으로 분해 |
 | `foreignOn()/setForeignChip()/foreignTagHtml()` | v19 외국인 고객 칩 · 외국인 전용(웰컴) 요금제 열기 · 배지 |
