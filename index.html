@@ -700,6 +700,19 @@
   .type-chip.on{box-shadow:0 0 0 2px var(--blue-600) inset;font-weight:800}
   .type-chip.on::before{content:"✓ ";font-weight:900}
   .type-chip.legacy{opacity:.85}
+  /* v28 — 유선 개통유형 [신규] · [약갱] 그룹 버튼 + 펼친 세부 유형 */
+  .type-chip.group-chip{display:inline-flex;align-items:center;gap:5px;background:#F7F9FC}
+  .type-chip.group-chip .gc-sub{font-size:10px;font-weight:700;color:var(--slate-400)}
+  .type-chip.group-chip::after{content:"▾";font-size:10px;color:var(--slate-400)}
+  .type-chip.group-chip.open{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700)}
+  .type-chip.group-chip.open::after{content:"▴";color:var(--blue-600)}
+  .type-chip.group-chip.on{background:#E1EDFF;border-color:#9DBDF0;color:var(--blue-700)}
+  .type-subrow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px;padding:7px 9px;
+    border:1px dashed #C9D8EC;border-radius:10px;background:#F8FBFF}
+  .type-sub-label{flex:none;font-size:10.5px;font-weight:800;color:var(--blue-700);background:#E8F1FF;border-radius:6px;padding:2px 7px}
+  @media (max-width:560px){
+    .type-subrow{align-items:flex-start;flex-direction:column;gap:5px}
+  }
   @media (pointer:coarse){.type-chip{height:38px;padding:0 13px;font-size:13px}}
   /* 폰: 무선/유선 라벨을 위에 두고 칩을 아래 줄에 펼친다 */
   @media (max-width:560px){
@@ -800,6 +813,14 @@
   }
   .staff-chip:hover{background:#F4F7FB}
   .staff-chip.on{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700);font-weight:800}
+  /* v28 — 기종 브랜드 [갤럭시] · [아이폰] · [기타] 버튼 + 펼친 모델 */
+  .brand-chip{display:inline-flex;align-items:center;gap:5px;background:#F7F9FC;font-weight:700}
+  .brand-chip .brand-sub{font-size:10px;font-weight:700;color:var(--slate-400)}
+  .brand-chip::after{content:"▾";font-size:10px;color:var(--slate-400)}
+  .brand-chip.open{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700);font-weight:800}
+  .brand-chip.open::after{content:"▴";color:var(--blue-600)}
+  .brand-panel{display:flex;flex-wrap:wrap;gap:6px;width:100%}
+  .brand-panel:empty{display:none}
   .switch-row{display:flex;align-items:center;gap:9px;font-size:13.5px;font-weight:700;color:var(--slate-700);padding:2px 0}
   .switch-row input{width:17px;height:17px;accent-color:var(--blue-600)}
   @media (pointer:coarse){.staff-chip{height:36px}}
@@ -1009,6 +1030,10 @@
     background:#F7FAFF;font-size:12.5px;line-height:1.5;color:var(--slate-500);
   }
   .pp-preview b{color:var(--blue-700);font-weight:700}
+  /* v28 — 유선 요금제 선택 창: 고른 개통유형에 맞는 줄만 나온다는 안내 */
+  .pp-wired-note{margin:0 0 10px;padding:7px 10px;border-radius:9px;background:#F5FAFF;border:1px solid #CFE3FA;
+    font-size:11.5px;font-weight:700;color:#334155;line-height:1.45}
+  .pp-wired-note b{color:var(--blue-700)}
   /* v21 — 요금제 선택 창: 본문만 스크롤 · 미리보기·[적용] 버튼은 항상 화면 안에 고정 */
   #planPicker[open]{
     display:flex;flex-direction:column;overflow:hidden;
@@ -1552,12 +1577,12 @@
       <div class="sum-cell">
         <span class="sum-label">유선 신규</span>
         <span class="sum-value"><b class="num" id="kpiWiredNewN">0</b><i>건</i></span>
-        <span class="sum-sub" id="kpiWiredNewNSub">인터넷+TV 신규가입</span>
+        <span class="sum-sub" id="kpiWiredNewNSub">인티 신규·단품</span>
       </div>
       <div class="sum-cell">
         <span class="sum-label">유선 약갱</span>
         <span class="sum-value"><b class="num" id="kpiWiredRenewN">0</b><i>건</i></span>
-        <span class="sum-sub" id="kpiWiredRenewNSub">약정갱신</span>
+        <span class="sum-sub" id="kpiWiredRenewNSub">약갱·인터넷 약정갱신</span>
       </div>
       <div class="sum-cell">
         <span class="sum-label">제휴카드</span>
@@ -1801,7 +1826,7 @@
           <label id="f_typeLabel">개통유형 <span class="opt">선택 · 무선·유선 각 1개</span></label>
           <input id="f_type" type="hidden" value="">
           <div class="type-group" id="typeChips" role="group" aria-labelledby="f_typeLabel"></div>
-          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP·2ND, 유선은 인터넷·TV 항목에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
+          <span class="hint" id="typeHint">무선은 기기변경·번호이동·신규가입·중고신규·중고MNP·2ND, 유선은 <b>신규</b>·<b>약갱</b> 그룹에서 고릅니다. 두 줄을 함께 골라도 됩니다.</span>
         </div>
 
         <!-- v27 — 중고신규·중고MNP 를 골랐을 때만: 중고 결합 여부 (MBA-02-02 결합 수수료 누락 방지 · 필수) -->
@@ -1853,7 +1878,7 @@
           </div>
           <input id="f_plan_l" type="text" autocomplete="off" placeholder="예) 인터넷 베이직 + 지니 TV 에센스">
           <div class="plan-suggest" id="sug_f_plan_l" role="listbox" aria-label="유선 요금제 검색 결과"></div>
-          <span class="hint">유선 개통유형을 고르면 열립니다. 창에서 인터넷·WiFi·TV·셋탑을 고르면 조합이 그대로 들어가고, 저장할 때 무선 요금제와 <b> + </b>로 이어 한 칸(요금제)에 들어갑니다.</span>
+          <span class="hint">유선 개통유형을 고르면 열립니다. <b>인터넷 신규 단품·인터넷 약정갱신</b>이면 인터넷·WiFi만, <b>TV 단품</b>이면 지니 TV·셋탑만, <b>인티 신규·인티 약갱</b>이면 넷 다 고를 수 있고, 고른 조합이 그대로 들어갑니다.</span>
         </div>
 
         <div class="field span2 ins-field">
@@ -1969,7 +1994,7 @@
         <div class="field admin-only">
           <label for="f_rebate_l">유선 리베이트 (원) <span class="opt">선택</span></label>
           <input id="f_rebate_l" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
-          <span class="hint">인터넷+TV · 인터넷 약정갱신</span>
+          <span class="hint">인티 신규 · 인터넷 신규 단품 · TV 단품 · 인티 약갱 · 인터넷 약정갱신</span>
         </div>
 
         <!-- v19 — 추지·페이백은 [미기입] 칩을 누르거나 금액을 입력해야 저장된다 -->
@@ -2522,20 +2547,46 @@
   var RISK_12 = /12\s*개월|약정\s*12|십이\s*개월/;
   var RISK_SEG = /스쿨잼|스쿨\s*잼|SEG|세그|하향/i;
 
-  // 개통유형 — 무선 6개(중고신규·중고 MNP·2ND 포함) / 유선(인터넷·TV) 3개
+  // 개통유형 — 무선 6개(중고신규·중고 MNP·2ND 포함) / 유선(인터넷·TV) 5개
   //  · 중고신규 · 중고 MNP 는 무선 줄에서 바로 고른다(v16). 고르면 MBA-02 후불 정책과 도도매 차감이 자동 적용된다.
   //  · 2ND(세컨드 디바이스: 워치·패드)는 v18 추가 — MRA 기본 리베이트 대상이 아니고 포인트만 010 기준 0.2P
+  //  · v28 — 유선은 [신규] / [약갱] 두 그룹 버튼으로 접어서 고른다(단품 2종 추가 · 매장 용어로 줄인 이름).
+  //    속도(500M·1G 등)는 개통유형이 아니라 '유선 요금제' 칸에서 고르므로 유형에는 넣지 않는다.
   var WIRELESS_TYPES = ['기기변경', '번호이동', '신규가입', '중고신규', '중고MNP', '2ND'];
   var MRA_WIRELESS_TYPES = ['기기변경', '번호이동', '신규가입'];   // MRA(기본·모델·활력) 대상 무선 유형
   var USED_TYPES = ['중고신규', '중고MNP'];                        // 중고·자급제 개통
-  var WIRED_TYPES = ['인터넷+TV 신규가입', '인터넷+TV 약정갱신', '인터넷 약정갱신'];
+  var WIRED_TYPES = ['인티 신규', '인터넷 신규 단품', 'TV 단품', '인티 약갱', '인터넷 약정갱신'];
+  // v28 — 유선 개통유형 그룹 (평소에는 이 두 버튼만 보이고, 누른 그룹의 세부 유형만 아래에 펼쳐진다)
+  var WIRED_GROUPS = [
+    { key: 'new', label: '신규', sub: '', types: ['인티 신규', '인터넷 신규 단품', 'TV 단품'] },
+    { key: 'renew', label: '약갱', sub: '', types: ['인티 약갱', '인터넷 약정갱신'] }
+  ];
+  // v28 — 예전 장부·시트에 붙어 있는 유선 표기를 지금 이름으로 되돌린다 (읽기·필터·요금제 연동 호환)
+  var WIRED_TYPE_ALIASES = {
+    '인터넷+TV신규가입': '인티 신규',
+    '인터넷+TV약정갱신': '인티 약갱',
+    '인티신규': '인티 신규',
+    '인티약갱': '인티 약갱',
+    '인티': '인티 신규',
+    '인터넷신규단품': '인터넷 신규 단품',
+    '인터넷단품': '인터넷 신규 단품',
+    '인터넷약정갱신': '인터넷 약정갱신',
+    'TV단품': 'TV 단품'
+  };
+  function wiredTypeCanon(t) {
+    var s = String(t == null ? '' : t).trim();
+    if (!s) return '';
+    return WIRED_TYPE_ALIASES[s.replace(/\s/g, '')] || s;
+  }
   var TYPES = WIRELESS_TYPES.concat(WIRED_TYPES);
   var TYPE_CLASS = {
     '기기변경':'t-change', '번호이동':'t-move', '신규가입':'t-new',
     '중고신규':'t-used', '중고MNP':'t-used2', '2ND':'t-second',
-    '인터넷+TV 신규가입':'t-net', '인터넷+TV 약정갱신':'t-wired', '인터넷 약정갱신':'t-wired2',
+    '인티 신규':'t-wired', '인티 약갱':'t-wired2', '인터넷 약정갱신':'t-wired2',
+    '인터넷 신규 단품':'t-wired2', 'TV 단품':'t-wired',
     // 예전 장부에 남아 있는 유형 (고르지는 못하지만 색·필터는 유지)
-    '인터넷+TV':'t-net', '키즈폰':'t-kids', '기타':'t-etc'
+    '인터넷+TV 신규가입':'t-net', '인터넷+TV 약정갱신':'t-wired', '인터넷+TV':'t-net',
+    '키즈폰':'t-kids', '기타':'t-etc'
   };
   var LEGACY_TYPES = ['인터넷+TV', '키즈폰', '기타'];
 
@@ -2863,6 +2914,15 @@
     return w || l || '';
   }
 
+  // 유형 필터 대조 — v28: 유선은 예전 표기('인터넷+TV 신규가입')와 지금 이름('인티 신규')을 같은 것으로 본다
+  function typeHasPart(v, want) {
+    var parts = typeParts(v), w = wiredTypeCanon(want);
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i] === want || wiredTypeCanon(parts[i]) === w) return true;
+    }
+    return false;
+  }
+
   // 조각을 무선 칸(w) / 유선 칸(l)으로 나눈다 — 각 칸에는 최대 1개
   function typeSlots(v) {
     var parts = typeParts(v), out = { w: '', l: '' }, i;
@@ -2875,13 +2935,15 @@
   }
 
   // 유형 배지 — 복합이면 무선·유선 배지 두 개를 나란히, 없으면 ''
+  //  v28 — 유선은 예전 표기('인터넷+TV 신규가입')도 지금 이름('인티 신규')으로 보여 준다
   function typeBadgesHtml(v) {
-    var parts = typeParts(v);
+    var parts = typeParts(v), names = [], i;
     if (!parts.length) return '';
-    var multi = parts.length > 1;
-    var html = '<span class="type-badges"' + (multi ? ' title="' + esc(parts.join(TYPE_SEP)) + '"' : '') + '>';
-    for (var i = 0; i < parts.length; i++) {
-      html += '<span class="badge ' + (TYPE_CLASS[parts[i]] || 't-etc') + '">' + esc(parts[i]) + '</span>';
+    for (i = 0; i < parts.length; i++) names.push(wiredTypeCanon(parts[i]));
+    var multi = names.length > 1;
+    var html = '<span class="type-badges"' + (multi ? ' title="' + esc(names.join(TYPE_SEP)) + '"' : '') + '>';
+    for (i = 0; i < names.length; i++) {
+      html += '<span class="badge ' + (TYPE_CLASS[names[i]] || 't-etc') + '">' + esc(names[i]) + '</span>';
     }
     return html + '</span>';
   }
@@ -2891,13 +2953,34 @@
   function isWiredType(t) {
     var parts = typeParts(t);
     if (parts.length !== 1) return false;
-    var s = String(parts[0]).replace(/\s/g, '');
+    var s = wiredTypeCanon(parts[0]).replace(/\s/g, '');
     if (!s) return false;
     for (var i = 0; i < WIRED_TYPES.length; i++) {
       if (WIRED_TYPES[i].replace(/\s/g, '') === s) return true;
     }
-    return /인터넷|TV|티비|iptv/i.test(s);
+    return /인터넷|TV|티비|iptv|인티/i.test(s);
   }
+
+  /* v28 — 유선 개통유형 그룹 */
+  // 유형 → 그룹 키('new' 신규 / 'renew' 약갱) · 그룹에 없는 예전 표기는 ''
+  function wiredGroupOf(t) {
+    var s = wiredTypeCanon(t).replace(/\s/g, '');
+    if (!s) return '';
+    for (var i = 0; i < WIRED_GROUPS.length; i++) {
+      for (var j = 0; j < WIRED_GROUPS[i].types.length; j++) {
+        if (WIRED_GROUPS[i].types[j].replace(/\s/g, '') === s) return WIRED_GROUPS[i].key;
+      }
+    }
+    return '';
+  }
+
+  function wiredGroupByKey(key) {
+    for (var i = 0; i < WIRED_GROUPS.length; i++) if (WIRED_GROUPS[i].key === key) return WIRED_GROUPS[i];
+    return null;
+  }
+
+  // 약정갱신 갈래인가 (KPI '유선 약갱' · 정책 약갱 표기용)
+  function wiredTypeRenew(t) { return /갱신|약갱/.test(wiredTypeCanon(t)); }
 
   /* ---------------- 단말 보험 (미가입 / 가입) ----------------
      · 앱 안에서는 '단말보험' 항목으로 다니고,
@@ -3708,27 +3791,79 @@
   /* ---------------- 기종 빠른 선택 (최근 2년 KT 주력 단말기) ----------------
      · 칩을 누르면 기종 칸에 들어가고, 다시 누르면 빠진다
      · 이미 다른 기기·유선 상품이 있으면 ' + '로 이어 붙인다 (예: 갤럭시 S26 + 인터넷 에센스)
-     · 직접 입력도 그대로 가능 (datalist 로 타이핑 제안) */
+     · 직접 입력도 그대로 가능 (datalist 로 타이핑 제안)
+     · v28 — 22종을 [갤럭시] · [아이폰] · [기타] 세 브랜드 버튼으로 접어 둔다 */
   function modelParts(value) {
     return String(value || '').split(/\s*\+\s*/).map(function (s) { return s.trim(); }).filter(Boolean);
+  }
+
+  // v28 — 기종 브랜드 3그룹 · 지금 펼쳐 둔 브랜드('' = 접힘)
+  var MODEL_BRANDS = [
+    { key: 'galaxy', label: '갤럭시', sub: '', test: function (n) { return /^갤럭시/.test(n); } },
+    { key: 'iphone', label: '아이폰', sub: '', test: function (n) { return /^아이폰/.test(n); } },
+    { key: 'etc', label: '기타', sub: '(키즈·폴더·모토)', test: function (n) { return !/^갤럭시/.test(n) && !/^아이폰/.test(n); } }
+  ];
+  var modelOpenBrand = '';
+
+  function modelBrandOf(name) {
+    var n = String(name == null ? '' : name).trim();
+    if (!n) return '';
+    for (var i = 0; i < MODEL_BRANDS.length; i++) if (MODEL_BRANDS[i].test(n)) return MODEL_BRANDS[i].key;
+    return '';
+  }
+
+  function modelBrandByKey(key) {
+    for (var i = 0; i < MODEL_BRANDS.length; i++) if (MODEL_BRANDS[i].key === key) return MODEL_BRANDS[i];
+    return null;
+  }
+
+  // 기종 칩 — 브랜드 버튼 3개 + 누른 브랜드의 모델만 아래에
+  function modelChipsHtml() {
+    var i, html = '';
+    for (i = 0; i < MODEL_BRANDS.length; i++) {
+      var g = MODEL_BRANDS[i];
+      var open = modelOpenBrand === g.key;
+      html += '<button type="button" class="staff-chip brand-chip' + (open ? ' open' : '') + '" data-brand="' + g.key +
+        '" aria-expanded="' + (open ? 'true' : 'false') + '">' + esc(g.label) +
+        (g.sub ? '<span class="brand-sub">' + esc(g.sub) + '</span>' : '') + '</button>';
+    }
+    html += '<div class="brand-panel" id="modelBrandPanel" data-brand="' + esc(modelOpenBrand) + '">';
+    if (modelOpenBrand) {
+      for (i = 0; i < KT_DEVICES.length; i++) {
+        if (modelBrandOf(KT_DEVICES[i]) !== modelOpenBrand) continue;
+        html += '<button type="button" class="staff-chip" data-model="' + esc(KT_DEVICES[i]) + '">' +
+          esc(KT_DEVICES[i]) + '</button>';
+      }
+    }
+    return html + '</div>';
+  }
+
+  // 브랜드 버튼·모델 패널만 다시 그린다(전체를 다시 그리지 않으니 입력 중 포커스가 안 튄다)
+  function paintModelBrandPanel() {
+    var box = $('modelChips');
+    if (!box) return;
+    box.innerHTML = modelChipsHtml();
   }
 
   function renderModelChips() {
     var box = $('modelChips');
     if (!box) return;
-    var html = '';
-    for (var i = 0; i < KT_DEVICES.length; i++) {
-      html += '<button type="button" class="staff-chip" data-model="' + esc(KT_DEVICES[i]) + '">' +
-        esc(KT_DEVICES[i]) + '</button>';
-    }
-    box.innerHTML = html;
+    paintModelBrandPanel();
     var dl = $('modelList');
     if (dl) {
       var opts = '';
       for (var j = 0; j < KT_DEVICES.length; j++) opts += '<option value="' + esc(KT_DEVICES[j]) + '"></option>';
-      dl.innerHTML = opts;
+      dl.innerHTML = opts;   // 직접 입력·자동완성은 22종 전체 그대로
     }
     box.onclick = function (e) {
+      var bb = e.target && e.target.closest ? e.target.closest('button[data-brand]') : null;
+      if (bb) {
+        var k = bb.getAttribute('data-brand');
+        modelOpenBrand = (modelOpenBrand === k) ? '' : k;
+        paintModelBrandPanel();
+        markModelChips($('f_model') ? $('f_model').value : '', true);
+        return;
+      }
       var b = e.target && e.target.closest ? e.target.closest('button[data-model]') : null;
       if (!b) return;
       toggleModel(b.getAttribute('data-model'));
@@ -3747,14 +3882,26 @@
     if (at >= 0) parts.splice(at, 1);
     else parts.push(name);
     input.value = parts.join(' + ');
-    markModelChips(input.value);
+    markModelChips(input.value, true);
     refreshPolicy(true); updateFormRisk();
   }
 
-  function markModelChips(value) {
+  // 이미 넣은 기종이 있으면 그 브랜드를 자동으로 펼쳐 선택 상태가 바로 보이게 한다(noAuto 면 건드리지 않는다)
+  function markModelChips(value, noAuto) {
     var box = $('modelChips');
     if (!box) return;
     var parts = modelParts(value);
+    if (!noAuto) {
+      // 입력한 기종의 브랜드로 자동 전환 (다른 브랜드가 펼쳐져 있어도 그 기종이 보이게)
+      var want = '';
+      for (var k = 0; k < parts.length; k++) {
+        if (KT_DEVICES.indexOf(parts[k]) >= 0) { want = modelBrandOf(parts[k]); break; }
+      }
+      if (want && want !== modelOpenBrand) modelOpenBrand = want;
+      var panel = box.querySelector('.brand-panel');
+      if ((modelOpenBrand && !panel) || (!modelOpenBrand && panel && panel.children.length)) paintModelBrandPanel();
+      else if (modelOpenBrand && panel && panel.getAttribute('data-brand') !== modelOpenBrand) paintModelBrandPanel();
+    }
     var chips = box.querySelectorAll('button[data-model]');
     for (var i = 0; i < chips.length; i++) {
       chips[i].classList.toggle('on', parts.indexOf(chips[i].getAttribute('data-model')) >= 0);
@@ -4315,7 +4462,7 @@
     // 유선 포인트 (인터넷 · TV · 유무선 결합)
     var ltype = slots.l || '';
     if (ltype) {
-      var renew = /약정갱신/.test(ltype) ? 1 : 0;
+      var renew = wiredTypeRenew(ltype) ? 1 : 0;   // v28 — '인티 약갱'도 약정갱신으로 본다
       var lp = splitPlanValue(rec.요금제).l || '';
       var chunks = lp ? lp.split('+') : [];
       var inKind = '', tvKind = '', k;
@@ -5336,10 +5483,31 @@
       '</button>';
   }
 
+  /* v28 — 유선 개통유형에 맞는 유선 요금제 줄만 보여 준다
+     · 인터넷 신규 단품 / 인터넷 약정갱신 → 인터넷 · WiFi
+     · TV 단품                     → 지니 TV · 셋탑
+     · 인터넷+TV (신규·약갱)        → 넷 다 */
+  function wiredPickerCats() {
+    var l = wiredTypeCanon(typeSlots($('f_type') ? $('f_type').value : '').l);
+    if (!l || WIRED_TYPES.indexOf(l) < 0) return ['인터넷', 'WiFi', '지니 TV', '셋탑박스'];   // 유선 미선택 · 예전 표기는 기존대로
+    if (l === '인티 신규' || l === '인티 약갱') return ['인터넷', 'WiFi', '지니 TV', '셋탑박스'];
+    if (l === 'TV 단품') return ['지니 TV', '셋탑박스'];
+    return ['인터넷', 'WiFi'];   // 인터넷 신규 단품 · 인터넷 약정갱신
+  }
+
+  // 지금 유형에서는 고를 수 없는 줄에서 골라 둔 항목을 버립니다 (조합 문자열이 섮이지 않게)
+  function pruneWiredPick() {
+    var allowed = wiredPickerCats();
+    if (!planPick.wired) planPick.wired = {};
+    for (var c in planPick.wired) {
+      if (!planPick.wired.hasOwnProperty(c) || !planPick.wired[c]) continue;
+      if (allowed.indexOf(c) < 0) planPick.wired[c] = null;
+    }
+  }
+
   function renderPlanPickerBody() {
     if (!el.ppMobile || !el.ppWired) return;
     var i, p, html = '', cat = '', open = false;
-
     // 모바일 — 그룹별 칩
     for (i = 0; i < KT_PLANS.length; i++) {
       p = KT_PLANS[i];
@@ -5357,13 +5525,21 @@
     el.ppMobile.innerHTML = html;
 
     // 유선 — 인터넷 / WiFi / TV / 셋탑박스 (v21: WiFi는 두 줄 없이 한 줄, TV는 금액순)
-    var rows = [
+    //   v28 — 고른 유선 개통유형에 필요한 줄만 그린다(인터넷 신규 단품 → 인터넷·WiFi / TV 단품 → TV·셋탑)
+    var allRows = [
       { cat: '인터넷', label: '인터넷' },
       { cat: 'WiFi', label: 'WiFi' },
       { cat: '지니 TV', label: '지니 TV' },
       { cat: '셋탑박스', label: '셋탑' }
     ];
-    var h = '';
+    var allowedCats = wiredPickerCats();
+    var rows = [];
+    for (var ar = 0; ar < allRows.length; ar++) if (allowedCats.indexOf(allRows[ar].cat) >= 0) rows.push(allRows[ar]);
+    var wl = wiredTypeCanon(typeSlots($('f_type') ? $('f_type').value : '').l);
+    var h = '<div class="pp-wired-note" id="ppWiredNote">' +
+      (wl
+        ? '유선 개통유형 <b>' + esc(wl) + '</b> — ' + esc(allowedCats.map(function (c) { return c === '셋탑박스' ? '셋탑' : c; }).join(' · ')) + '만 고를 수 있습니다'
+        : '유선 개통유형을 먼저 고르면 그에 맞는 항목만 나옵니다') + '</div>';
     for (var r = 0; r < rows.length; r++) {
       var row = rows[r];
       h += '<div class="pp-row" data-pp-row="' + esc(row.cat) + '"><span class="pp-row-label">' + esc(row.label) + '</span><div class="pp-row-body">';
@@ -5424,7 +5600,14 @@
     var head = el.planPicker.querySelector('.dlg-head p');
     if (head) {
       head.textContent = planPick.only === 'wired'
-        ? '인터넷 · WiFi · 지니 TV · 셋탑에서 고른 것만 조합되어 유선 요금제 칸에 들어갑니다'
+        ? (function () {
+            var cats = wiredPickerCats();
+            if (cats.length < 4) {
+              return '고른 유선 개통유형에 필요한 ' + cats.map(function (c) { return c === '셋탑박스' ? '셋탑' : c; }).join(' · ') +
+                '만 나옵니다 — 고른 것만 조합되어 유선 요금제 칸에 들어갑니다';
+            }
+            return '인터넷 · WiFi · 지니 TV · 셋탑에서 고른 것만 조합되어 유선 요금제 칸에 들어갑니다';
+          })()
         : (secondOn() && planPick.only !== 'wired')
           ? '2ND(세컨드 디바이스) 개통입니다 — 데이터투게더 요금제만 고를 수 있습니다'
         : planPick.only === 'mobile'
@@ -5454,6 +5637,7 @@
 
   function renderWiredState() {
     if (!el.ppWired) return;
+    pruneWiredPick();   // v28 — 유형에 맞지 않는 줄에서 골라 둔 항목은 버린다
     var chips = el.ppWired.querySelectorAll('[data-pp-plan]');
     for (var i = 0; i < chips.length; i++) {
       var p = PLAN_BY_ID[chips[i].getAttribute('data-pp-plan')];
@@ -5810,7 +5994,7 @@
     var month = f.due ? '' : (allSearch ? '' : f.month);   // 임박 보기에서는 월 필터를 무시
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
-      if (f.type && typeParts(r.개통유형).indexOf(f.type) < 0) return false;
+      if (f.type && !typeHasPart(r.개통유형, f.type)) return false;
       if (f.staff && (r.담당자 || '') !== f.staff) return false;
       if (f.due) {
         var ds = [];
@@ -5831,6 +6015,8 @@
       if (!ignoreEasy && f.easy && !isEasy(r.권매쉬움)) return false;
       if (q) {
         var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.부가서비스, r.중고폰, r.메모, r.개통유형, r.담당자].join(' ').toLowerCase();
+        // v28 — 예전 표기('인터넷+TV 신규가입')로 저장된 건도 '인티 신규' 로 찾힌다
+        if (r.개통유형) hay += ' ' + typeParts(r.개통유형).map(wiredTypeCanon).join(' ').toLowerCase();
         if (normalizeIns(r.단말보험) === '가입') hay += ' 단말보험 보험가입 가입';
         if (isEasy(r.권매쉬움)) hay += ' 권매쉬움 권매 쉬움';
         if (hay.indexOf(q) < 0) return false;
@@ -6025,8 +6211,10 @@
       if (sl0.w) nWireless++;
       var parts0 = typeParts(rr0.개통유형 || '');
       for (j = 0; j < parts0.length; j++) {
-        if (parts0[j] === '인터넷+TV 신규가입') nWiredNew++;
-        else if (parts0[j] === '인터넷+TV 약정갱신' || parts0[j] === '인터넷 약정갱신') nWiredRenew++;
+        var pt0 = wiredTypeCanon(parts0[j]);
+        if (WIRED_TYPES.indexOf(pt0) < 0) continue;
+        if (wiredTypeRenew(pt0)) nWiredRenew++;
+        else nWiredNew++;
       }
       var cd = normalizeCard(rr0.제휴카드);
       if (cd && cd !== '미가입') nCard++;
@@ -6045,7 +6233,7 @@
       var parts = typeParts(list[i].개통유형);
       if (!parts.length) { counts['미지정'] = (counts['미지정'] || 0) + 1; continue; }
       for (j = 0; j < parts.length; j++) {
-        var pt = parts[j];
+        var pt = wiredTypeCanon(parts[j]);
         counts[pt] = (counts[pt] || 0) + 1;
         if (TYPES.indexOf(pt) < 0 && legacy.indexOf(pt) < 0) legacy.push(pt);
       }
@@ -6823,7 +7011,7 @@
     for (i = 0; i < state.records.length; i++) {
       var parts = typeParts(state.records[i].개통유형);
       for (j = 0; j < parts.length; j++) {
-        t = parts[j];
+        t = wiredTypeCanon(parts[j]);
         if (t && TYPES.indexOf(t) < 0) seen[t] = true;
       }
     }
@@ -7147,8 +7335,11 @@
   }
 
   /* ---------------- editor ---------------- */
-  // 개통유형 칩 — 무선 한 줄 / 유선(인터넷·TV) 한 줄, 각 줄에서 최대 1개(무선+유선 동시 가능)
-  function renderTypeChips(selected) {
+  // v28 — 지금 펼쳐 둔 유선 그룹 키('' = 접힘). 모달을 열 때 고른 유형의 그룹이 자동으로 펼쳐진다.
+  var wiredOpenGroup = '';
+
+  // 개통유형 칩 — 무선 한 줄 / 유선은 [신규]·[약갱] 두 그룹 버튼, 각 줄에서 최대 1개(무선+유선 동시 가능)
+  function renderTypeChips(selected, keepOpen) {
     var box = el.typeChips;
     if (!box) return;
     // 예전 단일 값(키즈폰·기타·인터넷+TV)도 고르지는 못하지만 지우지 않고 그 줄에 보여 준다
@@ -7156,20 +7347,45 @@
     var w = slots.w, l = slots.l;
     var value = joinTypeParts(w, l);
     function chip(t) {
-      var on = (t === w || t === l);
+      var on = (t === w) || (!!l && wiredTypeCanon(t) === wiredTypeCanon(l));
       var cls = TYPE_CLASS[t] || 't-etc';
       return '<button type="button" class="type-chip ' + cls + (on ? ' on' : '') +
         (TYPES.indexOf(t) < 0 ? ' legacy' : '') + '" data-type="' + esc(t) + '" aria-pressed="' +
         (on ? 'true' : 'false') + '">' + esc(t) + '</button>';
     }
-    var i;
+    var i, j;
+    var selGroup = wiredGroupOf(l);
+    // 이미 고른 유선 유형이 있으면 그 그룹이 바로 보이게 펼쳐 둔다
+    if (!keepOpen && !wiredOpenGroup && selGroup) wiredOpenGroup = selGroup;
+
     var html = '<div class="type-row"><span class="type-row-label w">무선 개통</span><div class="type-chip-wrap">';
     for (i = 0; i < WIRELESS_TYPES.length; i++) html += chip(WIRELESS_TYPES[i]);
     if (w && TYPES.indexOf(w) < 0) html += chip(w);
-    html += '</div></div><div class="type-row"><span class="type-row-label l">유선 <small>인터넷·TV</small></span><div class="type-chip-wrap">';
-    for (i = 0; i < WIRED_TYPES.length; i++) html += chip(WIRED_TYPES[i]);
-    if (l && TYPES.indexOf(l) < 0) html += chip(l);
     html += '</div></div>';
+
+    // 유선 — [신규] · [약갱] 그룹 버튼만 두고, 누른 그룹의 세부 유형만 아래에 펼친다
+    html += '<div class="type-row wired-row"><span class="type-row-label l">유선 <small>인터넷·TV</small></span><div class="type-chip-wrap">';
+    for (i = 0; i < WIRED_GROUPS.length; i++) {
+      var g = WIRED_GROUPS[i];
+      var gOn = !!selGroup && selGroup === g.key;
+      var gOpen = wiredOpenGroup === g.key;
+      html += '<button type="button" class="type-chip group-chip' + (gOn ? ' on' : '') + (gOpen ? ' open' : '') +
+        '" data-wgroup="' + g.key + '" aria-pressed="' + (gOn ? 'true' : 'false') +
+        '" aria-expanded="' + (gOpen ? 'true' : 'false') +
+        '" title="' + esc(g.label + ' — ' + g.types.join(' · ')) + '">' + esc(g.label) +
+        (g.sub ? '<span class="gc-sub">' + esc(g.sub) + '</span>' : '') + '</button>';
+    }
+    // 그룹에 없는 예전 유선 표기는 지우지 않고 그 자리에 보여 준다
+    if (l && !selGroup) html += chip(l);
+    html += '</div></div>';
+
+    var openGroup = wiredGroupByKey(wiredOpenGroup);
+    if (openGroup) {
+      html += '<div class="type-subrow" data-wsub="' + openGroup.key + '"><span class="type-sub-label">' +
+        esc(openGroup.label) + '</span><div class="type-chip-wrap">';
+      for (j = 0; j < openGroup.types.length; j++) html += chip(openGroup.types[j]);
+      html += '</div></div>';
+    }
     box.innerHTML = html;
     $('f_type').value = value;
   }
@@ -7300,6 +7516,9 @@
     $('f_name').value = r.고객명 || '';
     $('f_phone').value = r.연락처 || '';
     $('f_birth').value = r.생년월일 || '';
+    // v28 — 새 등록은 유선 그룹을 접은 채로, 수정은 저장된 유형의 그룹을 펼친 채로 연다
+    wiredOpenGroup = wiredGroupOf(typeSlots(r.개통유형 || '').l) || '';
+    modelOpenBrand = '';
     renderTypeChips(r.개통유형 || '');
     applyTypeHint();
     renderDiscChips(r.할인유형 || '');
@@ -7571,6 +7790,8 @@
       $('f_usedprice').value = '';
       $('f_rebate_w').value = '';
       $('f_rebate_l').value = '';
+      // v28 — 다음 고객에게 유선 사은품이 따라가지 않게 비운다(유형은 유지)
+      if ($('f_wiredgift')) setWiredGift('');
       $('f_extra').value = '';
       $('f_paycard').value = '';
       $('f_paybank').value = '';
@@ -7729,16 +7950,22 @@
     if (!s) return '';
     var n = s.replace(/\s/g, '');
     var i;
-    // 새 유형과 같으면 그대로
+    // 새 유형과 같으면 그대로 · v28: 예전 유선 표기('인터넷+TV 신규가입')는 지금 이름으로
     for (i = 0; i < TYPES.length; i++) if (TYPES[i] === s) return s;
-    var isNet = /인터넷|TV|티비|iptv/i.test(n);
+    var c = wiredTypeCanon(s);
+    if (TYPES.indexOf(c) >= 0) return c;
+    var isNet = /인터넷|TV|티비|iptv|인티/i.test(n);
     var hasTv = /TV|티비|iptv/i.test(n);
-    var renewed = /갱신|재약정|연장|재계약/.test(n);
+    var renewed = /갱신|재약정|연장|재계약|약갱/.test(n);
     if (isNet) {
       // 유선(인터넷·TV) — 약정갱신인지 신규가입인지로 나누고, 예전 '인터넷+TV'는 신규가입으로 본다
-      if (renewed && hasTv) return '인터넷+TV 약정갱신';
+      if (renewed && hasTv) return '인티 약갱';
+      if (renewed && /인티/.test(n)) return '인티 약갱';
       if (renewed) return '인터넷 약정갱신';
-      if (hasTv) return '인터넷+TV 신규가입';
+      if (hasTv && /단품/.test(n)) return 'TV 단품';
+      if (/단품/.test(n)) return '인터넷 신규 단품';
+      if (hasTv) return '인티 신규';
+      if (/인티/.test(n)) return '인티 신규';
       return s; // '인터넷' 처럼 애매한 표기는 원문 유지
     }
     if (/^2nd$|세컨드|second/i.test(n)) return '2ND';
@@ -8422,9 +8649,17 @@
         .then(function (ok) { if (ok) deleteRecord(id); });
     });
 
-    // 개통유형 칩 (무선 / 유선) — 무선 1개 + 유선 1개까지 동시 선택
+    // 개통유형 칩 (무선 / 유선) — 무선 1개 + 유선 1개까지 동시 선택 · 유선은 [신규]/[약갱] 그룹 버튼으로 접었다 편다(v28)
     if (el.typeChips) {
       el.typeChips.addEventListener('click', function (e) {
+        var gb = e.target.closest ? e.target.closest('button[data-wgroup]') : null;
+        if (gb) {
+          var k = gb.getAttribute('data-wgroup');
+          wiredOpenGroup = (wiredOpenGroup === k) ? '' : k;
+          renderTypeChips($('f_type').value, true);   // 사용자가 직접 접고 편 것이면 자동으로 다시 펼치지 않는다
+          applyTypeHint();
+          return;
+        }
         var b = e.target.closest ? e.target.closest('button[data-type]') : null;
         if (!b) return;
         toggleTypeChip(b.getAttribute('data-type'));
