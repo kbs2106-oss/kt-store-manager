@@ -110,6 +110,12 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     칩 2개 **단일 선택**(다시 누르면 해제) — `상품권 고객 지급`(값 `상품권 지급`) · `단말할인쿠폰 결제`(값 `단말할인쿠폰`, `normalizeWiredGift`).
     저장은 앱 필드 `유선혜택` 이고, 시트 20컬럼은 그대로 — **메모 `[유선혜택:상품권 지급]` / `[유선혜택:단말할인쿠폰]`** 로 직렬화(`sheetMemo`)·스냅샷(`queueUpsert`)·복원(`normalizeRecord`)한다.
     표에서는 `요금제` 칸의 배지(`wiredGiftBadgeHtml`), 폰 카드 상세에서는 `유선 사은품` 줄로 값이 있을 때만 보인다.
+- **v23 — 폰 '자세히 보기'에서 긴 글 칸이 1글자 폭으로 찌그러지던 버그 수정**:
+  - 원인: 넓은 화면용 말줄임 폭 제한 `table.ledger td[data-label="기종"·"요금제"·"변경요금제"·"부가서비스"]{max-width:118px}` · `td[data-label="메모"]{max-width:128px}`(특이도 (0,2,2))이
+    **≤900px 폰 카드형 행에서도 그대로 살아** 라벨(`td::before` 96px)+간격만 차지하고 값 칸이 **10~20px**로 눌렸다 → 메모가 한 글자씩 세로로 떨어졌다.
+  - 수정(`@media (max-width:900px)`): `table.ledger td[data-label]{max-width:none}` + `td .ellip{flex:0 1 auto;min-width:0}` + 긴 글 칸(`기종`·`요금제`·`변경요금제`·`부가서비스`·`중고폰`·`메모`)은 `white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-overflow:clip` 로 **폰에서는 말줄임 대신 정상 줄바꿈**. 폰 카드 상세 `.m-v` 도 같은 값(`word-break:keep-all;overflow-wrap:anywhere`).
+  - 라벨 칸 `td::before` 를 **96px → 112px**(`부가서비스해지일자` 108px 가 값 칸을 덮치던 것) · `white-space:normal;word-break:keep-all`.
+  - 데스크톱(>900px) 표의 말줄임 폭 제한·한 줄 표시는 그대로다.
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
 ---

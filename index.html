@@ -964,7 +964,7 @@
   .mcard.open .mcard-detail{display:block}
   .m-row{display:flex;gap:10px;padding:4px 0;font-size:13px;line-height:1.5}
   .m-k{flex:none;width:96px;color:#64748B;font-weight:700}
-  .m-v{flex:1;min-width:0;color:#1E293B;font-weight:600;word-break:break-word}
+  .m-v{flex:1;min-width:0;color:#1E293B;font-weight:600;word-break:keep-all;overflow-wrap:anywhere}
   .m-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
   .m-actions .icon-btn{width:34px;height:34px;background:#F3F7FC;border-color:var(--line);color:var(--slate-500)}
   .m-actions .icon-btn.del{color:#C6554A}
@@ -1018,15 +1018,29 @@
     table.ledger td{
       display:flex;align-items:flex-start;gap:12px;padding:5px 0;border:0;max-width:none;
     }
+    /* v23 — 라벨 폭 96px 로는 `부가서비스해지일자`(108px)가 값 칸을 덮쳤다 → 112px */
     table.ledger td::before{
-      content:attr(data-label);flex:none;width:96px;font-size:12.5px;font-weight:700;color:#64748B;
-      padding-top:1px;
+      content:attr(data-label);flex:none;width:112px;font-size:12.5px;font-weight:700;color:#64748B;
+      padding-top:1px;white-space:normal;word-break:keep-all;line-height:1.35;
     }
     table.ledger td.actions{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;justify-content:flex-end}
     table.ledger td.actions::before{content:"";display:none}
     table.ledger td.money{text-align:right}
     table.ledger td.money::before{margin-right:auto}
-    table.ledger td[data-label="메모"] .ellip{white-space:normal}
+    /* v23 — 폰 카드에서 값이 1글자 폭으로 찌그러지던 버그.
+       넓은 화면용 말줄임 폭 제한(기종·요금제 118px / 메모 128px)이 그대로 남아
+       라벨 96px + 간격만 차지하고 값 칸은 10~20px로 눌렸다.
+       → 폰에서는 폭 제한을 풀고, 값 칸이 남는 폭을 다 쓰며 정상 줄바꿈하게 한다. */
+    table.ledger td[data-label]{max-width:none}
+    table.ledger td .ellip{flex:0 1 auto;min-width:0}
+    table.ledger td[data-label="기종"] .ellip,
+    table.ledger td[data-label="요금제"] .ellip,
+    table.ledger td[data-label="변경요금제"] .ellip,
+    table.ledger td[data-label="부가서비스"] .ellip,
+    table.ledger td[data-label="중고폰"] .ellip,
+    table.ledger td[data-label="메모"] .ellip{
+      white-space:normal;word-break:keep-all;overflow-wrap:anywhere;text-overflow:clip;
+    }
     .actions-col{display:none}
   }
   @media (max-width:520px){
