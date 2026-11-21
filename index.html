@@ -5274,7 +5274,10 @@
     var box = $('sug_f_model'), input = $('f_model');
     if (!box || !input || !modelSug.open) return;
     var r = input.getBoundingClientRect();
-    var vh = window.innerHeight || document.documentElement.clientHeight;
+    // 폰에서 키보드가 올라오면 보이는 높이가 줄어든다 → 그만큼만 쓴다(visualViewport)
+    var vv = window.visualViewport;
+    var vh = Math.round(vv && vv.height ? Math.min(vv.height, window.innerHeight || vv.height)
+      : (window.innerHeight || document.documentElement.clientHeight));
     var foot = document.querySelector('#editDialog .dlg-foot');
     var footTop = foot ? foot.getBoundingClientRect().top : vh;
     var limit = Math.min(vh - 10, footTop - 10);
@@ -5375,6 +5378,10 @@
     var body = input.closest('.dlg-body');
     if (body) body.addEventListener('scroll', function () { if (modelSug.open) positionModelSuggest(); }, { passive: true });
     window.addEventListener('resize', function () { if (modelSug.open) positionModelSuggest(); });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', function () { if (modelSug.open) positionModelSuggest(); });
+      window.visualViewport.addEventListener('scroll', function () { if (modelSug.open) positionModelSuggest(); });
+    }
   }
 
   /* =========================================================
