@@ -443,7 +443,7 @@
     box-shadow:var(--shadow-lg);width:min(720px,calc(100vw - 28px));max-height:calc(100vh - 40px);
     overflow:visible;
   }
-  dialog::backdrop{background:rgba(15,23,42,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+  dialog::backdrop{background:rgba(15,23,42,.45)}
   dialog[open]{animation:pop .16s ease-out}
   @keyframes pop{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}
   .dlg-head{display:flex;align-items:flex-start;gap:12px;padding:20px 22px 14px;border-bottom:1px solid var(--line)}
@@ -520,6 +520,40 @@
     .type-chip-wrap{width:100%}
     .type-chip{height:34px;padding:0 10px;font-size:12px}
   }
+
+  /* ---------- 할인 유형 · 정책 특수 조건 (개통 등록 창) ---------- */
+  .disc-chips .type-chip.on[data-disc="단말할인"]{background:#EEF2F7;border-color:#C8D4E2;color:#334155}
+  .disc-chips .type-chip.on[data-disc="요금할인"]{background:#E1EDFF;border-color:#9DBDF0;color:#0B4AA2}
+  .cond-chips .type-chip.on{background:#FFF3D6;border-color:#E8C87C;color:#8A5200}
+
+  /* 정책 자동 계산 (관리자 전용) */
+  .pv-box{border:1px solid #C7DCF6;background:#F5FAFF;border-radius:12px;padding:10px 12px}
+  .pv-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+  .pv-title{font-size:12.5px;font-weight:900;color:#0B4AA2}
+  .pv-ydum{font-size:11.5px;font-weight:700;color:#475569;display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+  .pv-apply{margin-left:auto;height:28px;padding:0 11px;border-radius:999px;border:1px solid #9DBDF0;
+    background:#fff;color:var(--blue-700);font-size:11.5px;font-weight:800;white-space:nowrap}
+  .pv-apply:hover{background:var(--blue-50)}
+  .pv-apply[disabled]{opacity:.5}
+  .pv-total{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+  .pv-total b{font-size:19px;font-weight:900;color:#0B4AA2;letter-spacing:-.4px}
+  .pv-total .pv-pt{font-size:12.5px;font-weight:900;color:#0B5F45;background:var(--green-bg);border-radius:999px;padding:3px 9px}
+  .pv-total .pv-sub{font-size:11px;color:#64748B;font-weight:700}
+  .pv-line{display:flex;gap:6px;flex-wrap:wrap;font-size:11.5px;line-height:1.7;color:#334155}
+  .pv-line .pv-k{font-weight:800;color:#0B4AA2}
+  .pv-line .pv-cut{font-weight:800;color:#B42318}
+  .pv-line .pv-n{color:#64748B}
+  .pv-note{margin-top:5px;font-size:11px;color:#8A5200;font-weight:700;line-height:1.55}
+  .pv-empty{font-size:11.5px;color:#64748B;font-weight:700}
+
+  /* 표·폰 카드의 할인유형 · 특수조건 배지 */
+  .pol-badges{display:inline-flex;gap:3px;flex-wrap:wrap;margin-top:2px}
+  .pbadge{font-size:10px;line-height:1;padding:3px 5px;border-radius:5px;font-weight:800;white-space:nowrap;border:1px solid transparent}
+  .pbadge.d1{background:#EEF2F7;color:#334155;border-color:#D8E0EA}
+  .pbadge.d2{background:#E1EDFF;color:#0B4AA2;border-color:#C4D9F7}
+  .pbadge.c1{background:#FFF3D6;color:#8A5200;border-color:#F2DCA8}
+  .pol-auto{display:inline-block;font-weight:800;color:#0B4AA2;background:#F0F7FF;border:1px solid #CFE3FA;border-radius:6px;padding:1px 5px;font-size:11px;white-space:nowrap}
+  .pol-diff{display:block;font-size:10px;font-weight:800;color:#8A5200;margin-top:1px}
 
   .dlg-body.center{text-align:center;padding:24px 24px 8px}
   .dlg-msg{font-size:14px;color:var(--slate-600);line-height:1.7}
@@ -1020,7 +1054,7 @@
   }
 
   /* ---------- 단가표 관리 (관리자 전용) ---------- */
-  .price-dlg{width:min(780px,calc(100vw - 24px))}
+  .price-dlg{width:min(900px,calc(100vw - 24px))}
   .pd-admin{font-size:10.5px;font-weight:800;color:var(--violet);background:var(--violet-bg);border-radius:999px;padding:2px 8px;vertical-align:2px;margin-left:5px}
   .pd-sec-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:14px 0 7px}
   .pd-sec-head:first-child{margin-top:2px}
@@ -1082,6 +1116,53 @@
     .pd-input{height:30px;font-size:11.5px;padding:0 5px}
     .price-dlg .dlg-body{padding:14px 14px 4px}
     .price-dlg .dlg-head,.price-dlg .dlg-foot{padding-left:14px;padding-right:14px}
+  }
+
+  /* ---------- 정책 계산표 (관리자 전용) ---------- */
+  .price-dlg .pv-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:0 14px 10px;border-bottom:1px solid var(--line);background:#fff}
+  .pv-tab{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line-strong);background:#fff;
+    font-size:12.5px;font-weight:800;color:var(--slate-600)}
+  .pv-tab:hover{background:#F4F7FB}
+  .pv-tab.on{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700)}
+  .pv-panel{padding-top:10px}
+  .pv-panel[hidden]{display:none}
+  .pol-sec-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:12px 0 6px}
+  .pol-sec-head:first-child{margin-top:0}
+  .pol-sec-title{font-size:13px;font-weight:900;color:#0F172A}
+  .pol-sec-note{font-size:11px;color:#64748B;font-weight:700}
+  .pol-table-wrap{overflow:auto;max-height:40vh;border:1px solid var(--line);border-radius:10px;background:#fff}
+  table.pol-table{border-collapse:separate;border-spacing:0;width:100%;min-width:540px;font-size:11.5px}
+  table.pol-table th,table.pol-table td{border-bottom:1px solid var(--line);padding:3px 4px;text-align:center;white-space:nowrap}
+  table.pol-table thead th{position:sticky;top:0;z-index:2;background:#F1F7FE;color:#0B4AA2;font-weight:900;font-size:11px}
+  table.pol-table thead tr.h2 th{top:26px;background:#F7FAFE;color:#475569}
+  table.pol-table td.pd-dev{text-align:left;font-size:11px;font-weight:800;color:#1E293B;padding-left:8px;white-space:normal;min-width:112px}
+  table.pol-table td.pd-seg{font-weight:800;color:#0B4AA2;font-size:10.5px}
+  table.pol-table tr:hover td{background:#FAFCFF}
+  .pol-input{width:44px;height:26px;font-size:11px;text-align:right;padding:0 3px;border:1px solid var(--line-strong);
+    border-radius:6px;background:#fff;color:#0F172A}
+  .pol-input.on{background:#F2FBFF;border-color:#9DBDF0;font-weight:800}
+  .pv-month{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  .pv-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px}
+  .pv-card{border:1px solid var(--line);border-radius:11px;background:#fff;padding:9px 11px}
+  .pv-card .k{display:block;font-size:11px;font-weight:800;color:#64748B}
+  .pv-card .v{display:block;font-size:17px;font-weight:900;color:#0F172A;letter-spacing:-.3px;margin-top:2px}
+  .pv-card .v i{font-size:11px;font-style:normal;font-weight:800;color:#64748B;margin-left:2px}
+  .pv-list{display:flex;flex-direction:column;gap:6px}
+  .pv-item{border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 10px}
+  .pv-item-top{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+  .pv-item-top .nm{font-size:12.5px;font-weight:900;color:#0F172A}
+  .pv-item-top .dt{font-size:11px;color:#64748B;font-weight:700}
+  .pv-item-top .am{margin-left:auto;font-size:12.5px;font-weight:900;color:#0B4AA2}
+  .pv-item-top .pp{font-size:11.5px;font-weight:900;color:#0B5F45}
+  .pv-item .br{font-size:11px;color:#475569;line-height:1.65;margin-top:3px}
+  .pv-item .br b{color:#0B4AA2}
+  .pv-item .br .cut{color:#B42318;font-weight:800}
+  .pv-empty2{font-size:12px;color:#64748B;font-weight:700;padding:14px 2px}
+  .pv-warn{font-size:11px;color:#8A5200;background:#FFF7E6;border:1px solid #F2DCA8;border-radius:9px;padding:7px 10px;margin-bottom:9px;line-height:1.6;font-weight:700}
+  @media (max-width:620px){
+    .pv-cards{grid-template-columns:1fr}
+    table.pol-table{min-width:480px}
+    .pol-table-wrap{max-height:none}
   }
 
   /* 등록 창 — 단가표 자동 입력 안내 칩 */
@@ -1155,7 +1236,7 @@
           <button class="menu-item" id="syncOpenBtn" role="menuitem">공용 장부 연동 (Google 시트)</button>
           <button class="menu-item" id="adminLockBtn" role="menuitem">🔓 관리자 모드 잠금 해제</button>
           <button class="menu-item admin-only" id="devicesBtn" role="menuitem">🛡️ 직원 · 기기 관리 (추방)</button>
-          <button class="menu-item admin-only" id="priceBtn" role="menuitem">🏷️ 단가표 관리</button>
+          <button class="menu-item admin-only" id="priceBtn" role="menuitem">🏷️ 단가표 · 정책 계산표</button>
           <button class="menu-item" id="syncNowBtn" role="menuitem" hidden>지금 동기화</button>
           <div class="menu-sep menu-mobile-only"></div>
           <button class="menu-item menu-mobile-only admin-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
@@ -1373,6 +1454,20 @@
         </div>
 
         <div class="field span2">
+          <label id="f_discLabel">할인 유형 <span class="opt">선택 · 정책 인정이 갈립니다</span></label>
+          <input id="f_discount" type="hidden" value="">
+          <div class="type-group disc-chips" id="discChips" role="group" aria-labelledby="f_discLabel"></div>
+          <span class="hint">공시지원금으로 개통했으면 <b>단말할인</b>, 선택약정이면 <b>요금할인</b>. 요금할인만 인정되는 정책(MRA-02-01·MRA-04·MBA-02)이 있습니다.</span>
+        </div>
+
+        <div class="field span2">
+          <label id="f_condLabel">정책 특수 조건 <span class="opt">선택 · 여러 개 가능</span></label>
+          <input id="f_cond" type="hidden" value="">
+          <div class="type-group cond-chips" id="condChips" role="group" aria-labelledby="f_condLabel"></div>
+          <span class="hint">중고 개통 · 장기고객 기변 · 512G 는 정책이 따로 인정됩니다. 직원 모드에서도 입력할 수 있습니다.</span>
+        </div>
+
+        <div class="field span2">
           <div class="field-head">
             <label for="f_plan">요금제(상품명) <span class="req">*</span></label>
             <button type="button" class="field-pick" data-plan-pick="f_plan">요금제 선택</button>
@@ -1460,6 +1555,16 @@
         </div>
 
         <div class="section-label">리베이트 · 중고폰</div>
+
+        <!-- 정책 자동 계산 (관리자 전용 — 직원 모드에서는 통째로 숨김) -->
+        <div class="field span2 pv-box admin-only" id="pvBox" hidden>
+          <div class="pv-head">
+            <span class="pv-title">정책 자동 계산 <span class="pd-admin">관리자 전용</span></span>
+            <label class="pv-ydum"><input type="checkbox" id="pvYDum"> 스쿨덤·Y덤 체크</label>
+            <button type="button" class="pv-apply" id="pvApply">무선 리베이트에 적용</button>
+          </div>
+          <div class="pv-body" id="pvBody"></div>
+        </div>
 
         <div class="field">
           <label for="f_rebate_w">무선 리베이트 (원) <span class="opt">선택</span></label>
@@ -1624,50 +1729,88 @@
   </div>
 </dialog>
 
-<!-- ===================== 단가표 관리 (관리자 전용) ===================== -->
+<!-- ===================== 단가표 · 정책 계산표 (관리자 전용) ===================== -->
 <dialog id="priceDialog" class="price-dlg">
   <div class="dlg-head">
     <div>
-      <h2>단가표 관리<span class="pd-admin">관리자 전용</span></h2>
-      <p>기종·개통유형별 기준 리베이트를 저장해 두면 개통 등록에서 자동으로 채워집니다. 금액은 모두 <b>원</b> 단위입니다.</p>
+      <h2>단가표 · 정책 계산표<span class="pd-admin">관리자 전용</span></h2>
+      <p>11월 KT 정책(MRA·MBA) · MRA 포인트 · 기종별 단가표를 한 자리에서 보고 고칩니다. 직원 모드에서는 보이지 않습니다.</p>
     </div>
     <button type="button" class="dlg-close" id="pdClose" aria-label="닫기">×</button>
   </div>
+  <div class="pv-tabs" id="pdTabs">
+    <button type="button" class="pv-tab on" data-pv-tab="sum">📊 정산 요약</button>
+    <button type="button" class="pv-tab" data-pv-tab="policy">📋 정책 계산표</button>
+    <button type="button" class="pv-tab" data-pv-tab="points">⭐ MRA 포인트</button>
+    <button type="button" class="pv-tab" data-pv-tab="price">🏷️ 단가표</button>
+  </div>
   <div class="dlg-body">
-    <!-- 일괄 붙여넣기 -->
-    <div class="pd-paste-box">
+
+    <!-- ---------- 정산 요약 ---------- -->
+    <div class="pv-panel" data-pv-panel="sum" id="pvPanelSum">
+      <div class="pv-month">
+        <label for="pvMonth">정산 월</label>
+        <input type="month" id="pvMonth" lang="ko-KR">
+        <button type="button" class="chip-btn" id="pvMonthThis">이번 달</button>
+        <span class="hint">개통일 기준 · 도도매 차감 반영 · 포인트는 차감 없음</span>
+      </div>
+      <div class="pv-cards">
+        <div class="pv-card"><span class="k">총 정책 정산 예상액</span><span class="v" id="pvTotal">0<i>원</i></span></div>
+        <div class="pv-card"><span class="k">총 MRA 포인트</span><span class="v" id="pvPoints">0.0<i>P</i></span></div>
+        <div class="pv-card"><span class="k">무선 정책 대상</span><span class="v" id="pvCount">0<i>건</i></span></div>
+      </div>
+      <div class="pv-list" id="pvList"></div>
+    </div>
+
+    <!-- ---------- 정책 계산표 ---------- -->
+    <div class="pv-panel" data-pv-panel="policy" id="pvPanelPolicy" hidden>
+      <div class="pv-warn">정책지와 같은 <b>천원</b> 단위로 적습니다. 예) <b>150</b> = <b>150,000원</b>. 앱 계산·표시는 원 단위로 바뀌어 나옵니다. 고친 값은 <b>저장</b>을 눌러야 반영됩니다.</div>
+      <div id="polTables"></div>
+    </div>
+
+    <!-- ---------- MRA 포인트 ---------- -->
+    <div class="pv-panel" data-pv-panel="points" id="pvPanelPoints" hidden>
+      <div class="pv-warn">포인트는 원 환산 없이 <b>N.NP</b>로만 계산합니다. 기준: MRA-00-01 무선·유선 Point (11·19~ 최신본) · 도도매 차감 없음</div>
+      <div id="polPoints"></div>
+    </div>
+
+    <!-- ---------- 단가표 (기존) ---------- -->
+    <div class="pv-panel" data-pv-panel="price" id="pvPanelPrice" hidden>
+      <!-- 일괄 붙여넣기 -->
+      <div class="pd-paste-box">
+        <div class="pd-sec-head">
+          <span class="pd-sec-title">일괄 붙여넣기</span>
+          <span class="pd-note">사진에서 뽑은 표를 그대로 붙여넣으면 한 번에 채워집니다</span>
+        </div>
+        <textarea id="pdPaste" spellcheck="false" placeholder="기종 / 기변 / 번이 / 신규&#10;갤럭시 S26 / 35 / 40 / 30&#10;아이폰 17 프로 / 40 / 45 / 35&#10;인터넷+TV 신규가입 / 30"></textarea>
+        <div class="pd-paste-foot">
+          <span class="hint">탭 · 쉼표 · 슬래시(/) 어느 것으로 나눠도 됩니다. 1~2자리는 만원으로 계산합니다(35 → 350,000원).</span>
+          <button type="button" class="btn sm" id="pdApplyPaste">표에 반영</button>
+        </div>
+        <div class="pd-paste-result" id="pdPasteResult" hidden></div>
+      </div>
+
       <div class="pd-sec-head">
-        <span class="pd-sec-title">일괄 붙여넣기</span>
-        <span class="pd-note">사진에서 뽑은 표를 그대로 붙여넣으면 한 번에 채워집니다</span>
+        <span class="pd-sec-title">무선 단말기</span>
+        <span class="pd-note">22종 × 3유형 · 원 단위</span>
       </div>
-      <textarea id="pdPaste" spellcheck="false" placeholder="기종 / 기변 / 번이 / 신규&#10;갤럭시 S26 / 35 / 40 / 30&#10;아이폰 17 프로 / 40 / 45 / 35&#10;인터넷+TV 신규가입 / 30"></textarea>
-      <div class="pd-paste-foot">
-        <span class="hint">탭 · 쉼표 · 슬래시(/) 어느 것으로 나눠도 됩니다. 1~2자리는 만원으로 계산합니다(35 → 350,000원).</span>
-        <button type="button" class="btn sm" id="pdApplyPaste">표에 반영</button>
+      <div class="pd-table-wrap">
+        <table class="pd-table" id="pdWireless">
+          <thead>
+            <tr><th>기종</th><th>기기변경</th><th>번호이동</th><th>신규가입</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
       </div>
-      <div class="pd-paste-result" id="pdPasteResult" hidden></div>
-    </div>
 
-    <div class="pd-sec-head">
-      <span class="pd-sec-title">무선 단말기</span>
-      <span class="pd-note">21종 × 3유형 · 원 단위</span>
-    </div>
-    <div class="pd-table-wrap">
-      <table class="pd-table" id="pdWireless">
-        <thead>
-          <tr><th>기종</th><th>기기변경</th><th>번호이동</th><th>신규가입</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
+      <div class="pd-sec-head">
+        <span class="pd-sec-title">유선 (인터넷·TV)</span>
+        <span class="pd-note">3유형 · 원 단위</span>
+      </div>
+      <div class="pd-wired" id="pdWired"></div>
 
-    <div class="pd-sec-head">
-      <span class="pd-sec-title">유선 (인터넷·TV)</span>
-      <span class="pd-note">3유형 · 원 단위</span>
+      <div class="pd-summary" id="pdSummary"></div>
     </div>
-    <div class="pd-wired" id="pdWired"></div>
-
-    <div class="pd-summary" id="pdSummary"></div>
   </div>
   <div class="dlg-foot">
     <button type="button" class="btn btn-danger" id="pdClear">초기화</button>
@@ -1779,7 +1922,7 @@
     '갤럭시 S26', '갤럭시 S26+', '갤럭시 S26 울트라', '갤럭시 S26 FE',
     '갤럭시 Z 폴드8', '갤럭시 Z 폴드8 울트라', '갤럭시 Z 플립8',
     '갤럭시 점프5', '갤럭시 A37', '갤럭시 A18 LTE', '갤럭시 A17',
-    '폼폼푸린 키즈폰', '시나모롤 키즈폰', '클래식 폴더',
+    '폼폼푸린 키즈폰', '시나모롤 키즈폰', '클래식 폴더', '모토로라 엣지70',
     '아이폰 18 프로', '아이폰 18 프로 맥스', '아이폰 듀오',
     '아이폰 17', '아이폰 17 에어', '아이폰 17 프로', '아이폰 17 프로 맥스'
   ];
@@ -1805,6 +1948,26 @@
      · 시트 : 메모 칸 앞에 [요금완료] / [부가완료] */
   var PLAN_DONE_MARK = '[요금완료]';
   var ADDON_DONE_MARK = '[부가완료]';
+
+  /* 할인 유형(지원금 유형) · 정책 특수 조건 — 단말보험과 같은 방식(시트 메모 표기)으로 공유한다
+     · 앱 안 : 할인유형 = '단말할인' | '요금할인' | ''
+               특수조건 = '중고신규,512G' 처럼 콤마로 이어 붙인 목록 (없으면 '')
+     · 시트   : 메모 칸의 [단말할인] / [요금할인] / [중고신규] [중고MNP] [중고결합] [장기기변] [512G]
+     → Code.gs(20컴럼)를 고치지 않고도 직원끼리 그대로 맞는다. */
+  var DISCOUNT_TYPES = ['단말할인', '요금할인'];
+  var DISCOUNT_MARK = { '단말할인': '[단말할인]', '요금할인': '[요금할인]' };
+  var DISCOUNT_LABEL = { '단말할인': '단말할인(공시)', '요금할인': '요금할인(선약)' };
+  var POLICY_CONDS = [
+    { key: '중고신규', label: '중고신규', hint: '010 자급제·중고 (G2982)' },
+    { key: '중고MNP', label: '중고 MNP', hint: '중고 번호이동' },
+    { key: '중고결합', label: '중고 결합', hint: 'MBA-02-02 결합' },
+    { key: '장기기변', label: '장기고객 기변(24개월↑)', hint: 'MRA-04' },
+    { key: '512G', label: '512G', hint: 'MRA-02 용량 구분' }
+  ];
+  var COND_MARK = {
+    '중고신규': '[중고신규]', '중고MNP': '[중고MNP]', '중고결합': '[중고결합]',
+    '장기기변': '[장기기변]', '512G': '[512G]'
+  };
 
   // 개통유형 — 무선 3개 / 유선(인터넷·TV) 3개
   var WIRELESS_TYPES = ['기기변경','번호이동','신규가입'];
@@ -2104,6 +2267,33 @@
      · 앱 안에서는 '단말보험' 항목으로 다니고,
      · 기존 구글 시트(20컴럼)에는 메모 칸의 '[단말보험]' 표기로만 실려 나간다.
      · 화면(메모 입력난)에는 표기가 보이지 않게 떼어 낸다. */
+  function normalizeDiscount(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '');
+    if (!s) return '';
+    if (/요금할인|선약/.test(s)) return '요금할인';
+    if (/단말할인|공시/.test(s)) return '단말할인';
+    return '';
+  }
+
+  // '중고신규,512G' → ['중고신규','512G'] (아는 조건만, POLICY_CONDS 순서)
+  function condList(v) {
+    var s = String(v == null ? '' : v);
+    var out = [], i;
+    for (i = 0; i < POLICY_CONDS.length; i++) {
+      var k = POLICY_CONDS[i].key;
+      if (s.indexOf(k) >= 0 && out.indexOf(k) < 0) out.push(k);
+    }
+    return out;
+  }
+
+  function condText(list) {
+    var src = list || [], out = [], i;
+    for (i = 0; i < POLICY_CONDS.length; i++) {
+      if (src.indexOf(POLICY_CONDS[i].key) >= 0) out.push(POLICY_CONDS[i].key);
+    }
+    return out.join(',');
+  }
+
   function normalizeIns(v) {
     var s = String(v == null ? '' : v).replace(/\s/g, '');
     if (!s) return '미가입';
@@ -2115,14 +2305,29 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료])를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false };
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [] };
     var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone']];
-    var hit = false;
-    for (var i = 0; i < tags.length; i++) {
+    var hit = false, i;
+    for (i = 0; i < tags.length; i++) {
       if (s.indexOf(tags[i][0]) < 0) continue;
       hit = true;
       out[tags[i][1]] = true;
       s = s.split(tags[i][0]).join(' ');
+    }
+    // 할인 유형 · 정책 특수 조건 표기도 떼어 낸다
+    for (i = 0; i < DISCOUNT_TYPES.length; i++) {
+      var dm = DISCOUNT_MARK[DISCOUNT_TYPES[i]];
+      if (s.indexOf(dm) < 0) continue;
+      hit = true;
+      out.discount = DISCOUNT_TYPES[i];
+      s = s.split(dm).join(' ');
+    }
+    for (i = 0; i < POLICY_CONDS.length; i++) {
+      var cm = COND_MARK[POLICY_CONDS[i].key];
+      if (s.indexOf(cm) < 0) continue;
+      hit = true;
+      out.conds.push(POLICY_CONDS[i].key);
+      s = s.split(cm).join(' ');
     }
     // 표기가 있을 때만 공백을 정리한다 (평범한 메모는 그대로 둔다)
     out.memo = hit ? s.replace(/\s{2,}/g, ' ').trim() : s;
@@ -2155,6 +2360,10 @@
     if (normalizeIns(rec.단말보험) === '가입') head.push(INS_MARK);
     if (normalizeDone(rec.요금제변경완료) === '완료') head.push(PLAN_DONE_MARK);
     if (normalizeDone(rec.부가서비스해지완료) === '완료') head.push(ADDON_DONE_MARK);
+    var disc = normalizeDiscount(rec.할인유형);
+    if (disc) head.push(DISCOUNT_MARK[disc]);
+    var conds = condList(rec.특수조건), i;
+    for (i = 0; i < conds.length; i++) head.push(COND_MARK[conds[i]]);
     if (!head.length) return m;
     return head.join(' ') + (m ? ' ' + m : '');
   }
@@ -2178,6 +2387,9 @@
     o.단말보험 = tags.ins ? '가입' : normalizeIns(o.단말보험);
     o.요금제변경완료 = tags.planDone ? '완료' : normalizeDone(r && r.요금제변경완료);
     o.부가서비스해지완료 = tags.addonDone ? '완료' : normalizeDone(r && r.부가서비스해지완료);
+    // 할인 유형 · 정책 특수 조건 (메모 표기 → 값 복원)
+    o.할인유형 = tags.discount || normalizeDiscount(r && r.할인유형);
+    o.특수조건 = condText(tags.conds.concat(condList(r && r.특수조건)));
     o.중고폰금액 = parseNumber(o.중고폰금액);
     o.무선리베이트 = parseNumber(o.무선리베이트);
     o.유선리베이트 = parseNumber(o.유선리베이트);
@@ -2856,11 +3068,11 @@
     return v > 0 ? { value: v, type: type } : null;
   }
 
-  // 등록 창의 리베이트 칸에 단가표 안내/적용 칩을 그린다
+  // 등록 창의 리베이트 칸에 정책(우선)·단가표 안내/적용 칩을 그린다
   function syncPriceHints(autoFill) {
     if (!el || !el.editDialog || !el.editDialog.open) return;
     var slots = typeSlots($('f_type').value);
-    paintPriceHint('w', wirelessPrice($('f_model').value, slots.w), 'f_rebate_w', 'ptHintW', autoFill);
+    refreshPolicy(autoFill);
     paintPriceHint('l', wiredPrice(slots.l), 'f_rebate_l', 'ptHintL', autoFill);
   }
 
@@ -2908,13 +3120,804 @@
     syncPriceHints(false);
   }
 
+  /* =========================================================
+     KT 정책 엔진 (2026년 11월 무선 정책 MRA·MBA + MRA 포인트)
+     ---------------------------------------------------------
+     · 할인유형(단말할인·요금할인) · 기종 · 요금제 · 개통유형 · 특수조건으로
+       MRA-01/02/02-01/03/04/06 · MBA-02-01/02 를 합산해 무선 리베이트를 뽑는다.
+     · 정책표 금액은 **천원 단위**(× 1,000원). 화면에서는 원 단위로 보여 준다.
+     · 도도매 차감 : 신규가입 -40,000원 / 번호이동·기기변경 -30,000원 (매칭된 건만)
+     · MRA 포인트는 차감 없이 N.NP 로만 표시하고 **관리자 모드에서만** 보인다.
+     · 정책표 숫자는 관리자 `단가표 · 정책 계산표` 창에서 고칠 수 있고,
+       고친 값만 localStorage('kt_policy_v1')에 저장한다(기본값은 코드에 남는다).
+     · 기간별 정책 : 개통일 기준으로 이전본/최신본을 자동으로 고른다
+       (MRA-02 11/1~11/11 · 11/18~, MRA-04 11/1~11/16 · 11/17~,
+        MRA-00-01 포인트 11/5~ 플래그십 가점 · 11/19~ 스쿨덤/Y덤 가점)
+     ========================================================= */
+  var POLICY_KEY = 'kt_policy_v1';
+  // 도도매 차감 (개통유형별, 매칭 합계가 0원이면 차감하지 않는다)
+  var POLICY_CUT = { '신규가입': 40000, '번호이동': 30000, '기기변경': 30000 };
+  var POL_TYPES = ['010', 'MNP', '기변'];
+  var POL_TYPE_LABEL = { '010': '010(신규)', 'MNP': 'MNP(번호이동)', '기변': '기변' };
+
+  function gRow(name, match, v) {
+    return { name: name, match: match, v: v };
+  }
+  function sRow(name, match, seg, v, extra) {
+    var o = { name: name, match: match, seg: seg, v: v };
+    if (extra) for (var k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) o[k] = extra[k];
+    return o;
+  }
+
+  // 기종 별칭 — 공백·대소문자 무시하고 비교한다(정확 일치 우선, 그다음 긴 이름 포함)
+  var M = {
+    duo: ['아이폰듀오', '아이폰duo', 'aipd'],
+    ip18: ['아이폰18프로', '아이폰18프로맥스', '아이폰18promax'],
+    fold8u: ['갤럭시z폴드8울트라', 'z폴드8울트라', '폴드8울트라'],
+    fold8: ['갤럭시z폴드8', 'z폴드8', '폴드8'],
+    flip8: ['갤럭시z플립8', 'z플립8', '플립8'],
+    s26: ['갤럭시s26', 's26'],
+    s26p: ['갤럭시s26+', '갤럭시s26플러스', 's26+', 's26플러스'],
+    s26u: ['갤럭시s26울트라', 's26울트라', 's26ultra'],
+    s26fe: ['갤럭시s26fe', 's26fe'],
+    ip17: ['아이폰17', '아이폰17프로', '아이폰17프로맥스'],
+    air: ['아이폰에어', '아이폰air', '아이폰17에어', 'aipa'],
+    fold7: ['갤럭시z폴드7', 'z폴드7', '폴드7'],
+    flip7: ['갤럭시z플립7', 'z플립7', '플립7'],
+    edge25: ['갤럭시s25엣지', 's25엣지', 's25edge'],
+    s25: ['갤럭시s25', '갤럭시s25+', '갤럭시s25울트라', '갤럭시s25플러스', 's25+', 's25울트라'],
+    ip17e: ['아이폰17e', 'aip17e'],
+    s25fe: ['갤럭시s25fe', 's25fe'],
+    a37: ['갤럭시a37', '갤럭시a375g', 'a375g'],
+    a36: ['갤럭시a36', 'a36'],
+    jump5: ['갤럭시점프5', '점프5', 'jump5'],
+    jump4: ['갤럭시점프4', '점프4', 'jump4'],
+    redmi14: ['레드미노트14', '레드미노트145g', 'redminote14'],
+    moto70: ['모토로라엣지70', '엣지70'],
+    g77: ['모토로라g77', 'g77'],
+    g56: ['모토로라g565g', '모토로라g56', 'g565g'],
+    a18: ['갤럭시a18', '갤럭시a18lte', 'a18lte'],
+    pom: ['폼폼푸린키즈폰', '폼폼푸린'],
+    a17: ['갤럭시a17'],
+    sino: ['시나모롤키즈폰', '시나모롤'],
+    redmi14c: ['레드미14c', 'redmi14c'],
+    clasic: ['클래식폴더', 'zte클래식폴더']
+  };
+
+  var POLICY_DEFAULT = {
+    title: '2026년 11월 KT 무선 정책 (MRA·MBA)',
+    unit: 1000,
+    rebate: [
+      { id: 'MRA01', name: 'MRA-01 소매 기본 정책', period: '11/1~ (최신본)', shape: 'grid',
+        note: '단말할인·요금할인 공통 · 요금제 구간 × 가입유형',
+        segs: ['110K', '90K', '61K', '37K'], types: POL_TYPES,
+        rows: [
+          gRow('아이폰 듀오', M.duo, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('아이폰 18 프로·프로 맥스', M.ip18, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 Z 폴드8 울트라', M.fold8u, { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 Z 폴드8', M.fold8, { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 Z 플립8', M.flip8, { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 S26·S26+·S26 울트라(NEW)', M.s26.concat(M.s26p, M.s26u), { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('아이폰 17·17 프로·17 프로 맥스', M.ip17, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('아이폰 Air', M.air, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 Z 폴드7', M.fold7, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 Z 플립7', M.flip7, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 S25 엣지', M.edge25, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 S25·S25+·S25 울트라', M.s25, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 S26 FE', M.s26fe, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('아이폰 17e', M.ip17e, { '110K': [100, 100, 100], '90K': [50, 50, 50], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 S25 FE', M.s25fe, { '110K': [100, 100, 100], '90K': [50, 50, 50], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('갤럭시 A37 5G', M.a37, { '110K': [150, 100, 100], '90K': [150, 100, 100], '61K': [150, 100, 100], '37K': [80, 80, 50] }),
+          gRow('갤럭시 A36 5G', M.a36, { '110K': [150, 100, 100], '90K': [150, 100, 100], '61K': [150, 100, 100], '37K': [80, 80, 50] }),
+          gRow('갤럭시 점프5', M.jump5, { '110K': [150, 100, 100], '90K': [150, 100, 100], '61K': [150, 100, 100], '37K': [80, 80, 50] }),
+          gRow('갤럭시 점프4', M.jump4, { '110K': [150, 100, 100], '90K': [150, 100, 100], '61K': [150, 100, 100], '37K': [80, 80, 50] }),
+          gRow('레드미 노트 14 5G', M.redmi14, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('모토로라 엣지70', M.moto70, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('모토로라 g77', M.g77, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('모토로라 G56 5G', M.g56, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('갤럭시 A18', M.a18, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('폼폼푸린 키즈폰', M.pom, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('갤럭시 A17', M.a17, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('시나모롤 키즈폰', M.sino, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('레드미 14C', M.redmi14c, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('ZTE 클래식 폴더', M.clasic, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] })
+        ] },
+      { id: 'MRA02', name: 'MRA-02 소매 돈버는 모델 정책', period: '11/18~ (11/1~11/11 이전본)',
+        shape: 'segRow', seg: '37K', types: POL_TYPES, note: '37K 이상 · 용량(256G/512G) 구분',
+        rows: [
+          sRow('갤럭시 Z 폴드8 울트라 256G', M.fold8u, '37K', [0, 60, 60], { cap: '256G' }),
+          sRow('갤럭시 Z 폴드8 울트라 512G', M.fold8u, '37K', [0, 150, 150], { cap: '512G' }),
+          sRow('갤럭시 Z 폴드8 256G', M.fold8, '37K', [0, 140, 140], { cap: '256G' }),
+          sRow('갤럭시 Z 폴드8 512G', M.fold8, '37K', [0, 90, 90], { cap: '512G' }),
+          sRow('갤럭시 Z 플립8 256G', M.flip8, '37K', [0, 60, 60], { cap: '256G' }),
+          sRow('갤럭시 Z 플립8 512G', M.flip8, '37K', [0, 150, 150], { cap: '512G' }),
+          sRow('갤럭시 S26(NEW)', M.s26, '37K', [0, 260, 260]),
+          sRow('갤럭시 S26+(NEW)', M.s26p, '37K', [0, 200, 200]),
+          sRow('갤럭시 S26 울트라(NEW)', M.s26u, '37K', [0, 200, 200]),
+          sRow('갤럭시 S25 엣지', M.edge25, '37K', [250, 250, 250], { altUntil: '2026-11-11', altV: [120, 120, 120] }),
+          sRow('갤럭시 A37 5G', M.a37, '37K', [60, 60, 60]),
+          sRow('갤럭시 점프5', M.jump5, '37K', [60, 60, 60]),
+          sRow('갤럭시 A17', M.a17, '37K', [40, 40, 40])
+        ] },
+      { id: 'MRA0201', name: 'MRA-02-01 소매 돈버는 요금할인 모델', period: '11/1~',
+        shape: 'segRow', seg: '90K', types: POL_TYPES, note: '요금할인(선약)만 · 90K 이상',
+        rows: [
+          sRow('아이폰 듀오', M.duo, '90K', [0, 50, 50]),
+          sRow('아이폰 18 프로·프로 맥스', M.ip18, '90K', [50, 50, 50]),
+          sRow('갤럭시 Z 폴드8 울트라', M.fold8u, '90K', [0, 0, 0]),
+          sRow('갤럭시 Z 폴드8', M.fold8, '90K', [0, 0, 0]),
+          sRow('갤럭시 Z 플립8', M.flip8, '90K', [0, 0, 0]),
+          sRow('갤럭시 S26·S26+·S26 울트라(NEW)', M.s26.concat(M.s26p, M.s26u), '90K', [0, 0, 0]),
+          sRow('아이폰 17·17 프로·17 프로 맥스(NEW)', M.ip17, '90K', [150, 150, 20]),
+          sRow('아이폰 Air', M.air, '90K', [150, 150, 20]),
+          sRow('갤럭시 S25 엣지', M.edge25, '90K', [150, 150, 50]),
+          sRow('갤럭시 S25·S25+·S25 울트라', M.s25, '90K', [150, 150, 50]),
+          sRow('갤럭시 S26 FE', M.s26fe, '90K', [150, 150, 100]),
+          sRow('아이폰 17e', M.ip17e, '90K', [150, 150, 50]),
+          sRow('갤럭시 S25 FE', M.s25fe, '90K', [150, 150, 50])
+        ] },
+      { id: 'MRA03', name: 'MRA-03 소매 활력 정책', period: '11/1~',
+        shape: 'segRow', types: POL_TYPES, note: '단말할인·요금할인 공통 · 모델별 요금제 구간',
+        rows: [
+          sRow('아이폰 듀오', M.duo, '110K', [0, 50, 20]),
+          sRow('아이폰 18 프로·프로 맥스', M.ip18, '110K', [150, 80, 50]),
+          sRow('갤럭시 Z 폴드8(울트라)', M.fold8u.concat(M.fold8), '110K', [140, 40, 0]),
+          sRow('갤럭시 Z 플립8', M.flip8, '110K', [140, 40, 0]),
+          sRow('갤럭시 S26·S26+·S26 울트라(NEW)', M.s26.concat(M.s26p, M.s26u), '110K', [100, 0, 0]),
+          sRow('아이폰 17·17 프로·17 프로 맥스(NEW)', M.ip17, '110K', [150, 130, 90]),
+          sRow('아이폰 Air', M.air, '110K', [150, 130, 90]),
+          sRow('갤럭시 Z 폴드7', M.fold7, '110K', [50, 50, 10]),
+          sRow('갤럭시 Z 플립7', M.flip7, '110K', [50, 50, 10]),
+          sRow('갤럭시 S25 엣지', M.edge25, '110K', [150, 100, 10]),
+          sRow('갤럭시 S25·S25+·S25 울트라', M.s25, '110K', [150, 100, 100]),
+          sRow('아이폰 17e', M.ip17e, '90K', [130, 100, 80]),
+          sRow('갤럭시 S26 FE', M.s26fe, '90K', [30, 30, 30]),
+          sRow('갤럭시 S25 FE', M.s25fe, '90K', [30, 30, 30]),
+          sRow('갤럭시 A37 5G', M.a37, '61K', [150, 130, 0]),
+          sRow('갤럭시 A36 5G', M.a36, '61K', [200, 150, 50]),
+          sRow('갤럭시 점프5', M.jump5, '61K', [150, 130, 0]),
+          sRow('갤럭시 점프4', M.jump4, '61K', [200, 150, 50]),
+          sRow('레드미 노트 14 5G', M.redmi14, '37K', [200, 100, 70]),
+          sRow('모토로라 엣지70', M.moto70, '37K', [200, 100, 70]),
+          sRow('모토로라 g77', M.g77, '37K', [200, 100, 70]),
+          sRow('모토로라 G56 5G', M.g56, '37K', [200, 100, 70]),
+          sRow('갤럭시 A18', M.a18, '37K', [200, 70, 30]),
+          sRow('폼폼푸린 키즈폰', M.pom, '37K', [240, 110, 70]),
+          sRow('갤럭시 A17', M.a17, '37K', [200, 70, 30]),
+          sRow('시나모롤 키즈폰', M.sino, '37K', [200, 100, 30]),
+          sRow('레드미 14C', M.redmi14c, '37K', [200, 100, 30]),
+          sRow('ZTE 클래식 폴더', M.clasic, '37K', [200, 100, 20])
+        ] },
+      { id: 'MRA04', name: 'MRA-04 장기 사용 고객 기변 활성화', period: '11/17~ (11/1~11/16 이전본)',
+        shape: 'segRow', seg: '90K', types: POL_TYPES, note: '요금할인 + 기기변경 + 장기고객(24개월↑) · 90K 이상',
+        rows: [
+          sRow('아이폰 18 프로·프로 맥스', M.ip18, '90K', [0, 0, 100], { altUntil: '2026-11-16', altV: [0, 0, 0] }),
+          sRow('갤럭시 Z 폴드8(울트라)', M.fold8u.concat(M.fold8), '90K', [0, 0, 100], { altUntil: '2026-11-16', altV: [0, 0, 0] }),
+          sRow('갤럭시 Z 플립8', M.flip8, '90K', [0, 0, 100], { altUntil: '2026-11-16', altV: [0, 0, 0] }),
+          sRow('갤럭시 S26·S26+·S26 울트라(NEW)', M.s26.concat(M.s26p, M.s26u), '90K', [0, 0, 100], { altUntil: '2026-11-16', altV: [0, 0, 0] }),
+          sRow('아이폰 17·17 프로·17 프로 맥스(NEW)', M.ip17, '90K', [0, 0, 50]),
+          sRow('아이폰 Air', M.air, '90K', [0, 0, 50]),
+          sRow('갤럭시 Z 폴드7', M.fold7, '90K', [0, 0, 50]),
+          sRow('갤럭시 Z 플립7', M.flip7, '90K', [0, 0, 50]),
+          sRow('갤럭시 S25 엣지', M.edge25, '90K', [0, 0, 50]),
+          sRow('갤럭시 S25·S25+·S25 울트라', M.s25, '90K', [0, 0, 50]),
+          sRow('갤럭시 S26 FE', M.s26fe, '90K', [0, 0, 50]),
+          sRow('아이폰 17e', M.ip17e, '90K', [0, 0, 50]),
+          sRow('갤럭시 S25 FE', M.s25fe, '90K', [0, 0, 50])
+        ] },
+      { id: 'MRA06', name: 'MRA-06 소매 ARPU UP 정책', period: '11/1~',
+        shape: 'segRow', seg: '120K', types: POL_TYPES, note: '120K 이상 · 번호이동·기기변경',
+        rows: [
+          sRow('아이폰 듀오', M.duo, '120K', [0, 30, 30]),
+          sRow('아이폰 18 프로·프로 맥스', M.ip18, '120K', [0, 30, 30]),
+          sRow('갤럭시 Z 폴드8(울트라)', M.fold8u.concat(M.fold8), '120K', [0, 30, 30]),
+          sRow('갤럭시 Z 플립8', M.flip8, '120K', [0, 30, 30]),
+          sRow('갤럭시 S26·S26+·S26 울트라(NEW)', M.s26.concat(M.s26p, M.s26u), '120K', [0, 30, 30]),
+          sRow('아이폰 17·17 프로·17 프로 맥스(NEW)', M.ip17, '120K', [0, 30, 30]),
+          sRow('아이폰 Air', M.air, '120K', [0, 30, 30]),
+          sRow('갤럭시 Z 폴드7', M.fold7, '120K', [0, 30, 30]),
+          sRow('갤럭시 Z 플립7', M.flip7, '120K', [0, 30, 30]),
+          sRow('갤럭시 S25 엣지', M.edge25, '120K', [0, 30, 30]),
+          sRow('갤럭시 S25·S25+·S25 울트라', M.s25, '120K', [0, 30, 30])
+        ] },
+      { id: 'MBA02', name: 'MBA-02-01 SIMple 후불 정책', period: '11/1~',
+        shape: 'grid', segs: ['90K', '69K', '61K', '55K', '37K'], types: ['010', 'MNP'],
+        note: '중고신규·중고 MNP + 요금할인(선약)만 · 181일 유지',
+        rows: [
+          gRow('자급제·중고 (판매코드 G5204 · G2982)', [''],
+            { '90K': [300, 300], '69K': [250, 250], '61K': [200, 200], '55K': [200, 150], '37K': [130, 50] })
+        ] },
+      { id: 'MBA0202', name: 'MBA-02-02 SIMple 후불 결합 활성화', period: '11/1~',
+        shape: 'grid', segs: ['69K', '37K'], types: ['결합'],
+        note: '중고 결합 시 추가 (365일 유지)',
+        rows: [
+          gRow('중고 결합 활성화', [''], { '69K': [150], '37K': [150] })
+        ] }
+    ],
+    points: {
+      base: { '120K': 2.0, '110K': 1.5, '90K': 1.2, '61K': 0.8, '37K': 0.5 },
+      bonus: {
+        school: 1.0, flag010: 1.0, flagMove: 1.0, airMnp: 2.0, airMove: 2.0, mnp: 1.0,
+        ip17pmMove: 0.5, feMove: 1.0, kid010: 1.5, kidMnp: 0.5, kidMove: 1.5,
+        budget010: 1.0, budgetMove: 1.0
+      },
+      wired: {
+        inEss: [1.5, 0.2], inBasic: [1.0, 0.2], inSlim: [0.8, 0.1],
+        tvAllG: [1.2, 0.2], tvEss: [0.5, 0.1], combMI: [3.5, 1.7]
+      }
+    }
+  };
+
+  var policyOverrides = {};
+
+  function loadPolicy() {
+    policyOverrides = {};
+    try {
+      var raw = localStorage.getItem(POLICY_KEY);
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      if (d && d.v && typeof d.v === 'object') {
+        for (var k in d.v) {
+          if (!Object.prototype.hasOwnProperty.call(d.v, k)) continue;
+          var n = Number(d.v[k]);
+          if (isFinite(n)) policyOverrides[k] = n;
+        }
+      }
+    } catch (e) { policyOverrides = {}; }
+  }
+
+  function savePolicy(next) {
+    policyOverrides = next || {};
+    try {
+      localStorage.setItem(POLICY_KEY, JSON.stringify({ v: policyOverrides, updatedAt: new Date().toISOString() }));
+      return true;
+    } catch (e) {
+      toast('정책표를 저장하지 못했습니다. 저장 공간을 확인해 주세요.', true);
+      return false;
+    }
+  }
+
+  function polById(id) {
+    var list = POLICY_DEFAULT.rebate;
+    for (var i = 0; i < list.length; i++) if (list[i].id === id) return list[i];
+    return null;
+  }
+
+  // row 인덱스는 매번 다시 매긴다(정책표 창에서 그대로 쓴다)
+  function polRowIndex(pol) {
+    if (!pol.__idx) {
+      pol.__idx = {};
+      for (var i = 0; i < pol.rows.length; i++) pol.rows[i].__i = i;
+    }
+    return pol.rows;
+  }
+
+  function polKey(pol, row, seg, type) {
+    return pol.id + '|' + row.__i + '|' + seg + '|' + type;
+  }
+
+  // 정책표 한 칸 값 (천원). 관리자가 고친 값이 있으면 그것을 쓴다.
+  function polCell(pol, row, seg, type, iso) {
+    var k = polKey(pol, row, seg, type);
+    // 관리자가 고친 값은 '원' 으로 저장한다 → 천원으로 되돌려 준다
+    if (policyOverrides[k] != null) return (Number(policyOverrides[k]) || 0) / POLICY_DEFAULT.unit;
+    var v = row.v, ti = pol.types.indexOf(type);
+    if (row.altUntil && iso && String(iso) <= row.altUntil && row.altV) v = row.altV;
+    var arr = pol.shape === 'grid' ? v[seg] : v;
+    if (!arr || ti < 0 || arr.length <= ti) return 0;
+    return Number(arr[ti]) || 0;
+  }
+
+  function polPoint(key, fallback) {
+    if (policyOverrides['PT|' + key] != null) return Number(policyOverrides['PT|' + key]) || 0;
+    return fallback;
+  }
+
+  // 요금제 문자열 → 월정액(원). 무선부가 있으면 무선부만 본다.
+  function planMonthly(text) {
+    var s = String(text == null ? '' : text);
+    if (!s) return 0;
+    var parts = splitPlanValue(s);
+    var t = (parts.w || '').trim();
+    if (!t) t = s.replace(/^[^/]*\/\s*/, '');
+    t = t.replace(/,/g, '');
+    // 5~6자리(90,000 · 120000) 우선
+    var m5 = t.match(/(\d{5,6})/);
+    if (m5) return Number(m5[1]);
+    var mk = t.match(/(\d{2,3})\s*[kK](?![a-zA-Z])/);
+    if (mk) return Number(mk[1]) * 1000;
+    // 상품명에 붙은 2~3자리 숫자 (초이스90 · 110 · 슬림 55)
+    var best = 0, re = /(\d{2,3})/g, mm;
+    while ((mm = re.exec(t))) {
+      var n = Number(mm[1]) * 1000;
+      if (n >= 30000 && n <= 200000) best = Math.max(best, n);
+    }
+    return best;
+  }
+
+  function segValue(key) { return Number(String(key).replace('K', '')) * 1000; }
+
+  // 요금제가 넘는 구간 중 가장 높은 기준 (120K 요금제는 110K 구간으로도 인정)
+  function segFor(plan, segs) {
+    var best = '', i, v;
+    for (i = 0; i < segs.length; i++) {
+      v = segValue(segs[i]);
+      if (plan >= v && (!best || v > segValue(best))) best = segs[i];
+    }
+    return best;
+  }
+
+  function mkey(s) {
+    return String(s == null ? '' : s).replace(/\s+/g, '').replace(/\(.*?\)/g, '').toLowerCase();
+  }
+
+  // 기종 입력칸 값에서 정책표 행 찾기 (정확 일치 우선 → 긴 이름 포함)
+  function polFindRow(pol, modelText, conds) {
+    var models = modelParts(modelText), norm = [], i, j, b;
+    for (i = 0; i < models.length; i++) {
+      var n = mkey(models[i]);
+      if (n) norm.push(n);
+    }
+    if (!norm.length) return null;
+    var wantCap = (conds || []).indexOf('512G') >= 0 ? '512G' : '256G';
+    var exact = null, best = null, bestLen = 0;
+    for (i = 0; i < pol.rows.length; i++) {
+      var row = pol.rows[i];
+      if (row.cap && row.cap !== wantCap) continue;
+      var aliases = row.match || [];
+      for (j = 0; j < aliases.length; j++) {
+        b = mkey(aliases[j]);
+        if (!b) continue;
+        for (var k = 0; k < norm.length; k++) {
+          if (norm[k] === b && !exact) exact = row;
+          else if (b.length >= 4 && norm[k].indexOf(b) >= 0 && b.length > bestLen) { best = row; bestLen = b.length; }
+        }
+      }
+    }
+    return exact || best;
+  }
+
+  // 생년월일(6·8자리) → 개통일(없으면 오늘) 기준 만 나이
+  function ageAt(birth, iso) {
+    var s = String(birth == null ? '' : birth).replace(/[^0-9]/g, '');
+    if (s.length === 8) s = s.slice(2);
+    if (s.length !== 6) return -1;
+    var yy = Number(s.slice(0, 2)), mm = Number(s.slice(2, 4)), dd = Number(s.slice(4, 6));
+    if (!mm || !dd) return -1;
+    var base = normalizeDate(iso) || todayISO();
+    var by = Number(base.slice(0, 4));
+    var year = 2000 + yy;
+    if (year > by) year -= 100;
+    var age = by - year;
+    var bmd = mm * 100 + dd, tmd = Number(base.slice(5, 7)) * 100 + Number(base.slice(8, 10));
+    if (tmd < bmd) age -= 1;
+    return age;
+  }
+
+  // 무선 포인트 (관리자 전용 표시)
+  function calcPoints(rec, opts) {
+    var o = opts || {};
+    var out = { total: 0, items: [], seg: 0, segKey: '' };
+    var iso = normalizeDate(rec.개통일) || todayISO();
+    var slots = typeSlots(rec.개통유형 || '');
+    var wtype = slots.w || '';
+    var conds = condList(rec.특수조건);
+    var plan = planMonthly(rec.요금제);
+    var P = POLICY_DEFAULT.points;
+    var i;
+    function add(label, v, detail) {
+      if (!v) return;
+      out.items.push({ label: label, p: v, detail: detail || '' });
+      out.total += v;
+    }
+    if (WIRELESS_TYPES.indexOf(wtype) >= 0 && plan >= 37000) {
+      var segKey = segFor(plan, ['120K', '110K', '90K', '61K', '37K']);
+      out.seg = plan; out.segKey = segKey;
+      add('무선 상품 기본', polPoint('base|' + segKey, P.base[segKey] || 0), segKey + ' 이상 · ' + wtype);
+      var isAir = !!polFindRow(polById('MRA01'), rec.기종, []);
+      var airRow = polFindRow(polById('MRA01'), rec.기종, []);
+      isAir = !!(airRow && (airRow.match || []).indexOf('아이폰에어') >= 0);
+      var flagRow = polFindRow(polById('MRA06'), rec.기종, []);
+      var age = ageAt(rec.생년월일, iso);
+      var yDum = o.yDum || (age >= 0 && age <= 34);
+      // 스쿨덤 · Y덤 가점 (11/19~)
+      if (yDum && iso >= '2026-11-19') {
+        add('스쿨덤·Y덤 가점', polPoint('bonus|school', P.bonus.school),
+          (o.yDum ? '직접 체크' : '만 ' + age + '세 (Y덤)') + ' · 37K 이상');
+      }
+      if (isAir && plan >= 90000) {
+        if (wtype === '번호이동') add('iPhone Air 가점', polPoint('bonus|airMnp', P.bonus.airMnp), '90K 이상 · MNP');
+        else if (wtype === '기기변경') add('iPhone Air 가점', polPoint('bonus|airMove', P.bonus.airMove), '90K 이상 · 기변');
+      } else if (wtype === '번호이동') {
+        add('MNP 가점', polPoint('bonus|mnp', P.bonus.mnp), '37K 이상 · iPhone Air 제외');
+      }
+      // 플래그십 가점 (11/5~)
+      if (flagRow && plan >= 110000 && iso >= '2026-11-05') {
+        if (wtype === '신규가입') add('플래그십 가점', polPoint('bonus|flag010', P.bonus.flag010), '110K 이상 · 010');
+        else if (wtype === '기기변경') add('플래그십 가점', polPoint('bonus|flagMove', P.bonus.flagMove), '110K 이상 · 기변');
+      }
+      var r17 = polFindRow(polById('MRA01'), rec.기종, []);
+      var is17pm = !!(r17 && (r17.match || []).indexOf('아이폰17프로') >= 0);
+      if (is17pm && plan >= 90000 && wtype === '기기변경') {
+        add('iPhone 17P·17PM 가점', polPoint('bonus|ip17pmMove', P.bonus.ip17pmMove), '90K 이상 · 기변');
+      }
+      var isFeRow = !!(r17 && ((r17.match || []).indexOf('아이폰17e') >= 0 || (r17.match || []).indexOf('갤럭시s25fe') >= 0));
+      if (isFeRow && plan >= 61000 && wtype === '기기변경') {
+        add('17e·S25 FE 가점', polPoint('bonus|feMove', P.bonus.feMove), '61K 이상 · 기변');
+      }
+      var isKid = !!(r17 && (r17.match || []).indexOf('시나모롤') >= 0);
+      if (isKid && plan >= 37000) {
+        if (wtype === '신규가입') add('시나모롤 키즈폰', polPoint('bonus|kid010', P.bonus.kid010), '37K 이상 · 010');
+        else if (wtype === '번호이동') add('시나모롤 키즈폰', polPoint('bonus|kidMnp', P.bonus.kidMnp), '37K 이상 · MNP');
+        else if (wtype === '기기변경') add('시나모롤 키즈폰', polPoint('bonus|kidMove', P.bonus.kidMove), '37K 이상 · 기변');
+      }
+      var isBudget = !!(r17 && ((r17.match || []).indexOf('레드미노트14') >= 0 || (r17.match || []).indexOf('모토로라엣지70') >= 0 ||
+        (r17.match || []).indexOf('g77') >= 0 || (r17.match || []).indexOf('모토로라g565g') >= 0));
+      if (isBudget && plan >= 37000 && (wtype === '신규가입' || wtype === '기기변경')) {
+        add('레드미·모토 가점', polPoint('bonus|' + (wtype === '신규가입' ? 'budget010' : 'budgetMove'),
+          wtype === '신규가입' ? P.bonus.budget010 : P.bonus.budgetMove), '37K 이상 · ' + wtype);
+      }
+    }
+    // 유선 포인트 (인터넷 · TV · 유무선 결합)
+    var ltype = slots.l || '';
+    if (ltype) {
+      var renew = /약정갱신/.test(ltype) ? 1 : 0;
+      var lp = splitPlanValue(rec.요금제).l || '';
+      var chunks = lp ? lp.split('+') : [];
+      var inKind = '', tvKind = '', k;
+      for (k = 0; k < chunks.length; k++) {
+        var c = String(chunks[k]).replace(/\s/g, '');
+        if (!c) continue;
+        if (/인터넷|와이파이|wifi|기가|기가인터넷/i.test(c)) {
+          if (/에센스/.test(c)) inKind = inKind || 'ess';
+          else if (/베이직/.test(c)) inKind = inKind || 'basic';
+          else if (/슬림/.test(c)) inKind = inKind || 'slim';
+          else if (!inKind) inKind = 'basic';
+        } else if (/tv|티비/i.test(c) || /지니|모든g/i.test(c)) {
+          if (/모든g/i.test(c)) tvKind = tvKind || 'allG';
+          else if (/에센스|플러스/.test(c)) tvKind = tvKind || 'ess';
+        }
+      }
+      var W = P.wired;
+      if (inKind === 'ess') add('유선 인터넷 에센스↑', polPoint('wired|inEss' + renew, W.inEss[renew]), renew ? '약정갱신' : '순신규');
+      else if (inKind === 'basic') add('유선 인터넷 베이직', polPoint('wired|inBasic' + renew, W.inBasic[renew]), renew ? '약정갱신' : '순신규');
+      else if (inKind === 'slim') add('유선 인터넷 슬림', polPoint('wired|inSlim' + renew, W.inSlim[renew]), renew ? '약정갱신' : '순신규');
+      if (tvKind === 'allG') add('TV 모든G↑', polPoint('wired|tvAllG' + renew, W.tvAllG[renew]), renew ? '약정갱신' : '순신규');
+      else if (tvKind === 'ess') add('TV 에센스·플러스', polPoint('wired|tvEss' + renew, W.tvEss[renew]), renew ? '약정갱신' : '순신규');
+      if (WIRELESS_TYPES.indexOf(wtype) >= 0 && inKind) {
+        add('무선+유선 결합 M+I(+T)', polPoint('wired|combMI' + renew, W.combMI[renew]), renew ? '약정갱신 · 결합 120일↑' : '순신규 · 결합 120일↑');
+      }
+    }
+    out.total = Math.round(out.total * 10) / 10;
+    return out;
+  }
+
+  function pText(n) { return (Math.round(Number(n || 0) * 10) / 10).toFixed(1) + 'P'; }
+
+  /* =========================================================
+     정책 합산 (무선 리베이트)
+     · 할인유형 · 기종 · 요금제 · 개통유형 · 특수조건 → 정책별 금액 합계
+     · 도도매 차감 : 신규가입 -40,000 / 번호이동·기기변경 -30,000
+     ========================================================= */
+  function calcPolicy(rec) {
+    var res = {
+      has: false, wtype: '', seg: 0, segKey: '', discount: normalizeDiscount(rec.할인유형),
+      conds: condList(rec.특수조건), items: [], sum: 0, cut: 0, cutLabel: '', total: 0,
+      points: 0, pointItems: [], notes: []
+    };
+    var iso = normalizeDate(rec.개통일) || todayISO();
+    var slots = typeSlots(rec.개통유형 || '');
+    var wtype = slots.w || '';
+    res.wtype = wtype;
+    var pt = calcPoints(rec);
+    res.points = pt.total;
+    res.pointItems = pt.items;
+    res.segKey = pt.segKey;
+    res.seg = pt.seg;
+    if (WIRELESS_TYPES.indexOf(wtype) < 0) return res;
+    var plan = planMonthly(rec.요금제);
+    if (plan < 37000) {
+      if (!plan) res.notes.push('요금제 월정액을 읽지 못해 무선 정책을 계산하지 못했습니다.');
+      else res.notes.push('요금제가 37K 미만이라 무선 정책 대상이 아닙니다 (정책 기준 37K 이상).');
+      return res;
+    }
+    var conds = res.conds, disc = res.discount;
+    var used = conds.indexOf('중고신규') >= 0 || conds.indexOf('중고MNP') >= 0;
+    var ti = wtype === '신규가입' ? 0 : wtype === '번호이동' ? 1 : 2;
+    var typeKey = POL_TYPES[ti];
+    function push(pol, row, seg, type, label, detail) {
+      var v = polCell(pol, row, seg, type, iso);
+      if (!v) return;
+      res.items.push({ id: pol.id, name: label || pol.name, amount: v * POLICY_DEFAULT.unit, detail: detail });
+      res.sum += v * POLICY_DEFAULT.unit;
+    }
+    if (!disc) res.notes.push('할인 유형(단말할인·요금할인)이 비어 있어 인정 여부를 가릴 수 없습니다. 정책 기준으로 계산했습니다.');
+    if (used) {
+      // 중고·자급제 개통 : MRA 는 대상이 아니고 MBA-02(후불)만 인정 (요금할인 적용)
+      if (conds.indexOf('중고결합') >= 0 && conds.indexOf('중고신규') < 0 && conds.indexOf('중고MNP') < 0) {
+        res.notes.push('중고결합은 중고신규·중고 MNP와 함께 골라야 인정됩니다.');
+      }
+      if (disc !== '요금할인') {
+        res.notes.push('중고 개통은 요금할인(선약)으로 개통해야 MBA-02 후불 정책이 인정됩니다.');
+      } else {
+        var mba = polById('MBA02');
+        var segKey = segFor(plan, mba.segs);
+        var col = conds.indexOf('중고신규') >= 0 ? '010' : 'MNP';
+        if (segKey) {
+          push(mba, mba.rows[0], segKey, col, 'MBA-02-01 SIMple 후불', segKey + ' 이상 · ' + col);
+          if (conds.indexOf('중고결합') >= 0) {
+            var mb2 = polById('MBA0202');
+            var seg2 = segFor(plan, mb2.segs);
+            if (seg2) push(mb2, mb2.rows[0], seg2, '결합', 'MBA-02-02 SIMple 후불 결합', seg2 + ' 이상 · 결합');
+          }
+        } else {
+          res.notes.push('요금제가 37K 미만이라 MBA-02 정책 대상이 아닙니다.');
+        }
+      }
+      res.notes.push('중고·자급제 개통은 MRA(기본·모델·활력·ARPU) 정책 대상이 아닙니다.');
+    } else {
+      // MRA-01 소매 기본
+      var p1 = polById('MRA01');
+      var r1 = polFindRow(p1, rec.기종, conds);
+      var s1 = segFor(plan, p1.segs);
+      if (r1 && s1) push(p1, r1, s1, typeKey, 'MRA-01 소매 기본', s1 + ' 이상 · ' + typeKey + ' · ' + r1.name);
+      // MRA-02 돈버는 모델 (37K↑)
+      var p2 = polById('MRA02');
+      var r2 = polFindRow(p2, rec.기종, conds);
+      if (r2 && plan >= segValue(p2.seg)) push(p2, r2, p2.seg, typeKey, 'MRA-02 돈버는 모델', p2.seg + ' 이상 · ' + typeKey + ' · ' + r2.name);
+      // MRA-02-01 돈버는 요금할인 (요금할인 전용 · 90K↑)
+      if (disc === '요금할인') {
+        var p21 = polById('MRA0201');
+        var r21 = polFindRow(p21, rec.기종, conds);
+        if (r21 && plan >= segValue(p21.seg)) push(p21, r21, p21.seg, typeKey, 'MRA-02-01 돈버는 요금할인', p21.seg + ' 이상 · ' + typeKey + ' · ' + r21.name);
+      }
+      // MRA-03 소매 활력 (모델 + 구간)
+      var p3 = polById('MRA03');
+      var s3 = segFor(plan, ['110K', '90K', '61K', '37K']);
+      if (s3) {
+        for (var i3 = 0; i3 < p3.rows.length; i3++) {
+          var r3 = p3.rows[i3];
+          if (r3.seg !== s3) continue;
+          if (polFindRow({ id: p3.id, rows: [r3], types: p3.types, shape: p3.shape }, rec.기종, conds) !== r3) continue;
+          push(p3, r3, s3, typeKey, 'MRA-03 소매 활력', s3 + ' 이상 · ' + typeKey + ' · ' + r3.name);
+          break;
+        }
+      }
+      // MRA-04 장기 사용 고객 기변 (요금할인 + 기변 + 장기기변)
+      if (disc === '요금할인' && wtype === '기기변경' && conds.indexOf('장기기변') >= 0) {
+        var p4 = polById('MRA04');
+        var r4 = polFindRow(p4, rec.기종, conds);
+        if (r4 && plan >= segValue(p4.seg)) push(p4, r4, p4.seg, '기변', 'MRA-04 장기 사용 고객 기변', p4.seg + ' 이상 · 기변 · ' + r4.name);
+      } else if (conds.indexOf('장기기변') >= 0 && disc !== '요금할인') {
+        res.notes.push('장기고객 기변(MRA-04)은 요금할인(선약) 개통에만 인정됩니다.');
+      }
+      // MRA-06 ARPU UP (120K↑ · 번호이동·기기변경)
+      if (wtype !== '신규가입') {
+        var p6 = polById('MRA06');
+        var r6 = polFindRow(p6, rec.기종, conds);
+        if (r6 && plan >= segValue(p6.seg)) push(p6, r6, p6.seg, typeKey, 'MRA-06 소매 ARPU UP', p6.seg + ' 이상 · ' + typeKey + ' · ' + r6.name);
+      }
+    }
+    res.sum = Math.round(res.sum);
+    if (res.sum > 0) {
+      // 도도매 차감 : 신규(신규가입·중고신규) -40,000 / 번이·기변(번호이동·기기변경·중고MNP) -30,000
+      var isNew = wtype === '신규가입' || conds.indexOf('중고신규') >= 0;
+      res.cut = isNew ? 40000 : (POLICY_CUT[wtype] || 0);
+      res.cutLabel = isNew ? '도도매 차감(신규)' : '도도매 차감(번이/기변)';
+      res.total = Math.max(0, res.sum - res.cut);
+      res.has = true;
+    }
+    return res;
+  }
+
   /* ---------- 단가표 관리 창 ---------- */
   function openPriceDialog() {
     if (!el.priceDialog) return;
     if (!isAdmin()) { openAdminDialog(); return; }
     renderPriceDialog();
+    renderPolTables();
+    renderPolPoints();
+    if ($('pvMonth')) $('pvMonth').value = currentMonth();
+    renderPolicySummary();
+    setPriceTab('sum');
     if (el.priceDialog.open) el.priceDialog.close();
     el.priceDialog.showModal();
+  }
+
+  /* ---------- 정책 계산표 · MRA 포인트 · 정산 요약 ---------- */
+  var priceTab = 'sum';
+
+  function setPriceTab(tab) {
+    priceTab = tab || 'sum';
+    var tabs = document.querySelectorAll('#pdTabs .pv-tab');
+    for (var i = 0; i < tabs.length; i++) {
+      tabs[i].classList.toggle('on', tabs[i].getAttribute('data-pv-tab') === priceTab);
+    }
+    var panels = document.querySelectorAll('#priceDialog .pv-panel');
+    for (var j = 0; j < panels.length; j++) {
+      panels[j].hidden = panels[j].getAttribute('data-pv-panel') !== priceTab;
+    }
+  }
+
+  function polInputHtml(pol, row, seg, type) {
+    var v = polCell(pol, row, seg, type, '');
+    return '<td><input class="pol-input' + (v ? ' on' : '') + '" type="text" inputmode="numeric" autocomplete="off"' +
+      ' data-pol="' + esc(pol.id) + '" data-prow="' + row.__i + '" data-pseg="' + esc(seg) + '" data-ptype="' + esc(type) + '"' +
+      ' value="' + (v ? String(Math.round(v * 1000) / 1000) : '') + '" placeholder="—"' +
+      ' aria-label="' + esc(pol.name + ' ' + row.name + ' ' + seg + ' ' + type) + '"></td>';
+  }
+
+  function renderPolTables() {
+    var html = '', i, j, k;
+    for (i = 0; i < POLICY_DEFAULT.rebate.length; i++) {
+      var pol = POLICY_DEFAULT.rebate[i];
+      polRowIndex(pol);
+      html += '<div class="pol-sec-head"><span class="pol-sec-title">' + esc(pol.name) + '</span>' +
+        '<span class="pol-sec-note">' + esc(pol.period) + ' · ' + esc(pol.note) + ' · 단위 천원</span></div>';
+      html += '<div class="pol-table-wrap"><table class="pol-table" data-pol-table="' + esc(pol.id) + '">';
+      if (pol.shape === 'grid') {
+        html += '<thead><tr><th rowspan="2" style="min-width:112px">기종</th>';
+        for (j = 0; j < pol.segs.length; j++) {
+          html += '<th colspan="' + pol.types.length + '">' + esc(pol.segs[j]) + ' 이상</th>';
+        }
+        html += '</tr><tr class="h2">';
+        for (j = 0; j < pol.segs.length; j++) {
+          for (k = 0; k < pol.types.length; k++) {
+            html += '<th title="' + esc(POL_TYPE_LABEL[pol.types[k]] || pol.types[k]) + '">' + esc(pol.types[k]) + '</th>';
+          }
+        }
+        html += '</tr></thead><tbody>';
+        for (j = 0; j < pol.rows.length; j++) {
+          var row = pol.rows[j];
+          html += '<tr><td class="pd-dev">' + esc(row.name) + '</td>';
+          for (k = 0; k < pol.segs.length; k++) {
+            for (var t2 = 0; t2 < pol.types.length; t2++) html += polInputHtml(pol, row, pol.segs[k], pol.types[t2]);
+          }
+          html += '</tr>';
+        }
+      } else {
+        html += '<thead><tr><th style="min-width:132px">기종</th><th>구간</th>';
+        for (k = 0; k < pol.types.length; k++) html += '<th>' + esc(POL_TYPE_LABEL[pol.types[k]] || pol.types[k]) + '</th>';
+        html += '</tr></thead><tbody>';
+        for (j = 0; j < pol.rows.length; j++) {
+          var r2 = pol.rows[j];
+          html += '<tr><td class="pd-dev">' + esc(r2.name) + '</td><td class="pd-seg">' + esc(r2.seg || pol.seg || '') + '↑</td>';
+          for (k = 0; k < pol.types.length; k++) html += polInputHtml(pol, r2, r2.seg || pol.seg, pol.types[k]);
+          html += '</tr>';
+        }
+      }
+      html += '</tbody></table></div>';
+    }
+    $('polTables').innerHTML = html;
+  }
+
+  var POINT_BONUS_ROWS = [
+    ['school', '스쿨덤·Y덤 가점 (11/19~)', '37K↑ · 010/MNP/기변 전부'],
+    ['flag010', '플래그십 가점 (11/5~)', '110K↑ · 010 (18P/PM·폴더블8·S26)'],
+    ['flagMove', '플래그십 가점 (11/5~)', '110K↑ · 기변 (18P/PM·폴더블8·S26)'],
+    ['airMnp', 'iPhone Air 가점', '90K↑ · MNP'],
+    ['airMove', 'iPhone Air 가점', '90K↑ · 기변'],
+    ['mnp', 'MNP 가점', '37K↑ · iPhone Air 제외'],
+    ['ip17pmMove', 'iPhone 17P·17PM 가점', '90K↑ · 기변'],
+    ['feMove', 'iPhone 17e·S25 FE 가점', '61K↑ · 기변'],
+    ['kid010', '시나모롤 키즈폰', '37K↑ · 010'],
+    ['kidMnp', '시나모롤 키즈폰', '37K↑ · MNP'],
+    ['kidMove', '시나모롤 키즈폰', '37K↑ · 기변'],
+    ['budget010', '레드미·모토 가점', '37K↑ · 010'],
+    ['budgetMove', '레드미·모토 가점', '37K↑ · 기변']
+  ];
+  var POINT_WIRED_ROWS = [
+    ['inEss', '인터넷 에센스↑'], ['inBasic', '인터넷 베이직'], ['inSlim', '인터넷 슬림 플러스↓'],
+    ['tvAllG', 'TV 모든G↑'], ['tvEss', 'TV 에센스·플러스'], ['combMI', '무선+유선 결합 M+I(+T)']
+  ];
+
+  function ptInputHtml(key, v) {
+    return '<input class="pol-input' + (v ? ' on' : '') + '" type="text" inputmode="decimal" autocomplete="off"' +
+      ' data-ptkey="' + esc(key) + '" value="' + (v ? String(v) : '') + '" placeholder="—" aria-label="' + esc(key) + '">';
+  }
+
+  function renderPolPoints() {
+    var P = POLICY_DEFAULT.points, html = '', i;
+    html += '<div class="pol-sec-head"><span class="pol-sec-title">무선 상품 기본 포인트</span>' +
+      '<span class="pol-sec-note">MRA-00-01 · 요금제 구간별 · 단위 P</span></div>';
+    html += '<div class="pol-table-wrap"><table class="pol-table"><thead><tr><th>요금제 구간</th><th>기본 포인트</th></tr></thead><tbody>';
+    var baseKeys = ['120K', '110K', '90K', '61K', '37K'];
+    for (i = 0; i < baseKeys.length; i++) {
+      html += '<tr><td class="pd-dev">' + baseKeys[i] + ' 이상</td><td>' +
+        ptInputHtml('PT|base|' + baseKeys[i], polPoint('base|' + baseKeys[i], P.base[baseKeys[i]])) + ' P</td></tr>';
+    }
+    html += '</tbody></table></div>';
+
+    html += '<div class="pol-sec-head"><span class="pol-sec-title">무선 가점 포인트</span>' +
+      '<span class="pol-sec-note">11/19~ 최신본 · 조건이 맞으면 기본 포인트에 더해집니다</span></div>';
+    html += '<div class="pol-table-wrap"><table class="pol-table"><thead><tr><th style="min-width:150px">가점</th><th>기준</th><th>포인트</th></tr></thead><tbody>';
+    for (i = 0; i < POINT_BONUS_ROWS.length; i++) {
+      var b = POINT_BONUS_ROWS[i];
+      html += '<tr><td class="pd-dev">' + esc(b[1]) + '</td><td class="pd-seg" style="color:#475569">' + esc(b[2]) + '</td><td>' +
+        ptInputHtml('PT|bonus|' + b[0], polPoint('bonus|' + b[0], P.bonus[b[0]])) + ' P</td></tr>';
+    }
+    html += '</tbody></table></div>';
+
+    html += '<div class="pol-sec-head"><span class="pol-sec-title">유선 포인트</span>' +
+      '<span class="pol-sec-note">순신규 / 약정갱신 · 단위 P</span></div>';
+    html += '<div class="pol-table-wrap"><table class="pol-table"><thead><tr><th style="min-width:150px">상품</th><th>순신규</th><th>약정갱신</th></tr></thead><tbody>';
+    for (i = 0; i < POINT_WIRED_ROWS.length; i++) {
+      var w = POINT_WIRED_ROWS[i], def = P.wired[w[0]];
+      html += '<tr><td class="pd-dev">' + esc(w[1]) + '</td><td>' + ptInputHtml('PT|wired|' + w[0] + '0', polPoint('wired|' + w[0] + '0', def[0])) + ' P</td>' +
+        '<td>' + ptInputHtml('PT|wired|' + w[0] + '1', polPoint('wired|' + w[0] + '1', def[1])) + ' P</td></tr>';
+    }
+    html += '</tbody></table></div>';
+    $('polPoints').innerHTML = html;
+  }
+
+  // 정책표에 적힌 값(원) 모으기 — 칸을 비우면 기본값으로 돌아간다
+  function polCollect() {
+    var out = {}, inputs = document.querySelectorAll('#priceDialog .pol-input'), i;
+    for (i = 0; i < inputs.length; i++) {
+      var t = inputs[i];
+      var polKeyStr = t.getAttribute('data-pol');
+      if (polKeyStr) {
+        var n = Number(String(t.value).replace(/[^0-9.]/g, ''));
+        if (!isFinite(n) || !n) continue;
+        out[polKeyStr + '|' + t.getAttribute('data-prow') + '|' + t.getAttribute('data-pseg') + '|' + t.getAttribute('data-ptype')] = Math.round(n * POLICY_DEFAULT.unit);
+      } else if (t.getAttribute('data-ptkey')) {
+        var pv = String(t.value).replace(/[^0-9.]/g, '');
+        if (pv === '') continue;
+        out[t.getAttribute('data-ptkey')] = Number(pv) || 0;
+      }
+    }
+    return out;
+  }
+
+  // 이번 달 건별 정책 산출 · 월 합계
+  function renderPolicySummary() {
+    var box = $('pvList');
+    if (!box) return;
+    var month = $('pvMonth') ? ($('pvMonth').value || currentMonth()) : currentMonth();
+    var list = [], i;
+    for (i = 0; i < state.records.length; i++) {
+      var r = state.records[i];
+      if (month && monthOf(r.개통일) !== month) continue;
+      list.push(r);
+    }
+    list.sort(function (a, b) { return String(b.개통일).localeCompare(String(a.개통일)); });
+    var total = 0, pts = 0, n = 0, html = '';
+    for (i = 0; i < list.length; i++) {
+      var rec = list[i];
+      var c = calcPolicy(rec);
+      var manual = Number(rec.무선리베이트) || 0;
+      var amount = manual || c.total;
+      total += amount;
+      pts += c.points;
+      if (c.has) n++;
+      var slots = typeSlots(rec.개통유형 || '');
+      var head = '<div class="pv-item-top"><span class="nm">' + esc(rec.고객명 || '(이름 없음)') + '</span>' +
+        '<span class="dt">' + esc(rec.개통일 || '') + ' · ' + esc(slots.w || '무선 없음') +
+        (normalizeDiscount(rec.할인유형) ? ' · ' + esc(normalizeDiscount(rec.할인유형)) : '') +
+        (rec.기종 ? ' · ' + esc(rec.기종) : '') +
+        (c.segKey ? ' · ' + c.segKey + '↑' : '') + '</span>';
+      var am = '<span class="am">' + fmtNum(amount) + '원' + (manual && c.has && manual !== c.total ? ' (정책 ' + fmtNum(c.total) + ')' : '') + '</span>';
+      var pp = c.points ? '<span class="pp">' + pText(c.points) + '</span>' : '';
+      head += am + pp + '</div>';
+      var br = '<div class="br">';
+      if (c.items.length) {
+        br += c.items.map(function (x) { return esc(x.id) + ' <b>' + fmtNum(x.amount) + '</b>'; }).join(' + ');
+        if (c.cut) br += ' <span class="cut">− ' + esc(c.cutLabel) + ' ' + fmtNum(c.cut) + '</span>';
+        br += ' = <b>' + fmtNum(c.total) + '원</b>';
+      } else {
+        br += '<span style="color:#94a3b8">정책 매칭 없음</span>';
+      }
+      if (c.pointItems.length) {
+        br += ' · <b>MRA</b> ' + c.pointItems.map(function (x) { return esc(x.label) + ' ' + pText(x.p); }).join(' + ');
+      }
+      br += '</div>';
+      if (c.notes.length) br += '<div class="br" style="color:#8A5200">· ' + esc(c.notes.join(' · ')) + '</div>';
+      html += '<div class="pv-item">' + head + br + '</div>';
+    }
+    if ($('pvTotal')) $('pvTotal').innerHTML = fmtNum(total) + '<i>원</i>';
+    if ($('pvPoints')) $('pvPoints').innerHTML = (Math.round(pts * 10) / 10).toFixed(1) + '<i>P</i>';
+    if ($('pvCount')) $('pvCount').innerHTML = n + '<i>건</i>';
+    box.innerHTML = html || '<div class="pv-empty2">이 달에 등록된 개통이 없습니다.</div>';
   }
 
   function pdValue(dev, type) {
@@ -2991,22 +3994,29 @@
     var t = pdCollect();
     t.updatedAt = new Date().toISOString();
     if (!savePriceTable(t)) return;
+    if (!savePolicy(polCollect())) return;
     var c = priceCounts();
     if (el.priceDialog.open) el.priceDialog.close();
     toast(c.total
-      ? '단가표 ' + c.total + '칸을 저장했습니다. 개통 등록에서 자동으로 채워집니다.'
-      : '단가표를 비웠습니다. 자동 입력도 멈춥니다.');
+      ? '단가표 ' + c.total + '칸 · 정책표를 저장했습니다. 개통 등록과 정산에 바로 반영됩니다.'
+      : '단가표를 비웠습니다. 정책표는 저장했습니다.');
+    render();
     syncPriceHints(false);
   }
 
   function clearPriceTable() {
     if (!isAdmin()) { toast('단가표는 관리자 모드에서만 바꿀 수 있습니다.', true); return; }
-    askConfirm('단가표 초기화', '저장된 단가표를 모두 지울까요?<br>개통 등록의 자동 입력도 함께 멈춥니다.', '초기화', true)
+    askConfirm('단가표 · 정책표 초기화',
+      '저장된 단가표와 고친 정책표 숫자를 모두 지우고 기본 KT 정책으로 돌아갈까요?<br>개통 등록의 단가표 자동 입력도 함께 멈춥니다.', '초기화', true)
       .then(function (ok) {
         if (!ok) return;
         savePriceTable(emptyPriceTable());
+        savePolicy({});
         renderPriceDialog();
-        toast('단가표를 초기화했습니다.');
+        renderPolTables();
+        renderPolPoints();
+        renderPolicySummary();
+        toast('단가표를 초기화하고 정책표를 기본값으로 되돌렸습니다.');
         syncPriceHints(false);
       });
   }
@@ -3147,6 +4157,207 @@
   /* ---------------- 단말 보험 칩 (미가입 · 가입) ----------------
      · 두 칸 중 하나만 선택된다 (기본 미가입)
      · 값은 hidden #f_ins 에 담겨 저장된다 */
+  /* ---------------- 할인 유형 · 정책 특수 조건 칩 ----------------
+     · 할인유형 : 단말할인(공시) / 요금할인(선약) — 1개(다시 누르면 해제)
+     · 특수조건 : 중고신규 · 중고MNP · 중고결합 · 장기기변 · 512G — 여러 개
+     · 직원 모드에서도 입력할 수 있어야 정확한 개통 구분이 된다 */
+  function renderDiscChips(value) {
+    var box = $('discChips');
+    if (!box) return;
+    var cur = normalizeDiscount(value);
+    var html = '<div class="type-row"><div class="type-chip-wrap">';
+    for (var i = 0; i < DISCOUNT_TYPES.length; i++) {
+      var t = DISCOUNT_TYPES[i], on = t === cur;
+      html += '<button type="button" class="type-chip' + (on ? ' on' : '') + '" data-disc="' + esc(t) + '"' +
+        ' aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(DISCOUNT_LABEL[t]) + '</button>';
+    }
+    box.innerHTML = html + '</div></div>';
+    $('f_discount').value = cur;
+  }
+
+  function toggleDiscChip(t) {
+    if (!t) return;
+    var cur = normalizeDiscount($('f_discount').value);
+    renderDiscChips(cur === t ? '' : t);
+    syncPriceHints(true);
+  }
+
+  function renderCondChips(list) {
+    var box = $('condChips');
+    if (!box) return;
+    var cur = condList(condText(list));
+    var html = '<div class="type-row"><div class="type-chip-wrap">';
+    for (var i = 0; i < POLICY_CONDS.length; i++) {
+      var c = POLICY_CONDS[i], on = cur.indexOf(c.key) >= 0;
+      html += '<button type="button" class="type-chip' + (on ? ' on' : '') + '" data-cond="' + esc(c.key) + '"' +
+        ' title="' + esc(c.hint) + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(c.label) + '</button>';
+    }
+    box.innerHTML = html + '</div></div>';
+    $('f_cond').value = condText(cur);
+  }
+
+  function toggleCondChip(key) {
+    if (!key) return;
+    var cur = condList($('f_cond').value);
+    var at = cur.indexOf(key);
+    if (at >= 0) cur.splice(at, 1); else cur.push(key);
+    renderCondChips(cur);
+    syncPriceHints(true);
+  }
+
+  // 표·폰 카드에 붙는 할인유형 · 특수조건 배지
+  function policyBadgesHtml(r) {
+    var disc = normalizeDiscount(r.할인유형);
+    var conds = condList(r.특수조건);
+    if (!disc && !conds.length) return '';
+    var html = '<span class="pol-badges">';
+    if (disc) html += '<span class="pbadge ' + (disc === '요금할인' ? 'd2' : 'd1') + '">' +
+      (disc === '요금할인' ? '요금할인' : '단말할인') + '</span>';
+    for (var i = 0; i < conds.length; i++) html += '<span class="pbadge c1">' + esc(conds[i]) + '</span>';
+    return html + '</span>';
+  }
+
+  /* ---------------- 정책 자동 계산 미리보기 (등록 창) ----------------
+     · 직원 모드 : 미리보기 없이 무선 리베이트 칸만 정책 단가로 자동 세팅
+     · 관리자 모드 : 정책별 내역 + MRA 포인트 + 도도매 차감을 보여 주고 1탭 적용 */
+  function formPolicyRecord() {
+    return {
+      개통일: $('f_date') ? $('f_date').value : '',
+      개통유형: $('f_type') ? $('f_type').value : '',
+      기종: $('f_model') ? $('f_model').value : '',
+      요금제: $('f_plan') ? $('f_plan').value : '',
+      생년월일: $('f_birth') ? $('f_birth').value : '',
+      할인유형: $('f_discount') ? $('f_discount').value : '',
+      특수조건: $('f_cond') ? $('f_cond').value : ''
+    };
+  }
+
+  function policyYdumOn() {
+    var c = $('pvYDum');
+    return !!(c && c.checked);
+  }
+
+  function paintPolicyPreview(calc, rec) {
+    var box = $('pvBox'), body = $('pvBody');
+    if (!box || !body) return;
+    if (!isAdmin()) { box.hidden = true; body.innerHTML = ''; return; }
+    box.hidden = false;
+    var slots = typeSlots(rec.개통유형 || '');
+    if (WIRELESS_TYPES.indexOf(slots.w) < 0) {
+      body.innerHTML = '<div class="pv-empty">무선 개통을 고르면 정책 계산이 바로 뜨는데요.</div>';
+      return;
+    }
+    if (!calc.items.length && !calc.points) {
+      body.innerHTML = '<div class="pv-empty">' + esc(calc.notes[0] || '정책에 맞는 조건이 아직 없습니다. 기종·요금제·할인유형을 보세요.') + '</div>';
+      return;
+    }
+    var html = '<div class="pv-total"><b>' + fmtNum(calc.total) + '원</b>' +
+      '<span class="pv-pt">MRA ' + pText(calc.points) + '</span>' +
+      '<span class="pv-sub">정책 매칭 ' + fmtNum(calc.sum) + '원' +
+      (calc.cut ? ' − 도도매 ' + fmtNum(calc.cut) + '원' : '') + '</span></div>';
+    html += '<div class="pv-line">';
+    for (var i = 0; i < calc.items.length; i++) {
+      html += '<span class="pv-k">' + esc(calc.items[i].id) + '</span>' +
+        '<span>' + fmtNum(calc.items[i].amount) + '원</span>' +
+        '<span class="pv-n">(' + esc(calc.items[i].detail || '') + ')</span>';
+    }
+    html += '</div>';
+    if (calc.cut) html += '<div class="pv-line"><span class="pv-cut">' + esc(calc.cutLabel) + '</span><span class="pv-cut">−' + fmtNum(calc.cut) + '원</span></div>';
+    if (calc.points) html += '<div class="pv-line"><span class="pv-k">MRA 포인트</span><span class="pv-pt">' + pText(calc.points) + '</span>' +
+      '<span class="pv-n">' + esc(calc.pointItems.map(function (x) { return x.label + ' ' + pText(x.p); }).join(' · ')) + '</span></div>';
+    if (calc.notes.length) html += '<div class="pv-note">· ' + esc(calc.notes.join(' · ')) + '</div>';
+    body.innerHTML = html;
+  }
+
+  // 무선 리베이트 칸 : 정책 단가 우선, 없으면 단가표 → 안내/1탭 칩
+  function paintRebateHint(calc, autoFill) {
+    var box = $('ptHintW'), input = $('f_rebate_w');
+    if (!box || !input) return;
+    var autoPrev = parseNumber(input.getAttribute('data-pt-auto'));
+    var cur = parseNumber(input.value);
+    var slots = typeSlots($('f_type').value);
+    var price = wirelessPrice($('f_model').value, slots.w);
+    var polTotal = (calc && calc.has) ? calc.total : 0;
+
+    // 1) 우리가 넣어 둔 값(또는 빈 칸)은 조건이 바뀌면 따라간다 — 직접 적은 값은 건드리지 않는다
+    var owned = !!(autoPrev && cur === autoPrev);
+    if (owned && polTotal && cur !== polTotal) {
+      input.value = fmtNum(polTotal);
+      cur = polTotal;
+    } else if (owned && !polTotal && price && cur !== price.value) {
+      input.value = fmtNum(price.value);
+      cur = price.value;
+    } else if (!cur) {
+      if (polTotal) input.value = fmtNum(polTotal);
+      else if (price) input.value = fmtNum(price.value);
+      cur = parseNumber(input.value);
+    }
+
+    // 2) 안내
+    if (polTotal && cur === polTotal) {
+      input.setAttribute('data-pt-auto', String(polTotal));
+      box.hidden = false;
+      box.setAttribute('data-val', String(polTotal));
+      box.setAttribute('data-src', 'pol');
+      box.innerHTML = '<span class="pt-same">정책 ' + fmtNum(polTotal) + '원 적용됨</span>' +
+        (isAdmin() ? '<span class="pt-same">MRA ' + pText(calc.points) + '</span>' : '');
+      return;
+    }
+    if (!polTotal && price && cur === price.value) {
+      input.setAttribute('data-pt-auto', String(price.value));
+      box.hidden = false;
+      box.setAttribute('data-val', String(price.value));
+      box.setAttribute('data-src', 'price');
+      box.innerHTML = '<span class="pt-same">단가표 ' + fmtNum(price.value) + '원 적용됨</span>';
+      return;
+    }
+    if (polTotal) {
+      input.removeAttribute('data-pt-auto');
+      box.hidden = false;
+      box.setAttribute('data-val', String(polTotal));
+      box.setAttribute('data-src', 'pol');
+      box.innerHTML = '<button type="button" class="pt-apply" data-pt="w">정책 단가 적용 (' + fmtNum(polTotal) + '원)</button>';
+      return;
+    }
+    if (price) {
+      input.removeAttribute('data-pt-auto');
+      box.hidden = false;
+      box.setAttribute('data-val', String(price.value));
+      box.setAttribute('data-src', 'price');
+      box.innerHTML = '<button type="button" class="pt-apply" data-pt="w">단가표 적용 (' + fmtNum(price.value) + '원)</button>';
+      return;
+    }
+    // 정책도 단가표도 없으면 : 자동으로 넣었던 값만 정리한다
+    if (autoPrev && cur === autoPrev) input.value = '';
+    input.removeAttribute('data-pt-auto');
+    box.hidden = true;
+    box.innerHTML = '';
+    box.setAttribute('data-val', '');
+    box.setAttribute('data-src', '');
+  }
+
+  // 등록 창의 무선 리베이트 · 정책 미리보기를 한 번에 다시 그린다
+  function refreshPolicy(autoFill) {
+    if (!el || !el.editDialog || !el.editDialog.open) return null;
+    var rec = formPolicyRecord();
+    var calc = calcPolicy(rec);
+    paintPolicyPreview(calc, rec);
+    paintRebateHint(calc, autoFill);
+    var btn = $('pvApply');
+    if (btn) btn.disabled = !calc.has;
+    return calc;
+  }
+
+  function applyPolicyToRebate() {
+    var input = $('f_rebate_w');
+    if (!input) return;
+    var calc = calcPolicy(formPolicyRecord());
+    if (!calc.has) { toast('지금 조건에 맞는 무선 정책이 없습니다.', true); return; }
+    input.value = fmtNum(calc.total);
+    refreshPolicy(false);
+    toast('정책 단가 ' + fmtNum(calc.total) + '원을 무선 리베이트에 넣었습니다.');
+  }
+
   function setInsChips(v) {
     var val = normalizeIns(v);
     var input = $('f_ins');
@@ -3989,10 +5200,15 @@
     el.kpiBreakdown.innerHTML = chips.length ? chips.join('') : '<span class="chip t-etc">아직 기록 없음</span>';
 
     // 리베이트(무선/유선) · 중고폰금액 합계
-    var sumW = 0, sumL = 0, usedSum = 0, nW = 0, nL = 0;
+    //  관리자 모드에서는 무선 리베이트가 비어 있는 건도 정책 자동 계산값으로 합산한다
+    var sumW = 0, sumL = 0, usedSum = 0, nW = 0, nL = 0, nPol = 0;
     for (i = 0; i < list.length; i++) {
       var rw = Number(list[i].무선리베이트) || 0;
       var rl = Number(list[i].유선리베이트) || 0;
+      if (!rw && isAdmin()) {
+        var pc = calcPolicy(list[i]);
+        if (pc.has) { rw = pc.total; nPol++; }
+      }
       sumW += rw; sumL += rl;
       if (rw) nW++;
       if (rl) nL++;
@@ -4005,7 +5221,7 @@
       : '기록을 추가하면 자동으로 합산됩니다';
     if (el.kpiRebateW) el.kpiRebateW.textContent = fmtNum(sumW);
     if (el.kpiRebateWSub) el.kpiRebateWSub.textContent = nW
-      ? '무선 ' + nW + '건 · 평균 ' + fmtNum(Math.round(sumW / nW)) + '원'
+      ? '무선 ' + nW + '건 · 평균 ' + fmtNum(Math.round(sumW / nW)) + '원' + (nPol ? ' · 정책 자동 ' + nPol + '건 포함' : '')
       : '기기변경·번호이동·신규가입';
     if (el.kpiRebateL) el.kpiRebateL.textContent = fmtNum(sumL);
     if (el.kpiRebateLSub) el.kpiRebateLSub.textContent = nL
@@ -4188,11 +5404,34 @@
       '</button>';
   }
 
-  // 폰 카드 두 번째 줄: 무선/유선 리베이트를 한눈에
+  // 장부 표·폰 카드의 무선 리베이트 칸 — 관리자 모드에서는 비어 있어도 정책 자동 계산값을 보여 준다
+  function wirelessRebateView(r) {
+    var manual = Number(r.무선리베이트) || 0;
+    var c = calcPolicy(r);
+    var auto = c.has ? c.total : 0;
+    return { manual: manual, auto: auto, calc: c };
+  }
+
+  function wirelessRebateCell(r) {
+    var v = wirelessRebateView(r);
+    if (v.manual) {
+      if (isAdmin() && v.auto && v.auto !== v.manual) {
+        return fmtNum(v.manual) + '<span class="pol-diff">정책 ' + fmtNum(v.auto) + '</span>';
+      }
+      return fmtNum(v.manual);
+    }
+    if (isAdmin() && v.auto) return '<span class="pol-auto">정책 ' + fmtNum(v.auto) + '</span>';
+    return '<span class="muted">—</span>';
+  }
+
+  // 폰 카드 두 번째 줄: 무선/유선 리베이트를 한눈에 (관리자면 정책 자동값도)
   function rebateText(r) {
-    var w = Number(r.무선리베이트) || 0, l = Number(r.유선리베이트) || 0;
+    var v = wirelessRebateView(r);
+    var w = v.manual, l = Number(r.유선리베이트) || 0;
+    var auto = (!w && isAdmin()) ? v.auto : 0;
     if (w && l) return '무 ' + fmtNum(w) + ' · 유 ' + fmtNum(l);
-    if (l) return fmtNum(l) + '원';
+    if (l && !w) return fmtNum(l) + '원';
+    if (auto) return '정책 ' + fmtNum(auto) + '원';
     return fmtNum(w) + '원';
   }
 
@@ -4223,6 +5462,7 @@
         '<div class="m-line2">' +
           '<span class="m-model">' + (r.기종 ? esc(r.기종) : '<span class="muted">기종 없음</span>') + '</span>' +
           (normalizeIns(r.단말보험) === '가입' ? '<span class="m-ins">단말보험 가입</span>' : '') +
+          policyBadgesHtml(r) +
           '<span class="m-money">' + rebateText(r) + '</span>' +
           (r.담당자 ? '<span class="m-staff">' + esc(r.담당자) + '</span>' : '') +
         '</div>' +
@@ -4239,7 +5479,8 @@
         mRow('단말보험', normalizeIns(r.단말보험) === '가입' ? '<span class="badge ins-on">보험가입</span>' : '')
         + mRow('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
         mRow('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
-        mRow('무선 리베이트', r.무선리베이트 ? fmtNum(r.무선리베이트) + '원' : '') +
+        mRow('무선 리베이트', wirelessRebateView(r).manual ? fmtNum(r.무선리베이트) + '원'
+          : (isAdmin() && wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) +
         mRow('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') +
         mRow('메모', r.메모 ? esc(r.메모) : '') +
         mRow('담당자', r.담당자 ? esc(r.담당자) : '') +
@@ -4348,7 +5589,7 @@
         '<td data-label="연락처" class="nowrap">' + (r.연락처 ? esc(r.연락처) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
-        '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span></td>' +
+        '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span>' + policyBadgesHtml(r) + '</td>' +
         '<td data-label="단말보험" class="ins-cell">' + insBadgeHtml(r.단말보험) + '</td>' +
         '<td data-label="요금제"><span class="ellip" title="' + esc(r.요금제) + '">' + (r.요금제 ? esc(r.요금제) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="변경요금제"><span class="ellip" title="' + esc(r.변경요금제) + '">' + (r.변경요금제 ? esc(r.변경요금제) : '<span class="muted">—</span>') + '</span></td>' +
@@ -4357,7 +5598,7 @@
         '<td data-label="부가서비스해지일자" class="nowrap">' + addonDateCell(r) + '</td>' +
         '<td data-label="중고폰"><span class="ellip" title="' + esc(r.중고폰) + '">' + (r.중고폰 ? esc(r.중고폰) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="중고폰금액" class="money">' + (r.중고폰금액 ? fmtNum(r.중고폰금액) : '<span class="muted">—</span>') + '</td>' +
-        '<td data-label="무선 리베이트" class="money">' + (r.무선리베이트 ? fmtNum(r.무선리베이트) : '<span class="muted">—</span>') + '</td>' +
+        '<td data-label="무선 리베이트" class="money">' + wirelessRebateCell(r) + '</td>' +
         '<td data-label="유선 리베이트" class="money">' + (r.유선리베이트 ? fmtNum(r.유선리베이트) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span></td>' +
         '<td data-label="담당자" class="nowrap">' + (r.담당자 ? esc(r.담당자) : '<span class="muted">—</span>') + '</td>' +
@@ -4790,6 +6031,9 @@
     $('f_birth').value = r.생년월일 || '';
     renderTypeChips(r.개통유형 || '');
     applyTypeHint();
+    renderDiscChips(r.할인유형 || '');
+    renderCondChips(r.특수조건 || '');
+    if ($('pvYDum')) $('pvYDum').checked = false;
     $('f_model').value = r.기종 || '';
     markModelChips($('f_model').value);
     setInsChips(r.단말보험);
@@ -4871,6 +6115,8 @@
       개통유형: $('f_type').value,
       기종: $('f_model').value.trim(),
       단말보험: normalizeIns($('f_ins').value),
+      할인유형: normalizeDiscount($('f_discount').value),
+      특수조건: condText(condList($('f_cond').value)),
       요금제: plan,
       변경요금제: $('f_newplan').value.trim(),
       요금제변경일자: normalizeDate($('f_newdate').value),
@@ -4947,6 +6193,9 @@
       $('f_rebate_w').value = '';
       $('f_rebate_l').value = '';
       $('f_memo').value = '';
+      renderDiscChips('');
+      renderCondChips([]);
+      if ($('pvYDum')) $('pvYDum').checked = false;
       $('f_name').focus();
       syncPriceHints(true);
     } else {
@@ -5545,6 +6794,30 @@
       if (el.pdSave) el.pdSave.addEventListener('click', savePriceFromDialog);
       if (el.pdClear) el.pdClear.addEventListener('click', clearPriceTable);
       if (el.pdApplyPaste) el.pdApplyPaste.addEventListener('click', applyPricePaste);
+      // 정책 계산표 탭 · 정산 월
+      if ($('pdTabs')) {
+        $('pdTabs').addEventListener('click', function (e) {
+          var b = e.target.closest ? e.target.closest('button[data-pv-tab]') : null;
+          if (b) setPriceTab(b.getAttribute('data-pv-tab'));
+        });
+      }
+      if ($('pvMonth')) $('pvMonth').addEventListener('change', renderPolicySummary);
+      if ($('pvMonthThis')) $('pvMonthThis').addEventListener('click', function () {
+        $('pvMonth').value = currentMonth();
+        renderPolicySummary();
+      });
+      // 정책표 · 포인트 입력칸 숫자 정리 (원 단위 · 포인트는 소수 한 자리)
+      el.priceDialog.addEventListener('input', function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('pol-input')) return;
+        if (t.getAttribute('data-ptkey')) {
+          t.value = String(t.value).replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1').slice(0, 5);
+        } else {
+          t.value = String(t.value).replace(/[^0-9]/g, '').slice(0, 4);
+        }
+        t.classList.toggle('on', !!t.value);
+        t.removeAttribute('data-base');
+      });
       el.priceDialog.addEventListener('input', function (e) {
         var t = e.target;
         if (!t || !t.classList || !t.classList.contains('pd-input')) return;
@@ -5723,6 +6996,32 @@
       });
     }
 
+    // 할인 유형 · 정책 특수 조건 칩 (직원 모드에서도 선택 가능)
+    if ($('discChips')) {
+      $('discChips').addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('button[data-disc]') : null;
+        if (!b) return;
+        toggleDiscChip(b.getAttribute('data-disc'));
+      });
+    }
+    if ($('condChips')) {
+      $('condChips').addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('button[data-cond]') : null;
+        if (!b) return;
+        toggleCondChip(b.getAttribute('data-cond'));
+      });
+    }
+    if ($('pvApply')) $('pvApply').addEventListener('click', applyPolicyToRebate);
+    if ($('pvYDum')) $('pvYDum').addEventListener('change', function () { refreshPolicy(false); });
+    // 요금제를 치는 동안에도 정책 계산이 따라오게 (입력 200ms 뒤)
+    var polTimer = null;
+    if ($('f_plan')) {
+      $('f_plan').addEventListener('input', function () {
+        clearTimeout(polTimer);
+        polTimer = setTimeout(function () { refreshPolicy(false); }, 200);
+      });
+    }
+
     // 요금제 빠른 검색(숫자·이름) + 요금제 선택 창
     bindPlanField($('f_plan'));
     bindPlanField($('f_newplan'));
@@ -5768,8 +7067,8 @@
     bindPeriod(el.planPeriodChips, 'plan');
     bindPeriod(el.addonPeriodChips, 'addon');
 
-    // 개통일을 바꾸면 선택한 기간에 맞춰 다시 계산
-    $('f_date').addEventListener('change', recalcPeriods);
+    // 개통일을 바꾸면 선택한 기간에 맞춰 다시 계산 (+ 정책 계산도)
+    $('f_date').addEventListener('change', function () { recalcPeriods(); refreshPolicy(false); });
     $('f_newdate').addEventListener('change', function () {
       period.plan = this.value ? 'custom' : 'none';
       paintPeriodChips();
@@ -6074,6 +7373,7 @@
     loadSync();
     loadDevice();
     loadPriceTable();
+    loadPolicy();
     state.records = blockedStored() ? [] : loadRecords();
     state.filters.month = currentMonth();
 
