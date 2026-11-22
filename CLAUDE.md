@@ -446,8 +446,10 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     메모 본문·상세보기에서는 태그가 빠진다. 한 줄은 컬럼만으로 충분해 태그를 만들지 않는다. **메모 태그가 없는 예전 기록**(`S25/에어팟` + `700000`)은 **1줄**로 안전하게 열린다(`usedRowsFromRecord`).
   - **`[미반납]` 그대로**: 칩을 누르면 여러 줄이 모두 비워지고 **1줄로 접히며** 흐려지고(`ulResetRows`), `[미기입:…,중고폰]` 표기·`⚠️ 미기재 확인` 규칙(모델명만 있고 합산 0 → `중고폰 금액 미기재`)도 그대로다.
   - **상세 표시**: 폰 카드·상세의 `중고폰금액` 줄에 `800,000원 (S25엣지 500,000 · 에어팟 200,000 · 워치 100,000)` 처럼 모델별 금액을 작게 덧붙인다(`usedDetailBadge`).
-  - 테스트 `qa-kt/v43_used_multi_test.py`(61항목: 1줄→`+ 추가` 3줄→합산→저장→KPI/순마진→✏️ 복원→`미반납`→폰 390→시트 왕복) · 라이브 `qa-kt/live_check_v43.py` ·
-    회귀 `v42_double_card`(59) · `v41_slip_amount`(38) · `v40_split_tel`(74) · `v39_pay_slip`(75) · `policy_calc`(74) 통과 ·
+  - 테스트 `qa-kt/v43_used_multi_test.py`(61항목: 1줄→`+ 추가` 3줄→합산→저장→KPI/순마진→✏️ 복원→`미반납`→폰 390→시트 왕복) · 라이브 `qa-kt/live_check_v43.py`(11항목) ·
+    회귀 `v42_double_card`(59) · `v41_slip_amount`(38) · `v40_split_tel`(74) · `v39_pay_slip`(75) · `policy_calc`(74) · `v32_approval_payback_used`(49) · `v34_easy_sale_scope`(72) ·
+    `v40_missing_plan`(22) · `payback_required`(69) 통과 (`v33` 60/67 은 **v40 커밋에서도 같던** 미기재 기준 차이 — 이번 변경과 무관) ·
+    `v32` C8(모델명 칸 placeholder `예) S25엣지`) · `v40_split_tel`·`v34` 의 CACHE_VERSION 검사를 v43 으로 맞췄다 ·
     스크린샷 `downloads/개통장부-v43-중고폰추가-모달.png` · `downloads/개통장부-v43-중고폰추가-목록.png`(+`qa-kt/_v43_모바일-중고폰추가.png`).
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
