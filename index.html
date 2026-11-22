@@ -978,7 +978,8 @@
   .wired-gift .gift-chips{display:flex;flex-wrap:wrap;gap:6px}
   .gift-badge{background:#EAF6EF;color:#0B5F45;border-color:#BFE3D3;margin-left:6px}
   /* ---------- v19 추지·페이백·중고폰 — [미기입]/[미반납] 1탭 칩 ---------- */
-  .pay-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 12px}
+  /* v47 — 추지·페이백 세 칸은 화면 폭과 상관없이 한 줄에 하나씩 (위/아래 칸 좌우 끝선을 맞추기 위해) */
+  .pay-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:10px 12px}
   .pay-grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
   @media (max-width:700px){.pay-grid,.pay-grid.two{grid-template-columns:1fr}}
   .pay-row{display:flex;align-items:center;gap:6px}
@@ -995,17 +996,27 @@
   .paycard-field .pc-foot .hint{flex:1 1 auto;min-width:0}
   .paycard-field .pc-foot .pc-add{flex:none;margin-top:-2px}
   .paycard-lines{display:flex;flex-direction:column;gap:8px}
-  /* v45 — 카드결제 한 줄 = 카드 박스(1단 금액 · 2단 4칩 · 3단 카드결제 완료) */
-  .paycard-line{display:flex;flex-direction:column;gap:7px;padding:9px 10px;border:1px solid #E2EAF5;
-    border-radius:12px;background:#F8FAFD}
-  .paycard-line + .paycard-line{padding-top:9px}
+  /* v45 — 카드결제 한 줄 = 1단 금액 · 2단 4칩 · 3단 카드결제 완료
+     v47 — 위(추가지원금)·아래(페이백 입금)와 좌우 끝선을 1px까지 맞춘다:
+            안쪽 카드 박스(테두리·배경·좌우 패딩)를 걷어 바깥 정렬로 두고, 줄 구분은 얇은 상단 점선만 */
+  .paycard-line{display:flex;flex-direction:column;gap:7px;padding:0;border:0;background:transparent;
+    border-radius:0}
+  .paycard-line + .paycard-line{padding-top:10px;border-top:1px dashed #DCE6F2}
   .paycard-line .pay-row{gap:6px}
   .paycard-line .pc-top{flex-wrap:nowrap;align-items:center}
   .paycard-line .pc-amt{flex:1 1 0;min-width:0;width:auto}
-  .paycard-line .pc-top .pc-del{margin-left:auto;flex:none}
-  .paycard-line .pc-tags{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  /* v47 — 4칩 한 줄: [할부금][위약금] | [1일 결제] [✓ 결제 완료] (+ [×]) */
+  .paycard-line .pc-chips-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
+  .paycard-line .pc-tags{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
+  .paycard-line .pc-done-row{margin-top:0;gap:5px;flex-wrap:nowrap;min-width:0}
+  /* v47 — [×] 는 4칩 줄 오른쪽 끝 (금액칸 폭을 위아래 칸과 같게 두기 위해) */
+  .paycard-line .pc-chips-row .pc-del{margin-left:auto;flex:none}
+  /* v47 — [+ 추가] 는 4칩 줄 오른쪽 끝 · 줄이 늘면 마지막 줄로 따라간다
+     · [×] 가 있으면 [×] 가 오른쪽을 잡고 [+ 추가] 가 바로 뒤에 붙는다 */
+  .paycard-line .pc-chips-row .pc-add{margin-left:auto;flex:none;padding:0 9px;font-size:12px}
+  .paycard-line .pc-chips-row .pc-del:not([hidden]) + .pc-add{margin-left:4px}
   .paycard-line .pc-chips{gap:4px}
-  .paycard-line .pc-chips .pchip{height:26px;padding:0 11px;font-size:12px;font-weight:800}
+  .paycard-line .pc-chips .pchip{height:26px;padding:0 9px;font-size:12px;font-weight:800}
   .paycard-line .pc-chips .pchip.on{background:#0F172A;color:#fff;border-color:#0F172A}
   /* v45 — 두 그룹 사이만 살짝 띄운다: [할부금][위약금] · [1일 결제] */
   .paycard-line .pc-sep{width:1px;height:18px;background:#D8E2EF;margin:0 3px;flex:none}
@@ -1015,6 +1026,16 @@
   .paycard-line.none-on{opacity:.55}
   .paycard-line .pc-no{font-size:11px;font-weight:800;color:var(--slate-400);min-width:0}
   .paycard-field .pc-total{font-weight:800;color:var(--blue-700)}
+  /* v47 — 폰 390 에서도 4칩 + [+ 추가] 가 2줄째 한 줄에 (아주 좀은 화면만 자연 줄바꿈) */
+  @media (max-width:560px){
+    .paycard-line .pc-chips-row{gap:4px}
+    .paycard-line .pc-chips .pchip{height:24px;padding:0 7px;font-size:11.5px}
+    .paycard-line .pc-chips-row .paydone-chip{height:24px;padding:0 7px;font-size:11.5px}
+    .paycard-line .pc-chips-row .pc-add{height:24px;padding:0 7px;font-size:11.5px}
+    .paycard-line .pc-sep{margin:0 1px}
+    .paycard-line .pc-chips-row .pd-state{display:none}
+    .paycard-line .pc-chips-row .pc-del{height:24px;width:22px;font-size:13px}
+  }
   /* v43 — 중고폰 여러 줄: 평소엔 1줄(모델명 · 금액), [+ 추가]로 여러 대·여러 품목을 나눠 적는다 */
   .used-lines{display:flex;flex-direction:column;gap:7px}
   .used-line{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 26px;gap:6px;align-items:center}
@@ -1031,9 +1052,9 @@
   .used-line .ul-del[hidden]{display:block;visibility:hidden}
   .used-lines.none-on .used-line{opacity:.55}
   .ul-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:7px}
-  .ul-foot .ul-add{order:1;margin-left:auto;height:28px;padding:0 10px;font-size:12px;font-weight:800;color:var(--blue-700);border-color:#B9D2F5;background:var(--blue-50)}
-  .ul-foot .ul-add:hover{background:#DBEAFE;border-color:#8CB8F0}
-  .ul-foot .hint{order:2;flex:1 1 100%;min-width:0}
+  .ul-add{height:26px;padding:0 9px;font-size:12px;font-weight:800;color:var(--blue-700);border-color:#B9D2F5;background:var(--blue-50)}
+  .ul-add:hover{background:#DBEAFE;border-color:#8CB8F0}
+  .ul-foot .hint{min-width:0}
   .ul-foot .hint .ul-total{color:var(--blue-700)}
   @media (max-width:420px){.used-line{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 26px}}
   /* v32 — 기기 승인 대기 화면 (차단 화면과 같은 모양, 문구·버튼만 다름) */
@@ -2066,9 +2087,12 @@
   .pc-done-row .paydone-chip[aria-pressed="true"] .pd-tick{opacity:1;color:#a16207}
   .pc-done-row .pd-state{font-size:11px;font-weight:800;color:var(--slate-400)}
   .pc-done-row .pd-state.done{color:#8a6d00}
-  /* v46 — 페이백 금액을 적었는데 [1일 결제]/[1일 입금] 도 [✓ 완료] 도 안 고른 곳 */
-  .paycard-line .pc-tags.bad,.paycard-line .pc-done-row.bad,
-  .paybank-done.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
+  /* v46 — 페이백 금액을 적었는데 [1일 결제] 도 [✓ 결제 완료] 도 안 고른 곳
+     v47 — 4칩 한 줄에서는 줄 전체(.pc-chips-row)에 한 번만 빨간 테두리를 두른다
+           (안쪽 .pc-tags · .pc-done-row 는 outline-color 만 남겨 테두리가 겹치지 않게) */
+  .paycard-line .pc-tags.bad,.paycard-line .pc-done-row.bad{outline-color:#DC2626;outline-style:none}
+  .paycard-line .pc-chips-row.bad,
+  .paybank-done.bad{outline:2px solid #DC2626;outline-offset:3px;border-radius:12px}
   @media (max-width:560px){
     .paybank-acct{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
     .paybank-acct #f_paybank_acct{grid-column:1/-1}
@@ -2704,7 +2728,7 @@
           <!-- v38 — list="modelList"(datalist) 는 안드로이드에서 탭해도 값이 안 바뀌어서 뺐다.
                이제 바로 아래 커스텀 목록(#sug_f_model)에서 한 번 탭하면 바뀐다.
                #modelList 는 예전 화면·테스트 호환용으로 22종을 그대로 채워 둔다(화면에는 안 뜬다). -->
-          <input id="f_model" type="text" autocomplete="off" placeholder="예) 갤럭시 S26 / 아이폰 17 프로"
+          <input id="f_model" type="text" autocomplete="off" placeholder="예) 갤럭시 S26 / 아이폰 18 프로"
                  aria-haspopup="listbox" aria-controls="sug_f_model" aria-expanded="false">
           <div class="plan-suggest model-suggest" id="sug_f_model" role="listbox" aria-label="기종 목록"></div>
           <datalist id="modelList"></datalist>
@@ -2920,38 +2944,40 @@
               <label for="f_paycard">페이백 (카드결제) <span class="req">*</span></label>
               <div class="paycard-lines" id="paycardLines">
                 <div class="paycard-line" id="paycardRow" data-pc-row="1">
-                  <!-- 1단 — 금액 · [미기입](1줄째만) · [×](2줄 이상) -->
+                  <!-- 1단 — 금액 · [미기입](1줄째만) -->
                   <div class="pay-row pc-top">
                     <input id="f_paycard" class="money pc-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
                     <input id="f_paycard_none" type="hidden" value="">
                     <div class="period-chips none-chips" id="paycardNoneChips" role="group" aria-label="페이백 카드결제 미기입">
                       <button type="button" class="pchip" data-pay-none="paycard" aria-pressed="false">미기입</button>
                     </div>
+                  </div>
+                  <!-- 2단 — v47: 4칩 한 줄 [할부금][위약금] | [1일 결제] [✓ 결제 완료] (+ [×]) -->
+                  <div class="pc-chips-row">
+                    <div class="pc-tags">
+                      <div class="period-chips pc-chips" role="group" aria-label="결제 종류">
+                        <button type="button" class="pchip" data-pc-kind="할부금" aria-pressed="false">할부금</button>
+                        <button type="button" class="pchip" data-pc-kind="위약금" aria-pressed="false">위약금</button>
+                      </div>
+                      <span class="pc-sep" aria-hidden="true"></span>
+                      <div class="period-chips pc-chips" role="group" aria-label="결제 시기">
+                        <button type="button" class="pchip" data-pc-when="1일결제" aria-pressed="false">1일 결제</button>
+                      </div>
+                    </div>
+                    <!-- 이 줄만 결제 완료 (금액이 있는 줄만 보임) -->
+                    <div class="pc-done-row" data-pc-done-row="1" hidden>
+                      <button type="button" class="pchip paydone-chip" data-pc-done-btn="1" aria-pressed="false"
+                              title="누를 때마다 미결제 ↔ 결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>결제 완료</button>
+                      <span class="pd-state">미결제</span>
+                    </div>
+                    <!-- v47 — [×] 는 4칩 줄 오른쪽 끝 (금액칸 폭을 위아래 칸과 같게 두기 위해) -->
                     <button type="button" class="pchip pc-del" data-pc-del="1" aria-label="이 줄 삭제" hidden>×</button>
-                  </div>
-                  <!-- 2단 — 1탭 4칩 (하나만 선택 · 다시 누르면 해제) -->
-                  <div class="pc-tags">
-                    <div class="period-chips pc-chips" role="group" aria-label="결제 종류">
-                      <button type="button" class="pchip" data-pc-kind="할부금" aria-pressed="false">할부금</button>
-                      <button type="button" class="pchip" data-pc-kind="위약금" aria-pressed="false">위약금</button>
-                    </div>
-                    <span class="pc-sep" aria-hidden="true"></span>
-                    <div class="period-chips pc-chips" role="group" aria-label="결제 시기">
-                      <button type="button" class="pchip" data-pc-when="1일결제" aria-pressed="false">1일 결제</button>
-                    </div>
-                  </div>
-                  <!-- 3단 — 이 줄만 카드결제 완료 (금액이 있는 줄만 보임) -->
-                  <div class="pc-done-row" data-pc-done-row="1" hidden>
-                    <button type="button" class="pchip paydone-chip" data-pc-done-btn="1" aria-pressed="false"
-                            title="누를 때마다 미결제 ↔ 카드결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>카드결제 완료</button>
-                    <span class="pd-state">미결제</span>
+                    <!-- v47 — [+ 추가] 는 2줄(4칩 줄) 오른쪽 끝 · 줄이 늘면 마지막 줄로 따라간다 -->
+                    <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
                   </div>
                 </div>
               </div>
               <span class="hint hint-auto" id="paycardTotal" hidden></span>
-              <div class="pc-foot">
-                <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
-              </div>
               <!-- v45 — 완료는 줄마다(.pc-done-row) · 여기엔 저장용 합계 상태(완료/일부/'')만 -->
               <input id="f_paycard_done" type="hidden" value="">
             </div>
@@ -3003,6 +3029,8 @@
             <div class="period-chips none-chips" id="usedNoneChips" role="group" aria-label="중고폰 미반납">
               <button type="button" class="pchip" data-pay-none="used" aria-pressed="false">미반납</button>
             </div>
+            <!-- v47 — [+ 추가] 는 [미반납] 바로 옆 헤더 줄 (아래 칸은 1:1 비율 그대로) -->
+            <button type="button" class="pchip ul-add" id="usedAdd" title="중고폰이 여러 대·여러 품목일 때 한 줄 더 (금액은 자동 합산)">+ 추가</button>
           </div>
           <!-- v43 — 중고폰 [모델명 · 금액] 여러 줄: 평소 1줄, [+ 추가]로 한 줄씩 늘린다 -->
           <div class="used-lines" id="usedLines">
@@ -3013,7 +3041,6 @@
             </div>
           </div>
           <div class="ul-foot">
-            <button type="button" class="pchip ul-add" id="usedAdd" title="중고폰이 여러 대·여러 품목일 때 한 줄 더 (금액은 자동 합산)">+ 추가</button>
             <span class="hint hint-auto" id="usedPriceHint" hidden></span>
           </div>
         </div>
@@ -3639,11 +3666,15 @@
 
   function setPayBankDone(on) {
     if ($('f_paybank_done')) $('f_paybank_done').value = on ? '완료' : '';
+    // v47 — 1일 입금 ↔ 입금 완료 는 둘 중 하나만 (완료를 켜면 1일 입금은 자동 해제)
+    if (on && $('f_paybank_1st')) $('f_paybank_1st').value = '';
     paintPayBankAcct();
   }
 
   function setPayBankFirst(on) {
     if ($('f_paybank_1st')) $('f_paybank_1st').value = on ? '1일' : '';
+    // v47 — 1일 입금을 켜면 입금 완료는 자동 해제
+    if (on && $('f_paybank_done')) $('f_paybank_done').value = '';
     paintPayBankAcct();
   }
 
@@ -3784,8 +3815,10 @@
       if (!ok) left++;
       var tags = ls[i].querySelector('.pc-tags');
       var row = ls[i].querySelector('.pc-done-row');
+      var grp = ls[i].querySelector('.pc-chips-row');
       if (tags) tags.classList.toggle('bad', !ok);
       if (row) row.classList.toggle('bad', !ok);
+      if (grp) grp.classList.toggle('bad', !ok);
     }
     var bankOk = pcBankStateOk();
     if (!bankOk) left++;
@@ -4013,6 +4046,7 @@
     }
     // v44 — 합계가 바뀌면 결제 완료 칩의 보임/값도 함께 맞춘다
     paintPayCardDone();
+    pcPlaceAdd();
     return total;
   }
 
@@ -4042,13 +4076,15 @@
     line.innerHTML =
       '<div class="pay-row pc-top">' +
         '<input class="money pc-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="페이백 카드결제 금액 ' + n + '">' +
-        '<button type="button" class="pchip pc-del" data-pc-del="' + n + '" aria-label="이 줄 삭제">×</button>' +
       '</div>' +
-      '<div class="pc-tags">' + pcChipsHtml() + '</div>' +
-      '<div class="pc-done-row" data-pc-done-row="' + n + '" hidden>' +
-        '<button type="button" class="pchip paydone-chip" data-pc-done-btn="1" aria-pressed="false" ' +
-          'title="누를 때마다 미결제 ↔ 카드결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>카드결제 완료</button>' +
-        '<span class="pd-state">미결제</span>' +
+      '<div class="pc-chips-row">' +
+        '<div class="pc-tags">' + pcChipsHtml() + '</div>' +
+        '<div class="pc-done-row" data-pc-done-row="' + n + '" hidden>' +
+          '<button type="button" class="pchip paydone-chip" data-pc-done-btn="1" aria-pressed="false" ' +
+            'title="누를 때마다 미결제 ↔ 결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>결제 완료</button>' +
+          '<span class="pd-state">미결제</span>' +
+        '</div>' +
+        '<button type="button" class="pchip pc-del" data-pc-del="' + n + '" aria-label="이 줄 삭제">×</button>' +
       '</div>';
     box.appendChild(line);
     var inp = line.querySelector('.pc-amt');
@@ -4089,7 +4125,10 @@
     for (var m = 0; m < now.length; m++) {
       var dl = pcLineData(now[m]);
       if (!(Number(dl.amt) > 0)) { now[m].setAttribute('data-pc-done', ''); continue; }
-      now[m].setAttribute('data-pc-done', String(stArr[sti] || '') === '1' ? '1' : '');
+      var stOne = String(stArr[sti] || '') === '1';
+      now[m].setAttribute('data-pc-done', stOne ? '1' : '');
+      // v47 — 예전 기록에 `1일결제` 와 완료가 함께 있으면 완료가 이긴다(1일 태그는 끈 상태로 연다)
+      if (stOne) now[m].setAttribute('data-pc-when', '');
       sti++;
     }
     pcRefresh();
@@ -4099,6 +4138,42 @@
     if (!line) return;
     var cur = line.getAttribute(attr) || '';
     line.setAttribute(attr, cur === value ? '' : value);
+    pcRefresh();
+  }
+
+  /* v47 — [+ 추가] 를 지금 맨 마지막 줄의 4칩 줄 오른쪽 끝에 붙인다
+     (pcSetRows·[×] 로 줄이 지워져도 버튼 노드는 살아 있으므로 다시 붙는다) */
+  var pcAddBtn = null;
+  function pcPlaceAdd() {
+    if (!pcAddBtn) return;
+    var ls = pcLines();
+    var row = ls.length ? ls[ls.length - 1].querySelector('.pc-chips-row') : null;
+    if (!row) return;
+    // 이미 제자리에 있으면 건드리지 않는다 (노드를 옮기면 눌린 버튼의 click 이 사라진다)
+    if (pcAddBtn.parentNode === row && row.lastElementChild === pcAddBtn) return;
+    row.appendChild(pcAddBtn);
+  }
+
+  /* v47 — 한 줄에서 `1일 결제` 와 `✓ 결제 완료` 는 둘 중 하나만 켜진다
+     · `1일 결제` 를 켜면 그 줄의 완료는 자동 해제 (종류·금액은 그대로) */
+  function pcToggleWhen(line, value) {
+    if (!line) return;
+    var cur = pcNormWhen(line.getAttribute('data-pc-when'));
+    if (cur && cur === pcNormWhen(value)) {
+      line.setAttribute('data-pc-when', '');
+    } else {
+      line.setAttribute('data-pc-when', value);
+      line.setAttribute('data-pc-done', '');
+    }
+    pcRefresh();
+  }
+
+  /* v47 — `✓ 결제 완료` 를 켜면 그 줄의 `1일 결제` 는 자동 해제 (할부금/위약금·금액은 유지) */
+  function pcToggleLineDone(line, on) {
+    if (!line) return;
+    if (on === undefined) on = line.getAttribute('data-pc-done') !== '1';
+    if (on) line.setAttribute('data-pc-when', '');
+    line.setAttribute('data-pc-done', on ? '1' : '');
     pcRefresh();
   }
 
@@ -11700,8 +11775,9 @@
     $('f_paybank_holder').value = r.입금예금주 || '';
     $('f_paybank_acct').value = r.입금계좌 || '';
     $('f_paybank_done').value = normalizeDone(r.입금완료) === '완료' ? '완료' : '';
-    // v45 — 1일 입금 상태 복원
-    $('f_paybank_1st').value = String(r.입금1일 || '') === '1일' ? '1일' : '';
+    var bankDoneOn = $('f_paybank_done').value === '완료';
+    // v45 — 1일 입금 상태 복원 · v47 — 예전 기록에 [1일입금]·[입금완료] 가 함께 있으면 완료가 이긴다
+    $('f_paybank_1st').value = (!bankDoneOn && String(r.입금1일 || '') === '1일') ? '1일' : '';
     setWiredGift(r.유선혜택 || '');
     syncWiredGiftField(false);   // 수정할 때 저장값은 유선 유형이 없어도 지우지 않는다
     // v19 — 새 등록은 미선택, 기존 기록 수정은 0·빈칸이면 [미기입]/[미반납]을 켠 채로 열어 수정 흐름을 깨지 않는다
@@ -11812,8 +11888,11 @@
     if (pcBadRows.length) {
       var pcBadEls = [];
       for (var pi = 0; pi < pcBadRows.length; pi++) {
+        var pcGrp = pcBadRows[pi].querySelector('.pc-chips-row');
         var pcTags = pcBadRows[pi].querySelector('.pc-tags');
         var pcDoneRow = pcBadRows[pi].querySelector('.pc-done-row');
+        // v47 — 4칩 한 줄에서는 .pc-chips-row 에 빨간 테두리를 한 번만 두른다
+        if (pcGrp) pcBadEls.push(pcGrp);
         if (pcTags) pcBadEls.push(pcTags);
         if (pcDoneRow) pcBadEls.push(pcDoneRow);
       }
@@ -13192,14 +13271,11 @@
         var kb2 = t && t.closest ? t.closest('button[data-pc-kind]') : null;
         if (kb2) { pcToggle(kb2.closest('.paycard-line'), 'data-pc-kind', kb2.getAttribute('data-pc-kind')); return; }
         var wb2 = t && t.closest ? t.closest('button[data-pc-when]') : null;
-        if (wb2) { pcToggle(wb2.closest('.paycard-line'), 'data-pc-when', wb2.getAttribute('data-pc-when')); return; }
-        // v45 — 그 줄만 카드결제 완료 토글
+        if (wb2) { pcToggleWhen(wb2.closest('.paycard-line'), wb2.getAttribute('data-pc-when')); return; }
+        // v45 — 그 줄만 카드결제 완료 토글 · v47 — 켜면 1일 결제는 자동 해제
         var dn = t && t.closest ? t.closest('button[data-pc-done-btn]') : null;
         if (dn) {
-          var dl = dn.closest('.paycard-line');
-          if (!dl) return;
-          dl.setAttribute('data-pc-done', dl.getAttribute('data-pc-done') === '1' ? '' : '1');
-          pcRefresh();
+          pcToggleLineDone(dn.closest('.paycard-line'));
           return;
         }
         var db = t && t.closest ? t.closest('button[data-pc-del]') : null;
@@ -13227,7 +13303,8 @@
         refreshPolicy(false); updateFormRisk();
       });
     }
-    if ($('paycardAdd')) $('paycardAdd').addEventListener('click', function () {
+    pcAddBtn = $('paycardAdd');
+    if (pcAddBtn) pcAddBtn.addEventListener('click', function () {
       if (payNoneOn('paycard')) setPayNone('paycard', false);
       var line = pcAddRow({});
       var inp = line && line.querySelector('.pc-amt');
