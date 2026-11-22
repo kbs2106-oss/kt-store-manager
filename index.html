@@ -285,7 +285,23 @@
 
   /* 오늘 · 이번 달 직원별 개통 건수 스트립 (요약 카드의 아래 줄) */
   .so-chip.top{box-shadow:0 0 0 1.5px #C7D2FE inset;background:#EEF2FF}
-  .so-rank{font-style:normal;font-size:9.5px;font-weight:900;color:#3730A3;background:#E0E7FF;border-radius:5px;padding:0 4px;margin-right:3px}
+  /* v42 — 1위 배지 : 황금 왕관 + 골드 그라데이션 + 반짝임(shimmer) */
+  @keyframes rankSweep{0%{transform:translateX(-130%)}58%,100%{transform:translateX(160%)}}
+  .so-rank,.sb-rank{
+    position:relative;overflow:hidden;font-style:normal;display:inline-flex;align-items:center;gap:2px;
+    font-size:10px;font-weight:900;color:#7C2D12;letter-spacing:-.2px;line-height:1.35;white-space:nowrap;
+    background:linear-gradient(135deg,#FEF08A 0%,#FDE047 42%,#F59E0B 78%,#FDE68A 100%);
+    border:1px solid #E9A23B;border-radius:999px;padding:1px 6px 1px 5px;vertical-align:middle;
+    box-shadow:0 1px 2px rgba(180,83,9,.25),inset 0 1px 0 rgba(255,255,255,.75);
+    text-shadow:0 1px 0 rgba(255,255,255,.6)}
+  .so-rank::before,.sb-rank::before{content:"👑";font-size:9.5px;line-height:1;filter:drop-shadow(0 1px 1px rgba(120,53,15,.3))}
+  .so-rank::after,.sb-rank::after{
+    content:"";position:absolute;top:-1px;bottom:-1px;left:0;width:55%;pointer-events:none;
+    background:linear-gradient(115deg,rgba(255,255,255,0) 0%,rgba(255,255,255,.9) 50%,rgba(255,255,255,0) 100%);
+    transform:translateX(-130%);animation:rankSweep 2.8s ease-in-out infinite}
+  .so-rank{margin-right:4px}
+  @media (prefers-reduced-motion:reduce){.so-rank::after,.sb-rank::after{animation:none}}
+  @media print{.so-rank::after,.sb-rank::after{display:none}}
   .sum-overview{grid-column:1/-1;display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;
     padding:6px 14px;border-top:1px solid var(--line);background:#FBFCFE}
   .so-part{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
@@ -337,7 +353,7 @@
   .sb-pt small{color:#5C7CA6;font-weight:700;font-size:9.5px;margin-left:2px}
   .sb-table tfoot td{background:#F8FAFD;font-weight:800;border-top:1px solid var(--line);border-bottom:0}
   .sb-table tfoot td.sb-name{background:#F8FAFD}
-  .sb-rank{font-style:normal;font-size:9.5px;font-weight:900;color:#3730A3;background:#E0E7FF;border-radius:5px;padding:0 4px;margin-left:4px}
+  .sb-rank{margin-left:5px}
 
   /* v30 → v40 — 전화번호 1탭 통화 링크 (표 · 폰 카드 · 임박 알림을 같은 모양으로) */
   .ph-copy{font:inherit;color:#1D4ED8;font-weight:700;background:none;border:0;padding:0;
@@ -1023,6 +1039,12 @@
   .card-box{margin-top:6px;display:flex;flex-direction:column;gap:6px}
   .card-box[hidden]{display:none}
   .card-box input{height:32px;border:1px solid var(--line-strong);border-radius:9px;padding:0 9px;font-size:13px;font-weight:600;background:#fff}
+  /* v42 — 제휴카드 더블카드(2장): 1번째/2번째 카드 칸 */
+  .card-slot{display:flex;flex-direction:column;gap:6px}
+  .card-slot[hidden]{display:none}
+  .card-slot-label{font-size:11.5px;font-weight:800;color:#475569;letter-spacing:-.2px}
+  #cardSlot2{padding-top:8px;border-top:1px dashed #CBD5E1}
+  .badge.card-on.card-double{background:#E0E7FF;color:#312E81;border-color:#A5B4FC}
   .ins-chips{display:flex;gap:7px;flex-wrap:wrap}
   .ins-chip{
     height:34px;padding:0 16px;border-radius:9px;border:1px solid var(--line-strong);
@@ -1307,6 +1329,8 @@
   .m-money{font-weight:800;font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
   .m-staff{flex:none;color:#475569;font-weight:700;background:#EEF3F9;border-radius:999px;padding:1px 8px;font-size:12px}
   .m-ins{flex:none;color:#0B5F45;font-weight:800;background:var(--green-bg);border:1px solid #BFE3D3;border-radius:999px;padding:1px 8px;font-size:12px;white-space:nowrap}
+  /* v42 — 모바일 카드의 더블카드(2장) 배지 */
+  .m-ins.m-ins-double{background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE}
   .mcard-detail{display:none;border-top:1px solid var(--line);padding:10px 14px 12px;background:#FCFDFF}
   .mcard.open .mcard-detail{display:block}
   .m-row{display:flex;gap:10px;padding:4px 0;font-size:13px;line-height:1.5}
@@ -2665,13 +2689,23 @@
         <div class="field span2 card-field">
           <label id="f_cardLabel">제휴카드 <span class="req">*</span></label>
           <input id="f_card" type="hidden" value="">
-          <div class="ins-chips" id="cardChips" role="group" aria-labelledby="f_cardLabel">
+          <div class="ins-chips" id="cardChips" role="group" aria-labelledby="f_cardLabel" data-mode="">
             <button type="button" class="ins-chip" data-card-sale="none" aria-pressed="false">미가입</button>
-            <button type="button" class="ins-chip" data-card-sale="sale" aria-pressed="false">판매(카드 선택)</button>
+            <button type="button" class="ins-chip" data-card-sale="sale" aria-pressed="false">1장 판매</button>
+            <button type="button" class="ins-chip" data-card-sale="double" aria-pressed="false">더블카드(2장)</button>
           </div>
+          <!-- v42 — 1번째 카드는 늘 있고, 2번째 카드는 더블카드(2장)를 골랐을 때만 열린다 -->
           <div class="card-box" id="cardBox" hidden>
-            <div class="staff-chips card-chips" id="cardBrandChips"></div>
-            <input id="f_cardname" type="text" autocomplete="off" placeholder="카드명 (예: 우리카드 카드의정석)">
+            <div class="card-slot" id="cardSlot1" data-slot="1" hidden>
+              <span class="card-slot-label" id="cardSlot1Label" hidden>1번째 카드</span>
+              <div class="staff-chips card-chips" id="cardBrandChips" role="group" aria-label="1번째 카드 카드사"></div>
+              <input id="f_cardname" type="text" autocomplete="off" placeholder="카드명 (예: 우리카드 카드의정석)">
+            </div>
+            <div class="card-slot" id="cardSlot2" data-slot="2" hidden>
+              <span class="card-slot-label" id="cardSlot2Label">2번째 카드</span>
+              <div class="staff-chips card-chips" id="cardBrandChips2" role="group" aria-label="2번째 카드 카드사"></div>
+              <input id="f_cardname2" type="text" autocomplete="off" placeholder="카드명 (예: 국민카드)">
+            </div>
           </div>
         </div>
           </div>
@@ -7020,35 +7054,162 @@
     box.hidden = false;
   }
 
+  // v42 — 카드사 칩을 1번째·2번째 두 칸에 같은 목록으로 그린다
+  var CARD_SLOT_BOXES = ['cardBrandChips', 'cardBrandChips2'];
   function renderCardBrands() {
-    var box = $('cardBrandChips');
-    if (!box) return;
-    var html = '';
-    for (var i = 0; i < CARD_BRANDS.length; i++) {
-      html += '<button type="button" class="chip' + (CARD_BRANDS[i] === '기타' ? '' : '') +
-        '" data-card-brand="' + esc(CARD_BRANDS[i]) + '">' + esc(CARD_BRANDS[i]) + '</button>';
+    for (var b = 0; b < CARD_SLOT_BOXES.length; b++) {
+      var box = $(CARD_SLOT_BOXES[b]);
+      if (!box) continue;
+      var html = '';
+      for (var i = 0; i < CARD_BRANDS.length; i++) {
+        html += '<button type="button" class="chip" data-card-brand="' + esc(CARD_BRANDS[i]) +
+          '">' + esc(CARD_BRANDS[i]) + '</button>';
+      }
+      box.innerHTML = html;
     }
-    box.innerHTML = html;
   }
 
-  // 제휴카드 — '없음' 또는 카드명. 판매를 고르면 카드사 칩·입력칸이 열린다
+  /* ---------- v42 — 제휴카드 더블카드(2장) ----------
+     1장 판매: 1번째 카드 한 칸 · 더블카드(2장): 1번째 + 2번째 칸
+     저장값은 예전 그대로 `제휴카드` 한 칸 — 2장이면 '카드1 + 카드2'. 시트 20컬럼·메모 [카드:…] 도 그대로. */
+  function cardModeOf() {
+    var box = $('cardChips');
+    return box ? (box.getAttribute('data-mode') || '') : '';
+  }
+  function cardSlotInput(n) { return n === 2 ? $('f_cardname2') : $('f_cardname'); }
+  function cardSlotVal(n) {
+    var input = cardSlotInput(n);
+    return input ? normalizeCard(input.value) : '';
+  }
+  // 카드사 이름 비교 키 — '우리카드' 와 칩 '우리', '국민카드' 와 칩 'KB국민' 을 같은 카드로 본다
+  function cardBrandKey(v) {
+    return String(v == null ? '' : v).replace(/\s+/g, '').replace(/^KB/, '').replace(/카드$/, '');
+  }
+  function cardIsKnownBrand(v) {
+    var k = cardBrandKey(v);
+    if (!k) return false;
+    for (var i = 0; i < CARD_BRANDS.length; i++) {
+      if (CARD_BRANDS[i] !== '기타' && cardBrandKey(CARD_BRANDS[i]) === k) return true;
+    }
+    return false;
+  }
+  // 짧은 이름 — '우리카드' → '우리'
+  function cardShortName(v) {
+    return String(v == null ? '' : v).trim().replace(/\s*카드$/, '');
+  }
+  // 저장값 → 카드 목록. ' + ' 로 이은 2장 표기가 기본,
+  //   예전 '/' 표기는 양쪽이 모두 카드사 이름일 때만 2장으로 센다(카드명 안의 '/' 는 1장)
+  function cardPartsOf(v) {
+    var s = normalizeCard(v);
+    if (!s || s === '미가입') return [];
+    var raw = [], parts = [], i;
+    if (/\s\+\s/.test(s)) {
+      raw = s.split(/\s+\+\s+/);
+      for (i = 0; i < raw.length; i++) { var t = raw[i].trim(); if (t) parts.push(t); }
+      if (parts.length) return parts;
+      return [s];
+    }
+    if (/[\/／]/.test(s)) {
+      raw = s.split(/[\/／]/);
+      for (i = 0; i < raw.length; i++) {
+        var t2 = raw[i].trim();
+        if (!t2) return [s];
+        parts.push(t2);
+      }
+      if (parts.length < 2) return [s];
+      for (i = 0; i < parts.length; i++) if (!cardIsKnownBrand(parts[i])) return [s];
+      return parts;
+    }
+    return [s];
+  }
+  // 제휴카드 판매 건수 — 미가입·빈 값 0 · 1장 1 · 더블카드(2장) 2
+  function cardCountOf(v) { return cardPartsOf(v).length; }
+  // 배지 문구 — 1장 '카드 우리카드' · 2장 '더블카드 · 우리+국민' (같은 카드사 2장이면 '우리×2')
+  function cardBadgeInfo(v) {
+    var parts = cardPartsOf(v);
+    if (!parts.length) return null;
+    if (parts.length === 1) return { text: '카드 ' + parts[0], full: parts[0], dbl: false };
+    var shorts = [], same = true, i;
+    for (i = 0; i < parts.length; i++) {
+      shorts.push(cardShortName(parts[i]));
+      if (i && cardBrandKey(parts[i]) !== cardBrandKey(parts[0])) same = false;
+    }
+    return {
+      text: '더블카드 · ' + (same ? shorts[0] + '×' + parts.length : shorts.join('+')),
+      full: parts.join(' + '),
+      dbl: true
+    };
+  }
+  // 1번째/2번째 카드 칸의 표시만 다시 칠한다 (칸의 글자는 건드리지 않는다)
+  function paintCardChips() {
+    var mode = cardModeOf();
+    var acts = ['none', 'sale', 'double'], i, j;
+    for (i = 0; i < acts.length; i++) {
+      var b = document.querySelector('#cardChips button[data-card-sale="' + acts[i] + '"]');
+      if (!b) continue;
+      var on = mode === acts[i];
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    for (i = 0; i < CARD_SLOT_BOXES.length; i++) {
+      var box = $(CARD_SLOT_BOXES[i]);
+      if (!box) continue;
+      var val = cardSlotVal(i === 1 ? 2 : 1);
+      var pick = box.getAttribute('data-pick') || '';
+      var chips = box.querySelectorAll('button[data-card-brand]');
+      for (j = 0; j < chips.length; j++) {
+        var brand = chips[j].getAttribute('data-card-brand');
+        var hit = val ? (brand !== '기타' && cardBrandKey(brand) === cardBrandKey(val)) : (pick === brand);
+        chips[j].classList.toggle('on', !!hit);
+      }
+    }
+  }
+  // 모드에 따라 버튼·칸을 열고 닫는다 — 2번째 카드 칸은 '더블카드(2장)' 일 때만 보인다
+  function setCardMode(mode) {
+    var box = $('cardChips');
+    if (box) box.setAttribute('data-mode', mode || '');
+    var open = mode === 'sale' || mode === 'double';
+    if ($('cardBox')) $('cardBox').hidden = !open;
+    if ($('cardSlot1')) $('cardSlot1').hidden = !open;
+    if ($('cardSlot2')) $('cardSlot2').hidden = mode !== 'double';
+    if ($('cardSlot1Label')) $('cardSlot1Label').hidden = mode !== 'double';   // 1장 판매는 예전 모양(라벨 없이)
+    paintCardChips();
+  }
+  // 화면의 1번째·2번째 카드 → `#f_card` 저장값
+  function syncCardValue() {
+    var mode = cardModeOf();
+    var v = '';
+    if (mode === 'none') v = '미가입';
+    else if (mode === 'sale') v = cardSlotVal(1);
+    else if (mode === 'double') {
+      var a = cardSlotVal(1), b = cardSlotVal(2);
+      if (a && b) v = a + ' + ' + b;
+    }
+    if ($('f_card')) $('f_card').value = v;
+    // 값이 완성되면 빨간 표시를 바로 지운다
+    if (v) {
+      if ($('cardChips')) $('cardChips').classList.remove('bad');
+      if ($('f_cardname')) $('f_cardname').classList.remove('bad');
+      if ($('f_cardname2')) $('f_cardname2').classList.remove('bad');
+    }
+    return v;
+  }
+
+  // 제휴카드 — '미가입' / '1장 판매' / '더블카드(2장)'. 저장값에서 모드와 두 칸을 되살린다
   function setCardChips(v) {
     var val = normalizeCard(v);
     if (val === '미판매') val = '미가입';
-    var input = $('f_card');
-    var box = $('cardBox');
-    var sale = !!val && val !== '미가입';
-    var saleBtn = document.querySelector('#cardChips button[data-card-sale="sale"]');
-    var noneBtn = document.querySelector('#cardChips button[data-card-sale="none"]');
-    if (noneBtn) { noneBtn.classList.toggle('on', val === '미가입'); noneBtn.setAttribute('aria-pressed', val === '미가입' ? 'true' : 'false'); }
-    if (saleBtn) { saleBtn.classList.toggle('on', sale); saleBtn.setAttribute('aria-pressed', sale ? 'true' : 'false'); }
-    if (input) input.value = val || '';
-    if (box) box.hidden = !sale;
-    if ($('f_cardname')) $('f_cardname').value = sale ? val : '';
-    var chips = document.querySelectorAll('#cardBrandChips button[data-card-brand]');
-    for (var i = 0; i < chips.length; i++) {
-      chips[i].classList.toggle('on', sale && chips[i].getAttribute('data-card-brand') === val);
-    }
+    var parts = cardPartsOf(val);
+    var mode = '';
+    if (val === '미가입') mode = 'none';
+    else if (parts.length === 1) mode = 'sale';
+    else if (parts.length >= 2) mode = 'double';
+    if ($('f_cardname')) $('f_cardname').value = parts.length ? parts[0] : '';
+    if ($('f_cardname2')) $('f_cardname2').value = parts.length >= 2 ? parts.slice(1).join(' + ') : '';
+    if ($('cardBrandChips')) $('cardBrandChips').removeAttribute('data-pick');
+    if ($('cardBrandChips2')) $('cardBrandChips2').removeAttribute('data-pick');
+    setCardMode(mode);
+    syncCardValue();
   }
 
   function setInsChips(v) {
@@ -8952,8 +9113,7 @@
         if (wiredTypeRenew(pt0)) nWiredRenew++;
         else nWiredNew++;
       }
-      var cd = normalizeCard(rr0.제휴카드);
-      if (cd && cd !== '미가입') nCard++;
+      nCard += cardCountOf(rr0.제휴카드);
     }
     if (el.kpiWirelessN) el.kpiWirelessN.textContent = fmtNum(nWireless);
     if (el.kpiWiredNewN) el.kpiWiredNewN.textContent = fmtNum(nWiredNew);
@@ -9180,8 +9340,7 @@
         if (WIRED_TYPES.indexOf(pt) < 0) continue;
         if (wiredTypeRenew(pt)) o.lr++; else o.ln++;
       }
-      var cd = normalizeCard(r.제휴카드);
-      if (cd && cd !== '미가입') o.card++;
+      o.card += cardCountOf(r.제휴카드);
       var nm = netMargin(r);
       o.rebate += nm.wireless + nm.wired;
       o.pay += nm.payback;
@@ -9505,11 +9664,26 @@
     return '<span class="muted">—</span>';
   }
 
-  // 제휴카드 배지 (판매한 카드사 이름까지)
+  // 제휴카드 배지 (1장은 '카드 우리카드' · 더블카드(2장)는 '더블카드 · 우리+국민' / '우리×2')
   function cardBadgeHtml(v) {
-    var s = normalizeCard(v);
-    if (!s || s === '미가입') return '';
-    return '<span class="badge card-on">카드 ' + esc(s) + '</span>';
+    var info = cardBadgeInfo(v);
+    if (!info) return '';
+    var tip = info.dbl ? '더블카드(2장) · ' + info.full : info.full;
+    return '<span class="badge card-on' + (info.dbl ? ' card-double' : '') + '" title="' + esc(tip) + '">' +
+      esc(info.text) + '</span>';
+  }
+  // 모바일 카드 두번째 줄 배지 (카드 · 더블카드)
+  function cardMobileBadgeHtml(v) {
+    var info = cardBadgeInfo(v);
+    if (!info) return '';
+    return '<span class="m-ins' + (info.dbl ? ' m-ins-double' : '') + '">' + esc(info.text) + '</span>';
+  }
+  // 상세보기 제휴카드 칸 — 더블카드면 짧은 이름 + 실제 두 카드 이름을 함께
+  function cardDetailHtml(v) {
+    var info = cardBadgeInfo(v);
+    if (!info) return '';
+    if (!info.dbl) return esc(info.text);
+    return '<b>' + esc(info.text) + '</b> <span class="muted">' + esc(info.full) + '</span>';
   }
 
   // 간단한 유선 사은품 배지 — 상품권 / 단말할인쿠폰
@@ -9553,7 +9727,7 @@
         '<div class="m-line2">' +
           '<span class="m-model">' + (r.기종 ? esc(r.기종) : '<span class="muted">기종 없음</span>') + '</span>' +
           (isInsured(r.단말보험) ? '<span class="m-ins">보험 ' + esc(insLabel(r.단말보험)) + '</span>' : '') +
-          (cardBadgeHtml(r.제휴카드) ? '<span class="m-ins">카드 ' + esc(normalizeCard(r.제휴카드)) + '</span>' : '') +
+          cardMobileBadgeHtml(r.제휴카드) +
           policyBadgesHtml(r) +
           '<span class="m-figs">' +
             '<span class="m-money">' + rebateText(r) + '</span>' +
@@ -9574,7 +9748,7 @@
         // v19 — 할인유형·보험·카드는 선택 결과이므로 미가입까지 그대로 보여 준다
         mRow('할인유형', discountLabel(r.할인유형)) +
         mRow('단말보험', normalizeIns(r.단말보험) ? insBadgeHtml(r.단말보험) : '') +
-        mRow('제휴카드', normalizeCard(r.제휴카드) ? esc(normalizeCard(r.제휴카드)) : '') +
+        mRow('제휴카드', normalizeCard(r.제휴카드) ? cardDetailHtml(r.제휴카드) : '') +
         (isForeign(r.외국인) ? mRow('고객 구분', '외국인') : '') +
         mRowOpt('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
         mRowOpt('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
@@ -10951,7 +11125,20 @@
     if (MRA_WIRELESS_TYPES.indexOf(slots.w) >= 0 && !modelVal) need.push({ label: '기종', el: $('f_model') });
     // 무선 개통이면 단말보험(3종)과 제휴카드(없음/카드명)를 반드시 고른다 — 유선 단독·2ND는 예외
     if (slots.w && !only2nd && !normalizeIns($('f_ins').value)) need.push({ label: '단말보험', el: $('insChips') });
-    if (slots.w && !only2nd && !normalizeCard($('f_card').value)) need.push({ label: '제휴카드', el: $('cardChips') });
+    // v42 — 더블카드(2장)는 1번째·2번째 카드를 모두 골라야 저장된다 (한 칸만 채우면 막는다)
+    var doubleCardBad = false;
+    if (cardModeOf() === 'double') {
+      var dc1 = cardSlotVal(1), dc2 = cardSlotVal(2);
+      if (!dc1 || !dc2) {
+        doubleCardBad = true;
+        need.push({
+          label: !dc1 && !dc2 ? '제휴카드(더블카드 1·2번째)' : (!dc1 ? '제휴카드(1번째 카드)' : '제휴카드(2번째 카드)'),
+          el: $('cardChips'),
+          inputs: [!dc1 ? $('f_cardname') : $('f_cardname2')]
+        });
+      }
+    }
+    if (slots.w && !only2nd && !doubleCardBad && !normalizeCard($('f_card').value)) need.push({ label: '제휴카드', el: $('cardChips') });
     // 요금제 변경 · 부가서비스 — '변경 없음'/'미가입'을 골랐거나, 내용을 적었을 때만 저장된다
     var hasPlanChange = !!($('f_newplan').value.trim() || $('f_newdate').value || (period.plan && period.plan !== 'none'));
     if (!planNoneOn() && !hasPlanChange) need.push({ label: '요금제 변경', el: $('planNoneChips') });
@@ -11043,7 +11230,7 @@
       단말보험: normalizeIns($('f_ins').value),
       외국인: foreignOn() ? '외국인' : '',
       성별: genderOn(),
-      제휴카드: normalizeCard($('f_card').value),
+      제휴카드: syncCardValue(),
       할인유형: normalizeDiscount($('f_discount').value),
       특수조건: condText(condList($('f_cond').value)),
       요금제: plan,
@@ -12762,34 +12949,50 @@
       if (!b) return;
       var act = b.getAttribute('data-card-sale');
       if (act === 'none') { setCardChips('미가입'); return; }
-      var cur = normalizeCard($('f_card').value);
-      setCardChips(cur && cur !== '미가입' ? cur : '');
-      var sale = document.querySelector('#cardChips button[data-card-sale="sale"]');
-      if (sale) { sale.classList.add('on'); sale.setAttribute('aria-pressed', 'true'); }
-      if ($('cardBox')) $('cardBox').hidden = false;
-      var name = $('f_cardname');
-      if (name) { try { name.focus(); } catch (err) {} }
+      if (act === 'sale') {
+        // 더블카드(2장)에서 1장으로 줄이면 1번째 카드만 남긴다(2번째 칸은 숨김)
+        if (cardModeOf() !== 'sale') { setCardMode('sale'); syncCardValue(); }
+        var name1 = $('f_cardname');
+        if (name1) { try { name1.focus(); } catch (err) {} }
+        return;
+      }
+      // 더블카드(2장) — 1번째·2번째 카드 칸을 같이 연다
+      if (cardModeOf() !== 'double') { setCardMode('double'); syncCardValue(); }
     });
-    var brandBox = $('cardBrandChips');
+    // 카드사 칩 — 누른 칸(1번째/2번째)에만 들어간다. 같은 카드사 2장도 칩만으로 골라진다
+    var brandBox = $('cardBox');
     if (brandBox) brandBox.addEventListener('click', function (e) {
       var b = e.target && e.target.closest ? e.target.closest('button[data-card-brand]') : null;
       if (!b) return;
+      var slotEl = b.closest ? b.closest('.card-slot') : null;
+      var n = slotEl && slotEl.getAttribute('data-slot') === '2' ? 2 : 1;
       var brand = b.getAttribute('data-card-brand');
+      var input = cardSlotInput(n);
+      var group = $(n === 2 ? 'cardBrandChips2' : 'cardBrandChips');
+      if (!input) return;
       if (brand === '기타') {
-        if ($('f_cardname')) { $('f_cardname').value = ''; try { $('f_cardname').focus(); } catch (err) {} }
-        $('f_card').value = '';
-        var chips = document.querySelectorAll('#cardBrandChips button[data-card-brand]');
-        for (var i = 0; i < chips.length; i++) chips[i].classList.toggle('on', chips[i] === b);
+        if (group) group.setAttribute('data-pick', '기타');
+        input.value = '';
+        try { input.focus(); } catch (err) {}
+        syncCardValue();
+        paintCardChips();
         return;
       }
-      setCardChips(brand);
+      input.value = brand;
+      if (group) group.removeAttribute('data-pick');
+      syncCardValue();
+      paintCardChips();
     });
-    if ($('f_cardname')) $('f_cardname').addEventListener('input', function () {
-      var v = String(this.value || '').trim();
-      $('f_card').value = v;
-      var chips = document.querySelectorAll('#cardBrandChips button[data-card-brand]');
-      for (var i = 0; i < chips.length; i++) chips[i].classList.remove('on');
-    });
+    function bindCardName(input, group) {
+      if (!input) return;
+      input.addEventListener('input', function () {
+        if (group) group.removeAttribute('data-pick');
+        syncCardValue();
+        paintCardChips();
+      });
+    }
+    bindCardName($('f_cardname'), $('cardBrandChips'));
+    bindCardName($('f_cardname2'), $('cardBrandChips2'));
     renderPlanPickerBody();
     applyViewMode();
     render();
