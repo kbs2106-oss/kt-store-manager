@@ -1967,6 +1967,9 @@
   .card-box input{height:30px;border-color:#94A3B8}
   .pc-add{height:26px}
   .paycard-line .pc-chips .pchip{height:24px}
+  /* v50 — 넓은 화면에서는 4칩도 [✓ 결제 완료]·[+ 추가] 와 같은 26px 로 맞춘다
+     (전에는 24px 이라 한 줄 안에서 위아래가 1px 어궜다 · 폰 560 이하는 위 규칙그대로 24px) */
+  @media (min-width:561px){.paycard-line .pc-chips .pchip{height:26px}}
 
   /* ---------- 4) 상단 KPI — 핵심 4개만 색으로 강조 ---------- */
   .kpi-c-blue{--kc:#0B57D0;--kt:#0A3E8F;--kb1:#F2F7FF;--kb2:#E4EEFE}
@@ -2094,6 +2097,8 @@
   .paybank-acct input:focus{outline:none;border-color:#8FB4EE;box-shadow:0 0 0 3px rgba(11,87,208,.14)}
   .paybank-acct input:disabled{background:#F5F8FC;color:#9AA7B8;border-color:#E2E9F2}
   .paybank-acct.off{opacity:.5}
+  /* v50 — [미기입] 이면 항상 보이는 [1일 입금]·[✓ 입금 완료] 도 함께 흐리게 */
+  .paybank-done.off{opacity:.55}
   .paybank-done,.paycard-done{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
   .paybank-done[hidden],.paycard-done[hidden]{display:none !important}
   .paybank-done .paydone-chip,.paycard-done .paydone-chip{
@@ -3007,8 +3012,8 @@
                         <button type="button" class="pchip" data-pc-when="1일결제" aria-pressed="false">1일 결제</button>
                       </div>
                     </div>
-                    <!-- 이 줄만 결제 완료 (금액이 있는 줄만 보임) -->
-                    <div class="pc-done-row" data-pc-done-row="1" hidden>
+                    <!-- v50 — 이 줄만 결제 완료 (금액이 없어도 [1일 결제] 와 함께 처음부터 보인다) -->
+                    <div class="pc-done-row" data-pc-done-row="1">
                       <button type="button" class="pchip paydone-chip" data-pc-done-btn="1" aria-pressed="false"
                               title="누를 때마다 미결제 ↔ 결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>결제 완료</button>
                       <span class="pd-state">미결제</span>
@@ -3040,8 +3045,8 @@
                 <input id="f_paybank_holder" type="text" autocomplete="off" placeholder="예금주 (선택)" aria-label="입금 예금주">
                 <input id="f_paybank_acct" type="text" autocomplete="off" placeholder="계좌번호 (선택)" aria-label="입금 계좌번호">
               </div>
-              <!-- v39 · v45 — 1일 입금 / 입금 완료 1탭 (금액이 있는 건만 보임) -->
-              <div class="paybank-done" id="paybankDone" hidden>
+              <!-- v39 · v45 · v50 — 1일 입금 / 입금 완료 1탭 (금액이 없어도 처음부터 함께 보인다) -->
+              <div class="paybank-done" id="paybankDone">
                 <input id="f_paybank_done" type="hidden" value="">
                 <input id="f_paybank_1st" type="hidden" value="">
                 <button type="button" class="pchip pay1st-chip" id="paybank1stChip" aria-pressed="false"
@@ -3522,8 +3527,13 @@
     pin: defaultStorePin()
   };
 
-  // 매장 직원 — 담당자 빠른 선택용 (다른 이름도 직접 입력 가능)
-  var STAFF_LIST = ['김태양', '김설화', '이건엽', '권영한', '전국현'];
+  // 매장 담당자 — 담당자 빠른 선택용 (다른 이름도 직접 입력 가능)
+  // v50 — 아내 최지수 실장을 기본 담당자에 더한다
+  var STAFF_LIST = ['김태양', '최지수', '김설화', '이건엽', '권영한', '전국현'];
+  // v50 — 이번 버전에서 기본 담당자에 더한 이름 (그 전에 명부에서 지운 다른 이름은 건드리지 않는다)
+  var STAFF_PRESET_KEY = 'kt_chilgeum_roster_preset_v1';
+  var STAFF_PRESET_VER = 50;
+  var STAFF_PRESET_ADD = ['최지수'];
   // 사장님 이름 — v49 직원 인증 면제(사장님 기기)·서버의 추방 불가와 같은 목록 (Code.gs OWNER_NAMES)
   var OWNER_NAMES = ['김태양'];
 
@@ -3717,9 +3727,10 @@
     paintPayBankAcct();
   }
 
-  /* v39 — 페이백(입금) 계좌 3칸 · 입금 완료 1탭 칩의 지금 모양
-     · [미기입] 이면 세 칸을 잠그고 흐리게
-     · 금액이 없으면 입금 완료 칩은 숨긴다(입금할 금액이 없는 건에 상태를 달지 않는다) */
+  /* v39 — 페이백(입금) 계좌 3칸 · 1일 입금/입금 완료 1탭의 지금 모양
+     · [미기입] 이면 세 칸을 잠그고 흐리게, 두 칩의 상태도 비운다
+     v50 — 금액이 0/빈칸이어도 [1일 입금]·[✓ 입금 완료] 를 숨기지 않고 늘 함께 보인다
+       (카드결제의 [1일 결제]·[✓ 결제 완료] 와 같은 규칙 — 금액이 없으면 저장에는 싣지 않는다) */
   function paintPayBankAcct() {
     var ids = ['f_paybank_bank', 'f_paybank_holder', 'f_paybank_acct'], i;
     var off = payNoneOn('paybank');
@@ -3729,10 +3740,14 @@
       var inp = $(ids[i]);
       if (inp) inp.disabled = off;
     }
-    var doneOn = String(($('f_paybank_done') || {}).value || '') === '완료';
-    var amt = parseNumber(($('f_paybank') || {}).value);
+    // v50 — [미기입] 이면 입금할 건이 없으니 완료·1일 입금 상태도 지운다
+    if (off) {
+      if ($('f_paybank_done')) $('f_paybank_done').value = '';
+      if ($('f_paybank_1st')) $('f_paybank_1st').value = '';
+    }
     var row = $('paybankDone');
-    if (row) row.hidden = off || !(amt > 0);
+    if (row) { row.hidden = false; row.classList.toggle('off', off); }
+    var doneOn = String(($('f_paybank_done') || {}).value || '') === '완료';
     var chip = $('paybankDoneChip');
     if (chip) {
       chip.classList.toggle('on', doneOn);
@@ -3745,10 +3760,8 @@
       st.textContent = '미지급';
       st.classList.toggle('done', doneOn);
     }
-    // v45 — 1일 입금: 금액이 없거나 [미기입] 이면 숨기고 값을 비운다
-    var show = !off && amt > 0;
+    // v45 · v50 — 1일 입금: 금액과 상관없이 누를 수 있고, 금액이 없으면 저장에서 빠진다
     var fchip = $('paybank1stChip');
-    if (!show && $('f_paybank_1st')) $('f_paybank_1st').value = '';
     var firstOn = String(($('f_paybank_1st') || {}).value || '') === '1일';
     if (fchip) {
       fchip.classList.toggle('on', firstOn);
@@ -3834,18 +3847,21 @@
     return out.length > 1 ? out.join(',') : '';
   }
 
-  /* 줄마다 칩의 보임·노랑·상태 글씨를 그리고, 합계 상태를 hidden 에 넣는다 */
+  /* 줄마다 칩의 보임·노랑·상태 글씨를 그리고, 합계 상태를 hidden 에 넣는다
+     v50 — 금액이 0/빈칸이어도 [1일 결제] 와 함께 [✓ 결제 완료] 가 늘 보인다
+       · 금액이 있는 줄만 완료 집계(n·d)에 센다 → 저장 값은 지금 그대로
+       · [미기입] 이면 그 줄의 완료 상태를 비운다(입금할 금액이 없는 건이므로) */
   function paintPayCardDone() {
     var off = payNoneOn('paycard'), ls = pcLines(), n = 0, d = 0, i;
     for (i = 0; i < ls.length; i++) {
       var dd = pcLineData(ls[i]);
-      var show = !off && Number(dd.amt) > 0;
+      var hasAmt = Number(dd.amt) > 0;
       var row = ls[i].querySelector('[data-pc-done-row]');
       var btn = ls[i].querySelector('button[data-pc-done-btn]');
       var st = ls[i].querySelector('.pc-done-row .pd-state');
-      if (!show) ls[i].setAttribute('data-pc-done', '');
-      var on = show && ls[i].getAttribute('data-pc-done') === '1';
-      if (row) row.hidden = !show;
+      if (off && ls[i].getAttribute('data-pc-done') === '1') ls[i].setAttribute('data-pc-done', '');
+      var on = ls[i].getAttribute('data-pc-done') === '1';
+      if (row) row.hidden = false;
       if (btn) {
         btn.classList.toggle('on', on);
         btn.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -3855,7 +3871,7 @@
         st.textContent = on ? '카드결제 완료' : '미결제';
         st.classList.toggle('done', on);
       }
-      if (show) { n++; if (on) d++; }
+      if (hasAmt) { n++; if (on) d++; }
     }
     var hid = $('f_paycard_done');
     if (hid) hid.value = (n > 0 && d === n) ? '완료' : (d > 0 ? '일부' : '');
@@ -4172,7 +4188,7 @@
       '</div>' +
       '<div class="pc-chips-row">' +
         '<div class="pc-tags">' + pcChipsHtml() + '</div>' +
-        '<div class="pc-done-row" data-pc-done-row="' + n + '" hidden>' +
+        '<div class="pc-done-row" data-pc-done-row="' + n + '">' +
           '<button type="button" class="pchip paydone-chip" data-pc-done-btn="1" aria-pressed="false" ' +
             'title="누를 때마다 미결제 ↔ 결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>결제 완료</button>' +
           '<span class="pd-state">미결제</span>' +
@@ -5960,12 +5976,51 @@
         roster.staff = list;
         roster.updatedAt = String(d.updatedAt || '');
         roster.dirty = !!d.dirty;
+        if (roster.staff.length) seedRosterPreset();   // v50 — 새 기본 담당자(최지수)를 한 번만 더한다
+        else markRosterPreset();                        // 명부를 통째로 비운 기기는 그대로 둔다(칩은 STAFF_LIST)
         return;
       }
     } catch (e) {}
     roster.staff = defaultRosterStaff();
     roster.updatedAt = '';
     roster.dirty = false;
+    // v50 — 여기서는 표시를 적지 않는다: 뒤에 시트 명부를 받아 오면 그때 최지수를 더해
+    //   사장님 기기에서 시트로 올라가게 한다(seedRosterPreset 안에서 표시를 적는다)
+  }
+
+  /* v50 — 새로 더한 기본 담당자(최지수)를 이 기기 명부에 "한 번만" 끼워 넣는다
+     · STAFF_PRESET_KEY 에 이 버전을 적어 두므로, 사장님이 나중에 지운 이름은 다시 살아나지 않는다
+     · 이름이 더해지면 dirty 로 두어 다음 동기화에 시트 명부로도 올라간다 */
+  function markRosterPreset() {
+    try { localStorage.setItem(STAFF_PRESET_KEY, String(STAFF_PRESET_VER)); } catch (e) {}
+  }
+
+  /* 기본 순서(STAFF_LIST)에서 바로 앞 사람 뒤에 끼워 넣을 자리 — 앞 사람이 없으면 맨 앞 */
+  function rosterPresetPos(name) {
+    var idx = STAFF_LIST.indexOf(name), i, j;
+    for (i = idx - 1; i >= 0; i--) {
+      for (j = 0; j < roster.staff.length; j++) if (roster.staff[j].name === STAFF_LIST[i]) return j + 1;
+    }
+    return 0;
+  }
+
+  function seedRosterPreset() {
+    var ver = 0;
+    try { ver = Number(localStorage.getItem(STAFF_PRESET_KEY) || 0) || 0; } catch (e) { ver = 0; }
+    if (ver >= STAFF_PRESET_VER) return;
+    var have = {}, added = 0, i;
+    for (i = 0; i < roster.staff.length; i++) if (roster.staff[i]) have[roster.staff[i].name] = true;
+    for (i = 0; i < STAFF_PRESET_ADD.length; i++) {
+      var n = STAFF_PRESET_ADD[i];
+      if (have[n]) continue;
+      roster.staff.splice(rosterPresetPos(n), 0, { name: n, phone: '' });
+      added++;
+    }
+    if (added) {
+      roster.dirty = true;
+      saveRosterLocal();
+    }
+    markRosterPreset();
   }
 
   function saveRosterLocal() {
@@ -6180,6 +6235,9 @@
     roster.staff = cfg.staff;
     roster.updatedAt = cfg.updatedAt || roster.updatedAt;
     roster.dirty = false;
+    // v50 — 시트에서 받은 명부에도 새 기본 담당자(최지수)를 한 번만 더한다
+    //   (표시가 적힌 뒤에는 사장님이 지운 이름이 시트에서 내려와도 다시 살아나지 않는다)
+    seedRosterPreset();
     saveRosterLocal();
     afterRosterChange();
     return true;
@@ -11483,8 +11541,10 @@
       r = state.records[i];
       if (r.담당자) seen[r.담당자] = true;
     }
+    // v50 — 명부(등록 직원)에 있는 담당자는 장부 기록이 없어도 필터에 먼저 보인다
+    //   (새로 더한 최지수처럼 첫 개통 전에도 필터에서 고를 수 있게)
     var base = staffNames();   // v49 — 등록 직원 명부 순서
-    var list = base.filter(function (name) { return seen[name]; });
+    var list = base.slice();
     var extra = [];
     for (n in seen) if (seen.hasOwnProperty(n) && base.indexOf(n) < 0) extra.push(n);
     extra.sort();
