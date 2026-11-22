@@ -2053,8 +2053,6 @@
   .slip-row .slip-pay-sub{display:block;font-size:10.5px;font-weight:700;color:var(--slate-500);white-space:nowrap}
   .slip-pay-tags{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px}
   .slip-pay-kind{font-size:9.5px;font-weight:700;color:#5B6B83;white-space:nowrap}
-  .slip-row .sr-done{height:26px;padding:0 9px;font-size:11.5px;font-weight:800;flex:none;white-space:nowrap}
-  .slip-row .sr-done.done{background:#E9F7EF;border-color:#7FCEA6;color:#0B6B47}
   .slip-pv-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 7px;
     font-size:12px;font-weight:800;color:#334155}
   .slip-pv-head span:last-child{font-size:11.5px;font-weight:700;color:var(--slate-400)}
@@ -2080,9 +2078,6 @@
     min-height:9mm;padding:1.4mm 2.4mm;border-bottom:.9pt solid #0F172A}
   .slip-title{font-size:11.5pt;font-weight:800;letter-spacing:.01em;white-space:nowrap}
   .slip-meta{display:flex;align-items:center;gap:1.4mm;font-size:8pt;font-weight:700;color:#1F2A37;white-space:nowrap}
-  .slip-state{display:inline-block;padding:0 1.4mm;border-radius:1mm;border:.8pt solid #B7791F;
-    background:#FFF6E5;color:#8A5200;font-size:7.5pt;font-weight:900;line-height:1.5}
-  .slip-state.done{border-color:#198754;background:#E9F7EF;color:#0B6B47}
   .slip-tb{width:100%;flex:1 1 auto;border-collapse:collapse;table-layout:fixed;font-size:9pt}
   .slip-tb th,.slip-tb td{border:.9pt solid #0F172A;padding:1.1mm 2mm;vertical-align:middle;
     text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2090,8 +2085,12 @@
   .slip-tb th.w44{width:31mm}
   .slip-tb td{font-size:9.5pt;font-weight:600;color:#0B1220}
   .slip-tb tr{height:33.33%}
-  .slip-tb td.slip-money,.slip-tb .slip-money{font-size:15pt;font-weight:900;letter-spacing:-.01em;text-align:right;
-    font-variant-numeric:tabular-nums;padding-right:3mm;line-height:1.15}
+  /* v41 — 지급 금액 줄에 높이를 더 준다 (금액 + 카드 내역 여러 줄 + 총액) */
+  .slip-tb tr.slip-r1{height:24%}
+  .slip-tb tr.slip-r2{height:24%}
+  .slip-tb tr.slip-r3{height:52%}
+  .slip-tb td.slip-c-tel{width:56mm}
+  .slip-tb td.slip-pay-td{padding:.9mm 2.6mm .9mm 2mm;vertical-align:middle}
   /* A4 칸 안의 구분 배지 — 종이 크기에 맞춰 pt 로 */
   .slip-tb .slip-pay-tags{gap:1.2mm;margin-top:.8mm;justify-content:flex-end}
   .slip-tb .slip-tag{font-size:6.2pt;padding:.2mm 1.2mm;border-radius:1mm;display:inline-flex;align-items:center;gap:.9mm}
@@ -2108,15 +2107,25 @@
   .slip-kind.kb{background:#eef5ff;border-color:#C3D9F5;color:#0B4AA2}
   .slip-note{margin-top:auto;padding:.8mm 2.4mm 1.2mm;font-size:6.6pt;font-weight:700;color:#475569;
     border-top:.6pt dashed #C7D2E0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* v40 — 지급 금액 아래 계산식 줄 : 추지(형광펜) + 카드결제 / 입금 */
-  .slip-calc{display:flex;align-items:center;justify-content:flex-end;gap:1.2mm;flex-wrap:wrap;
-    margin-top:.9mm;font-size:6.8pt;font-weight:800;color:#1F2A37;line-height:1.35}
-  .slip-calc .plus{font-weight:900;color:#94A3B8}
-  .slip-calc .calc-item{font-weight:800}
+  /* v41 — 지급 금액 칸 : 결제·입금해 줄 돈만 크게(한 줄씩) · 항목이 2개 이상일 때만 점선 아래 '총액' */
+  .slip-calc{display:flex;flex-direction:column;align-items:flex-end;gap:0;
+    font-size:11pt;font-weight:900;color:#0B1220;line-height:1.14;letter-spacing:-.02em;
+    font-variant-numeric:tabular-nums}
+  .slip-calc .calc-line{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;
+    max-width:100%}
+  .slip-calc .calc-item{font-weight:900;white-space:nowrap}
   .slip-calc .calc-item.bank{color:#0B4AA2}
-  .slip-calc .calc-sub{font-style:normal;font-size:5.6pt;font-weight:700;color:#64748B;margin-left:.7mm}
-  .slip-calc .hl{background:#fef08a;padding:0 .9mm;border-radius:.6mm;color:#3F2D00;
+  /* 카드 결제 내역 — 한 줄에 하나씩, 7.6pt 진한 회색 */
+  .slip-calc .calc-detail{font-size:7.6pt;font-weight:700;color:#334155;white-space:nowrap;
+    max-width:100%;text-align:right;line-height:1.3}
+  .slip-calc .calc-sub{font-style:normal;font-size:7.4pt;font-weight:700;color:#334155;
+    margin-left:1mm;letter-spacing:0;white-space:nowrap}
+  .slip-calc .hl{background:#fef08a;padding:0 1mm;border-radius:.6mm;color:#3F2D00;
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  /* 총액 — 항목이 2개 이상일 때만, 얇은 점선 아래 작은 합계 줄 */
+  .slip-calc .slip-money{width:100%;margin-top:1mm;padding-top:.9mm;border-top:1px dashed #CBD5E1;
+    font-size:8pt;font-weight:800;color:#475569;text-align:right;line-height:1.15;
+    letter-spacing:0;white-space:nowrap;font-variant-numeric:tabular-nums}
   /* 폰 목록에서도 추지 금액은 형광펜으로 */
   .slip-row .slip-tag.extra{background:#fef08a;border-color:#e6c96a;color:#4A3400}
   .slip-tb td.slip-check{background:#fff}
@@ -3160,8 +3169,7 @@
   </div>
   <div class="slip-bar">
     <div class="period-chips slip-filters" id="slipFilters" role="group" aria-label="확인서 필터">
-      <button type="button" class="pchip on" data-slip-filter="unpaid" aria-pressed="true">미지급만</button>
-      <button type="button" class="pchip" data-slip-filter="month" aria-pressed="false">당월 전체</button>
+      <button type="button" class="pchip on" data-slip-filter="month" aria-pressed="true">당월 전체</button>
       <button type="button" class="pchip" data-slip-filter="date" aria-pressed="false">특정 일자</button>
     </div>
     <input type="date" id="slipDate" class="slip-date" hidden aria-label="특정 일자">
@@ -8378,7 +8386,7 @@
                  (1탭으로 되돌릴 수 있고, 되돌린 상태는 메모 [지급미완료] 로 시트까지 왕복)
      · 필터    : 미지급만 / 당월 전체 / 특정 일자 · 인쇄: 체크한 건을 4칸씩 A4 한 장씩
      ========================================================= */
-  var slipState = { filter: 'unpaid', date: '', staff: '', sel: {} };
+  var slipState = { filter: 'month', date: '', staff: '', sel: {} };
 
   /* v40 — 확인서 한 건의 지급액 = 추가지원금 + 페이백(카드결제) + 페이백(입금) */
   function slipPayParts(r) {
@@ -8388,32 +8396,16 @@
     return { extra: extra, card: card, bank: bank, total: extra + card + bank };
   }
 
-  // 카드결제 내역 — '위약금·1일예정 251,870 · 할부금·선결제 100,000'
-  function slipCardDetailText(r) {
-    var list = pcDetailParse(r.페이백카드상세), out = [], i;
+  // 카드결제 내역 — ['위약금(1일 예정) 251,870원', '할부금 100,000원'] 처럼 한 줄씩
+  function slipCardDetailList(r) {
+    var list = pcDetailParse(r.페이백카드상세), out = [], i, d, lbl;
     for (i = 0; i < list.length; i++) {
-      var d = list[i];
+      d = list[i];
       if (!(Number(d.amt) > 0)) continue;
-      out.push((d.kind || '카드') + (d.when ? '·' + PC_WHEN_LABEL[d.when] : '') + ' ' + fmtNum(d.amt));
+      lbl = (d.kind || '카드') + (d.when ? '(' + PC_WHEN_LABEL[d.when] + ')' : '');
+      out.push(lbl + ' ' + fmtNum(d.amt) + '원');
     }
-    return out.join(' · ');
-  }
-
-  /* v40 — 지급 완료 판정
-     · 장부에 '완료' 가 있으면 완료
-     · '미지급' 을 직접 고른 건(추지 단독 기본완료를 되돌린 건)은 미완료
-     · 표시가 없으면 : 추가지원금만 있는 건은 개통 때 이미 수납됐으므로 '완료' 로 본다 */
-  function slipDoneOf(r) {
-    if (normalizeDone(r.입금완료) === '완료') return true;
-    if (String(r.입금완료 == null ? '' : r.입금완료).trim() === '미지급') return false;
-    var p = slipPayParts(r);
-    return !!(p.extra > 0 && !p.card && !p.bank);
-  }
-  // 완료 배지 글자 — 추지 단독은 '수납완료', 그 밖은 '입금완료'
-  function slipDoneLabel(r) {
-    var p = slipPayParts(r);
-    if (!p.card && !p.bank && p.extra > 0) return '✓ 수납완료';
-    return '✓ 입금완료';
+    return out;
   }
 
   // 목록 한 줄 금액 — 합계 + (여러 항목이면) 항목별 내역
@@ -8453,7 +8445,6 @@
     var staff = slipState.staff || '';
     var list = slipBaseRecords().filter(function (r) {
       if (staff && String(r.담당자 == null ? '' : r.담당자).trim() !== staff) return false;
-      if (f === 'unpaid' && slipDoneOf(r)) return false;
       if (f === 'month' && monthOf(r.개통일) !== month) return false;
       if (f === 'date') {
         if (!day) return false;
@@ -8482,7 +8473,6 @@
   }
 
   function slipRowHtml(r) {
-    var done = slipDoneOf(r);
     var line = payBankLine(r);
     var holder = String(r.입금예금주 || '').trim();
     var acctText = line || holder
@@ -8500,19 +8490,15 @@
         '<span class="sr-acct">' + acctText + '</span>' +
       '</div>' +
       '<span class="sr-money">' + slipPayText(r) + '</span>' +
-      '<button type="button" class="pchip sr-done' + (done ? ' done' : '') + '" data-slip-done="' + esc(r.id) + '"' +
-        ' title="누를 때마다 미지급 ↔ 지급 완료">' + (done ? slipDoneLabel(r) : '미지급') + '</button>' +
     '</div>';
   }
 
   function slipPaintBar() {
-    var base = slipBaseRecords(), unpaid = 0, i;
-    for (i = 0; i < base.length; i++) if (!slipDoneOf(base[i])) unpaid++;
-    var sel = slipSelected(), sum = 0;
+    var list = slipFiltered(), sel = slipSelected(), sum = 0, i;
     for (i = 0; i < sel.length; i++) sum += slipPayParts(sel[i]).total;
     var box = $('slipBarSum');
     if (!box) return;
-    box.innerHTML = '지급 건 <b>' + base.length + '</b> · 미지급 <b>' + unpaid + '</b>' +
+    box.innerHTML = '총 <b>' + list.length + '</b>건' +
       ' · 선택 <b>' + sel.length + '</b>건 <b>' + fmtNum(sum) + '원</b>';
   }
 
@@ -8536,43 +8522,57 @@
   //   kind A(추지·카드) 는 그 금액만, kind B(계좌입금) 는 입금 금액만 + 계좌 정보
   function slipCardHtml(e) {
     var r = e.r, kind = e.kind;
-    var done = slipDoneOf(r);
     var phone = formatPhone(r.연락처) || String(r.연락처 || '');
     var birth = String(r.생년월일 || '').trim();
     var phoneBirth = [phone, birth].filter(function (x) { return !!x; }).join(' / ');
     var bankLine = kind === 'B' ? payBankLine(r) : '';
     var holder = kind === 'B' ? String(r.입금예금주 || '').trim() : '';
     var d = normalizeDate(r.개통일) || String(r.개통일 || '');
-    var cardDetail = slipCardDetailText(r);
-    // v40 — 총액 한 줄 + 바로 아래 '추지 200,000원 + 카드결제 251,870원' 계산식 (추지는 노란 형광펜)
-    var calc = [];
-    if (e.extra) calc.push('<span class="hl">추지 ' + fmtNum(e.extra) + '원</span><em class="calc-sub">개통시 결제완료</em>');
-    if (e.card) calc.push('<span class="calc-item">카드결제 ' + fmtNum(e.card) + '원' +
-      (cardDetail ? '<em class="calc-sub">' + esc(cardDetail) + '</em>' : '') + '</span>');
-    if (e.bank) calc.push('<span class="calc-item bank">입금 ' + fmtNum(e.bank) + '원</span>');
-    var payCell = '<div class="slip-money">총액 ' + fmtNum(e.amount) + '원</div>' +
-      '<div class="slip-calc">' + calc.join('<span class="plus">+</span>') + '</div>';
+    /* v41 — 지급 금액 칸
+       · 결제·입금해 줄 돈을 한 줄에 하나씩 크게(11pt · 900)
+       · 카드 결제 내역은 줄을 나눠 7.6pt 로 또렷하게
+       · 항목이 2개 이상일 때만 맨 아래 점선 아래에 '총액 …원' */
+    var cardLines = slipCardDetailList(r);
+    var payCount = (e.extra ? 1 : 0) + (e.card ? 1 : 0) + (e.bank ? 1 : 0);
+    var calcRows = [], detailRows = [], ci;
+    if (e.extra) {
+      calcRows.push('<div class="calc-line"><span class="hl">추지 ' + fmtNum(e.extra) + '원</span>' +
+        '<em class="calc-sub">개통시 결제완료</em></div>');
+    }
+    if (e.card) {
+      calcRows.push('<div class="calc-line"><span class="calc-item">카드결제 ' + fmtNum(e.card) + '원</span>' +
+        (payCount === 1 && cardLines.length ? '<em class="calc-sub">' + esc(cardLines.join(' · ')) + '</em>' : '') +
+        '</div>');
+      if (payCount > 1) {
+        for (ci = 0; ci < cardLines.length; ci++) {
+          detailRows.push('<div class="calc-detail">' + esc(cardLines[ci]) + '</div>');
+        }
+      }
+    }
+    if (e.bank) {
+      calcRows.push('<div class="calc-line"><span class="calc-item bank">입금 ' + fmtNum(e.bank) + '원</span></div>');
+    }
+    var payCell = '<div class="slip-calc">' + calcRows.join('') + detailRows.join('') +
+      (payCount > 1 ? '<div class="slip-money">총액 ' + fmtNum(e.amount) + '원</div>' : '') + '</div>';
     // 기종 · 반납 중고폰 — 종이 여백처럼 카드 아래 한 줄
     var notes = [];
     if (r.기종) notes.push('기종 ' + String(r.기종).trim());
     if (r.중고폰) notes.push('중고폰 반납 ' + String(r.중고폰).trim());
-    var stateLabel = done ? (kind === 'B' ? '입금완료' : '수납완료') : '미지급';
     return '<div class="slip slip-k' + kind + '">' +
       '<div class="slip-hd">' +
         '<span class="slip-title">티앤제이통신 입금 지급 확인서</span>' +
         '<span class="slip-meta">개통일: ' + esc(d || '—') + ' · 담당: ' + esc(String(r.담당자 || '').trim() || '—') +
           '<span class="slip-kind ' + (kind === 'A' ? 'ka' : 'kb') + '">' +
-            (kind === 'A' ? '추지·카드' : '계좌입금') + '</span>' +
-          '<span class="slip-state ' + (done ? 'done' : 'wait') + '">' + stateLabel + '</span></span>' +
+            (kind === 'A' ? '추지·카드' : '계좌입금') + '</span></span>' +
       '</div>' +
       '<table class="slip-tb"><tbody>' +
-        '<tr><th>가입자명</th><td>' + esc(r.고객명 || '') + '</td>' +
-          '<th class="w44">연락처 / 생년월일</th><td>' + esc(phoneBirth) + '</td></tr>' +
-        '<tr><th>은행 / 계좌번호</th><td class="slip-bank' + (kind === 'A' ? ' slip-dim' : '') + '">' +
+        '<tr class="slip-r1"><th>가입자명</th><td>' + esc(r.고객명 || '') + '</td>' +
+          '<th class="w44">연락처 / 생년월일</th><td class="slip-c-tel">' + esc(phoneBirth) + '</td></tr>' +
+        '<tr class="slip-r2"><th>은행 / 계좌번호</th><td class="slip-bank' + (kind === 'A' ? ' slip-dim' : '') + '">' +
           (kind === 'B' ? esc(bankLine) : '—') + '</td>' +
           '<th>예금주</th><td' + (kind === 'A' ? ' class="slip-dim"' : '') + '>' +
           (kind === 'B' ? esc(holder) : '—') + '</td></tr>' +
-        '<tr><th>지급 금액</th><td>' + payCell +
+        '<tr class="slip-r3"><th>지급 금액</th><td class="slip-pay-td">' + payCell +
           '<th>확인</th><td class="slip-check"></td></tr>' +
       '</tbody></table>' +
       (notes.length ? '<div class="slip-note">' + esc(notes.join(' · ')) + '</div>' : '') +
@@ -8709,27 +8709,6 @@
     slipRepaint();
   }
 
-  // 확인서 창 안에서 입금완료 ↔ 미지급 1탭 전환 (장부에도 그대로 저장)
-  function slipToggleDone(id) {
-    var rec = null, i;
-    for (i = 0; i < state.records.length; i++) {
-      if (state.records[i].id === id) { rec = state.records[i]; break; }
-    }
-    if (!rec) return;
-    var on = !slipDoneOf(rec);
-    // v40 — '미지급' 도 값으로 남긴다 (추지 단독은 표시가 없으면 기본이 '수납완료' 라 되돌린 상태가 사라진다)
-    rec.입금완료 = on ? '완료' : '미지급';
-    rec.수정일시 = new Date().toISOString();
-    persist();
-    render();
-    queueUpsert(rec);
-    syncAfterChange();
-    // 미지급만 보기에서는 완료로 바꾼 건이 목록에서 빠진다
-    if (on) delete slipState.sel[id];
-    slipRenderList();
-    toast((rec.고객명 || '기록') + ' · ' + (on ? '입금 완료로 바꿨습니다.' : '미지급으로 되돌렸습니다.'));
-  }
-
   function slipPrint() {
     var list = slipSelected();
     if (!list.length) { toast('인쇄할 확인서를 먼저 체크해 주세요.', true); return; }
@@ -8737,14 +8716,36 @@
     if (!root) return;
     root.innerHTML = slipPagesHtml(list);
     document.body.classList.add('print-slips');
+    /* v41 — 안드로이드(삼성 인터넷·크롬) 인쇄 미리보기가 백지로 뜨는 문제
+       ① 모달(top layer)이 인쇄 화면을 가림 → 인쇄 전에 닫고, 끝나면 도로 연다
+       ② 인쇄 직후 afterprint 가 바로 와서 body.print-slips 가 먼저 지워짐
+          → 너무 빨리 온 afterprint 는 무시하고 최소 1.5초는 인쇄 모드를 유지한다 */
+    var dlg = $('paySlipDialog'), wasOpen = !!(dlg && dlg.open);
+    if (wasOpen) dlg.close();
+    var printStartedAt = Date.now(), cleaned = false;
+    var reopen = function () {
+      if (!wasOpen || !dlg) return;
+      try { if (!dlg.open) dlg.showModal(); } catch (e) {}
+    };
     var cleanup = function () {
+      if (cleaned) return;
+      var wait = 1500 - (Date.now() - printStartedAt);
+      if (wait > 0) { setTimeout(cleanup, wait); return; }
+      cleaned = true;
       document.body.classList.remove('print-slips');
       window.removeEventListener('afterprint', cleanup);
+      window.removeEventListener('focus', cleanup);
+      reopen();
+      setTimeout(fitSlipPreview, 60);
     };
     window.addEventListener('afterprint', cleanup);
+    window.addEventListener('focus', cleanup);
     setTimeout(function () {
       try { window.print(); } catch (e) {
-        cleanup();
+        document.body.classList.remove('print-slips');
+        window.removeEventListener('afterprint', cleanup);
+        window.removeEventListener('focus', cleanup);
+        if (wasOpen && dlg) { try { dlg.showModal(); } catch (e2) {} }
         toast('인쇄 창을 열지 못했습니다. 브라우저 인쇄로 다시 시도해 주세요.', true);
         return;
       }
@@ -8790,8 +8791,6 @@
     if ($('slipList')) $('slipList').addEventListener('click', function (e) {
       var t = e.target;
       if (!t || !t.closest) return;
-      var doneBtn = t.closest('button[data-slip-done]');
-      if (doneBtn) { slipToggleDone(doneBtn.getAttribute('data-slip-done')); return; }
       var ck = t.closest('input[data-slip-ck]');
       var row = t.closest('.slip-row');
       if (ck) {
