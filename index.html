@@ -1010,6 +1010,21 @@
   .paycard-line.none-on{opacity:.55}
   .paycard-line .pc-no{font-size:11px;font-weight:800;color:var(--slate-400);min-width:0}
   .paycard-field .pc-total{font-weight:800;color:var(--blue-700)}
+  /* v43 — 중고폰 여러 줄: 평소엔 1줄(모델명 · 금액), [+ 추가]로 여러 대·여러 품목을 나눠 적는다 */
+  .used-lines{display:flex;flex-direction:column;gap:7px}
+  .used-line{display:grid;grid-template-columns:minmax(0,1fr) 116px 26px;gap:6px;align-items:center}
+  .used-line .ul-name{width:100%;min-width:0}
+  .used-line .ul-amt{width:100%;min-width:0}
+  .used-line .ul-del{height:26px;width:26px;padding:0;font-size:14px;font-weight:900;line-height:1;color:#B42318;border-color:#F1C2BD;background:#FEF3F2}
+  /* 1줄일 때도 × 자리를 비워 둬 [+ 추가] 때 입력칸 폭이 흔들리지 않게 */
+  .used-line .ul-del[hidden]{display:block;visibility:hidden}
+  .used-lines.none-on .used-line{opacity:.55}
+  .ul-foot{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px;margin-top:7px}
+  .ul-foot .ul-add{order:1;margin-left:auto;height:28px;padding:0 10px;font-size:12px;font-weight:800;color:var(--blue-700);border-color:#B9D2F5;background:var(--blue-50)}
+  .ul-foot .ul-add:hover{background:#DBEAFE;border-color:#8CB8F0}
+  .ul-foot .hint{order:2;flex:1 1 100%;min-width:0}
+  .ul-foot .hint .ul-total{color:var(--blue-700)}
+  @media (max-width:420px){.used-line{grid-template-columns:minmax(0,1fr) 100px 26px}}
   /* v32 — 기기 승인 대기 화면 (차단 화면과 같은 모양, 문구·버튼만 다름) */
   .pending-screen{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:22px;
     background:rgba(15,23,42,.72);backdrop-filter:blur(3px)}
@@ -2910,16 +2925,17 @@
               <button type="button" class="pchip" data-pay-none="used" aria-pressed="false">미반납</button>
             </div>
           </div>
-          <div class="pay-grid two">
-            <div class="field">
-              <label for="f_used">중고폰 <span class="req">*</span></label>
-              <input id="f_used" type="text" autocomplete="off" placeholder="예) S25/에어팟">
+          <!-- v43 — 중고폰 [모델명 · 금액] 여러 줄: 평소 1줄, [+ 추가]로 한 줄씩 늘린다 -->
+          <div class="used-lines" id="usedLines">
+            <div class="used-line" id="usedRow" data-ul-row="1">
+              <input id="f_used" class="ul-name" type="text" autocomplete="off" placeholder="예) S25엣지" aria-label="중고폰 모델 1">
+              <input id="f_usedprice" class="money ul-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="중고폰 금액 1">
+              <button type="button" class="pchip ul-del" data-ul-del="1" aria-label="이 줄 삭제" hidden>×</button>
             </div>
-            <div class="field">
-              <label for="f_usedprice">중고폰금액 <span class="opt">선택</span></label>
-              <input id="f_usedprice" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="예) 22 · 50/20">
-              <span class="hint hint-auto" id="usedPriceHint" hidden></span>
-            </div>
+          </div>
+          <div class="ul-foot">
+            <button type="button" class="pchip ul-add" id="usedAdd" title="중고폰이 여러 대·여러 품목일 때 한 줄 더 (금액은 자동 합산)">+ 추가</button>
+            <span class="hint hint-auto" id="usedPriceHint" hidden></span>
           </div>
         </div>
           </div>
@@ -3492,6 +3508,8 @@
     }
     // v32 — 페이백(카드결제) 여러 줄도 함께 흐리게
     if ($('paycardLines')) pcRefresh();
+    // v43 — 중고폰 여러 줄도 [미반납] 이면 함께 흐리게
+    if ($('usedLines')) ulRefresh();
     // v39 — 페이백(입금) 은행·예금주·계좌 3칸과 입금 완료 칩도 같이
     paintPayBankAcct();
   }
@@ -3568,6 +3586,8 @@
         for (var q = 0; q < acctIds.length; q++) if ($(acctIds[q])) $(acctIds[q]).value = '';
         setPayBankDone(false);
       }
+      // v43 — 중고폰을 [미반납]으로 두면 여러 줄을 모두 비우고 1줄로 되돌린다
+      if (kind === 'used') ulResetRows();
     }
     setPayNone(kind, on);
     payNoneBad(kind, false);
@@ -3845,12 +3865,232 @@
     return '자동 계산: ' + fmtNum(p.total) + '원 (' + one.n + '만원)';
   }
 
-  function paintUsedPriceHint(force) {
-    var box = $('usedPriceHint'), inp = $('f_usedprice');
-    if (!box || !inp) return;
-    var t = usedPriceHintText(inp.value);
-    box.textContent = t ? '🧮 ' + t : '';
-    box.hidden = !t;
+  /* =========================================================
+     v43 — 중고폰 [모델명 · 금액] 여러 줄
+     · 한 줄 = [모델명] [금액] · [+ 추가] 로 늘리고 2줄 이상이면 줄마다 [×]
+     · 앱 필드  중고폰     = 줄마다 적은 모델명을 '/' 로 이어 저장 (시트 20컬럼 그대로)
+       앱 필드  중고폰금액 = 모든 줄 금액의 합계(원) → 상단 KPI·순마진·목록·상세가 그대로 쓴다
+       앱 필드  중고폰상세 = 'S25엣지=500000|에어팟=200000|워치=100000' (메모 [중고상세:…] 로만 왕복)
+     · 상세는 두 줄 이상일 때만 메모에 남긴다 (한 줄은 중고폰·중고폰금액 컬럼으로 충분)
+     ========================================================= */
+  function ulLines() {
+    var box = $('usedLines');
+    return box ? box.querySelectorAll('.used-line') : [];
+  }
+
+  function ulLineData(line) {
+    var nm = line ? line.querySelector('.ul-name') : null;
+    var am = line ? line.querySelector('.ul-amt') : null;
+    var raw = am ? String(am.value == null ? '' : am.value) : '';
+    var p = usedParse(raw);
+    return {
+      line: line, nameEl: nm, amtEl: am,
+      name: nm ? String(nm.value || '').trim() : '',
+      raw: raw, amt: p.total, has: p.has
+    };
+  }
+
+  function ulAll() {
+    var ls = ulLines(), out = [];
+    for (var i = 0; i < ls.length; i++) out.push(ulLineData(ls[i]));
+    return out;
+  }
+
+  function ulTotal() {
+    var list = ulAll(), s = 0;
+    for (var i = 0; i < list.length; i++) s += Number(list[i].amt) || 0;
+    return s;
+  }
+
+  /* 어느 한 줄이라도 모델명이나 금액을 적었는가 */
+  function ulAnyFilled() {
+    var list = ulAll();
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].name || moneyFilled(list[i].raw)) return true;
+    }
+    return false;
+  }
+
+  /* 시트 [중고폰] 컬럼 — 줄마다 적은 모델명을 '/' 로 잇는다 (예: 'S25엣지/에어팟/워치') */
+  function ulNamesText() {
+    var list = ulAll(), out = [];
+    for (var i = 0; i < list.length; i++) {
+      var nm = String(list[i].name || '').trim();
+      if (nm) out.push(nm);
+    }
+    return out.join('/');
+  }
+
+  /* 모델명에 표기 구분자(= · | · [ ])가 들어가도 상세 문자열이 깨지지 않게 */
+  function ulNameClean(v) {
+    return String(v == null ? '' : v).replace(/[\[\]|=]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  /** [{name, amt}] → 'S25엣지=500000|에어팟=200000' */
+  function ulDetailText(list) {
+    var out = [];
+    for (var i = 0; i < (list || []).length; i++) {
+      var d = list[i] || {};
+      var nm = ulNameClean(d.name);
+      var amt = Math.round(Number(d.amt) || 0);
+      if (!nm && !(amt > 0)) continue;
+      out.push(nm + '=' + amt);
+    }
+    return out.join('|');
+  }
+
+  /** 'S25엣지=500000|에어팟=200000' → [{name, amt}] */
+  function ulDetailParse(text) {
+    var out = [];
+    var s = String(text == null ? '' : text).trim();
+    if (!s) return out;
+    var parts = s.split('|');
+    for (var i = 0; i < parts.length; i++) {
+      var t = String(parts[i] || '').trim();
+      if (!t) continue;
+      var m = /^(.*)=([^=]*)$/.exec(t);
+      var nm = '', amt = 0;
+      if (m) { nm = String(m[1] || '').trim(); amt = parseNumber(m[2]); }
+      else { nm = t; }
+      if (!nm && !(amt > 0)) continue;
+      out.push({ name: nm, amt: amt });
+    }
+    return out;
+  }
+
+  /* 합산 안내 — 2줄 이상 금액이 있으면 '합산: 800,000원 (S25엣지 500,000 + …)' */
+  function usedSumHintHtml() {
+    var list = ulAll(), parts = [], total = 0, n = 0, one = null;
+    for (var i = 0; i < list.length; i++) {
+      if (!(list[i].amt > 0)) continue;
+      n++;
+      total += Number(list[i].amt) || 0;
+      parts.push((list[i].name || '모델 미입력') + ' ' + fmtNum(list[i].amt));
+      one = list[i];
+    }
+    if (n >= 2) {
+      return {
+        html: '🧮 <b class="ul-total">합산: ' + fmtNum(total) + '원</b> (' + esc(parts.join(' + ')) + ')',
+        text: '합산: ' + fmtNum(total) + '원 (' + parts.join(' + ') + ')'
+      };
+    }
+    if (n === 1) {
+      var t = usedPriceHintText(one.raw);
+      return t ? { html: '🧮 ' + esc(t), text: t } : null;
+    }
+    return null;
+  }
+
+  function paintUsedPriceHint() {
+    var box = $('usedPriceHint');
+    if (!box) return;
+    var h = usedSumHintHtml();
+    box.innerHTML = h ? h.html : '';
+    box.hidden = !h;
+  }
+
+  /* 줄의 삭제 버튼·합산 안내·[미반납] 흐림을 한 번에 맞춘다 */
+  function ulRefresh() {
+    var ls = ulLines(), i;
+    for (i = 0; i < ls.length; i++) {
+      var del = ls[i].querySelector('.ul-del');
+      if (del) del.hidden = ls.length <= 1;
+      var nm = ls[i].querySelector('.ul-name');
+      if (nm) nm.setAttribute('aria-label', '중고폰 모델 ' + (i + 1));
+      var am = ls[i].querySelector('.ul-amt');
+      if (am) am.setAttribute('aria-label', '중고폰 금액 ' + (i + 1));
+    }
+    var box = $('usedLines');
+    if (box) box.classList.toggle('none-on', payNoneOn('used'));
+    paintUsedPriceHint();
+  }
+
+  /* 한 줄의 입력 처리를 붙인다 (첫 줄·추가 줄 모두) */
+  function ulBindLine(line) {
+    if (!line) return;
+    var nm = line.querySelector('.ul-name'), am = line.querySelector('.ul-amt');
+    var touched = function () {
+      if (payNoneOn('used')) setPayNone('used', false);
+      payNoneBad('used', false);
+      ulRefresh();
+    };
+    if (nm) {
+      nm.addEventListener('input', touched);
+      nm.addEventListener('change', touched);
+    }
+    if (am) {
+      am.addEventListener('input', function () {
+        this.value = String(this.value || '').replace(/[^0-9/]/g, '');
+        touched();
+        updateFormRisk();
+      });
+      am.addEventListener('blur', function () {
+        var p = usedParse(this.value);
+        if (p.has) this.value = fmtNum(p.total);
+        ulRefresh();
+      });
+    }
+  }
+
+  function ulAddRow(data) {
+    var box = $('usedLines');
+    if (!box) return null;
+    var n = ulLines().length + 1;
+    var d = data || {};
+    var line = document.createElement('div');
+    line.className = 'used-line';
+    line.setAttribute('data-ul-row', String(n));
+    line.innerHTML =
+      '<input class="ul-name" type="text" autocomplete="off" placeholder="예) 에어팟" aria-label="중고폰 모델 ' + n + '">' +
+      '<input class="money ul-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="중고폰 금액 ' + n + '">' +
+      '<button type="button" class="pchip ul-del" data-ul-del="' + n + '" aria-label="이 줄 삭제">×</button>';
+    box.appendChild(line);
+    var nm = line.querySelector('.ul-name'), am = line.querySelector('.ul-amt');
+    if (nm && d.name) nm.value = d.name;
+    if (am) am.value = Number(d.amt) > 0 ? fmtNum(d.amt) : '';
+    ulBindLine(line);
+    ulRefresh();
+    return line;
+  }
+
+  /* [{name, amt}] 로 줄을 다시 그린다 (수정 복원·미반납 초기화·다음 고객) */
+  function ulSetRows(list) {
+    var box = $('usedLines');
+    if (!box) return;
+    var ls = ulLines();
+    for (var i = ls.length - 1; i > 0; i--) box.removeChild(ls[i]);
+    var first = ulLines()[0];
+    if (!first) return;
+    var rows = (list && list.length) ? list : [{ name: '', amt: 0 }];
+    var nm = first.querySelector('.ul-name'), am = first.querySelector('.ul-amt');
+    if (nm) nm.value = rows[0].name || '';
+    if (am) am.value = Number(rows[0].amt) > 0 ? fmtNum(rows[0].amt) : '';
+    for (var j = 1; j < rows.length; j++) ulAddRow(rows[j]);
+    ulRefresh();
+  }
+
+  function ulResetRows() { ulSetRows([]); }
+
+  /* 기존 기록 → 줄 목록 : 메모 [중고상세:…] 가 있으면 그 줄들, 없으면 예전 1줄(중고폰 + 중고폰금액) */
+  function usedRowsFromRecord(r) {
+    var det = ulDetailParse(r && r.중고폰상세);
+    if (det.length) return det;
+    var nm = String((r && r.중고폰) || '').trim();
+    var amt = Number(r && r.중고폰금액) || 0;
+    if (!nm && !(amt > 0)) return [{ name: '', amt: 0 }];
+    return [{ name: nm, amt: amt }];
+  }
+
+  /* 상세보기·폰 카드에 모델별 금액을 작게 붙인다 — ' (S25엣지 500,000 · 에어팟 200,000)' */
+  function usedDetailBadge(detail) {
+    var list = ulDetailParse(detail);
+    if (list.length < 2) return '';
+    var parts = [];
+    for (var i = 0; i < list.length; i++) {
+      var d = list[i];
+      parts.push((d.name || '모델 미입력') + (d.amt > 0 ? ' ' + fmtNum(d.amt) : ''));
+    }
+    return ' <span class="muted">(' + esc(parts.join(' · ')) + ')</span>';
   }
 
   /* v30 — 저장할 때 [미기입] 으로 확인된 칸 목록 (금액이 0·빈칸인 칸만)
@@ -3869,10 +4109,8 @@
       out.push(map[i][0]);
     }
     // 중고폰 [미반납] 도 함께 남긴다 (중고폰 칸은 값이 아니라 칩 상태로만 확인된다)
-    var usedInp = $('f_used'), usedPrice = $('f_usedprice');
-    if (payNoneOn('used')
-      && !(usedInp && moneyFilled(usedInp.value))
-      && !(usedPrice && moneyFilled(usedPrice.value))) {
+    // v43 — [미반납] 은 여러 줄 중 어느 줄에도 모델명·금액이 없을 때만 남긴다
+    if (payNoneOn('used') && !ulAnyFilled()) {
       out.push('중고폰');
     }
     return out.join(',');
@@ -4664,7 +4902,7 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '', payBank: '', payHolder: '', payAcct: '', payDone: false, payUndone: false, writtenAt: '' };
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '', usedDetail: '', payBank: '', payHolder: '', payAcct: '', payDone: false, payUndone: false, writtenAt: '' };
     var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop'], [PAY_DONE_MARK, 'payDone'], [PAY_UNDONE_MARK, 'payUndone']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
@@ -4703,6 +4941,9 @@
     // v32 — 카드결제 상세 [카드상세:할부금/선결제 200000,위약금/1일예정 150000]
     var rePcDetail = /\[카드상세:\s*([^\]]*)\]/g;
     s = s.replace(rePcDetail, function (all, v) { hit = true; out.paycardDetail = String(v || '').trim(); return ' '; });
+    // v43 — 중고폰 여러 줄 상세 [중고상세:S25엣지=500000|에어팟=200000|워치=100000]
+    var reUsedDetail = /\[중고상세:\s*([^\]]*)\]/g;
+    s = s.replace(reUsedDetail, function (all, v) { hit = true; out.usedDetail = String(v || '').trim(); return ' '; });
     // v39 — 입금 계좌 [입금은행:국민은행] [입금예금주:홍길동] [입금계좌:123-456-7890] · [입금완료]
     var rePayBank = /\[입금은행:\s*([^\]]*)\]/g;
     s = s.replace(rePayBank, function (all, v) { hit = true; out.payBank = String(v || '').trim(); return ' '; });
@@ -4789,6 +5030,15 @@
       for (var q = 0; q < pcList.length; q++) if (pcList[q].kind || pcList[q].when) pcWorth = true;
       if (pcWorth) head.push('[카드상세:' + pcDet.replace(/\]/g, '') + ']');
     }
+    // v43 — 중고폰 여러 줄 상세 — 두 줄 이상일 때만 메모 표기로 남긴다(한 줄은 중고폰·중고폰금액 컬럼으로 충분)
+    var ulDet = String(rec.중고폰상세 || t.usedDetail || '').trim();
+    if (ulDet) {
+      var ulList = ulDetailParse(ulDet);
+      if (ulList.length > 1) {
+        var ulTxt = ulDetailText(ulList);
+        if (ulTxt) head.push('[중고상세:' + ulTxt + ']');
+      }
+    }
     // v30 — [미기입] 으로 확인한 결제 칸 (0원이 '미기입'인지 '확인해서 0원'인지 시트에도 남긴다)
     var noneKeys = payNoneKeys(rec);
     if (!noneKeys.length && t.payNone) noneKeys = String(t.payNone).split(',').filter(function (x) { return !!x; });
@@ -4857,6 +5107,8 @@
       var pcSum = pcDetailSum(o.페이백카드상세);
       if (pcSum > 0) o.페이백카드 = pcSum;
     }
+    // v43 — 중고폰 여러 줄 상세 복원 (모델별 금액) — 합계는 중고폰금액 컬럼을 그대로 쓴다
+    o.중고폰상세 = String(tags.usedDetail || (r && r.중고폰상세) || '').trim();
     if (!o.개통유형) o.개통유형 = '';
     // v39 — 페이백(입금) 계좌 · 입금 완료 → 메모 표기에서 복원
     o.입금은행 = String(tags.payBank || (r && r.입금은행) || '').trim();
@@ -5347,6 +5599,8 @@
     snap.미기입 = String(rec.미기입 || '').replace(/\s/g, '');
     // v32 — 카드결제 상세도 스냅사진에 담는다 (빠뜨리면 서버 왕복 뒤 [카드상세:…] 표기가 풀린다)
     snap.페이백카드상세 = String(rec.페이백카드상세 || '').trim();
+    // v43 — 중고폰 여러 줄 상세도 담는다 (빠뜨리면 서버 왕복 뒤 [중고상세:…] 표기가 풀린다)
+    snap.중고폰상세 = String(rec.중고폰상세 || '').trim();
     // v39 — 입금 계좌·입금 완료·등록일시도 담는다 (빠뜨리면 서버 왕복 뒤 메모 표기가 풀린다)
     snap.입금은행 = String(rec.입금은행 || '').trim();
     snap.입금예금주 = String(rec.입금예금주 || '').trim();
@@ -9751,7 +10005,7 @@
         mRow('제휴카드', normalizeCard(r.제휴카드) ? cardDetailHtml(r.제휴카드) : '') +
         (isForeign(r.외국인) ? mRow('고객 구분', '외국인') : '') +
         mRowOpt('중고폰', r.중고폰 ? esc(r.중고폰) : '') +
-        mRowOpt('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' : '') +
+        mRowOpt('중고폰금액', r.중고폰금액 ? fmtNum(r.중고폰금액) + '원' + usedDetailBadge(r.중고폰상세) : '') +
         // v27 · v31 — 결합 적용 건만 한 줄로 보인다 (정책명 없이)
         (condList(r.특수조건).indexOf(USED_COMBO_KEY) >= 0
           ? mRow('결합 여부', '<span class="pbadge c2">결합 적용</span> <span class="muted">결합 조건으로 저장됨</span>') : '') +
@@ -11032,8 +11286,9 @@
       : (r.부가서비스유지 === '6개월') ? '6'
       : (r.부가서비스유지 === '직접입력' || $('f_addondate').value) ? 'custom' : 'none';
     paintPeriodChips();
-    $('f_used').value = r.중고폰 || '';
-    $('f_usedprice').value = r.중고폰금액 ? fmtNum(r.중고폰금액) : '';
+    // v43 — 중고폰은 여러 줄(모델명 · 금액)로 복원한다. 메모 [중고상세:…] 가 있으면 그 줄들,
+    //   없는 예전 기록은 '중고폰 + 중고폰금액' 1줄로 안전하게 열린다.
+    ulSetRows(usedRowsFromRecord(r));
     paintUsedPriceHint(true);
     $('f_rebate_w').value = r.무선리베이트 ? fmtNum(r.무선리베이트) : '';
     wiredAutoLast = null;
@@ -11151,8 +11406,15 @@
       need.push({ label: '페이백(카드결제)', el: $('paycardNoneChips'), inputs: [$('f_paycard')] });
     if (!payNoneOn('paybank') && !moneyFilled($('f_paybank').value))
       need.push({ label: '페이백(입금)', el: $('paybankNoneChips'), inputs: [$('f_paybank')] });
-    if (!payNoneOn('used') && !String($('f_used').value).trim() && !moneyFilled($('f_usedprice').value))
-      need.push({ label: '중고폰', el: $('usedNoneChips'), inputs: [$('f_used'), $('f_usedprice')] });
+    if (!payNoneOn('used') && !ulAnyFilled()) {
+      // v43 — 지금 그려진 모든 줄(모델명·금액)을 빨간 테두리로 표시한다
+      var ulBad = [], lsU = ulAll();
+      for (i = 0; i < lsU.length; i++) {
+        if (lsU[i].nameEl) ulBad.push(lsU[i].nameEl);
+        if (lsU[i].amtEl) ulBad.push(lsU[i].amtEl);
+      }
+      need.push({ label: '중고폰', el: $('usedNoneChips'), inputs: ulBad });
+    }
 
     if (need.length || issues.length) {
       var labels = [];
@@ -11241,8 +11503,10 @@
         : period.addon === '6' ? '6개월'
         : period.addon === 'custom' ? '직접입력' : '',
       부가서비스해지일자: normalizeDate($('f_addondate').value),
-      중고폰: $('f_used').value.trim(),
-      중고폰금액: usedAmount($('f_usedprice').value),
+      중고폰: ulNamesText(),
+      중고폰금액: ulTotal(),
+      // v43 — 중고폰 여러 줄의 모델별 금액 (두 줄 이상이면 메모 [중고상세:…] 로 왕복)
+      중고폰상세: ulDetailText(ulAll()),
       무선리베이트: parseNumber($('f_rebate_w').value),
       유선리베이트: parseNumber($('f_rebate_l').value),
       추가지원금: parseNumber($('f_extra').value),
@@ -11332,8 +11596,8 @@
       paintNoneChips();
       paintPeriodChips();
       paintAddonChips();   // v31 — 다음 고객에게 부가서비스 칩이 따라가지 않게
-      $('f_used').value = '';
-      $('f_usedprice').value = '';
+      // v43 — 다음 고객에게 중고폰 여러 줄이 따라가지 않게 1줄로 초기화
+      ulSetRows([]);
       paintUsedPriceHint(true);
       $('f_rebate_w').value = '';
       wiredAutoLast = null;
@@ -12529,16 +12793,33 @@
       if (inp) { try { inp.focus(); } catch (e) {} }
     });
 
-    // v32 — 중고폰금액: 만 원 단위·슬래시(/) 자동 합산
-    $('f_usedprice').addEventListener('input', function () {
-      this.value = String(this.value || '').replace(/[^0-9/]/g, '');
-      paintUsedPriceHint();
-      updateFormRisk();
-    });
-    $('f_usedprice').addEventListener('blur', function () {
-      var p = usedParse(this.value);
-      if (p.has) this.value = fmtNum(p.total);
-      paintUsedPriceHint(true);
+    // v43 — 중고폰 여러 줄: 첫 줄 입력 처리 + [×] 삭제 + [+ 추가]
+    //   · 금액칸은 숫자(과거 기록의 '/') 만 받고, 칸을 벗어나면 만 원 단위를 원 단위로 정리한다
+    var ulBox = $('usedLines');
+    if (ulBox) {
+      ulBindLine(ulLines()[0]);
+      ulBox.addEventListener('click', function (e) {
+        var t = e.target;
+        var db = t && t.closest ? t.closest('button[data-ul-del]') : null;
+        if (!db) return;
+        var line = db.closest('.used-line');
+        if (!line) return;
+        var ls = ulLines();
+        if (ls.length > 1) line.parentNode.removeChild(line);
+        else {
+          var nm = line.querySelector('.ul-name'), am = line.querySelector('.ul-amt');
+          if (nm) nm.value = '';
+          if (am) am.value = '';
+        }
+        ulRefresh();
+        updateFormRisk();
+      });
+    }
+    if ($('usedAdd')) $('usedAdd').addEventListener('click', function () {
+      if (payNoneOn('used')) setPayNone('used', false);
+      var line = ulAddRow({});
+      var nm = line && line.querySelector('.ul-name');
+      if (nm) { try { nm.focus(); } catch (e) {} }
     });
     // 금액(무선·유선 리베이트 · 추지·페이백입금) 콤마 포맷
     ['f_rebate_w', 'f_rebate_l', 'f_extra', 'f_paybank'].forEach(function (id) {
