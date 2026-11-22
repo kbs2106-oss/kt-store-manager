@@ -2066,6 +2066,9 @@
   .pc-done-row .paydone-chip[aria-pressed="true"] .pd-tick{opacity:1;color:#a16207}
   .pc-done-row .pd-state{font-size:11px;font-weight:800;color:var(--slate-400)}
   .pc-done-row .pd-state.done{color:#8a6d00}
+  /* v46 — 페이백 금액을 적었는데 [1일 결제]/[1일 입금] 도 [✓ 완료] 도 안 고른 곳 */
+  .paycard-line .pc-tags.bad,.paycard-line .pc-done-row.bad,
+  .paybank-done.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
   @media (max-width:560px){
     .paybank-acct{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
     .paybank-acct #f_paybank_acct{grid-column:1/-1}
@@ -3631,6 +3634,7 @@
       fchip.classList.toggle('on', firstOn);
       fchip.setAttribute('aria-pressed', firstOn ? 'true' : 'false');
     }
+    paintPayStateBad();
   }
 
   function setPayBankDone(on) {
@@ -3731,6 +3735,7 @@
     }
     var hid = $('f_paycard_done');
     if (hid) hid.value = (n > 0 && d === n) ? '완료' : (d > 0 ? '일부' : '');
+    paintPayStateBad();
     return { total: n, done: d };
   }
 
@@ -3738,6 +3743,58 @@
     var ls = pcLines();
     for (var i = 0; i < ls.length; i++) ls[i].setAttribute('data-pc-done', '');
     paintPayCardDone();
+  }
+
+  /* =========================================================
+     v46 — 페이백 금액을 적었으면 상태를 반드시 고른다
+     · [미기입] 이면 통과 (금액 자체가 없는 건)
+     · 카드결제: 금액 > 0 인 줄마다 [1일 결제] 또는 [✓ 카드결제 완료] 중 하나
+     · 입금:   금액 > 0 이면 [1일 입금] 또는 [✓ 입금 완료] 중 하나
+     ========================================================= */
+  function pcStateOkLine(line) {
+    if (!line) return true;
+    var d = pcLineData(line);
+    if (!(Number(d.amt) > 0)) return true;
+    return d.when === '1일결제' || line.getAttribute('data-pc-done') === '1';
+  }
+
+  function pcStateBadLines() {
+    if (payNoneOn('paycard')) return [];
+    var ls = pcLines(), out = [];
+    for (var i = 0; i < ls.length; i++) if (!pcStateOkLine(ls[i])) out.push(ls[i]);
+    return out;
+  }
+
+  function pcBankStateOk() {
+    if (payNoneOn('paybank')) return true;
+    if (!(parseNumber(($('f_paybank') || {}).value) > 0)) return true;
+    return String(($('f_paybank_1st') || {}).value || '') === '1일'
+      || String(($('f_paybank_done') || {}).value || '') === '완료';
+  }
+
+  /* 금액 있는 줄/입금 칸에 빨간 테두리를 지금 상태에 맞춰 달고 벗긴다
+     · 저장을 한 번 막은 뒤(pcStateBlocked)에만 표시한다 — 금액을 적는 중에 미리 빨개지지 않는다 */
+  var pcStateBlocked = false;
+
+  function paintPayStateBad() {
+    if (!pcStateBlocked) return;
+    var ls = pcLines(), i, left = 0;
+    for (i = 0; i < ls.length; i++) {
+      var ok = pcStateOkLine(ls[i]);
+      if (!ok) left++;
+      var tags = ls[i].querySelector('.pc-tags');
+      var row = ls[i].querySelector('.pc-done-row');
+      if (tags) tags.classList.toggle('bad', !ok);
+      if (row) row.classList.toggle('bad', !ok);
+    }
+    var bankOk = pcBankStateOk();
+    if (!bankOk) left++;
+    var bank = $('paybankDone');
+    if (bank) bank.classList.toggle('bad', !bankOk);
+    if (!left) {
+      pcStateBlocked = false;
+      if (el.editDialog && !el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
+    }
   }
 
   function setPayNone(kind, on) {
@@ -11662,6 +11719,7 @@
   }
 
   function clearInvalid() {
+    pcStateBlocked = false;
     var bads = el.editDialog.querySelectorAll('.bad');
     for (var i = 0; i < bads.length; i++) bads[i].classList.remove('bad');
   }
@@ -11737,6 +11795,23 @@
       need.push({ label: '페이백(카드결제)', el: $('paycardNoneChips'), inputs: [$('f_paycard')] });
     if (!payNoneOn('paybank') && !moneyFilled($('f_paybank').value))
       need.push({ label: '페이백(입금)', el: $('paybankNoneChips'), inputs: [$('f_paybank')] });
+    // v46 — 금액을 적었으면 상태를 반드시 고른다 (미기입은 그대로 통과)
+    //   카드결제: 금액 있는 줄마다 [1일 결제] 또는 [✓ 카드결제 완료]
+    var pcBadRows = pcStateBadLines();
+    if (pcBadRows.length) {
+      var pcBadEls = [];
+      for (var pi = 0; pi < pcBadRows.length; pi++) {
+        var pcTags = pcBadRows[pi].querySelector('.pc-tags');
+        var pcDoneRow = pcBadRows[pi].querySelector('.pc-done-row');
+        if (pcTags) pcBadEls.push(pcTags);
+        if (pcDoneRow) pcBadEls.push(pcDoneRow);
+      }
+      if (!pcBadEls.length) pcBadEls.push(pcBadRows[0]);
+      need.push({ label: '페이백(카드결제) 상태(1일 결제/완료)', el: pcBadEls[0], inputs: pcBadEls.slice(1) });
+    }
+    //   입금: 금액이 있으면 [1일 입금] 또는 [✓ 입금 완료]
+    if (!pcBankStateOk()) need.push({ label: '페이백(입금) 상태(1일 입금/완료)', el: $('paybankDone') });
+    if (pcBadRows.length || !pcBankStateOk()) pcStateBlocked = true;
     if (!payNoneOn('used') && !ulAnyFilled()) {
       // v43 — 지금 그려진 모든 줄(모델명·금액)을 빨간 테두리로 표시한다
       var ulBad = [], lsU = ulAll();
