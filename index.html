@@ -305,9 +305,12 @@
   .so-rank{margin-right:4px}
   @media (prefers-reduced-motion:reduce){.so-rank::after,.sb-rank::after{animation:none}}
   @media print{.so-rank::after,.sb-rank::after{display:none}}
-  .sum-overview{grid-column:1/-1;display:flex;align-items:center;gap:6px 12px;flex-wrap:wrap;
+  /* v52 — [오늘 개통 11-22 (일)] 총 N건 한 줄, 바로 아래 줄에 이번 달 담당자 칩이 이어진다.
+     이번 달 '총 N건' 은 위 KPI '총 건수' 와 같은 숫자라 줄째로 감췄다(값은 #soMonthTitle·#soMonthTotal 에 유지). */
+  .sum-overview{grid-column:1/-1;display:flex;flex-direction:column;align-items:stretch;gap:5px;
     padding:6px 14px;border-top:1px solid var(--line);background:#FBFCFE}
   .so-part{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}
+  .so-part-month{gap:4px 6px}
   .so-title{flex:none;display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:7px;
     background:var(--blue-50);border:1px solid #DCE9FB;color:var(--blue-800);
     font-size:11.5px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
@@ -318,11 +321,12 @@
   .so-chip{display:inline-flex;align-items:center;gap:4px;padding:1px 8px;border-radius:999px;
     background:#EEF2F8;color:#475569;font-size:11.5px;font-weight:700;white-space:nowrap}
   .so-chips{display:flex;align-items:center;gap:4px;flex-wrap:wrap;min-width:0}
+  /* v52 — 오늘 건이 0건이면 칩 줄 자체가 없다(빈 칸이 자리·간격을 차지하지 않게) */
+  .so-chips:empty{display:none}
   .so-chip b{font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
   .so-chip.zero{background:#F6F8FB;color:#B4BFCE}
   .so-chip.zero b{color:#B4BFCE}
   .so-empty{font-size:11.5px;font-weight:700;color:var(--slate-400)}
-  .so-div{width:1px;align-self:stretch;min-height:14px;background:#E4EBF4;flex:none}
 
   /* v30 — 관리자 전용 직원별 실적 표 (요약 카드 아래) */
   .sum-staff{grid-column:1/-1;min-width:0;border-top:1px solid var(--line);background:#FCFDFF;padding:10px 14px 12px}
@@ -395,9 +399,8 @@
     .sum-net .sum-value i{font-size:10px}
     .sum-cells.sum-net .sum-value b{font-size:16px}
     .sum-net .kpi-paren{font-size:9.5px}
-    .sum-overview{padding:6px 10px;gap:5px 10px}
+    .sum-overview{padding:6px 10px;gap:5px}
     .so-total b{font-size:13px}
-    .so-div{display:none}
     .sum-staff{padding:8px 10px 10px}
     .sb-note{display:none}
     .sb-table{min-width:600px;font-size:11px}
@@ -2555,18 +2558,19 @@
 
     </div>
 
-    <!-- 오늘 · 이번 달 직원별 개통 건수 (리베이트 금액은 표시하지 않음) -->
+    <!-- 오늘 개통 · 이번 달 담당자별 개통 건수 (리베이트 금액은 표시하지 않음)
+         v52 — [오늘 개통 11-22 (일)] 총 N건 한 줄 + 그 아래 이번 달 담당자 칩. 이번 달 '총 N건' 은
+         위 KPI '총 건수' 와 같은 숫자라 화면에서 감춘다(요소는 값 갱신용으로 남겨 둔다). -->
     <div class="sum-overview" id="sumOverview">
-      <div class="so-part">
+      <div class="so-part so-part-today">
         <span class="so-title">오늘 개통 <span class="so-date" id="soTodayDate">—</span></span>
         <span class="so-total">총 <b id="soTodayTotal">0</b>건</span>
-        <div class="so-chips" id="soTodayStaff"></div>
+        <div class="so-chips" id="soTodayStaff" role="group" aria-label="오늘 담당자별 개통 건수"></div>
       </div>
-      <span class="so-div" aria-hidden="true"></span>
-      <div class="so-part">
-        <span class="so-title" id="soMonthTitle">이번 달</span>
-        <span class="so-total">총 <b id="soMonthTotal">0</b>건</span>
-        <div class="so-chips" id="soMonthStaff"></div>
+      <div class="so-part so-part-month">
+        <span class="so-title" id="soMonthTitle" hidden>이번 달</span>
+        <span class="so-total" hidden>총 <b id="soMonthTotal">0</b>건</span>
+        <div class="so-chips" id="soMonthStaff" role="group" aria-label="이번 달 담당자별 개통 건수"></div>
       </div>
     </div>
 
@@ -10502,9 +10506,8 @@
     }
     if (el.soTodayTotal) el.soTodayTotal.textContent = fmtNum(tTotal);
     if (el.soTodayStaff) {
-      el.soTodayStaff.innerHTML = tTotal
-        ? staffChipsHtml(tTally, true)
-        : '<span class="so-empty">아직 기록 없음</span>';
+      // v52 — 0건이면 '아직 기록 없음' 없이 [오늘 개통 …] 총 0건 한 줄로 끝낸다
+      el.soTodayStaff.innerHTML = tTotal ? staffChipsHtml(tTally, true) : '';
     }
 
     // 이번 달(기준 월) — 요약 KPI와 같은 범위
@@ -10520,6 +10523,8 @@
       el.soMonthStaff.innerHTML = monthList.length
         ? staffChipsHtml(mTally, false)
         : '<span class="so-empty">아직 기록 없음</span>';
+      // v52 — 화면에서 '이번 달' 라벨을 감췄으니, 읽어 주는 화면에는 칩 줄의 뜻을 남긴다
+      el.soMonthStaff.setAttribute('aria-label', mLabel + ' 담당자별 개통 건수');
     }
   }
 
@@ -11295,8 +11300,8 @@
     if (searchAll) scopeTag = scopeTag ? scopeTag + ' · 전체 기간 검색' : '전체 기간 검색';
     el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') + rows.length + '건';
     el.resultCount.classList.toggle('is-allsearch', searchAll);
-    // v51 — 기본 화면에서는 맨 위 '이번 달 총 N건'과 겹치는 건수 칩을 숨긴다(필터 줄에 혼자 떨어지는 원인).
-    //        검색·필터를 걸었을 때만 결과 건수를 보여 준다.
+    // v51 — 기본 화면에서는 맨 위 KPI '총 건수' 와 겹치는 건수 칩을 숨긴다(필터 줄에 혼자 떨어지는 원인).
+    //        검색·필터를 걸었을 때만 결과 건수를 보여 준다. (v52 — 스트립의 '이번 달 총 N건' 줄은 없앴다)
     var countNeeded = !!(state.filters.q.trim() || state.filters.type || state.filters.staff ||
       state.filters.due || state.filters.easy || state.filters.missing || !state.filters.month || scopeTag);
     el.resultCount.hidden = !countNeeded;
