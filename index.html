@@ -1078,6 +1078,49 @@
   .dv-owner-note{font-size:11px;font-weight:800;color:#8A5200;white-space:nowrap}
   .dv-acts{display:flex;gap:4px;justify-content:flex-end}
   .dv-acts .dv-btn{height:26px;padding:0 8px;font-size:11.5px}
+  /* v49 — 직원 명부(이름 · 전화번호) · 1회 휴대폰 인증 */
+  .dv-rs-form{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr) auto auto;gap:6px;align-items:center;margin:0 0 8px}
+  .dv-rs-form input{height:34px;min-width:0;border:1px solid var(--line-strong);border-radius:9px;padding:0 10px;font-size:13px;font-weight:700;background:#fff}
+  .dv-rs-form input::placeholder{font-weight:600;color:var(--slate-400)}
+  .dv-rs-form input:focus{outline:none;border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(47,123,229,.16)}
+  .dv-rs-form .btn{height:34px;white-space:nowrap}
+  .dv-rs-msg{font-size:11.5px;font-weight:800;color:#B42318;margin:0 0 8px;line-height:1.55}
+  .dv-rs-msg.ok{color:#0B5F45}
+  .dv-rs-msg[hidden]{display:none}
+  .dv-rs-note{font-size:11px;color:var(--slate-400);margin-top:7px;line-height:1.6}
+  .dv-rs-note b{color:var(--slate-600)}
+  .rs-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) auto auto;gap:8px;align-items:center;padding:7px 12px;border-top:1px solid var(--line)}
+  .rs-row:first-child{border-top:0}
+  .rs-row.head{background:#F6F9FE;font-size:11px;font-weight:800;color:var(--slate-500)}
+  .rs-row .who{font-weight:800;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .rs-row .ph{font-weight:800;color:var(--slate-600);font-variant-numeric:tabular-nums}
+  .rs-row .ph.none{color:var(--slate-400);font-weight:700}
+  .rs-row.editing{background:#F5F9FF}
+  .rs-row .acts{display:flex;gap:4px;justify-content:flex-end}
+  .rs-row .acts .dv-btn{height:25px;padding:0 8px;font-size:11px}
+  @media (max-width:560px){
+    .dv-rs-form{grid-template-columns:minmax(0,1fr) minmax(0,1.1fr)}
+    .dv-rs-form .btn{grid-column:auto}
+    .rs-row{grid-template-columns:minmax(0,1fr) auto;row-gap:2px}
+    .rs-row.head{display:none}
+    .rs-row .who{grid-column:1/2}
+    .rs-row .ph{grid-column:1/2;font-size:11.5px}
+    .rs-row .st{display:none}
+    .rs-row .acts{grid-row:1/3;grid-column:2/3;align-self:center}
+  }
+  /* v49 — 직원 휴대폰 1회 인증 화면 (승인 대기 화면과 같은 모양) */
+  .gate-card .pk-ico{background:var(--blue-50);color:var(--blue-700)}
+  .gate-card .pk-row input{letter-spacing:.02em;font-size:16px;font-variant-numeric:tabular-nums}
+  .gate-card .btn{margin-top:10px}
+  .gate-card .pk-meta{font-size:11.5px;color:var(--slate-400);margin-top:10px}
+  .gate-card .sg-admin{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+  .gate-card .sg-admin summary{font-size:11.5px;font-weight:800;color:var(--slate-500);cursor:pointer;list-style:none}
+  .gate-card .sg-admin summary::-webkit-details-marker{display:none}
+  .gate-card .sg-admin .pk-row{margin-top:6px}
+  .gate-card .sg-admin .pk-row input{height:38px;font-size:14px}
+  .gate-card .sg-admin .btn{margin-top:6px}
+  .gate-card .pk-row input:focus{outline:none;border-color:var(--blue-500);box-shadow:0 0 0 3px rgba(47,123,229,.18)}
+  body.is-gate{overflow:hidden}
   .period-chips.none-chips.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
   .form-error b{font-weight:900}
   .form-error .fe-sub{font-size:11.5px;font-weight:700;color:#8A5200}
@@ -3190,6 +3233,20 @@
   </div>
   <div class="dlg-body">
     <div class="sync-status" id="dvStatus">불러오는 중…</div>
+    <!-- v49 — 등록 직원(이름 · 전화번호) -->
+    <div class="dv-sec" id="dvRosterSec">
+      <h3>👤 등록 직원 (이름 · 전화번호) <span class="cnt" id="dvRosterCount">0</span></h3>
+      <p class="dv-hint">직원이 이 목록의 번호로 <b>한 번만</b> 인증하면 휴대폰을 바꿀 때까지 다시 묻지 않고, 개통 등록의 <b>담당자</b>가 그 이름으로 자동 선택됩니다. 번호는 <b>하이픈 없이</b> 적어도 됩니다.</p>
+      <div class="dv-rs-form">
+        <input id="dvRsName" type="text" autocomplete="off" maxlength="12" placeholder="이름 (예) 김설화" aria-label="직원 이름">
+        <input id="dvRsPhone" type="tel" inputmode="numeric" autocomplete="off" maxlength="13" placeholder="전화번호 01012345678" aria-label="직원 휴대폰 번호">
+        <button type="button" class="btn sm btn-primary" id="dvRsAdd">+ 직원 추가</button>
+        <button type="button" class="btn sm" id="dvRsCancel" hidden>취소</button>
+      </div>
+      <p class="dv-rs-msg" id="dvRsMsg" hidden></p>
+      <div class="dv-list" id="dvRoster"></div>
+      <p class="dv-rs-note" id="dvRsNote">—</p>
+    </div>
     <div class="dv-sec" id="dvPendingSec" hidden>
       <h3>승인 대기 <span class="cnt" id="dvPendingCount">0</span></h3>
       <p class="dv-hint">새 기기에서 앱을 열면 여기에 생깁니다. <b>[승인]</b>을 눌러야 그 기기에서 장부가 보입니다.</p>
@@ -3376,6 +3433,30 @@
   </div>
 </div>
 
+<!-- ===================== v49 — 직원 휴대폰 1회 인증 ===================== -->
+<div class="pending-screen gate-screen" id="staffGateScreen" hidden>
+  <div class="pending-card gate-card">
+    <div class="pk-ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6.5" y="2.6" width="11" height="18.8" rx="2.6"/><path d="M10.6 18.6h2.8"/></svg>
+    </div>
+    <h2>직원 휴대폰 인증이 필요합니다</h2>
+    <p>이 기기를 쓸 <b>직원의 휴대폰 번호</b>를 넣어 주세요.<br>한 번 인증하면 <b>휴대폰을 바꿀 때까지</b> 다시 묻지 않고, 개통 등록의 <b>담당자</b>가 그 이름으로 자동 선택됩니다.</p>
+    <div class="pk-row">
+      <input id="sgPhone" type="tel" inputmode="numeric" autocomplete="off" maxlength="13" placeholder="010-0000-0000" aria-label="직원 휴대폰 번호">
+    </div>
+    <button type="button" class="btn btn-primary" id="sgOk">인증</button>
+    <p class="pk-err" id="sgError" hidden></p>
+    <p class="pk-meta" id="sgMeta"></p>
+    <details class="sg-admin">
+      <summary>사장님이면 PIN 으로 통과</summary>
+      <div class="pk-row">
+        <input id="sgAdminPin" type="password" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="사장님 PIN" aria-label="사장님 PIN">
+      </div>
+      <button type="button" class="btn" id="sgAdminOk">PIN 으로 통과</button>
+    </details>
+  </div>
+</div>
+
 <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,text/csv" style="display:none">
 <input type="file" id="jsonInput" accept=".json,application/json" style="display:none">
 <!-- v26 — 연도·월 1탭 점프 팝업 (기준 월 버튼을 누르면 열린다 · body 에 붙여 카드 넘침에 가리지 않게) -->
@@ -3443,6 +3524,8 @@
 
   // 매장 직원 — 담당자 빠른 선택용 (다른 이름도 직접 입력 가능)
   var STAFF_LIST = ['김태양', '김설화', '이건엽', '권영한', '전국현'];
+  // 사장님 이름 — v49 직원 인증 면제(사장님 기기)·서버의 추방 불가와 같은 목록 (Code.gs OWNER_NAMES)
+  var OWNER_NAMES = ['김태양'];
 
   /* v40 — '전체 유형' 상자에 넣는 인터넷·TV(유선) 전체 보기 값 (option value) */
   var WIRED_ALL_KEY = '__wired_all__';
@@ -3462,6 +3545,15 @@
   var DEVICE_KEY = 'kt_chilgeum_device_v1';
   // 차단(추방) 당한 기기임을 기억하는 표시 — 새로고침해도 잠금 화면을 유지
   var BLOCK_KEY = 'kt_chilgeum_blocked_v1';
+  /* v49 — 직원 명부(이름 · 전화번호)와 1회 휴대폰 인증
+     · STAFF_ROSTER_KEY : 명부(사장님이 관리) — 시트 전체_통합의 설정 줄과도 동기화된다
+     · STAFF_AUTH_KEY   : 이 기기가 1회 인증한 결과 — 휴대폰을 바꿀 때까지 남는다
+     · OWNER_DEVICE_KEY : 사장님이 자기 기기에서 관리자 PIN 을 넣었다는 표시(인증 면제) */
+  var STAFF_ROSTER_KEY = 'kt_chilgeum_staff_roster_v1';
+  var STAFF_AUTH_KEY   = 'kt_chilgeum_staff_auth_v1';
+  var OWNER_DEVICE_KEY = 'kt_chilgeum_owner_device_v1';
+  var STAFF_CFG_ID     = 'cfg_staff_roster_v1';
+  var STAFF_CFG_MARK   = '[직원명부]';
 
   // 엑셀/CSV 헤더 순서 — 리베이트는 무선/유선 두 칸으로 나뉜다
   var HEADERS = ['개통일','고객명','연락처','생년월일','개통유형','기종','단말보험','요금제','변경요금제','요금제변경일자','부가서비스','부가서비스유지','부가서비스해지일자','중고폰','중고폰금액','무선리베이트','유선리베이트','메모'];
@@ -5663,6 +5755,7 @@
     if (!box) return;
     box.hidden = !on;
     document.body.classList.toggle('is-blocked', !!on);
+    if (on) showStaffGate(false);   // v49 — 잠금 화면이 뜨면 직원 인증 화면은 내린다
     if (!on) return;
     var meta = $('lockMeta');
     if (!meta) return;
@@ -5735,6 +5828,7 @@
     if (!box) return;
     box.hidden = !on;
     document.body.classList.toggle('is-pending', !!on);
+    if (on) showStaffGate(false);   // v49 — 승인 대기 화면이 뜨면 직원 인증 화면은 내린다
     if (!on) return;
     var meta = $('pendMeta');
     if (!meta) return;
@@ -5800,6 +5894,7 @@
     }).then(function (data) {
       if (data && data.ok === true) {
         clearPending();
+        if (data.owner === 'Y' || data.deviceId === info.deviceId) markOwnerDevice();   // v49 — 사장님 PIN 으로 승인한 기기
         if (data.owner === 'Y') toast('👑 사장님 기기로 승인했습니다. 장부를 엽니다.');
         else toast('승인했습니다. 장부를 엽니다.');
         setTimeout(function () { location.reload(); }, 300);
@@ -5811,6 +5906,458 @@
       var msg = String((err && err.message) || '승인하지 못했습니다.');
       if (msg === 'cannot_kick_owner') msg = '사장님 기기는 추방할 수 없습니다.';
       if (errBox) { errBox.textContent = msg; errBox.hidden = false; }
+    });
+  }
+
+  /* =========================================================
+     v49 — 직원 명부(이름 · 전화번호) · 1회 휴대폰 인증
+     ---------------------------------------------------------
+     · 사장님이 `더보기 → 직원 · 기기 관리` 에서 이름과 번호를 등록한다
+     · 번호는 어느 칸에 넣든 숫자만 뽑아(01012345678 · 010 1234 5678 · 010-1234-5678)
+       `010-1234-5678` 로 맞춰 저장·표시한다
+     · 직원 기기는 기기 승인 뒤 본인 번호를 1회 넣으면, 휴대폰을 바꾸거나
+       사장님이 지울 때까지 다시 묻지 않고 담당자가 자동으로 그 이름이 된다
+     · 명부는 시트(전체_통합)의 설정 줄(id = cfg_staff_roster_v1 · 메모 [직원명부]…)로 공유되어
+       Code.gs 를 고치지 않고 기존 /exec 로 모든 기기에 내려간다
+     ========================================================= */
+  var roster = { staff: [], updatedAt: '', dirty: false };
+  var rsEditName = '';   // 명부 수정 중인 직원 이름 ('' = 새로 추가)
+
+  function phoneDigits(v) { return String(v == null ? '' : v).replace(/[^0-9]/g, ''); }
+
+  /* 어느 모양으로 넣어도 010-0000-0000 으로 (휴대폰 11자리 기준 · 그 밖은 기존 규칙) */
+  function fmtPhone(v) {
+    var d = phoneDigits(v);
+    if (!d) return '';
+    if (d.length === 11) return d.slice(0, 3) + '-' + d.slice(3, 7) + '-' + d.slice(7);
+    if (d.length === 10 && d.slice(0, 2) !== '02') return d.slice(0, 3) + '-' + d.slice(3, 6) + '-' + d.slice(6);
+    return formatPhone(v);
+  }
+
+  function defaultRosterStaff() {
+    var out = [];
+    for (var i = 0; i < STAFF_LIST.length; i++) out.push({ name: STAFF_LIST[i], phone: '' });
+    return out;
+  }
+
+  function loadRoster() {
+    try {
+      var d = JSON.parse(localStorage.getItem(STAFF_ROSTER_KEY) || 'null');
+      if (d && Array.isArray(d.staff)) {
+        var list = [];
+        for (var i = 0; i < d.staff.length; i++) {
+          var s = d.staff[i] || {};
+          var name = String(s.name || '').trim();
+          if (!name) continue;
+          list.push({ name: name, phone: fmtPhone(s.phone || '') });
+        }
+        roster.staff = list;
+        roster.updatedAt = String(d.updatedAt || '');
+        roster.dirty = !!d.dirty;
+        return;
+      }
+    } catch (e) {}
+    roster.staff = defaultRosterStaff();
+    roster.updatedAt = '';
+    roster.dirty = false;
+  }
+
+  function saveRosterLocal() {
+    try {
+      localStorage.setItem(STAFF_ROSTER_KEY, JSON.stringify({
+        staff: roster.staff, updatedAt: roster.updatedAt, dirty: !!roster.dirty
+      }));
+    } catch (e) {}
+  }
+
+  function rosterPhones() {
+    var out = [];
+    for (var i = 0; i < roster.staff.length; i++) {
+      if (roster.staff[i].phone && phoneDigits(roster.staff[i].phone).length >= 10) out.push(roster.staff[i]);
+    }
+    return out;
+  }
+
+  /* 담당자 칩·집계 순서 — 명부 이름 먼저, 예전 명단은 뒤에 */
+  function staffNames() {
+    var out = [], i;
+    for (i = 0; i < roster.staff.length; i++) {
+      var n = String(roster.staff[i].name || '').trim();
+      if (n && out.indexOf(n) < 0) out.push(n);
+    }
+    // 명부를 통째로 비웠을 때만 예전 명단으로 돌아간다
+    return out.length ? out : STAFF_LIST.slice();
+  }
+
+  function findStaffByName(name) {
+    var n = String(name == null ? '' : name).trim();
+    if (!n) return null;
+    for (var i = 0; i < roster.staff.length; i++) if (roster.staff[i].name === n) return roster.staff[i];
+    return null;
+  }
+
+  function findStaffByPhone(v) {
+    var d = phoneDigits(v);
+    if (!d) return null;
+    for (var i = 0; i < roster.staff.length; i++) {
+      var p = roster.staff[i].phone;
+      if (p && phoneDigits(p) === d) return roster.staff[i];
+    }
+    return null;
+  }
+
+  /* ---------------- 이 기기의 1회 인증 ---------------- */
+  function staffAuth() {
+    try {
+      var a = JSON.parse(localStorage.getItem(STAFF_AUTH_KEY) || 'null');
+      if (a && a.phone) return a;
+    } catch (e) {}
+    return null;
+  }
+
+  function saveStaffAuth(a) {
+    try { localStorage.setItem(STAFF_AUTH_KEY, JSON.stringify(a || {})); } catch (e) {}
+  }
+
+  function clearStaffAuth() {
+    try { localStorage.removeItem(STAFF_AUTH_KEY); } catch (e) {}
+  }
+
+  function ownerDeviceStored() {
+    try { return !!localStorage.getItem(OWNER_DEVICE_KEY); } catch (e) { return false; }
+  }
+
+  function markOwnerDevice() {
+    try { localStorage.setItem(OWNER_DEVICE_KEY, '1'); } catch (e) {}
+  }
+
+  /* 사장님 기기인가 — 관리자 모드이거나, 관리자 PIN 을 넣은 적이 있거나, 이름이 사장님이면 인증을 묻지 않는다 */
+  function isOwnerDevice() {
+    if (isAdmin()) return true;
+    if (ownerDeviceStored()) return true;
+    var a = staffAuth();
+    if (a && OWNER_NAMES.indexOf(String(a.name || '').trim()) >= 0) return true;
+    return OWNER_NAMES.indexOf(String(sync.name || '').trim()) >= 0;
+  }
+
+  /* 명부가 바뀌었을 때 이 기기의 인증을 다시 맞춘다 — 번호가 빠졌으면 다시 인증받게 한다 */
+  function revalidateStaffAuth() {
+    var a = staffAuth();
+    if (!a) return;
+    var hit = findStaffByPhone(a.phone);
+    if (!hit) {
+      clearStaffAuth();
+      if (a.name && String(sync.name || '') === String(a.name)) { sync.name = ''; saveSync(); }
+      return;
+    }
+    if (String(a.name || '') !== hit.name || String(a.phone || '') !== fmtPhone(hit.phone)) {
+      a.name = hit.name;
+      a.phone = fmtPhone(hit.phone);
+      saveStaffAuth(a);
+    }
+    if (!String(sync.name || '').trim()) { sync.name = hit.name; saveSync(); }
+  }
+
+  function staffGateNeeded() {
+    if (!syncOn()) return false;
+    if (pendingStored() || blockedStored()) return false;
+    if (isOwnerDevice()) return false;
+    if (!rosterPhones().length) return false;      // 등록된 번호가 없으면 기기 승인만으로 통과
+    var a = staffAuth();
+    if (a && findStaffByPhone(a.phone)) return false;   // 이미 1회 인증함 — 다시 묻지 않는다
+    return true;
+  }
+
+  function showStaffGate(on) {
+    var box = $('staffGateScreen');
+    if (!box) return;
+    box.hidden = !on;
+    document.body.classList.toggle('is-gate', !!on);
+    if (!on) return;
+    var err = $('sgError');
+    if (err) { err.hidden = true; err.textContent = ''; }
+    var meta = $('sgMeta');
+    if (meta) {
+      var dev = '';
+      try { dev = deviceInfo().device || ''; } catch (e) { dev = ''; }
+      meta.textContent = '등록된 직원 번호 ' + rosterPhones().length + '개 · 이 기기 ' + (dev || '기기');
+    }
+    var ph = $('sgPhone');
+    if (ph && !ph.value) setTimeout(function () { try { ph.focus(); } catch (e) {} }, 40);
+  }
+
+  function maybeStaffGate() { showStaffGate(staffGateNeeded()); }
+
+  /* 직원이 자기 번호를 1회 인증 — 명부의 번호와 맞으면 영구 저장하고 담당자를 그 이름으로 고정 */
+  function submitStaffGate() {
+    var errBox = $('sgError');
+    if (errBox) { errBox.hidden = true; errBox.textContent = ''; }
+    var hit = findStaffByPhone(($('sgPhone') || {}).value || '');
+    if (!hit) {
+      if (errBox) { errBox.textContent = '등록된 직원 번호가 아닙니다. 사장님께 번호 등록을 확인해 주세요.'; errBox.hidden = false; }
+      return;
+    }
+    var info = deviceInfo();
+    saveStaffAuth({ name: hit.name, phone: fmtPhone(hit.phone), at: new Date().toISOString(), deviceId: info.deviceId });
+    sync.name = hit.name;
+    saveSync();
+    if ($('sgPhone')) $('sgPhone').value = '';
+    showStaffGate(false);
+    showPending(false);
+    toast('✅ ' + hit.name + ' 님으로 인증했습니다. 담당자가 자동으로 선택됩니다.');
+    if (el.staffChips) renderStaffChips(el.staffChips, $('f_staff'));
+    if ($('f_staff') && !$('f_staff').value) { $('f_staff').value = hit.name; markStaffChips(el.staffChips, hit.name); }
+    if (syncOn()) setTimeout(function () { runSync({ quiet: true, quietFail: true }); }, 250);
+  }
+
+  /* 사장님이 자기 기기에서 PIN 으로 통과 (그 기기는 이후 인증을 묻지 않는다) */
+  function staffGateAdminPass() {
+    var errBox = $('sgError');
+    if (errBox) { errBox.hidden = true; errBox.textContent = ''; }
+    var pin = String(($('sgAdminPin') || {}).value || '').trim();
+    if (!checkAdminPin(pin)) {
+      if (errBox) { errBox.textContent = '사장님 PIN 이 맞지 않습니다.'; errBox.hidden = false; }
+      return;
+    }
+    markOwnerDevice();
+    if ($('sgAdminPin')) $('sgAdminPin').value = '';
+    showStaffGate(false);
+    toast('👑 사장님 기기로 통과했습니다. 이 기기에서는 인증을 묻지 않습니다.');
+  }
+
+  /* ---------------- 명부를 시트(전체_통합)와 주고받기 ----------------
+     · 기존 /exec 의 upsert 로 설정 줄 한 줄을 쓴다 → Code.gs 수정·재배포 없이 모든 기기에 공유
+     · 앱은 이 줄을 장부 기록으로 세지 않고 명부로만 읽는다 (id·메모 표기로 구분) */
+  function rosterRecord() {
+    var rec = {}, i;
+    for (i = 0; i < HEADERS.length; i++) rec[HEADERS[i]] = '';
+    var staff = [];
+    for (i = 0; i < roster.staff.length; i++) {
+      var s = roster.staff[i];
+      var name = String(s.name || '').trim();
+      if (!name) continue;
+      staff.push({ n: name, p: fmtPhone(s.phone) });
+    }
+    rec.id = STAFF_CFG_ID;
+    rec.고객명 = '⚙️ 직원명부';
+    rec.메모 = STAFF_CFG_MARK + JSON.stringify({ v: 1, staff: staff, updatedAt: roster.updatedAt || '' });
+    rec.담당자 = '';   // 담당자 칸이 비어 있어야 직원별 보기 탭·집계에 끼지 않는다
+    rec.수정일시 = roster.updatedAt || new Date().toISOString();
+    return rec;
+  }
+
+  /* 시트 한 줄이 명부 설정 줄이면 {staff, updatedAt}, 아니면 null */
+  function parseRosterRow(row) {
+    if (!row) return null;
+    var memo = String(row.메모 == null ? '' : row.메모);
+    var at = memo.indexOf(STAFF_CFG_MARK);
+    if (at < 0) return null;
+    if (String(row.id || '').trim() !== STAFF_CFG_ID && String(row.고객명 || '').indexOf('직원명부') < 0) return null;
+    var d = null;
+    try { d = JSON.parse(memo.slice(at + STAFF_CFG_MARK.length)); } catch (e) { d = null; }
+    if (!d || !Array.isArray(d.staff)) return null;
+    var staff = [];
+    for (var i = 0; i < d.staff.length; i++) {
+      var it = d.staff[i] || {};
+      var name = String(it.n || it.name || '').trim();
+      if (!name) continue;
+      staff.push({ name: name, phone: fmtPhone(it.p || it.phone || '') });
+    }
+    return { staff: staff, updatedAt: String(row.수정일시 || d.updatedAt || '') };
+  }
+
+  /* 서버 명부를 받아들인다 — 이 기기에 아직 못 올린 수정이 더 최신이면 그대로 둔다 */
+  function adoptRoster(cfg) {
+    if (!cfg) return false;
+    if (roster.dirty && String(roster.updatedAt || '') > String(cfg.updatedAt || '')) return false;
+    if (String(roster.updatedAt || '') === String(cfg.updatedAt || '')) return false;   // 같은 판이면 그대로
+    roster.staff = cfg.staff;
+    roster.updatedAt = cfg.updatedAt || roster.updatedAt;
+    roster.dirty = false;
+    saveRosterLocal();
+    afterRosterChange();
+    return true;
+  }
+
+  function afterRosterChange() {
+    revalidateStaffAuth();
+    renderRoster();
+    if (isAdmin() && el && el.staffChips) renderStaffChips(el.staffChips, $('f_staff'));
+    maybeStaffGate();
+  }
+
+  function pushRoster() {
+    if (!syncOn()) { roster.dirty = true; saveRosterLocal(); renderRoster(); return Promise.resolve(false); }
+    var info = deviceInfo();
+    return fetchJson(sync.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        pin: sync.pin, action: 'upsert', record: rosterRecord(),
+        deviceId: info.deviceId, device: info.device, name: info.name, ua: info.ua
+      }),
+      redirect: 'follow'
+    }).then(function (data) {
+      if (data && data.blocked) { onBlocked(data); throw blockedError(); }
+      if (data && data.pending && data.error === 'device_pending') { onPending(data); throw pendingError(); }
+      if (!data || data.ok !== true) {
+        throw new Error((data && (data.message || data.error)) || '직원 명부를 올리지 못했습니다.');
+      }
+      roster.dirty = false;
+      saveRosterLocal();
+      renderRoster();
+      return true;
+    });
+  }
+
+  /* ---------------- 명부 화면 (관리자) ---------------- */
+  function rosterMsg(text, ok) {
+    var b = $('dvRsMsg');
+    if (!b) return;
+    if (!text) { b.hidden = true; b.textContent = ''; b.classList.remove('ok'); return; }
+    b.textContent = text;
+    b.classList.toggle('ok', !!ok);
+    b.hidden = false;
+  }
+
+  function renderRoster() {
+    var box = $('dvRoster'), cnt = $('dvRosterCount'), note = $('dvRsNote');
+    var list = roster.staff.slice();
+    if (cnt) cnt.textContent = String(list.length);
+    if (box) {
+      if (!list.length) {
+        box.innerHTML = '<p class="dv-empty">등록된 직원이 없습니다. 위에 이름과 전화번호를 넣고 <b>[+ 직원 추가]</b>를 눌러 주세요.</p>';
+      } else {
+        var html = '<div class="rs-row head"><span>이름</span><span>전화번호</span><span>인증</span><span></span></div>';
+        for (var i = 0; i < list.length; i++) {
+          var s = list[i];
+          var on = !!(s.phone && phoneDigits(s.phone).length >= 10);
+          html += '<div class="rs-row' + (rsEditName && rsEditName === s.name ? ' editing' : '') + '" data-rs-row="' + esc(s.name) + '">' +
+            '<span class="who">' + esc(s.name) + '</span>' +
+            '<span class="ph' + (on ? '' : ' none') + '">' + (on ? esc(fmtPhone(s.phone)) : '번호 미등록') + '</span>' +
+            '<span class="st">' + (on ? '<span class="dv-badge on">인증 가능</span>' : '<span class="dv-badge pend">번호 미등록</span>') + '</span>' +
+            '<span class="acts">' +
+              '<button type="button" class="dv-btn" data-rs-act="edit" data-rs-name="' + esc(s.name) + '">수정</button>' +
+              '<button type="button" class="dv-btn bad" data-rs-act="del" data-rs-name="' + esc(s.name) + '">삭제</button>' +
+            '</span></div>';
+        }
+        box.innerHTML = html;
+      }
+    }
+    if (note) {
+      var n = rosterPhones().length;
+      var msg = n
+        ? '번호가 등록된 직원 <b>' + n + '명</b> — 그 번호로 인증한 기기는 다시 묻지 않습니다.'
+        : '등록된 번호가 아직 없어 인증을 묻지 않습니다 (기기 승인만으로 입장).';
+      if (!syncOn()) msg += '<br>공용 장부 연동이 꺼져 있어 <b>이 기기에만</b> 저장됩니다.';
+      else if (roster.dirty) msg += '<br><b>시트에 아직 못 올렸습니다</b> — 연결되면 자동으로 올라갑니다.';
+      else if (roster.updatedAt) msg += '<br>시트에 저장됨 · ' + esc(String(roster.updatedAt).slice(0, 16).replace('T', ' '));
+      note.innerHTML = msg;
+    }
+    // v49 — 명부가 바뀌면 아래 「직원 이름」(추방 목록)도 같은 기준으로 다시 그린다
+    if (el && el.devicesDialog && el.devicesDialog.open && el.dvStaff) renderDevices();
+  }
+
+  function setRsEdit(name) {
+    rsEditName = String(name || '').trim();
+    var s = rsEditName ? findStaffByName(rsEditName) : null;
+    var nEl = $('dvRsName'), pEl = $('dvRsPhone');
+    if (nEl) nEl.value = s ? s.name : '';
+    if (pEl) pEl.value = s ? fmtPhone(s.phone) : '';
+    if ($('dvRsAdd')) $('dvRsAdd').textContent = rsEditName ? '저장' : '+ 직원 추가';
+    if ($('dvRsCancel')) $('dvRsCancel').hidden = !rsEditName;
+    rosterMsg('');
+    renderRoster();
+  }
+
+  function saveRosterEntry() {
+    var nameEl = $('dvRsName'), phEl = $('dvRsPhone');
+    var name = String((nameEl || {}).value || '').replace(/\s+/g, ' ').trim();
+    var rawPhone = String((phEl || {}).value || '');
+    var d = phoneDigits(rawPhone);
+    var phone = fmtPhone(rawPhone);
+    rosterMsg('');
+    if (!name) { rosterMsg('이름을 넣어 주세요.'); if (nameEl) nameEl.focus(); return; }
+    if (name.length < 2) { rosterMsg('이름을 두 글자 이상 넣어 주세요.'); if (nameEl) nameEl.focus(); return; }
+    if (d) {
+      if (d.indexOf('010') === 0 && d.length !== 11) {
+        rosterMsg('휴대폰 번호는 010-0000-0000 11자리로 넣어 주세요.'); if (phEl) phEl.focus(); return;
+      }
+      if (d.length < 10 || d.length > 11) {
+        rosterMsg('전화번호를 확인해 주세요 (010-0000-0000 11자리).'); if (phEl) phEl.focus(); return;
+      }
+      var dupPhone = findStaffByPhone(d);
+      if (dupPhone && dupPhone.name !== rsEditName) {
+        rosterMsg('이 번호는 이미 “' + dupPhone.name + '” 님 번호로 등록되어 있습니다.'); return;
+      }
+    }
+    var dupName = findStaffByName(name);
+    /* v49 — 프리셋으로 이름만 있던 직원은 [추가]에 번호를 넣으면 그 줄을 채운다
+       (이미 번호까지 있는 이름은 [수정]으로만 바꿀 수 있다) */
+    var fillPreset = (!rsEditName && dupName && !String(dupName.phone || '').trim()) ? dupName : null;
+    if (dupName && dupName.name !== rsEditName && !fillPreset) {
+      rosterMsg('“' + name + '” 은(는) 이미 등록된 이름입니다. 그 줄의 [수정]을 눌러 주세요.'); return;
+    }
+    var before = rsEditName;   // '' 이면 새로 추가(프리셋 채우기 포함)
+    if (before) {
+      var s = findStaffByName(before);
+      if (!s) { setRsEdit(''); rosterMsg('수정할 직원을 찾지 못했습니다. 다시 시도해 주세요.'); return; }
+      s.name = name;
+      s.phone = phone;
+      // 이 기기가 그 직원으로 인증한 상태면 인증 이름도 함께 바꾼다
+      var a = staffAuth();
+      if (a && String(a.name || '') === before) {
+        a.name = name; a.phone = phone; saveStaffAuth(a);
+        if (String(sync.name || '') === before) { sync.name = name; saveSync(); }
+      }
+    } else if (fillPreset) {
+      fillPreset.name = name;
+      fillPreset.phone = phone;
+    } else {
+      roster.staff.push({ name: name, phone: phone });
+    }
+    roster.updatedAt = new Date().toISOString();
+    roster.dirty = true;
+    saveRosterLocal();
+    setRsEdit('');
+    revalidateStaffAuth();
+    renderRoster();
+    if (isAdmin() && el && el.staffChips) renderStaffChips(el.staffChips, $('f_staff'));
+    maybeStaffGate();
+    var label = '“' + name + '” ' + (phone ? fmtPhone(phone) : '번호 미등록');
+    rosterMsg(label + ' 저장했습니다.' + (syncOn() ? '' : ' (이 기기에만)'), true);
+    pushRoster().then(function (ok) {
+      renderRoster();
+      rosterMsg(label + (ok ? ' · 시트에 올렸습니다.' : ' 저장 — 연동이 꺼져 있어 이 기기에만 남습니다.'), true);
+    }).catch(function (err) {
+      renderRoster();
+      rosterMsg(label + ' 이 기기에는 저장했지만 시트에 못 올렸습니다 · ' + String((err && err.message) || err));
+    });
+  }
+
+  function deleteRosterEntry(name) {
+    var s = findStaffByName(name);
+    if (!s) return;
+    askConfirm('직원 삭제',
+      '“' + esc(s.name) + '” 님을 명부에서 지울까요?' +
+      (s.phone ? '<br>등록 번호 <b>' + esc(fmtPhone(s.phone)) + '</b>' : '') +
+      '<br>이 번호로 인증한 기기는 다음 접속 때 <b>다시 인증</b>을 받게 됩니다.',
+      '삭제', true).then(function (ok) {
+      if (!ok) return;
+      roster.staff = roster.staff.filter(function (x) { return x.name !== s.name; });
+      roster.updatedAt = new Date().toISOString();
+      roster.dirty = true;
+      saveRosterLocal();
+      if (rsEditName === s.name) setRsEdit('');
+      revalidateStaffAuth();
+      renderRoster();
+      if (isAdmin() && el && el.staffChips) renderStaffChips(el.staffChips, $('f_staff'));
+      maybeStaffGate();
+      rosterMsg('“' + s.name + '” 님을 명부에서 지웠습니다.', true);
+      pushRoster().then(function () { renderRoster(); }).catch(function (err) {
+        renderRoster();
+        rosterMsg('이 기기에서는 지웠지만 시트에 못 올렸습니다 · ' + String((err && err.message) || err));
+      });
     });
   }
 
@@ -5912,7 +6459,15 @@
         if (data && data.pending && data.error === 'device_pending') { onPending(data); throw pendingError(); }
         if (!data || data.ok !== true) throw new Error((data && data.error) || '공용 장부 응답 오류');
         var rows = Array.isArray(data.records) ? data.records : [];
-        return rows.map(normalizeRecord);
+        /* v49 — 시트의 직원 명부 설정 줄은 장부 기록이 아니라 명부로만 받아 낸다 */
+        var cfg = null, keep = [];
+        for (var i = 0; i < rows.length; i++) {
+          var cfgRow = parseRosterRow(rows[i]);
+          if (cfgRow) { if (!cfg) cfg = cfgRow; continue; }
+          keep.push(rows[i]);
+        }
+        if (cfg) adoptRoster(cfg);
+        return keep.map(normalizeRecord);
       });
   }
 
@@ -6072,10 +6627,14 @@
     syncing = true;
     renderSyncUi();
     var pushErr = null;
+    /* v49 — 사장님 기기에만 있고 시트에 못 올린 직원 명부가 있으면(편집 때 연결이 끊겼던 경우) 먼저 올린다 */
+    var rosterPush = (roster.dirty && (isAdmin() || ownerDeviceStored()))
+      ? pushRoster().catch(function () { return false; })
+      : Promise.resolve(true);
     /* v39 — 대기열 올리기가 실패해도(차단·승인 대기는 예외) 서버 목록은 반드시 받아 온다.
        · 전에는 첫 실패에서 catch 로 빠져 pullList() 가 아예 돌지 않았고,
          시트에서 지운 기록(0건)이 이 기기에 유령처럼 계속 남았다. */
-    return flushPending()
+    return rosterPush.then(function () { return flushPending(); })
       .catch(function (err) {
         if (err && (err.blocked || err.pending)) throw err;   // 차단·기기 승인 대기는 그대로 화면 전환
         pushErr = err;
@@ -6219,8 +6778,9 @@
   function renderStaffChips(box, input) {
     if (!box || !input) return;
     var html = '';
-    for (var i = 0; i < STAFF_LIST.length; i++) {
-      var n = STAFF_LIST[i];
+    var names = staffNames();   // v49 — 명부(등록 직원) 이름 먼저, 예전 명단은 뒤에
+    for (var i = 0; i < names.length; i++) {
+      var n = names[i];
       html += '<button type="button" class="staff-chip" data-staff="' + esc(n) + '">' + esc(n) + '</button>';
     }
     box.innerHTML = html;
@@ -6230,7 +6790,11 @@
       input.value = b.getAttribute('data-staff');
       markStaffChips(box, input.value);
     };
-    input.addEventListener('input', function () { markStaffChips(box, input.value); });
+    // v49 — 명부가 바뀌어 다시 그릴 때마다 리스너가 쌓이지 않게 한 번만 건다
+    if (!input.__staffChipBound) {
+      input.__staffChipBound = true;
+      input.addEventListener('input', function () { markStaffChips(box, input.value); });
+    }
     markStaffChips(box, input.value);
   }
 
@@ -8717,6 +9281,7 @@
     if (!isAdmin()) { openAdminDialog(); return; }
     if (el.dvDevices) el.dvDevices.innerHTML = '';
     el.dvStaff.innerHTML = '';
+    setRsEdit('');   // v49 — 직원 명부 입력칸·목록을 새로 그린다
     if ($('dvPending')) $('dvPending').innerHTML = '';
     if ($('dvPendingSec')) $('dvPendingSec').hidden = true;
     if ($('dvPendingCount')) $('dvPendingCount').textContent = '0';
@@ -8825,10 +9390,15 @@
       : '<p class="dv-empty">아직 기록된 기기가 없습니다. 직원이 앱을 한 번 열면 자동으로 표시됩니다.</p>';
     el.dvDevCount.textContent = String(devs.length);
 
-    var names = dvState.staff.slice();
+    // v49 — 등록 직원 명부가 기준. 지운 직원은 기기·차단 기록에 남아 있을 때만 보인다
+    var names = staffNames();
     for (i = 0; i < dvState.devices.length; i++) {
       var n = String(dvState.devices[i].name || '').trim();
       if (n && names.indexOf(n) < 0) names.push(n);
+    }
+    for (var bi = 0; bi < (dvState.blocks.staff || []).length; bi++) {
+      var bn = String((dvState.blocks.staff[bi] || {}).value || '').trim();
+      if (bn && names.indexOf(bn) < 0) names.push(bn);
     }
     html = '<div class="dv-row head"><span>이름</span><span>현재 사용 기기</span><span></span><span>상태</span><span></span></div>';
     for (i = 0; i < names.length; i++) {
@@ -9574,8 +10144,7 @@
   function renderSlipStaff() {
     var box = $('slipStaff');
     if (!box) return;
-    var names = [], i, n;
-    for (i = 0; i < STAFF_LIST.length; i++) names.push(STAFF_LIST[i]);
+    var names = staffNames(), i, n;   // v49 — 등록 직원 명부 순서
     var base = slipBaseRecords();
     for (i = 0; i < base.length; i++) {
       n = String(base[i].담당자 == null ? '' : base[i].담당자).replace(/\s+/g, ' ').trim();
@@ -9752,9 +10321,9 @@
     return { map: map, names: staffOrder(seen) };
   }
 
-  // 직원 순서 = 매장 명단(STAFF_LIST) 순서 → 장부에만 있는 이름은 뒤에
+  // 직원 순서 = 매장 명부(등록 직원) 순서 → 장부에만 있는 이름은 뒤에
   function staffOrder(seen) {
-    var out = STAFF_LIST.slice(), i;
+    var out = staffNames(), i;   // v49 — 등록 직원 명부 순서
     for (i = 0; i < seen.length; i++) {
       if (out.indexOf(seen[i]) < 0) out.push(seen[i]);
     }
@@ -10072,7 +10641,8 @@
       }
       return map[n];
     }
-    for (var s = 0; s < STAFF_LIST.length; s++) slot(STAFF_LIST[s]);
+    var staffBase = staffNames();   // v49 — 등록 직원 명부 순서
+    for (var s = 0; s < staffBase.length; s++) slot(staffBase[s]);
     var i, j;
     for (i = 0; i < list.length; i++) {
       var r = list[i];
@@ -10099,10 +10669,10 @@
       o.pw += ps.w;
       o.pl += ps.l;
     }
-    // 매장 명단(STAFF_LIST) 순서는 그대로, 나머지는 총 리베이트 큰 순으로 뒤에 붙인다
+    // 매장 명부 순서는 그대로, 나머지는 총 리베이트 큰 순으로 뒤에 붙인다
     var fixed = [], extra = [];
     for (i = 0; i < order.length; i++) {
-      if (STAFF_LIST.indexOf(order[i]) >= 0) fixed.push(map[order[i]]);
+      if (staffBase.indexOf(order[i]) >= 0) fixed.push(map[order[i]]);
       else extra.push(map[order[i]]);
     }
     extra.sort(function (a, b) { return b.rebate - a.rebate || b.n - a.n; });
@@ -10907,9 +11477,10 @@
       r = state.records[i];
       if (r.담당자) seen[r.담당자] = true;
     }
-    var list = STAFF_LIST.filter(function (name) { return seen[name]; });
+    var base = staffNames();   // v49 — 등록 직원 명부 순서
+    var list = base.filter(function (name) { return seen[name]; });
     var extra = [];
-    for (n in seen) if (seen.hasOwnProperty(n) && STAFF_LIST.indexOf(n) < 0) extra.push(n);
+    for (n in seen) if (seen.hasOwnProperty(n) && base.indexOf(n) < 0) extra.push(n);
     extra.sort();
     list = list.concat(extra);
     if (state.filters.staff && list.indexOf(state.filters.staff) < 0) state.filters.staff = '';
@@ -11050,6 +11621,8 @@
     state.role = 'admin';
     state.adminPin = pin;
     try { sessionStorage.setItem(ADMIN_PIN_KEY, pin); } catch (e) {}
+    markOwnerDevice();   // v49 — 관리자 PIN 을 넣은 기기는 사장님 기기로 보고 직원 인증을 면제한다
+    showStaffGate(false);
     saveRole();
     el.adminDialog.close();
     applyRole();
@@ -11818,7 +12391,9 @@
     setPayNone('used', !!rec && !(String(r.중고폰 || '').trim() || Number(r.중고폰금액) > 0));
     paintPayNone();
     $('f_memo').value = r.메모 || '';
-    $('f_staff').value = r.담당자 || (rec ? '' : (sync.name || ''));
+    // v49 — 인증한 직원은 담당자가 그 이름으로 자동 선택된다 (수정할 때는 저장값 그대로)
+    var authName = (staffAuth() || {}).name || '';
+    $('f_staff').value = r.담당자 || (rec ? '' : (authName || sync.name || ''));
     markStaffChips(el.staffChips, $('f_staff').value);
 
     clearInvalid();
@@ -12925,7 +13500,30 @@
       if (el.dvClose) el.dvClose.addEventListener('click', function () { el.devicesDialog.close(); });
       if (el.dvDone) el.dvDone.addEventListener('click', function () { el.devicesDialog.close(); });
       if (el.dvRefresh) el.dvRefresh.addEventListener('click', function () { loadDevices(); });
+      // v49 — 직원 명부 입력·수정·삭제
+      if ($('dvRsAdd')) $('dvRsAdd').addEventListener('click', saveRosterEntry);
+      if ($('dvRsCancel')) $('dvRsCancel').addEventListener('click', function () { setRsEdit(''); });
+      if ($('dvRsPhone')) {
+        $('dvRsPhone').addEventListener('input', function (e) {
+          var el2 = e.target || {};
+          el2.value = formatPhoneInput(el2.value || '');
+        });
+        $('dvRsPhone').addEventListener('keydown', function (e) {
+          if (e.key === 'Enter') { e.preventDefault(); saveRosterEntry(); }
+        });
+      }
+      if ($('dvRsName')) $('dvRsName').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); if ($('dvRsPhone')) $('dvRsPhone').focus(); }
+      });
       el.devicesDialog.addEventListener('click', function (e) {
+        var rb = e.target.closest ? e.target.closest('button[data-rs-act]') : null;
+        if (rb) {
+          var ract = rb.getAttribute('data-rs-act');
+          var rname = rb.getAttribute('data-rs-name') || '';
+          if (ract === 'edit') setRsEdit(rname);
+          else if (ract === 'del') deleteRosterEntry(rname);
+          return;
+        }
         var b = e.target.closest ? e.target.closest('button[data-dv-act]') : null;
         if (b) {
           var act = b.getAttribute('data-dv-act');
@@ -12949,6 +13547,18 @@
     if ($('pendApprove')) $('pendApprove').addEventListener('click', approvePendingDevice);
     if ($('pendPin')) $('pendPin').addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); approvePendingDevice(); }
+    });
+    // v49 — 직원 휴대폰 1회 인증 화면
+    if ($('sgOk')) $('sgOk').addEventListener('click', submitStaffGate);
+    if ($('sgPhone')) {
+      $('sgPhone').addEventListener('input', function (e) { e.target.value = formatPhoneInput(e.target.value); });
+      $('sgPhone').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); submitStaffGate(); }
+      });
+    }
+    if ($('sgAdminOk')) $('sgAdminOk').addEventListener('click', staffGateAdminPass);
+    if ($('sgAdminPin')) $('sgAdminPin').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); staffGateAdminPass(); }
     });
     // v30 — 관리자 모드 10분 미사용 자동 잠금: 클릭·터치·키입력·입력값 변경이 있을 때마다 타이머를 다시 건다
     ['pointerdown', 'touchstart', 'keydown', 'input', 'change'].forEach(function (evt) {
@@ -13725,6 +14335,7 @@
 
     loadSync();
     loadDevice();
+    loadRoster();   // v49 — 직원 명부(이름 · 전화번호) · 이 기기 인증 상태
     loadPolicy();
     state.records = blockedStored() ? [] : loadRecords();
     state.filters.month = currentMonth();
@@ -13841,6 +14452,8 @@
     if (!blockedStored() && pendingStored()) {
       showPending(true);
     }
+    // v49 — 승인된 기기라도 등록된 직원 번호가 있으면 1회 휴대폰 인증을 받는다
+    maybeStaffGate();
 
     // 첫 방문 안내 (데이터 없을 때만)
     if (!state.records.length) {
