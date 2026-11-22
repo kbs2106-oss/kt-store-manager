@@ -2020,26 +2020,31 @@
   .paybank-acct input:focus{outline:none;border-color:#8FB4EE;box-shadow:0 0 0 3px rgba(11,87,208,.14)}
   .paybank-acct input:disabled{background:#F5F8FC;color:#9AA7B8;border-color:#E2E9F2}
   .paybank-acct.off{opacity:.5}
-  .paybank-done{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
-  .paybank-done[hidden]{display:none !important}
-  .paybank-done .paydone-chip{
+  .paybank-done,.paycard-done{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
+  .paybank-done[hidden],.paycard-done[hidden]{display:none !important}
+  .paybank-done .paydone-chip,.paycard-done .paydone-chip{
     height:28px;padding:0 11px;font-size:12px;font-weight:800;border-color:var(--line-strong);
     background:#fff;color:var(--slate-500);display:inline-flex;align-items:center;gap:5px;
   }
-  .paybank-done .paydone-chip .pd-tick{font-weight:900;opacity:.35}
-  .paybank-done .paydone-chip.on{background:#E9F7EF;border-color:#7FCEA6;color:#0B5F45}
-  .paybank-done .paydone-chip.on .pd-tick{opacity:1;color:#0B8A55}
-  .paybank-done .pd-state{font-size:11.5px;font-weight:800;color:var(--slate-400)}
-  .paybank-done .pd-state.done{color:#0B6B47}
+  .paybank-done .paydone-chip .pd-tick,.paycard-done .paydone-chip .pd-tick{font-weight:900;opacity:.35}
+  /* v44 — 완료된 칸은 추지와 같은 노란 형광펜 톤(#fef08a)으로 똑같이 칠한다 */
+  .paybank-done .paydone-chip[aria-pressed="true"],.paycard-done .paydone-chip[aria-pressed="true"]{
+    background:#fef08a;border-color:#eab308;color:#4a3400
+  }
+  .paybank-done .paydone-chip[aria-pressed="true"] .pd-tick,
+  .paycard-done .paydone-chip[aria-pressed="true"] .pd-tick{opacity:1;color:#a16207}
+  .paybank-done .pd-state,.paycard-done .pd-state{font-size:11.5px;font-weight:800;color:var(--slate-400)}
+  .paybank-done .pd-state.done,.paycard-done .pd-state.done{color:#8a6d00}
   @media (max-width:560px){
     .paybank-acct{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
     .paybank-acct #f_paybank_acct{grid-column:1/-1}
   }
 
   /* ---------- 목록·카드의 입금 상태 배지 ---------- */
+  /* v44 — 완료 배지(✓ 입금완료 · ✓ 카드완료)는 둘 다 노란 형광펜 톤으로 통일 */
   .pay-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:999px;
     font-size:10.5px;font-weight:900;line-height:1.5;white-space:nowrap;margin-left:4px;
-    background:#E9F7EF;color:#0B6B47;border:1px solid #A9DCC8}
+    background:#fef08a;color:#4a3400;border:1px solid #eab308}
   .pay-badge.wait{background:#FFF6E5;color:#8A5200;border-color:#F0D59A}
 
   /* ---------- ② 메모 아래 등록일시 ---------- */
@@ -2878,6 +2883,13 @@
               <div class="pc-foot">
                 <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
               </div>
+              <!-- v44 — 페이백(카드결제) 결제 완료 1탭 (금액이 있는 건만 보임) -->
+              <div class="paycard-done" id="paycardDone" hidden>
+                <input id="f_paycard_done" type="hidden" value="">
+                <button type="button" class="pchip paydone-chip" id="paycardDoneChip" aria-pressed="false"
+                        title="누를 때마다 미결제 ↔ 결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>결제 완료</button>
+                <span class="pd-state" id="paycardDoneState">미결제</span>
+              </div>
             </div>
             <div class="field paybank-field">
               <label for="f_paybank">페이백 (입금) <span class="req">*</span></label>
@@ -3447,6 +3459,8 @@
      · [입금은행:국민은행] [입금예금주:홍길동] [입금계좌:123-456-7890] [입금완료]
      · [작성일:2026-11-22 11:30] — 신규 저장 때 자동, 수정할 때는 최초 값 유지 */
   var PAY_DONE_MARK = '[입금완료]';
+  /* v44 — 페이백(카드결제) 결제 완료 (시트 20컴럼 유지용 메모 표기 · [카드완료]) */
+  var PAYCARD_DONE_MARK = '[카드완료]';
   /* v40 — 지급 미완료를 직접 고른 건 (추지 단독은 기본이 '수납완료' 라, 되돌린 상태를 따로 남긴다) */
   var PAY_UNDONE_MARK = '[지급미완료]';
 
@@ -3547,6 +3561,34 @@
   function setPayBankDone(on) {
     if ($('f_paybank_done')) $('f_paybank_done').value = on ? '완료' : '';
     paintPayBankAcct();
+  }
+
+  /* v44 — 페이백(카드결제) 결제 완료 1탭 칩의 지금 모양
+     · [미기입] 이거나 합계가 0원이면 칩을 숨기고 완료 표시도 지운다(결제할 금액이 없는 건에 상태를 달지 않는다) */
+  function paintPayCardDone() {
+    var off = payNoneOn('paycard');
+    var amt = pcTotal();
+    var show = !off && amt > 0;
+    var row = $('paycardDone');
+    if (row) row.hidden = !show;
+    if (!show && $('f_paycard_done')) $('f_paycard_done').value = '';
+    var doneOn = String(($('f_paycard_done') || {}).value || '') === '완료';
+    var chip = $('paycardDoneChip');
+    if (chip) {
+      chip.classList.toggle('on', doneOn);
+      chip.setAttribute('aria-pressed', doneOn ? 'true' : 'false');
+    }
+    var st = $('paycardDoneState');
+    if (st) {
+      st.hidden = doneOn;
+      st.textContent = '미결제';
+      st.classList.toggle('done', doneOn);
+    }
+  }
+
+  function setPayCardDone(on) {
+    if ($('f_paycard_done')) $('f_paycard_done').value = on ? '완료' : '';
+    paintPayCardDone();
   }
 
   function setPayNone(kind, on) {
@@ -3752,6 +3794,8 @@
         box.hidden = true;
       }
     }
+    // v44 — 합계가 바뀌면 결제 완료 칩의 보임/값도 함께 맞춘다
+    paintPayCardDone();
     return total;
   }
 
@@ -4902,8 +4946,8 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '', usedDetail: '', payBank: '', payHolder: '', payAcct: '', payDone: false, payUndone: false, writtenAt: '' };
-    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop'], [PAY_DONE_MARK, 'payDone'], [PAY_UNDONE_MARK, 'payUndone']];
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '', usedDetail: '', payBank: '', payHolder: '', payAcct: '', payDone: false, payUndone: false, cardDone: false, writtenAt: '' };
+    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop'], [PAY_DONE_MARK, 'payDone'], [PAY_UNDONE_MARK, 'payUndone'], [PAYCARD_DONE_MARK, 'cardDone']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
       if (s.indexOf(tags[i][0]) < 0) continue;
@@ -5055,6 +5099,9 @@
     else if (String(rec.입금완료 == null ? '' : rec.입금완료).trim() === '완료' &&
              (parseNumber(rec.추가지원금) || parseNumber(rec.페이백카드))) head.push(PAY_DONE_MARK);
     else if (String(rec.입금완료 == null ? '' : rec.입금완료).trim() === '미지급') head.push(PAY_UNDONE_MARK);
+    // v44 — 페이백(카드결제) 결제 완료 ([카드완료] — 금액이 있는 건만)
+    if ((parseNumber(rec.페이백카드) || parseNumber(t.페이백카드) || 0) > 0 &&
+        normalizeDone(rec.카드완료) === '완료') head.push(PAYCARD_DONE_MARK);
     var stamp = normWriteStamp(rec.작성일 || t.writtenAt);
     if (stamp) head.push('[작성일:' + stamp + ']');
     if (!head.length) return m;
@@ -5118,6 +5165,9 @@
       : (tags.payUndone ? '미지급'
       : (normalizeDone(r && r.입금완료) === '완료' ? '완료'
       : (String((r && r.입금완료) || '').trim() === '미지급' ? '미지급' : '')));
+    // v44 — 페이백(카드결제) 결제 완료 → 메모 표기 [카드완료] 에서 복원
+    o.카드완료 = tags.cardDone ? '완료'
+      : (normalizeDone(r && r.카드완료) === '완료' ? '완료' : '');
     // v39 — 등록(작성) 일시: 메모 표기 → createdAt(밀리초) 순서로 되살린다
     var wStamp = normWriteStamp(tags.writtenAt || (r && r.작성일));
     if (!wStamp && o.createdAt) wStamp = stampFromMs(o.createdAt);
@@ -5608,6 +5658,8 @@
     // v40 — '미지급' 을 직접 고른 건은 그대로 보낸다 (추지 단독 기본완료를 되돌린 상태)
     snap.입금완료 = normalizeDone(rec.입금완료) === '완료' ? '완료'
       : (String(rec.입금완료 == null ? '' : rec.입금완료).trim() === '미지급' ? '미지급' : '');
+    // v44 — 카드결제 완료도 담는다 (빠뜨리면 서버 왕복 뒤 [카드완료] 표기가 풀린다)
+    snap.카드완료 = normalizeDone(rec.카드완료) === '완료' ? '완료' : '';
     snap.작성일 = normWriteStamp(rec.작성일);
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
@@ -8731,13 +8783,21 @@
         : '중고폰 금액이 비어 있는 건만 (현재 ' + n + '건)');
   }
 
-  /* v39 — 목록·카드의 입금 완료 배지 (페이백(입금) 금액이 있는 건 · 관리자만) */
+  /* v39 — 목록·카드의 입금 완료 배지 (페이백(입금) 금액이 있는 건 · 관리자만)
+     v44 — ✓ 카드완료 배지도 함께 · 두 배지 모두 노란 형광펜 톤 */
   function payDoneBadgeHtml(r) {
     if (!isAdmin()) return '';
+    var out = '';
     var amt = Number(r && r.페이백입금) || 0;
-    if (!(amt > 0)) return '';
-    if (normalizeDone(r.입금완료) !== '완료') return '';
-    return '<span class="pay-badge" title="페이백(입금) ' + fmtNum(amt) + '원 입금 완료">✓ 입금완료</span>';
+    if (amt > 0 && normalizeDone(r.입금완료) === '완료') {
+      out += '<span class="pay-badge" title="페이백(입금) ' + fmtNum(amt) + '원 입금 완료">✓ 입금완료</span>';
+    }
+    var cardAmt = Number(r && r.페이백카드) || 0;
+    if (cardAmt > 0 && normalizeDone(r.카드완료) === '완료') {
+      out += '<span class="pay-badge card-done" title="페이백(카드결제) ' + fmtNum(cardAmt) +
+        '원 결제 완료">✓ 카드완료</span>';
+    }
+    return out;
   }
   // 페이백(입금) 계좌 한 줄 — '국민은행 123-456-7890'
   function payBankLine(r) {
@@ -8955,8 +9015,17 @@
         '<em class="calc-sub">개통시 결제완료</em></div>');
     }
     if (e.card) {
-      calcRows.push('<div class="calc-line"><span class="calc-item">카드결제 ' + fmtNum(e.card) + '원</span>' +
-        (payCount === 1 && cardLines.length ? '<em class="calc-sub">' + esc(cardLines.join(' · ')) + '</em>' : '') +
+      // v44 — 결제 완료된 카드결제는 추지와 똑같이 노란 형광펜(.hl) + '결제완료'
+      var cardDone = normalizeDone(r.카드완료) === '완료';
+      var cardSub = '';
+      if (cardDone) cardSub = (payCount === 1 && cardLines.length)
+        ? '결제완료 · ' + cardLines.join(' · ') : '결제완료';
+      else if (payCount === 1 && cardLines.length) cardSub = cardLines.join(' · ');
+      calcRows.push('<div class="calc-line">' +
+        (cardDone
+          ? '<span class="hl">카드결제 ' + fmtNum(e.card) + '원</span>'
+          : '<span class="calc-item">카드결제 ' + fmtNum(e.card) + '원</span>') +
+        (cardSub ? '<em class="calc-sub">' + esc(cardSub) + '</em>' : '') +
         '</div>');
       if (payCount > 1) {
         for (ci = 0; ci < cardLines.length; ci++) {
@@ -8965,7 +9034,14 @@
       }
     }
     if (e.bank) {
-      calcRows.push('<div class="calc-line"><span class="calc-item bank">입금 ' + fmtNum(e.bank) + '원</span></div>');
+      // v44 — 입금 완료된 건도 추지와 똑같이 노란 형광펜(.hl) + '입금완료'
+      var bankDone = normalizeDone(r.입금완료) === '완료';
+      calcRows.push('<div class="calc-line">' +
+        (bankDone
+          ? '<span class="hl">입금 ' + fmtNum(e.bank) + '원</span>'
+          : '<span class="calc-item bank">입금 ' + fmtNum(e.bank) + '원</span>') +
+        (bankDone ? '<em class="calc-sub">입금완료</em>' : '') +
+        '</div>');
     }
     var payCell = '<div class="slip-calc">' + calcRows.join('') + detailRows.join('') +
       (payCount > 1 ? '<div class="slip-money">총액 ' + fmtNum(e.amount) + '원</div>' : '') + '</div>';
@@ -10015,7 +10091,9 @@
         mRowOpt('유선 사은품', normalizeWiredGift(r.유선혜택) ? esc(wiredGiftLabel(r.유선혜택)) : '') +
         (onestopOf(r) ? mRow('원스톱', '<span class="pbadge onestop-badge">체크</span> <span class="muted">유선 +10만원 · +1.0P</span>') : '') +
         (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
-        (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세) : '') : '') +
+        (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세) +
+          (normalizeDone(r.카드완료) === '완료'
+            ? ' <span class="pay-badge card-done" title="페이백(카드결제) 결제 완료">✓ 카드완료</span>' : '') : '') : '') +
         (isAdmin() ? mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' : '') : '') +
         (isAdmin() && (payBankLine(r) || Number(r.페이백입금) > 0)
           ? mRow('입금 계좌', (payBankLine(r) ? esc(payBankLine(r)) : '<span class="muted">계좌 미입력</span>') +
@@ -11297,6 +11375,9 @@
     $('f_extra').value = r.추가지원금 ? fmtNum(r.추가지원금) : '';
     // v32 — 페이백(카드결제)은 여러 줄(할부금/위약금 · 선결제/1일예정)로 복원한다
     pcSetRows(r.페이백카드상세 || '', Number(r.페이백카드) || 0);
+    // v44 — 페이백(카드결제) 결제 완료 상태 복원
+    $('f_paycard_done').value = normalizeDone(r.카드완료) === '완료' ? '완료' : '';
+    paintPayCardDone();
     $('f_paybank').value = r.페이백입금 ? fmtNum(r.페이백입금) : '';
     // v39 — 페이백(입금) 계좌 3칸 + 입금 완료 상태 복원
     $('f_paybank_bank').value = r.입금은행 || '';
@@ -11513,6 +11594,9 @@
       // v32 — 페이백(카드결제): 여러 줄의 합계 + 상세(할부금/위약금 · 선결제/1일예정)
       페이백카드: pcTotal(),
       페이백카드상세: pcDetailText(pcAll()),
+      // v44 — 페이백(카드결제) 결제 완료 (금액이 있는 건만)
+      카드완료: (!payNoneOn('paycard') && pcTotal() > 0 &&
+        String($('f_paycard_done').value) === '완료') ? '완료' : '',
       페이백입금: parseNumber($('f_paybank').value),
       // v39 — 페이백(입금) 계좌(선택) + 입금 완료 상태
       입금은행: payNoneOn('paybank') ? '' : $('f_paybank_bank').value.trim(),
@@ -11610,6 +11694,7 @@
       if ($('f_wiredgift')) setWiredGift('');
       $('f_extra').value = '';
       pcSetRows('', 0);
+      setPayCardDone(false);
       $('f_paybank').value = '';
       $('f_paybank_bank').value = '';
       $('f_paybank_holder').value = '';
@@ -12717,6 +12802,10 @@
     if ($('f_paybank')) $('f_paybank').addEventListener('input', paintPayBankAcct);
     if ($('paybankDoneChip')) $('paybankDoneChip').addEventListener('click', function () {
       setPayBankDone(String(($('f_paybank_done') || {}).value || '') !== '완료');
+    });
+    // v44 — 페이백(카드결제) 결제 완료 1탭 칩
+    if ($('paycardDoneChip')) $('paycardDoneChip').addEventListener('click', function () {
+      setPayCardDone(String(($('f_paycard_done') || {}).value || '') !== '완료');
     });
     ['f_paybank_bank', 'f_paybank_holder', 'f_paybank_acct'].forEach(function (id) {
       var inp = $(id);
