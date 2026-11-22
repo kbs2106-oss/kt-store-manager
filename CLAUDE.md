@@ -451,6 +451,20 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     `v40_missing_plan`(22) · `payback_required`(69) 통과 (`v33` 60/67 은 **v40 커밋에서도 같던** 미기재 기준 차이 — 이번 변경과 무관) ·
     `v32` C8(모델명 칸 placeholder `예) S25엣지`) · `v40_split_tel`·`v34` 의 CACHE_VERSION 검사를 v43 으로 맞췄다 ·
     스크린샷 `downloads/개통장부-v43-중고폰추가-모달.png` · `downloads/개통장부-v43-중고폰추가-목록.png`(+`qa-kt/_v43_모바일-중고폰추가.png`).
+- **v44 — 페이백(카드결제) 결제 완료 칩 · 완료된 건 노랑 체크** (사장님 요청: “페이백 완료 버튼 일보 적는 창에 만들어주고” · “완료된건 노랑색으로 똑같이 체크해줘”):
+  - **등록 모달**: `페이백 (카드결제)` 칸 맨 아래에 `#paycardDone`(`✓ 결제 완료` · `#paycardDoneChip` · `#paycardDoneState` = `미결제`) 를 입금 칸(`#paybankDone`)과 **같은 패턴**으로 넣었다.
+    **합계가 1원 이상이고 `[미기입]` 이 아닐 때만** 보이고(0원·`[미기입]` 이면 숨기며 `#f_paycard_done` 값도 비운다 — `paintPayCardDone()` 를 `pcRefresh()` 끝에서 호출),
+    1탭으로 `미결제 ↔ 결제 완료`(`#f_paycard_done` = `완료`/`''`). 직원 모드·관리자 모드 모두에서 동작·저장된다.
+  - **노랑 형광펜**: 완료 상태의 두 칩(`#paycardDoneChip` · `#paybankDoneChip`)은 `[aria-pressed="true"]` 로 `background:#fef08a` · `border-color:#eab308` · `color:#4a3400`(추지와 같은 톤).
+    목록 표·폰 카드·상세의 `✓ 입금완료` · `✓ 카드완료` 배지(`.pay-badge`)도 같은 노란색으로 통일(미지급 `.wait` 는 예전 앰버 그대로, 배지는 관리자 모드에서만).
+  - **입금 지급 확인서**: 지급 금액에서 `카드완료 === '완료'` 이면 `<span class="hl">카드결제 …원</span>` + `결제완료`(카드 내역이 한 줄에 붙을 때는 `결제완료 · 할부금 …`),
+    `입금완료 === '완료'` 이면 `<span class="hl">입금 …원</span>` + `입금완료` — 미완료 건은 예전처럼 칠하지 않는다(입금은 `#0B4AA2`).
+  - **저장(20컬럼·`Code.gs` 그대로)**: 앱 전용 필드 **`카드완료`** = `완료`. 메모 표기 **`[카드완료]`**(`PAYCARD_DONE_MARK`)만 시트를 왕복한다(`sheetMemo`·`splitMemoTags`·`normalizeRecord`·`queueUpsert` 스냅샷),
+    메모 본문·상세보기에는 태그가 남지 않는다. `sw.js` `CACHE_VERSION = 'v44'`.
+  - 테스트 `qa-kt/v44_payback_done_test.py`(60항목: 칩 보임/토글/0원·미기입 숨김 → 노랑색 → 저장 → 표·폰 배지 → ✏️ 복원 → 확인서 형광펜 → 직원 390 저장 → 시트 왕복) · 라이브 `qa-kt/live_check_v44.py`(10항목: md5 일치 · SW 캐시 v44 · 배지 · 1탭 · 확인서) ·
+    회귀 `v43_used_multi`(61) · `v42_double_card`(59) · `v41_slip_amount`(38) · `v40_split_tel`(74) · `v39_pay_slip`(75) · `policy_calc`(74) · `v34_easy_sale_scope`(72) 통과 ·
+    `v39` H6c(완료 건 `입금 …원입금완료`) · `v43`·`v40_split_tel`·`v34` 의 CACHE_VERSION 검사를 v44 로 맞췄다 ·
+    스크린샷 `downloads/개통장부-v44-모달-페이백완료.png` · `downloads/개통장부-v44-확인서-노랑체크.png` · `downloads/개통장부-v44-목록-배지.png`(+`downloads/개통장부-v44-폰목록-배지.png`).
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
 ---
