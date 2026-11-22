@@ -412,7 +412,9 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     - 칸 배분: `지급 금액` 열을 **80mm**로 넓히고(`.slip-c-tel` 56mm · 확인 56mm) 줄 높이를 **24% / 24% / 52%** 로 바꿔 2줄 금액 + 카드 내역 여러 줄 + 총액이 62mm 안에 들어간다(넘침 0 검증).
   - **`미지급` / `✓ 입금완료` / `✓ 수납완료` 화면 요소 제거**: `#slipFilters` 는 **`당월 전체`(기본) · `특정 일자`** 두 개(`미지급만` 삭제), `#slipList` 줄의 1탭 토글 버튼 삭제, A4 카드 머리의 상태 배지 삭제(구분 배지 `추지·카드`/`계좌입금` 만), 합계 줄은 **`총 N건 · 선택 M건 OOO원`**. `slipDoneOf`·`slipDoneLabel`·`slipToggleDone` 삭제. **시트 20컬럼·메모 표기(`[입금완료]`·`[지급미완료]`)·저장 구조는 그대로**.
   - **안드로이드 인쇄 백지(1/5) 수정**: `slipPrint()` 가 `window.print()` 전에 **`#paySlipDialog` 를 `close()`** 하고(탑레이어가 인쇄 화면을 가리던 문제), 인쇄가 끝나면 `showModal()` 로 다시 연다. `afterprint`/`focus` 가 **1.5초 안에 너무 빨리** 오면 무시하고(안드로이드 스풀러가 화면을 캡처하기 전에 `body.print-slips` 가 지워져 백지가 되던 문제) 최소 1.5초 유지한 뒤 `cleanup()`. 60초 안전 타이머 유지.
-  - 테스트 `qa-kt/v41_slip_amount_test.py`(38) 신규 · 회귀 `v40_slip_test`(53) · `v39_pay_slip`(75) · `v40_split_tel`(74) · `v40_missing_plan`(22) · `v39_staff_wired`(9) · `v38`(50) · `v37`(60) · `v35`(150) · `policy_calc`(74) · `v32`(49) 통과 ·
+  - 테스트 `qa-kt/v41_slip_amount_test.py`(38) 신규 · 라이브 `qa-kt/live_check_v41.py`(9: md5 일치·표식·필터·글자 크기·인쇄 모달 닫힘) ·
+    회귀 `v40_slip_test`(53) · `v39_pay_slip`(75) · `v40_split_tel`(74) · `v40_missing_plan`(22) · `v39_staff_wired`(9) · `v38`(50) · `v37`(60) · `v36`(48) · `v35`(150) · `v29`(138) · `v28`(87) · `sheet_roundtrip_v19`(67) · `policy_calc`(74) · `v32`(49) · `payback_required`(69) 통과
+    (`v33` 60/67 · `v30` 120/122 는 **v40 커밋에서도 같던** 미기재·직원모드 기준 차이 — 이번 변경과 무관) ·
     스크린샷 `downloads/개통장부-v41-지급확인서.png`.
 - **PWA**: 안드로이드 크롬·PC 크롬에서 “앱 설치” → 홈 화면 아이콘으로 실행, 오프라인에서도 열림
 
