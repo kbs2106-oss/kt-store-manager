@@ -5631,6 +5631,12 @@
       if (!raw) return [];
       var data = JSON.parse(raw);
       if (!Array.isArray(data)) return [];
+      /* v49 — 예전 버전이 시트의 직원 명부 설정 줄을 장부 기록으로 저장해 둔 경우 걷어 낸다 */
+      data = data.filter(function (r) {
+        if (!r) return false;
+        if (String(r.id || '') === STAFF_CFG_ID) return false;
+        return String(r.고객명 == null ? '' : r.고객명).trim() !== '⚙️ 직원명부';
+      });
       return data.map(normalizeRecord);
     } catch (e) {
       return [];
