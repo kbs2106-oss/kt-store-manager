@@ -4061,6 +4061,14 @@
   function pcSetRows(detailText, total, states) {
     var box = $('paycardLines');
     if (!box) return;
+    // v46 — 다시 그릴 때 이전 줄의 빨간 표시는 들고 오지 않는다
+    var lsOld = pcLines();
+    for (var ob = 0; ob < lsOld.length; ob++) {
+      var tgOld = lsOld[ob].querySelector('.pc-tags');
+      var drOld = lsOld[ob].querySelector('.pc-done-row');
+      if (tgOld) tgOld.classList.remove('bad');
+      if (drOld) drOld.classList.remove('bad');
+    }
     var ls = pcLines();
     for (var i = ls.length - 1; i > 0; i--) box.removeChild(ls[i]);
     var list = pcDetailParse(detailText);
@@ -11618,6 +11626,9 @@
     el.deleteBtn.style.display = rec ? 'inline-flex' : 'none';
     el.formError.classList.remove('show');
     dupGuardOn = false;
+    // v46 — 창을 새로 열면 페이백 상태 빨간 표시는 들고 오지 않는다(저장 때 다시 검사한다)
+    pcStateBlocked = false;
+    if ($('paybankDone')) $('paybankDone').classList.remove('bad');
 
     var r = rec || { 개통일: todayISO(), 개통유형: '' };
     $('f_date').value = normalizeDate(r.개통일) || todayISO();

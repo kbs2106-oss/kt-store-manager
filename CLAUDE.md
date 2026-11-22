@@ -481,9 +481,9 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
 - **v46 — 페이백 금액을 적으면 상태(`1일 결제`/`1일 입금`/`완료`)를 반드시 고른다** (사장님 요청: “미기입은 당연히 넘어가는거고 금액을 적었는데도 넘어간단거야 ?” → “당연하지”):
   - **페이백(카드결제)**: `[미기입]` 이면 통과. **금액 > 0 인 `.paycard-line` 줄마다** `[1일 결제]`(`data-pc-when="1일결제"`) 또는 `[✓ 카드결제 완료]`(`data-pc-done="1"`) 중 **하나가 없으면 저장을 막는다**. 그 줄의 `.pc-tags`·`.pc-done-row` 에 `.bad`(빨간 테두리 `#DC2626` 2px) + 안내 `페이백(카드결제) 상태(1일 결제/완료)`.
   - **페이백(입금)**: `[미기입]` 이면 통과. 금액 > 0 인데 `f_paybank_1st !== '1일'` 이고 `f_paybank_done !== '완료'` 이면 막고 `#paybankDone` 에 `.bad` + `페이백(입금) 상태(1일 입금/완료)`.
-  - **동작**: `pcStateOkLine()`·`pcStateBadLines()`·`pcBankStateOk()` 판정, `collectForm()` 이 `need` 에 두 항목을 넣어 첫 곳으로 스크롤. `paintPayStateBad()` 는 **저장을 한 번 막은 뒤(`pcStateBlocked`)** 에만 표시하고, `1일 결제`/`완료`를 고르면 **저장 재시도 없이 바로** 빨간 표시·안내를 지운다(`clearInvalid()` 가 플래그를 초기화). **금액을 적는 중에는 미리 빨개지지 않는다**. 금액 0원 줄·`[미기입]` 건은 그대로 통과하고, 기존 기록도 상태가 없으면 수정 저장이 막힌다.
+  - **동작**: `pcStateOkLine()`·`pcStateBadLines()`·`pcBankStateOk()` 판정, `collectForm()` 이 `need` 에 두 항목을 넣어 첫 곳으로 스크롤. `paintPayStateBad()` 는 **저장을 한 번 막은 뒤(`pcStateBlocked`)** 에만 표시하고(창을 새로 열면 `openEditor`·`pcSetRows` 가 지운다), `1일 결제`/`완료`를 고르면 **저장 재시도 없이 바로** 빨간 표시·안내를 지운다(`clearInvalid()` 가 플래그를 초기화). **금액을 적는 중에는 미리 빨개지지 않는다**. 금액 0원 줄·`[미기입]` 건은 그대로 통과하고, 기존 기록도 상태가 없으면 수정 저장이 막힌다.
   - **저장 형식·`Code.gs`·시트 20컬럼 무변경**(새 컬럼·새 메모 태그 없음). `sw.js` `CACHE_VERSION = 'v46'`.
-  - 테스트 `qa-kt/v46_payback_required_test.py`(**40/40**: 미기입 통과 · 0원 통과 · 카드 1줄/2줄 차단+해제(`1일 결제`·`완료` 두 경로) · 입금 차단+해제(`1일 입금`·`완료`) · ✏️ 복원/재저장 · 모바일 390 넘침 없음) · 라이브 `qa-kt/live_check_v46.py` ·
+  - 테스트 `qa-kt/v46_payback_required_test.py`(**42/42**: 미기입 통과 · 0원 통과 · 카드 1줄/2줄 차단+해제(`1일 결제`·`완료` 두 경로) · 입금 차단+해제(`1일 입금`·`완료`) · ✏️ 복원/재저장 · 창을 다시 열면 빨간 표시 없음 · 모바일 390 넘침 없음) · 라이브 `qa-kt/live_check_v46.py` ·
     회귀 `v45_carddone_label`(68) · `v44_payback_done`(60) · `v43_used_multi`(61) · `v42_double_card`(59) · `v41_slip_amount`(38) · `v40_split_tel`(74) · `v39_pay_slip`(75) · `policy_calc`(74) · `v34_easy_sale_scope`(72) · `v32_approval_payback_used`(49) 통과 ·
     페이백 금액을 적고 저장하던 회귀 테스트(`v43`·`v42`·`policy_calc` fill_common, `v32` 카드두건)는 `[1일 결제]`/`[1일 입금]`·`[✓ 카드결제 완료]` 를 함께 고르도록 정비하고, `v45`·`v44`·`v43`·`v40_split_tel`·`v34` 의 CACHE_VERSION 검사를 v46 으로 맞췄다 ·
     스크린샷 `downloads/개통장부-v46-필수차단.png`(PC) · `downloads/개통장부-v46-필수차단-모바일.png`.
