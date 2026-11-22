@@ -2297,16 +2297,21 @@
   .slip-kind.ka{background:#fef08a;color:#4A3400;border-color:#e6c96a}
   .slip-kind.kb{background:#DBEAFE;color:#0B4AA2;border-color:#93B8EE}
   /* 고객 · 계좌 요약 줄 */
-  .slip-who{display:flex;align-items:baseline;gap:1.8mm;min-height:6.6mm;padding:1.2mm 2.8mm;
+  .slip-who{display:flex;align-items:baseline;gap:1.6mm;min-height:7.4mm;padding:1.4mm 2.8mm;
     background:#F4F7FB;border-bottom:.7pt solid #E2E8F0;white-space:nowrap;overflow:hidden}
-  .slip-who .sw-name{font-size:10.5pt;font-weight:900;color:#0F172A;letter-spacing:-.01em}
-  .slip-who .sw-tel{font-size:8.4pt;font-weight:800;color:#1F2A37;font-variant-numeric:tabular-nums}
-  .slip-who .sw-born{font-size:7.4pt;font-weight:700;color:#64748B;font-variant-numeric:tabular-nums}
+  .slip-who .sw-name{font-size:11pt;font-weight:900;color:#0F172A;letter-spacing:-.01em}
+  .slip-who .sw-tel{font-size:10.5pt;font-weight:800;color:#0F172A;font-variant-numeric:tabular-nums}
+  .slip-who .sw-born{font-size:10pt;font-weight:800;color:#1F2A37;font-variant-numeric:tabular-nums}
   .slip-who .sw-born::before{content:'('}
   .slip-who .sw-born::after{content:')'}
-  .slip-who .sw-acct{margin-left:auto;font-size:7.6pt;font-weight:800;color:#0B4AA2;
-    overflow:hidden;text-overflow:ellipsis}
-  .slip-who .sw-acct b{font-weight:900}
+  /* v55 — 계좌입금 칸은 계좌·예금주를 고객 줄 아래 전용 줄로 뺀다(이름 밑에 크게) */
+  .slip-acct-row{display:flex;align-items:center;gap:1.6mm;padding:.9mm 2.8mm 1.1mm;
+    background:#EFF6FF;border-bottom:.7pt solid #DBE7F6;font-size:10.5pt;font-weight:800;
+    color:#0B4AA2;white-space:nowrap;overflow:hidden;letter-spacing:-.005em;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .slip-acct-row .sar-bank{font-weight:900}
+  .slip-acct-row .sar-no{font-variant-numeric:tabular-nums;letter-spacing:0}
+  .slip-acct-row .sar-holder{font-size:9.6pt;font-weight:800;color:#1D4ED8}
   /* 금액 블록 */
   .slip-body{flex:1 1 auto;display:flex;min-height:0;padding:1.2mm 3mm .9mm}
   .slip-calc{display:flex;flex-direction:column;justify-content:flex-start;gap:.4mm;width:100%;
@@ -2331,6 +2336,11 @@
     font-weight:900}
   .slip-calc .cd-l{display:flex;align-items:baseline;gap:1.2mm;min-width:0;overflow:hidden;
     text-overflow:ellipsis}
+  /* v55 — 왼쪽 항목과 오른쪽 금액을 점선 리더로 이어 준다 (넓은 A4 에서 줄을 놓치지 않게) */
+  .slip-calc .cd-lead{flex:1 1 auto;min-width:4mm;align-self:center;height:0;
+    border-bottom:1pt dotted #A9B7C8;margin:0 2.2mm;transform:translateY(.2mm)}
+  .slip-calc .cl-lead{flex:1 1 auto;min-width:6mm;align-self:center;height:0;
+    border-bottom:1pt dotted #A9B7C8;margin:0 2.4mm;transform:translateY(.2mm)}
   .slip-calc .cd-when{font-style:normal;font-size:8pt;font-weight:800;color:#64748B;letter-spacing:0}
   .slip-calc .cd-done{font-style:normal;font-size:6.6pt;font-weight:900;color:#4A3400;
     background:#fef08a;border-radius:.8mm;padding:.1mm 1mm;letter-spacing:0;
@@ -10266,6 +10276,7 @@
     return '<div class="calc-line"><span class="cl-main' + (hl ? ' hl' : '') + '">' +
       '<span class="cl-l"><span class="cl-badge' + cls + '">' + esc(label) + '</span>' +
         (sub ? ' <em class="calc-sub">' + esc(sub) + '</em>' : '') + '</span> ' +
+      '<span class="cl-lead" aria-hidden="true"></span>' +
       '<span class="cl-r calc-item' + cls + '">' + fmtNum(amount) + '원</span>' +
       '</span></div>';
   }
@@ -10297,9 +10308,9 @@
           '<span class="cd-l">' + esc(cIt.kindLabel) +
             (cIt.whenLabel ? ' · <em class="cd-when">' + esc(cIt.whenLabel) + '</em>' : '') +
             (cIt.done ? ' <em class="cd-done">카드결제 완료</em>' : '') + '</span> ' +
+          '<span class="cd-lead" aria-hidden="true"></span>' +
           '<span class="cd-r' + (cIt.done ? ' hl' : '') + '">' + esc(cIt.amtText) + '</span>' +
-          '</div>');
-      }
+          '</div>');      }
     }
     if (e.bank) {
       var bankDone = normalizeDone(r.입금완료) === '완료';
@@ -10312,20 +10323,26 @@
       (payCount > 1 ? '<div class="slip-money"><span class="sm-l">총액</span> <span class="sm-r">' +
         fmtNum(e.amount) + '원</span></div>' : '') + '</div>';
 
-    /* 고객 요약 줄 — 계좌·예금주는 [계좌 입금] 칸에서만. 없는 칸을 '—' 로 채우지 않는다 */
-    var acct = '';
+    /* 고객 요약 줄 — 이름 · 연락처 · 생년월일만. 계좌·예금주는 [계좌입금] 칸에서만 이름 밑 전용 줄로 */
+    var acctRow = '', acct = '';
     if (kind === 'B') {
       var bankLine = payBankLine(r);
+      var bankName = String(r.입금은행 || '').trim();
+      var acctNo = String(r.입금계좌 || '').trim();
       var holder = String(r.입금예금주 || '').trim();
       if (bankLine || holder) {
-        acct = '<span class="sw-acct">' + (bankLine ? esc(bankLine) : '') +
-          (holder ? (bankLine ? ' · ' : '') + '예금주 ' + esc(holder) : '') + '</span>';
+        acctRow = '<div class="slip-acct-row">' +
+          (bankName ? '<span class="sar-bank">' + esc(bankName) + '</span>' : '') +
+          (acctNo ? '<span class="sar-no">' + esc(acctNo) + '</span>' : '') +
+          (holder ? '<span class="sar-holder">' + (bankName || acctNo ? '· ' : '') +
+            '예금주 ' + esc(holder) + '</span>' : '') +
+          '</div>';
       }
     }
     var who = '<div class="slip-who">' +
       '<span class="sw-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
       (phone ? '<span class="sw-tel">' + esc(phone) + '</span>' : '') +
-      (birth ? '<span class="sw-born">' + esc(birth) + '</span>' : '') + acct + '</div>';
+      (birth ? '<span class="sw-born">' + esc(birth) + '</span>' : '') + acct + '</div>' + acctRow;
 
     var notes = [];
     if (r.기종) notes.push('기종 ' + String(r.기종).trim());
