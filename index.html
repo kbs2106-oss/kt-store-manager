@@ -1049,6 +1049,14 @@
   .paycard-line .pc-chips .pchip.on{background:#0F172A;color:#fff;border-color:#0F172A}
   /* v45 — 두 그룹 사이만 살짝 띄운다: [할부금][위약금] · [1일 결제] */
   .paycard-line .pc-sep{width:1px;height:18px;background:#D8E2EF;margin:0 3px;flex:none}
+  /* v54 — [할부금]을 골랐을 때만 그 아래 한 줄로 열리는 [새 기기] / [전 단말]
+     평소(할부금 아님 · 위약금만 · 아무것도 안 고름)에는 아예 그리지 않는다 */
+  .paycard-line .pc-inst-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
+  .paycard-line .pc-inst-row[hidden]{display:none !important}
+  .paycard-line .pc-inst-row .pc-inst-label{font-size:11px;font-weight:800;color:var(--slate-400);flex:none}
+  .paycard-line .pc-inst-row .pchip{height:25px;padding:0 9px;font-size:12px;font-weight:800;
+    color:var(--blue-700);border-color:#C7D8F5;background:var(--blue-50)}
+  .paycard-line .pc-inst-row .pchip.on{background:var(--blue-700);color:#fff;border-color:var(--blue-700)}
   .paycard-line .pc-del{height:26px;width:26px;padding:0;font-size:14px;font-weight:900;line-height:1;
     color:#B42318;border-color:#F1C2BD;background:#FEF3F2;flex:none}
   .paycard-line .pc-del[hidden]{display:none}
@@ -1064,6 +1072,10 @@
     .paycard-line .pc-sep{margin:0 1px}
     .paycard-line .pc-chips-row .pd-state{display:none}
     .paycard-line .pc-chips-row .pc-del{height:24px;width:22px;font-size:13px}
+    /* v54 — 폰에서도 [할부] [새 기기] [전 단말] 한 줄 */
+    .paycard-line .pc-inst-row{gap:4px}
+    .paycard-line .pc-inst-row .pc-inst-label{font-size:10.5px}
+    .paycard-line .pc-inst-row .pchip{height:23px;padding:0 8px;font-size:11.5px}
   }
   /* v43 — 중고폰 여러 줄: 평소엔 1줄(모델명 · 금액), [+ 추가]로 여러 대·여러 품목을 나눠 적는다 */
   .used-lines{display:flex;flex-direction:column;gap:7px}
@@ -2257,7 +2269,7 @@
 
   /* 확인서 한 칸 — 종이 양식(티앤제이통신 입금 지급 확인서) 그대로 */
   .slip-page{width:210mm;min-height:297mm;box-sizing:border-box;padding:10mm;background:#fff;
-    display:flex;flex-direction:column;gap:4mm;box-shadow:0 6px 18px -12px rgba(15,23,42,.5)}
+    display:flex;flex-direction:column;gap:3.4mm;box-shadow:0 6px 18px -12px rgba(15,23,42,.5)}
   /* v40 — 페이지 구분 표기([추지·카드결제 확인용] / [계좌 입금 지급용]) : 한 장에 4칸이 계속 들어가게 카드 높이를 62mm 로 */
   .slip-page-tag{flex:none;display:flex;align-items:center;gap:2mm;height:5mm;font-size:8pt;font-weight:900;
     letter-spacing:.01em;color:#0F172A}
@@ -2267,75 +2279,84 @@
   .slip-page-tag.gb{color:#0B4AA2}
   .slip-page-tag.gb .dot{background:#2B6FD4}
   .slip-page-tag .cnt{margin-left:auto;font-size:7.4pt;font-weight:700;color:#64748B}
+  /* v54 — 입금 지급 확인서를 카드형 영수증으로 전면 개편 (A4 1장 4칸 · 칸 높이 62mm 그대로)
+     · 상단 진한 헤더 바 : 제목 + 개통일·담당 + 구분 배지
+     · 고객 요약 줄 : 이름(크게) · 연락처 · 생년월일 + (계좌 입금용일 때만) 계좌 · 예금주
+     · 금액 블록 : 라벨은 왼쪽 · 금액은 오른쪽 끝(13.5pt · 900) — 영수증처럼 줄맞춤
+     · 세부 내역 : 위약금 → 할부금(새 기기 · 전 단말) 순서로 모아 쓴다 */
   .slip{box-sizing:border-box;height:62mm;display:flex;flex-direction:column;background:#fff;
-    border:1.1pt solid #0F172A;color:#0F172A;overflow:hidden}
-  .slip-hd{display:flex;align-items:center;justify-content:space-between;gap:3mm;
-    min-height:9mm;padding:1.4mm 2.4mm;border-bottom:.9pt solid #0F172A}
-  .slip-title{font-size:11.5pt;font-weight:800;letter-spacing:.01em;white-space:nowrap}
-  .slip-meta{display:flex;align-items:center;gap:1.4mm;font-size:8pt;font-weight:700;color:#1F2A37;white-space:nowrap}
-  .slip-tb{width:100%;flex:1 1 auto;border-collapse:collapse;table-layout:fixed;font-size:9pt}
-  .slip-tb th,.slip-tb td{border:.9pt solid #0F172A;padding:1.1mm 2mm;vertical-align:middle;
-    text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .slip-tb th{width:23mm;background:#F1F4F8;font-size:8.2pt;font-weight:800;color:#111827;white-space:normal;line-height:1.25}
-  .slip-tb th.w44{width:31mm}
-  .slip-tb td{font-size:9.5pt;font-weight:600;color:#0B1220}
-  .slip-tb tr{height:33.33%}
-  /* v41 — 지급 금액 줄에 높이를 더 준다 (금액 + 카드 내역 여러 줄 + 총액) */
-  .slip-tb tr.slip-r1{height:24%}
-  .slip-tb tr.slip-r2{height:24%}
-  .slip-tb tr.slip-r3{height:52%}
-  .slip-tb td.slip-c-tel{width:56mm}
-  .slip-tb td.slip-pay-td{padding:.9mm 2.6mm .9mm 2mm;vertical-align:middle}
-  /* A4 칸 안의 구분 배지 — 종이 크기에 맞춰 pt 로 */
-  .slip-tb .slip-pay-tags{gap:1.2mm;margin-top:.8mm;justify-content:flex-end}
-  .slip-tb .slip-tag{font-size:6.2pt;padding:.2mm 1.2mm;border-radius:1mm;display:inline-flex;align-items:center;gap:.9mm}
-  .slip-tb .slip-tag em{font-style:normal;font-size:5.4pt;font-weight:700;color:#64748B}
-  /* v40 — 추지(추가지원금)는 개통 때 이미 처리된 돈 → 종이의 노란 형광펜처럼 칠한다 (미리보기·인쇄 공통) */
-  .slip-tb .slip-tag.extra{background:#fef08a;border-color:#e6c96a;color:#4A3400}
-  .slip-tb .slip-tag.extra em{color:#6B5200}
-  .hl{background:#fef08a;color:inherit;padding:0 .7mm;border-radius:.6mm;
-    -webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
-  .slip-tb .slip-tag.extra .hl{background:none;padding:0}
-  .slip-tb td.slip-dim{color:#94A3B8;font-weight:600}
-  .slip-kind{font-size:6pt;font-weight:900;border-radius:1mm;padding:0 1mm;border:.6pt solid #CBD5E1;color:#334155}
-  .slip-kind.ka{background:#fffbe6;border-color:#E7CE7E;color:#7A5B00}
-  .slip-kind.kb{background:#eef5ff;border-color:#C3D9F5;color:#0B4AA2}
-  .slip-note{margin-top:auto;padding:.8mm 2.4mm 1.2mm;font-size:6.6pt;font-weight:700;color:#475569;
-    border-top:.6pt dashed #C7D2E0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  /* v41 — 지급 금액 칸 : 결제·입금해 줄 돈만 크게(한 줄씩) · 항목이 2개 이상일 때만 점선 아래 '총액' */
-  /* v53 — 지급 금액 칸을 칸 너비 전체로 쓴다.
-     · 전에는 오른쪽 끝에만 붙어 왼쪽 절반이 늘 비어 있었고, 그 상태로 세부 내역은 7.6pt 라
-       A4 로 인쇄하면 읽기 어려웠다.
-     · 지금: 금액은 칸 왼쪽부터, 처리 상태(개통시 결제완료 · 카드결제 완료)는 같은 줄 오른쪽 끝
-       → 좌우가 모두 채워져 빈 공란 없이 보인다.
-     · 세부 내역(위약금 · 할부금 …)은 9.8pt 진한 글씨로 키우고, 총액 줄도 9.5pt 왼쪽 정렬. */
-  .slip-calc{display:flex;flex-direction:column;align-items:stretch;gap:0;
-    font-size:11pt;font-weight:900;color:#0B1220;line-height:1.15;letter-spacing:-.02em;
-    font-variant-numeric:tabular-nums}
-  .slip-calc .calc-line{display:flex;align-items:baseline;justify-content:space-between;gap:1.6mm;
-    flex-wrap:wrap;max-width:100%}
-  .slip-calc .calc-item{font-weight:900;white-space:nowrap;flex:0 1 auto;min-width:0}
-  .slip-calc .calc-item.bank{color:#0B4AA2}
-  /* 카드 결제 내역 — 한 줄에 하나씩, 9.8pt 진한 글씨(인쇄해도 또렷) */
-  .slip-calc .calc-detail{display:flex;align-items:baseline;justify-content:space-between;gap:1.4mm;
-    flex-wrap:wrap;font-size:9.8pt;font-weight:800;color:#1F2A37;white-space:nowrap;
-    max-width:100%;text-align:left;line-height:1.22;padding-left:3mm;position:relative}
-  .slip-calc .calc-detail::before{content:'·';position:absolute;left:.8mm;top:0;
-    color:#94A3B8;font-weight:900}
-  .slip-calc .calc-sub{font-style:normal;font-size:9pt;font-weight:800;color:#334155;
-    margin-left:auto;letter-spacing:0;white-space:nowrap}
-  .slip-calc .hl{background:#fef08a;padding:0 1mm;border-radius:.6mm;color:#3F2D00;
+    border:.9pt solid #94A3B8;border-radius:2.6mm;overflow:hidden;color:#0F172A}
+  .slip-hd{display:flex;align-items:center;justify-content:space-between;gap:2mm;
+    min-height:8.8mm;padding:1.4mm 2.8mm;background:#0F172A;color:#fff}
+  .slip-title{font-size:10pt;font-weight:800;letter-spacing:-.015em;white-space:nowrap}
+  .slip-meta{display:flex;align-items:center;gap:1.8mm;font-size:7pt;font-weight:700;color:#DCE4EE;
+    white-space:nowrap}
+  .slip-meta .slip-md + .slip-md::before{content:'·';margin-right:1.8mm;color:#94A3B8}
+  .slip-kind{font-size:6.2pt;font-weight:900;border-radius:1.2mm;padding:.35mm 1.5mm;
+    border:.6pt solid transparent;letter-spacing:0}
+  .slip-kind.ka{background:#fef08a;color:#4A3400;border-color:#e6c96a}
+  .slip-kind.kb{background:#DBEAFE;color:#0B4AA2;border-color:#93B8EE}
+  /* 고객 · 계좌 요약 줄 */
+  .slip-who{display:flex;align-items:baseline;gap:1.8mm;min-height:6.6mm;padding:1.2mm 2.8mm;
+    background:#F4F7FB;border-bottom:.7pt solid #E2E8F0;white-space:nowrap;overflow:hidden}
+  .slip-who .sw-name{font-size:10.5pt;font-weight:900;color:#0F172A;letter-spacing:-.01em}
+  .slip-who .sw-tel{font-size:8.4pt;font-weight:800;color:#1F2A37;font-variant-numeric:tabular-nums}
+  .slip-who .sw-born{font-size:7.4pt;font-weight:700;color:#64748B;font-variant-numeric:tabular-nums}
+  .slip-who .sw-born::before{content:'('}
+  .slip-who .sw-born::after{content:')'}
+  .slip-who .sw-acct{margin-left:auto;font-size:7.6pt;font-weight:800;color:#0B4AA2;
+    overflow:hidden;text-overflow:ellipsis}
+  .slip-who .sw-acct b{font-weight:900}
+  /* 금액 블록 */
+  .slip-body{flex:1 1 auto;display:flex;min-height:0;padding:1.2mm 3mm .9mm}
+  .slip-calc{display:flex;flex-direction:column;justify-content:flex-start;gap:.4mm;width:100%;
+    font-size:11.25pt;font-weight:900;font-variant-numeric:tabular-nums}
+  .slip-calc .cl-main{display:flex;align-items:baseline;justify-content:space-between;gap:1.6mm;
+    flex:1 1 auto;min-width:0;padding:.4mm 1mm;margin:0 -1mm;border-radius:1mm}
+  .slip-calc .cl-l{display:flex;align-items:baseline;gap:1.4mm;min-width:0;white-space:nowrap}
+  .slip-calc .cl-badge{font-size:9.4pt;font-weight:900;letter-spacing:-.01em;color:#0F172A}
+  .slip-calc .cl-badge.extra{background:#fef08a;padding:0 1.3mm;border-radius:.8mm;color:#4A3400;
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
-  /* 총액 — 항목이 2개 이상일 때만, 얇은 점선 아래 합계 줄(9.5pt 왼쪽 정렬) */
-  .slip-calc .slip-money{width:100%;margin-top:.8mm;padding-top:.8mm;border-top:1px dashed #CBD5E1;
+  .slip-calc .cl-badge.bank{color:#0B4AA2}
+  .slip-calc .cl-r{font-size:14pt;font-weight:900;letter-spacing:-.03em;white-space:nowrap;color:#0F172A}
+  .slip-calc .calc-item{font-weight:900;white-space:nowrap;color:#0F172A}
+  .slip-calc .calc-item.bank{color:#0B4AA2}
+  .slip-calc .calc-sub{font-style:normal;font-size:9pt;font-weight:800;color:#334155;
+    letter-spacing:0;white-space:nowrap}
+  /* 세부 내역 — 영수증 줄맞춤 (왼쪽 항목 · 오른쪽 금액) */
+  .slip-calc .calc-detail{display:flex;align-items:baseline;justify-content:space-between;gap:1.4mm;
+    font-size:9.8pt;font-weight:800;color:#1F2A37;white-space:nowrap;line-height:1.24;
+    text-align:left;padding-left:3mm;position:relative}
+  .slip-calc .calc-detail::before{content:'·';position:absolute;left:.9mm;top:0;color:#94A3B8;
+    font-weight:900}
+  .slip-calc .cd-l{display:flex;align-items:baseline;gap:1.2mm;min-width:0;overflow:hidden;
+    text-overflow:ellipsis}
+  .slip-calc .cd-when{font-style:normal;font-size:8pt;font-weight:800;color:#64748B;letter-spacing:0}
+  .slip-calc .cd-done{font-style:normal;font-size:6.6pt;font-weight:900;color:#4A3400;
+    background:#fef08a;border-radius:.8mm;padding:.1mm 1mm;letter-spacing:0;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .slip-calc .cd-r{font-size:9.6pt;font-weight:900;letter-spacing:-.02em;white-space:nowrap;flex:none;
+    line-height:1.24}
+  .hl{background:#fef08a;padding:0 .8mm;border-radius:.7mm;color:inherit;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
+  .slip-calc .hl{background:#fef08a;padding:0 1mm;border-radius:.7mm;color:#3F2D00;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .slip-calc .hl .cl-badge,.slip-calc .hl .calc-sub,.slip-calc .hl .cl-r{color:#3F2D00}
+  .slip-calc .cd-r.hl{color:#3F2D00}
+  /* 총액 — 항목이 2개 이상일 때만 얇은 점선 아래 */
+  .slip-calc .slip-money{display:flex;align-items:baseline;justify-content:space-between;gap:1.6mm;
+    width:100%;margin-top:.7mm;padding-top:.7mm;border-top:1px dashed #CBD5E1;
     font-size:9.5pt;font-weight:900;color:#0F172A;text-align:left;line-height:1.15;
-    letter-spacing:0;white-space:nowrap;font-variant-numeric:tabular-nums}
+    letter-spacing:0;white-space:nowrap}
+  .slip-calc .slip-money .sm-r{font-size:10.5pt;font-weight:900;letter-spacing:-.02em}
+  /* 하단 요약 (기종 · 중고폰 반납) */
+  .slip-note{margin-top:auto;padding:.8mm 3mm 1.1mm;font-size:6.8pt;font-weight:700;color:#475569;
+    border-top:.6pt dashed #CBD5E1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* 폰 목록에서도 추지 금액은 형광펜으로 */
   .slip-row .slip-tag.extra{background:#fef08a;border-color:#e6c96a;color:#4A3400}
   /* v45 — 페이백 리스트에서도 완료 건은 노랑 형광펜 (일부는 연노랑 + 1/2 완료) */
   .slip-row .slip-tag.card.done,.slip-row .slip-tag.bank.done{background:#fef08a;border-color:#e6c96a;color:#4A3400}
   .slip-row .slip-tag.card.part{background:#FEF9C3;border-color:#E7D98A;color:#6B5200}
-  .slip-tb td.slip-check{background:#fff}
   .slip-foot{margin-top:auto;padding-top:1.4mm;border-top:.8pt dashed #9AA7B8;text-align:right;
     font-size:8pt;font-weight:700;color:#475569;font-variant-numeric:tabular-nums}
 
@@ -3074,6 +3095,12 @@
                       <button type="button" class="pchip pc-del" data-pc-del="1" aria-label="이 줄 삭제" hidden>×</button>
                       <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
                     </div>
+                  </div>
+                  <!-- v54 — [할부금]을 골랐을 때만 열린다 (새 기기 할부금 / 전 단말 할부금) -->
+                  <div class="pc-inst-row" data-pc-inst-row="1" hidden>
+                    <span class="pc-inst-label">할부 대상</span>
+                    <button type="button" class="pchip" data-pc-inst="새기기" aria-pressed="false">새 기기</button>
+                    <button type="button" class="pchip" data-pc-inst="전단말" aria-pressed="false">전 단말</button>
                   </div>
                 </div>
               </div>
@@ -4049,6 +4076,19 @@
   var PC_KINDS = ['할부금', '위약금'];
   var PC_WHENS = ['1일결제'];
   var PC_WHEN_LABEL = { '1일결제': '1일 결제' };
+  /* v54 — [할부금]을 골랐을 때만 고르는 [새 기기] / [전 단말] (하나만 · 다시 누르면 해제)
+     · 앱 필드  카드줄할부 = 금액 있는 줄 순서의 '새기기' / '전단말' / '-' (예 '새기기,-')
+       메모 표기 [카드줄할부:새기기,-] 로만 시트를 왕복한다(20컬럼·Code.gs 그대로) */
+  var PC_INSTS = ['새기기', '전단말'];
+  var PC_INST_LABEL = { '새기기': '새 기기', '전단말': '전 단말' };
+
+  function pcNormInst(v) {
+    var s = String(v == null ? '' : v).replace(/\s/g, '');
+    if (!s || s === '-') return '';
+    if (s.indexOf('새기기') === 0) return '새기기';
+    if (s.indexOf('전단말') === 0) return '전단말';
+    return '';
+  }
   /* v45 — 한 줄에 [할부금][위약금] + [1일 결제] (+ 금액이 있으면 ✓ 카드결제 완료)
      · 종류는 하나만, '1일 결제'는 따로 토글 — 예전 '1일예정' · '선결제' 기록도 그대로 살린다 */
 
@@ -4065,11 +4105,13 @@
     return '';
   }
 
-  /* 확인서·상세에 보여 줄 이름 — '할부금' / '위약금 · 1일 결제' */
-  function pcComboLabel(kind, when) {
-    kind = pcNormKind(kind); when = pcNormWhen(when);
-    if (kind && when) return kind + ' · ' + PC_WHEN_LABEL[when];
-    if (kind) return kind;
+  /* 확인서·상세에 보여 줄 이름 — '할부금' / '새 기기 할부금' / '전 단말 할부금' / '위약금 · 1일 결제' */
+  function pcComboLabel(kind, when, inst) {
+    kind = pcNormKind(kind); when = pcNormWhen(when); inst = pcNormInst(inst);
+    var base = kind;
+    if (kind === '할부금' && inst) base = PC_INST_LABEL[inst] + ' 할부금';
+    if (base && when) return base + ' · ' + PC_WHEN_LABEL[when];
+    if (base) return base;
     if (when) return PC_WHEN_LABEL[when];
     return '카드결제';
   }
@@ -4119,16 +4161,28 @@
     return box ? box.querySelectorAll('.paycard-line') : [];
   }
 
-  /* 폰 카드 상세에 카드결제 내역을 작게 붙인다 — ' (할부금 200,000 · 위약금 150,000)' */
-  function pcDetailBadge(detail) {
+  /* 폰 카드 상세에 카드결제 내역을 작게 붙인다 — ' (할부금 200,000 · 위약금 150,000)'
+     v54 — 줄의 [새 기기]/[전 단말] 도 함께 ('새 기기 할부금 361,184') */
+  function pcDetailBadge(detail, insts) {
     var list = pcDetailParse(detail);
     if (list.length < 2) return '';
-    var parts = [];
+    var parts = [], iArr = insts || [];
     for (var i = 0; i < list.length; i++) {
       var d = list[i];
-      parts.push(pcComboLabel(d.kind, d.when) + ' ' + fmtNum(d.amt));
+      parts.push(pcComboLabel(d.kind, d.when, iArr[i]) + ' ' + fmtNum(d.amt));
     }
     return ' <span class="muted">(' + esc(parts.join(' · ')) + ')</span>';
+  }
+
+  /* v54 — 이 줄이 [새 기기]/[전 단말] 중 무엇인지 */
+  function pcInstRowHtml(n) {
+    var h = '<div class="pc-inst-row" data-pc-inst-row="' + n + '" hidden>' +
+      '<span class="pc-inst-label">할부 대상</span>';
+    for (var i = 0; i < PC_INSTS.length; i++) {
+      h += '<button type="button" class="pchip" data-pc-inst="' + PC_INSTS[i] + '" aria-pressed="false">' +
+        PC_INST_LABEL[PC_INSTS[i]] + '</button>';
+    }
+    return h + '</div>';
   }
 
   function pcLineData(line) {
@@ -4138,7 +4192,8 @@
       raw: inp ? String(inp.value == null ? '' : inp.value) : '',
       amt: inp ? parseNumber(inp.value) : 0,
       kind: line ? pcNormKind(line.getAttribute('data-pc-kind')) : '',
-      when: line ? pcNormWhen(line.getAttribute('data-pc-when')) : ''
+      when: line ? pcNormWhen(line.getAttribute('data-pc-when')) : '',
+      inst: line ? pcNormInst(line.getAttribute('data-pc-inst')) : ''
     };
   }
 
@@ -4179,6 +4234,21 @@
         wb[j].classList.toggle('on', won);
         wb[j].setAttribute('aria-pressed', won ? 'true' : 'false');
       }
+      /* v54 — [새 기기]/[전 단말] 은 [할부금]일 때만 보인다 · 종류를 바꾸면 고른 값도 비운다 */
+      if (d.kind !== '할부금' && ls[i].getAttribute('data-pc-inst')) {
+        ls[i].setAttribute('data-pc-inst', '');
+        d.inst = '';
+      }
+      var ir = ls[i].querySelector('.pc-inst-row');
+      if (ir) {
+        ir.hidden = d.kind !== '할부금';
+        var ib = ir.querySelectorAll('button[data-pc-inst]');
+        for (j = 0; j < ib.length; j++) {
+          var ion = !!d.inst && ib[j].getAttribute('data-pc-inst') === d.inst;
+          ib[j].classList.toggle('on', ion);
+          ib[j].setAttribute('aria-pressed', ion ? 'true' : 'false');
+        }
+      }
       var del = ls[i].querySelector('.pc-del');
       if (del) del.hidden = ls.length <= 1;
       if (payNoneOn('paycard')) ls[i].classList.add('none-on');
@@ -4197,7 +4267,13 @@
         box.innerHTML = '총 카드결제: <b class="pc-total">' + fmtNum(total) + '원</b> (' + n + '건)';
         box.hidden = false;
       } else if (chip && n >= 1) {
-        box.innerHTML = '카드결제 ' + fmtNum(total) + '원 — ' + esc(pcDetailText(pcAll())) ;
+        /* v54 — 상세를 그대로 보이지 않고 읽는 이름으로: `새 기기 할부금 361,184원` */
+        var allPc = pcAll(), lbls = [];
+        for (i = 0; i < allPc.length; i++) {
+          if (!(Number(allPc[i].amt) > 0)) continue;
+          lbls.push(pcComboLabel(allPc[i].kind, allPc[i].when, allPc[i].inst) + ' ' + fmtNum(allPc[i].amt));
+        }
+        box.innerHTML = '카드결제 ' + fmtNum(total) + '원 — ' + esc(lbls.join(' · '));
         box.hidden = false;
       } else {
         box.textContent = '';
@@ -4233,6 +4309,7 @@
     line.setAttribute('data-pc-row', String(n));
     line.setAttribute('data-pc-kind', d.kind || '');
     line.setAttribute('data-pc-when', d.when || '');
+    line.setAttribute('data-pc-inst', d.inst || '');
     line.innerHTML =
       '<div class="pay-row pc-top">' +
         '<input class="money pc-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="페이백 카드결제 금액 ' + n + '">' +
@@ -4247,7 +4324,8 @@
         '<div class="pc-tools">' +
           '<button type="button" class="pchip pc-del" data-pc-del="' + n + '" aria-label="이 줄 삭제">×</button>' +
         '</div>' +
-      '</div>';
+      '</div>' +
+      pcInstRowHtml(n);
     box.appendChild(line);
     var inp = line.querySelector('.pc-amt');
     if (inp && Number(d.amt) > 0) inp.value = fmtNum(d.amt);
@@ -4256,7 +4334,7 @@
   }
 
   /* 상세 문자열·합계로 줄을 다시 그린다 (수정 모달 복원·다음 고객 초기화) */
-  function pcSetRows(detailText, total, states) {
+  function pcSetRows(detailText, total, states, insts) {
     var box = $('paycardLines');
     if (!box) return;
     // v46 — 다시 그릴 때 이전 줄의 빨간 표시는 들고 오지 않는다
@@ -4282,11 +4360,19 @@
     if (inp) inp.value = Number(list[0].amt) > 0 ? fmtNum(list[0].amt) : '';
     for (var j = 1; j < list.length; j++) pcAddRow(list[j]);
     // v45 — 줄별 완료 상태 복원 (금액 있는 줄 순서대로 '1'/'0')
+    // v54 — 줄별 [새 기기]/[전 단말] 도 같은 순서로 되살린다
     var stArr = (states && states.length) ? states : [];
-    var now = pcLines(), sti = 0;
+    var inArr = (insts && insts.length) ? insts : [];
+    var now = pcLines(), sti = 0, ini = 0;
     for (var m = 0; m < now.length; m++) {
       var dl = pcLineData(now[m]);
-      if (!(Number(dl.amt) > 0)) { now[m].setAttribute('data-pc-done', ''); continue; }
+      if (!(Number(dl.amt) > 0)) {
+        now[m].setAttribute('data-pc-done', '');
+        now[m].setAttribute('data-pc-inst', '');
+        continue;
+      }
+      now[m].setAttribute('data-pc-inst', pcNormInst(inArr[ini] || ''));
+      ini++;
       var stOne = String(stArr[sti] || '') === '1';
       now[m].setAttribute('data-pc-done', stOne ? '1' : '');
       // v47 — 예전 기록에 `1일결제` 와 완료가 함께 있으면 완료가 이긴다(1일 태그는 끈 상태로 연다)
@@ -4301,6 +4387,41 @@
     var cur = line.getAttribute(attr) || '';
     line.setAttribute(attr, cur === value ? '' : value);
     pcRefresh();
+  }
+
+  /* v54 — 한 줄의 [새 기기] / [전 단말] — 하나만 (같은 칩을 다시 누르면 해제) */
+  function pcToggleInst(line, value) {
+    if (!line) return;
+    var cur = pcNormInst(line.getAttribute('data-pc-inst'));
+    var v = pcNormInst(value);
+    line.setAttribute('data-pc-inst', (cur && cur === v) ? '' : v);
+    pcRefresh();
+  }
+
+  /* v54 — 저장용 줄별 할부 구분 — 금액 있는 줄 순서 · 빈 자리는 '-'
+     예) 1줄 새 기기 → '새기기' · [위약금, 전 단말] → '-,전단말' (없으면 '') */
+  function pcLineInstText() {
+    if (payNoneOn('paycard')) return '';
+    var ls = pcLines(), out = [], any = false, i;
+    for (i = 0; i < ls.length; i++) {
+      var dd = pcLineData(ls[i]);
+      if (!(Number(dd.amt) > 0) || dd.kind !== '할부금') { out.push(''); continue; }
+      out.push(dd.inst || '');
+      if (dd.inst) any = true;
+    }
+    while (out.length && !out[out.length - 1]) out.pop();
+    if (!any) return '';
+    return out.map(function (x) { return x || '-'; }).join(',');
+  }
+
+  /* v54 — 기록의 카드줄할부 → 금액 있는 줄 순서의 ['새기기'|'전단말'|''] */
+  function cardLineInsts(r) {
+    var n = cardAmountLines(r && r.페이백카드상세, r && r.페이백카드).length;
+    var raw = String((r && r.카드줄할부) || '');
+    var arr = raw ? raw.split(',') : [];
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(pcNormInst(arr[i]));
+    return out;
   }
 
   /* v47 — [+ 추가] 를 지금 맨 마지막 줄의 4칩 줄 오른쪽 끝에 붙인다
@@ -5466,6 +5587,9 @@
     // v45 — 카드결제 줄별 완료 [카드줄완료:1,0] (금액 있는 줄 순서)
     var rePcLineDone = /\[카드줄완료:\s*([01,\s]*)\]/g;
     s = s.replace(rePcLineDone, function (all, v) { hit = true; out.cardLineDone = String(v || '').replace(/[^01,]/g, ''); return ' '; });
+    // v54 — 카드결제 줄별 할부 구분 [카드줄할부:새기기,-] (금액 있는 줄 순서 · '-' 는 고르지 않은 줄)
+    var rePcLineInst = /\[카드줄할부:\s*([^\]]*)\]/g;
+    s = s.replace(rePcLineInst, function (all, v) { hit = true; out.cardLineInst = String(v || '').replace(/\s/g, ''); return ' '; });
     // v43 — 중고폰 여러 줄 상세 [중고상세:S25엣지=500000|에어팟=200000|워치=100000]
     var reUsedDetail = /\[중고상세:\s*([^\]]*)\]/g;
     s = s.replace(reUsedDetail, function (all, v) { hit = true; out.usedDetail = String(v || '').trim(); return ' '; });
@@ -5595,6 +5719,19 @@
       if (pcInf.done === pcInf.total) head.push(PAYCARD_DONE_MARK);
       if (pcInf.total > 1) head.push('[카드줄완료:' + pcInf.states.join(',') + ']');
     }
+    // v54 — 카드결제 줄별 [새 기기]/[전 단말] ([카드줄할부:새기기,-] · 고른 줄이 있을 때만)
+    var pcInstRaw = String(rec.카드줄할부 || t.cardLineInst || '').replace(/\s/g, '');
+    if (pcMemoAmt > 0 && pcInstRaw) {
+      var pcInstN = cardAmountLines(String(rec.페이백카드상세 || t.paycardDetail || ''), pcMemoAmt).length;
+      var pcInstArr = pcInstRaw.split(','), pcInstOut = [], pcInstAny = false;
+      for (var pi = 0; pi < pcInstN && pi < pcInstArr.length; pi++) {
+        var pv2 = pcNormInst(pcInstArr[pi]);
+        pcInstOut.push(pv2 || '-');
+        if (pv2) pcInstAny = true;
+      }
+      while (pcInstOut.length && pcInstOut[pcInstOut.length - 1] === '-') pcInstOut.pop();
+      if (pcInstAny) head.push('[카드줄할부:' + pcInstOut.join(',') + ']');
+    }
     var stamp = normWriteStamp(rec.작성일 || t.writtenAt);
     if (stamp) head.push('[작성일:' + stamp + ']');
     if (!head.length) return m;
@@ -5668,6 +5805,8 @@
     var pcN = cardAmountLines(pcFinalDetail, pcFinalAmt).length;
     var pcRaw = String(tags.cardLineDone || (r && r.카드줄완료) || '').replace(/[^01,]/g, '');
     o.카드줄완료 = (pcN > 1 && pcRaw) ? pcRaw : '';
+    // v54 — 카드결제 줄별 [새 기기]/[전 단말] 도 메모 표기에서 복원
+    o.카드줄할부 = String(tags.cardLineInst || (r && r.카드줄할부) || '').replace(/\s/g, '');
     var pcLegacyDone = !!tags.cardDone || normalizeCardDone(r && r.카드완료) === '완료';
     var pcArr2 = o.카드줄완료 ? o.카드줄완료.split(',') : [];
     var pcDoneCnt = 0;
@@ -6680,6 +6819,8 @@
     // v44 · v45 — 카드결제 완료(완료/일부)와 줄별 상태도 담는다 (빠뜨리면 서버 왕복 뒤 표기가 풀린다)
     snap.카드완료 = normalizeCardDone(rec.카드완료);
     snap.카드줄완료 = String(rec.카드줄완료 || '').replace(/[^01,]/g, '');
+    // v54 — 줄별 할부 구분도 담는다 (빠뜨리면 서버 왕복 뒤 [카드줄할부:…] 표기가 풀린다)
+    snap.카드줄할부 = String(rec.카드줄할부 || '').replace(/\s/g, '');
     snap.작성일 = normWriteStamp(rec.작성일);
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
@@ -9957,16 +10098,38 @@
   }
 
   // 카드결제 내역 — ['위약금(1일 예정) 251,870원', '할부금 100,000원'] 처럼 한 줄씩
-  /* v45 — 확인서 카드결제 내역: [{label:'1일 위약금 선납 150,000원', done:true}] (완료 줄만 노랑) */
+  /* v45 — 확인서 카드결제 내역: [{label:'1일 위약금 선납 150,000원', done:true}] (완료 줄만 노랑)
+     v54 — 종이에는 입력 순서가 아니라 종류별로 모아 쓴다 */
+  var PC_SLIP_RANK = { '위약금': 0, '할부금': 1 };
+  function pcSlipRank(kind) {
+    var k = pcNormKind(kind);
+    return PC_SLIP_RANK[k] == null ? 2 : PC_SLIP_RANK[k];
+  }
+
   function slipCardDetailItems(r) {
-    var list = pcDetailParse(r.페이백카드상세), states = cardLineStates(r), out = [], i, d;
+    var list = pcDetailParse(r.페이백카드상세), states = cardLineStates(r), insts = cardLineInsts(r);
+    var out = [], i, d, k = 0, kd, wh, inst, kindLabel;
     for (i = 0; i < list.length; i++) {
       d = list[i];
       if (!(Number(d.amt) > 0)) continue;
-      out.push({ label: pcComboLabel(d.kind, d.when) + ' ' + fmtNum(d.amt) + '원',
-                 done: states[i] === '1' });
+      kd = pcNormKind(d.kind); wh = pcNormWhen(d.when); inst = pcNormInst(insts[k]);
+      kindLabel = (kd === '할부금' && inst) ? (PC_INST_LABEL[inst] + ' 할부금') : (kd || '카드결제');
+      out.push({ label: pcComboLabel(d.kind, d.when, insts[k]) + ' ' + fmtNum(d.amt) + '원',
+                 kindLabel: kindLabel,
+                 whenLabel: wh ? PC_WHEN_LABEL[wh] : '',
+                 amtText: fmtNum(d.amt) + '원',
+                 done: states[i] === '1',
+                 rank: pcSlipRank(d.kind), idx: k });
+      k++;
     }
-    return out;
+    /* v54 — `위약금 372,000 → 할부금 361,184 → 위약금 195,256` 처럼 섞여 적혀도
+       종이에는 `위약금` 을 먼저 모으고 그다음 `할부금`(새 기기 · 전 단말) 을 쓴다.
+       종류가 없는 줄은 맨 뒤, 같은 종류끼리는 적은 순서 그대로(완료 표시도 그 줄을 따라간다). */
+    out.sort(function (a, b) { return (a.rank - b.rank) || (a.idx - b.idx); });
+    return out.map(function (x) {
+      return { label: x.label, kindLabel: x.kindLabel, whenLabel: x.whenLabel,
+               amtText: x.amtText, done: x.done };
+    });
   }
 
   function slipCardDetailList(r) {
@@ -10095,96 +10258,89 @@
     return out;
   }
 
-  // 확인서 한 칸 — 종이 양식 그대로 (제목 + 2열 컴팩트 표 3줄)
-  //   kind A(추지·카드) 는 그 금액만, kind B(계좌입금) 는 입금 금액만 + 계좌 정보
+  /* v54 — 확인서 한 칸 : 카드형 영수증
+     · kind A(추지·카드) 는 추지 + 카드결제를, kind B(계좌입금) 는 입금만 + 계좌 정보를 적는다
+     · 라벨·항목은 왼쪽, 금액은 오른쪽 끝 — 영수증처럼 한눈에 읽히게 */
+  function slipLineHtml(label, amount, hl, sub) {
+    var cls = label === '추지' ? ' extra' : (label === '입금' ? ' bank' : '');
+    return '<div class="calc-line"><span class="cl-main' + (hl ? ' hl' : '') + '">' +
+      '<span class="cl-l"><span class="cl-badge' + cls + '">' + esc(label) + '</span>' +
+        (sub ? ' <em class="calc-sub">' + esc(sub) + '</em>' : '') + '</span> ' +
+      '<span class="cl-r calc-item' + cls + '">' + fmtNum(amount) + '원</span>' +
+      '</span></div>';
+  }
+
   function slipCardHtml(e) {
     var r = e.r, kind = e.kind;
     var phone = formatPhone(r.연락처) || String(r.연락처 || '');
     var birth = String(r.생년월일 || '').trim();
-    var phoneBirth = [phone, birth].filter(function (x) { return !!x; }).join(' / ');
-    var bankLine = kind === 'B' ? payBankLine(r) : '';
-    var holder = kind === 'B' ? String(r.입금예금주 || '').trim() : '';
     var d = normalizeDate(r.개통일) || String(r.개통일 || '');
-    /* v41 — 지급 금액 칸
-       · 결제·입금해 줄 돈을 한 줄에 하나씩 크게(11pt · 900)
-       · 카드 결제 내역은 줄을 나눠 7.6pt 로 또렷하게
-       · 항목이 2개 이상일 때만 맨 아래 점선 아래에 '총액 …원' */
+    var staff = String(r.담당자 || '').trim();
     var cardItems = slipCardDetailItems(r);
-    var cardLines = cardItems.map(function (x) { return x.label; });
     var cardInf = cardDoneInfo(r);
     var cardAllDone = cardInf.total > 0 && cardInf.done === cardInf.total;
     var payCount = (e.extra ? 1 : 0) + (e.card ? 1 : 0) + (e.bank ? 1 : 0);
-    var calcRows = [], detailRows = [], ci;
-    if (e.extra) {
-      calcRows.push('<div class="calc-line"><span class="hl">추지 ' + fmtNum(e.extra) + '원</span>' +
-        '<em class="calc-sub">개통시 결제완료</em></div>');
-    }
+    var rows = [], details = [], ci;
+
+    /* 합계 줄 — 왼쪽 라벨 · 오른쪽 금액(13.5pt) · 처리 상태는 라벨 옆 작은 글씨
+       완료(추지 · 전 줄 카드결제 · 입금완료)는 그 줄 전체를 노란 형광펜으로 */
+    if (e.extra) rows.push(slipLineHtml('추지', e.extra, true, '개통시 결제완료'));
     if (e.card) {
-      /* v45 — 카드결제는 줄별 완료
-         · 전 줄 완료 : 합계를 노란 형광펜 + '카드결제 완료'
-         · 일부 완료 : 합계는 일반 글씨 + '1/2 완료', 내역에서 완료된 줄만 노랑 + '카드결제 완료'
-         · 미완료    : 노랑 없음 */
       var cardSub = '';
-      if (cardAllDone) {
-        cardSub = (payCount === 1 && cardLines.length === 1)
-          ? '카드결제 완료 · ' + cardLines[0] : '카드결제 완료';
-      } else if (cardInf.done > 0) {
-        cardSub = cardInf.done + '/' + cardInf.total + ' 완료';
-      } else if (payCount === 1 && cardLines.length === 1) {
-        cardSub = cardLines[0];
-      }
-      calcRows.push('<div class="calc-line">' +
-        (cardAllDone
-          ? '<span class="hl">카드결제 ' + fmtNum(e.card) + '원</span>'
-          : '<span class="calc-item">카드결제 ' + fmtNum(e.card) + '원</span>') +
-        (cardSub ? '<em class="calc-sub">' + esc(cardSub) + '</em>' : '') +
-        '</div>');
-      if (cardItems.length >= 2 || payCount > 1) {
-        for (ci = 0; ci < cardItems.length; ci++) {
-          var cIt = cardItems[ci];
-          detailRows.push('<div class="calc-detail">' +
-            (cIt.done
-              ? '<span class="hl">' + esc(cIt.label) + '</span> <em class="calc-sub">카드결제 완료</em>'
-              : esc(cIt.label)) +
-            '</div>');
-        }
+      if (cardAllDone) cardSub = '카드결제 완료';
+      else if (cardInf.done > 0) cardSub = cardInf.done + '/' + cardInf.total + ' 완료';
+      rows.push(slipLineHtml('카드결제', e.card, cardAllDone, cardSub));
+      /* 세부 내역 — 위약금 먼저, 그다음 할부금(새 기기 · 전 단말) (slipCardDetailItems 가 정렬) */
+      for (ci = 0; ci < cardItems.length; ci++) {
+        var cIt = cardItems[ci];
+        details.push('<div class="calc-detail">' +
+          '<span class="cd-l">' + esc(cIt.kindLabel) +
+            (cIt.whenLabel ? ' · <em class="cd-when">' + esc(cIt.whenLabel) + '</em>' : '') +
+            (cIt.done ? ' <em class="cd-done">카드결제 완료</em>' : '') + '</span> ' +
+          '<span class="cd-r' + (cIt.done ? ' hl' : '') + '">' + esc(cIt.amtText) + '</span>' +
+          '</div>');
       }
     }
     if (e.bank) {
-      // v44 · v45 — 입금 완료는 노란 형광펜, 1일 입금은 옆에 함께 표시
       var bankDone = normalizeDone(r.입금완료) === '완료';
       var bankFirst = String(r.입금1일 || '') === '1일';
-      var bankSub = [bankDone ? '입금완료' : '', bankFirst ? '1일 입금' : ''].filter(function (x) { return !!x; }).join(' · ');
-      calcRows.push('<div class="calc-line">' +
-        (bankDone
-          ? '<span class="hl">입금 ' + fmtNum(e.bank) + '원</span>'
-          : '<span class="calc-item bank">입금 ' + fmtNum(e.bank) + '원</span>') +
-        (bankSub ? '<em class="calc-sub">' + esc(bankSub) + '</em>' : '') +
-        '</div>');
+      var bankSub = [bankDone ? '입금완료' : '', bankFirst ? '1일 입금' : '']
+        .filter(function (x) { return !!x; }).join(' · ');
+      rows.push(slipLineHtml('입금', e.bank, bankDone, bankSub));
     }
-    var payCell = '<div class="slip-calc">' + calcRows.join('') + detailRows.join('') +
-      (payCount > 1 ? '<div class="slip-money">총액 ' + fmtNum(e.amount) + '원</div>' : '') + '</div>';
-    // 기종 · 반납 중고폰 — 종이 여백처럼 카드 아래 한 줄
+    var payBlock = '<div class="slip-calc">' + rows.join('') + details.join('') +
+      (payCount > 1 ? '<div class="slip-money"><span class="sm-l">총액</span> <span class="sm-r">' +
+        fmtNum(e.amount) + '원</span></div>' : '') + '</div>';
+
+    /* 고객 요약 줄 — 계좌·예금주는 [계좌 입금] 칸에서만. 없는 칸을 '—' 로 채우지 않는다 */
+    var acct = '';
+    if (kind === 'B') {
+      var bankLine = payBankLine(r);
+      var holder = String(r.입금예금주 || '').trim();
+      if (bankLine || holder) {
+        acct = '<span class="sw-acct">' + (bankLine ? esc(bankLine) : '') +
+          (holder ? (bankLine ? ' · ' : '') + '예금주 ' + esc(holder) : '') + '</span>';
+      }
+    }
+    var who = '<div class="slip-who">' +
+      '<span class="sw-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
+      (phone ? '<span class="sw-tel">' + esc(phone) + '</span>' : '') +
+      (birth ? '<span class="sw-born">' + esc(birth) + '</span>' : '') + acct + '</div>';
+
     var notes = [];
     if (r.기종) notes.push('기종 ' + String(r.기종).trim());
     if (r.중고폰) notes.push('중고폰 반납 ' + String(r.중고폰).trim());
+
     return '<div class="slip slip-k' + kind + '">' +
       '<div class="slip-hd">' +
         '<span class="slip-title">티앤제이통신 입금 지급 확인서</span>' +
-        '<span class="slip-meta">개통일: ' + esc(d || '—') + ' · 담당: ' + esc(String(r.담당자 || '').trim() || '—') +
+        '<span class="slip-meta">' +
+          '<span class="slip-md">개통일 ' + esc(d || '—') + '</span>' +
+          '<span class="slip-md">담당 ' + esc(staff || '—') + '</span>' +
           '<span class="slip-kind ' + (kind === 'A' ? 'ka' : 'kb') + '">' +
             (kind === 'A' ? '추지·카드' : '계좌입금') + '</span></span>' +
-      '</div>' +
-      '<table class="slip-tb"><tbody>' +
-        '<tr class="slip-r1"><th>가입자명</th><td>' + esc(r.고객명 || '') + '</td>' +
-          '<th class="w44">연락처 / 생년월일</th><td class="slip-c-tel">' + esc(phoneBirth) + '</td></tr>' +
-        '<tr class="slip-r2"><th>은행 / 계좌번호</th><td class="slip-bank' + (kind === 'A' ? ' slip-dim' : '') + '">' +
-          (kind === 'B' ? esc(bankLine) : '—') + '</td>' +
-          '<th>예금주</th><td' + (kind === 'A' ? ' class="slip-dim"' : '') + '>' +
-          (kind === 'B' ? esc(holder) : '—') + '</td></tr>' +
-        '<tr class="slip-r3"><th>지급 금액</th><td class="slip-pay-td">' + payCell +
-          '<th>확인</th><td class="slip-check"></td></tr>' +
-      '</tbody></table>' +
+      '</div>' + who +
+      '<div class="slip-body">' + payBlock + '</div>' +
       (notes.length ? '<div class="slip-note">' + esc(notes.join(' · ')) + '</div>' : '') +
     '</div>';
   }
@@ -11258,7 +11414,7 @@
         mRowOpt('유선 사은품', normalizeWiredGift(r.유선혜택) ? esc(wiredGiftLabel(r.유선혜택)) : '') +
         (onestopOf(r) ? mRow('원스톱', '<span class="pbadge onestop-badge">체크</span> <span class="muted">유선 +10만원 · +1.0P</span>') : '') +
         (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
-        (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세) +
+        (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세, cardLineInsts(r)) +
           (cardDoneBadgeHtml(r) ? ' ' + cardDoneBadgeHtml(r) : '') : '') : '') +
         (isAdmin() ? mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' +
           (String(r.입금1일 || '') === '1일' ? ' <span class="muted">1일 입금</span>' : '') : '') : '') +
@@ -12584,7 +12740,8 @@
     $('f_rebate_l').value = r.유선리베이트 ? fmtNum(r.유선리베이트) : '';
     $('f_extra').value = r.추가지원금 ? fmtNum(r.추가지원금) : '';
     // v32 · v45 — 페이백(카드결제)을 여러 줄(4칩)로 복원하고, 줄별 완료 상태까지 되살린다
-    pcSetRows(r.페이백카드상세 || '', Number(r.페이백카드) || 0, cardLineStates(r));
+    // v54 — 줄별 [새 기기]/[전 단말] 도 함께
+    pcSetRows(r.페이백카드상세 || '', Number(r.페이백카드) || 0, cardLineStates(r), cardLineInsts(r));
     $('f_paybank').value = r.페이백입금 ? fmtNum(r.페이백입금) : '';
     // v39 — 페이백(입금) 계좌 3칸 + 입금 완료 상태 복원
     $('f_paybank_bank').value = r.입금은행 || '';
@@ -12835,6 +12992,8 @@
       카드완료: (!payNoneOn('paycard') && pcDoneSummary().total > 0) ? pcDoneSummary().state : '',
       // v45 — 두 줄 이상이면 줄별 완료('1,0')를 메모 [카드줄완료:1,0] 로 왕복
       카드줄완료: payNoneOn('paycard') ? '' : pcLineDoneText(),
+      // v54 — 할부금 줄의 [새 기기]/[전 단말] (금액 있는 줄 순서 · 메모 [카드줄할부:…] 로 왕복)
+      카드줄할부: pcLineInstText(),
       페이백입금: parseNumber($('f_paybank').value),
       // v39 — 페이백(입금) 계좌(선택) + 입금 완료 상태
       입금은행: payNoneOn('paybank') ? '' : $('f_paybank_bank').value.trim(),
@@ -14127,6 +14286,9 @@
         if (kb2) { pcToggle(kb2.closest('.paycard-line'), 'data-pc-kind', kb2.getAttribute('data-pc-kind')); return; }
         var wb2 = t && t.closest ? t.closest('button[data-pc-when]') : null;
         if (wb2) { pcToggleWhen(wb2.closest('.paycard-line'), wb2.getAttribute('data-pc-when')); return; }
+        // v54 — [할부금]일 때만 보이는 [새 기기] / [전 단말]
+        var ib2 = t && t.closest ? t.closest('button[data-pc-inst]') : null;
+        if (ib2) { pcToggleInst(ib2.closest('.paycard-line'), ib2.getAttribute('data-pc-inst')); return; }
         // v45 — 그 줄만 카드결제 완료 토글 · v47 — 켜면 1일 결제는 자동 해제
         var dn = t && t.closest ? t.closest('button[data-pc-done-btn]') : null;
         if (dn) {
@@ -14144,6 +14306,7 @@
             if (inp) inp.value = '';
             line.setAttribute('data-pc-kind', '');
             line.setAttribute('data-pc-when', '');
+            line.setAttribute('data-pc-inst', '');
           }
           pcRefresh();
         }
