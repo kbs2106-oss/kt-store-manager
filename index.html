@@ -236,9 +236,11 @@
   .sum-cell{display:flex;flex-direction:column;justify-content:center;min-width:0;overflow:hidden;
     padding:9px 15px;border-right:1px solid var(--line)}
   .sum-cell:last-child{border-right:0}
-  /* 관리자 전용 정산 줄 — 총 순마진 · 추지·페이백 합계
-     v33 — 칸 수와 열 수를 맞춘다 (전에는 5열에 2칸이라 1/5 폭에서 7자리 금액이 옆 칸을 침범했다) */
-  .sum-cells.sum-net{grid-template-columns:repeat(2,minmax(0,1fr));border-top:1px solid var(--line);background:#FBFCFE}
+  /* 관리자 전용 정산 줄 — 총 순마진 · 추가지원금(추지) · 페이백
+     v33 — 칸 수와 열 수를 맞춘다 (전에는 5열에 2칸이라 1/5 폭에서 7자리 금액이 옆 칸을 침범했다)
+     v40 — 추지·페이백 합산 한 칸을 추지 · 페이백 두 칸으로 나눠 3칸이 된다 */
+  .sum-cells.sum-net{grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);background:#FBFCFE}
+  .sum-net .kpi-paren{font-size:10.5px;font-weight:700;color:var(--slate-400);letter-spacing:0}
   .sum-cells.sum-money{grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--line);background:#FBFCFE}
   /* v21 — 정책 포인트 줄 (무선 · 유선 · 합계) */
   .sum-cells.sum-points{grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--line);background:#FFFDF8}
@@ -311,6 +313,9 @@
     border:1px solid #DCE9FB;border-radius:6px;padding:1px 6px}
   .sb-note{font-size:11px;font-weight:600;color:var(--slate-400);white-space:nowrap}
   .sb-scroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:10px;background:#fff}
+  /* v40 — 폰에서 표가 옆으로 넘칠 때만 뜨는 안내 줄 */
+  .sb-hint{font-size:10.5px;font-weight:700;color:var(--slate-400);margin:5px 2px 0;line-height:1.35;text-align:right}
+  .sb-hint[hidden]{display:none}
   .sb-table{width:100%;min-width:640px;border-collapse:separate;border-spacing:0;font-size:11.5px}
   .sb-table th{position:sticky;top:0;background:#F6F9FD;color:var(--slate-500);font-size:10.5px;font-weight:800;
     text-align:right;padding:6px 8px;border-bottom:1px solid var(--line);line-height:1.25;white-space:nowrap}
@@ -334,9 +339,10 @@
   .sb-table tfoot td.sb-name{background:#F8FAFD}
   .sb-rank{font-style:normal;font-size:9.5px;font-weight:900;color:#3730A3;background:#E0E7FF;border-radius:5px;padding:0 4px;margin-left:4px}
 
-  /* v30 — 전화번호 1탭 복사 (표 · 폰 카드 · 임박 알림) */
+  /* v30 → v40 — 전화번호 1탭 통화 링크 (표 · 폰 카드 · 임박 알림을 같은 모양으로) */
   .ph-copy{font:inherit;color:#1D4ED8;font-weight:700;background:none;border:0;padding:0;
-    border-bottom:1px dashed #A9C4EE;cursor:pointer;text-align:left;font-variant-numeric:tabular-nums}
+    border-bottom:1px dashed #A9C4EE;cursor:pointer;text-align:left;font-variant-numeric:tabular-nums;
+    text-decoration:none;display:inline-block;line-height:1.35}
   .ph-copy:hover{color:#1E3A8A;border-bottom-color:#1D4ED8}
   .ph-copy:active{background:#EAF2FF;border-radius:4px}
   .duerow .ph-copy{color:#1D4ED8}
@@ -361,8 +367,15 @@
     /* 폰: 두 칸씩 쌓아 읽기 쉽게 (리베이트·순마진은 관리자만) */
     .sum-cells,
     .sum-cells.sum-money,
-    .sum-cells.sum-net,
     .sum-cells.sum-points{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+    /* v40 — 순마진 · 추지 · 페이백 3칸은 폰에서도 한 줄에 (금액이 길면 칸 안에서 줄어든다) */
+    .sum-cells.sum-net{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+    .sum-net .sum-cell{padding:8px 9px}
+    .sum-net .sum-label{font-size:10.5px;gap:0}
+    .sum-net .sum-value{margin-top:1px}
+    .sum-net .sum-value i{font-size:10px}
+    .sum-cells.sum-net .sum-value b{font-size:16px}
+    .sum-net .kpi-paren{font-size:9.5px}
     .sum-overview{padding:6px 10px;gap:5px 10px}
     .so-total b{font-size:13px}
     .so-div{display:none}
@@ -371,10 +384,13 @@
     .sb-table{min-width:600px;font-size:11px}
     .sum-cell{padding:7px 10px;border-top:1px solid var(--line)}
     .sum-cell:nth-child(2n){border-right:0}
+    /* v40 — 3칸짜리 순마진 줄은 가운데 칸도 오른쪽 경계선을 남긴다 */
+    .sum-net .sum-cell:nth-child(2n){border-right:1px solid var(--line)}
+    .sum-net .sum-cell:last-child{border-right:0}
     .sum-value b{font-size:17px}
     /* 금액 칸은 라벨·숫자가 잘리지 않게 살짝 크게 + 여백 */
-    .sum-money .sum-cell,.sum-net .sum-cell{padding:9px 12px}
-    .sum-money .sum-value b,.sum-cells.sum-net .sum-value b,.sum-points .sum-value b{font-size:18px}
+    .sum-money .sum-cell{padding:9px 12px}
+    .sum-money .sum-value b,.sum-points .sum-value b{font-size:18px}
     .sum-label{overflow:visible}
     #sumPointRow .sum-cell:last-child{grid-column:1/-1}
   }
@@ -1496,7 +1512,14 @@
   @media (max-width:640px){
     .summary{grid-template-columns:1fr}
     .sum-rows{grid-column:1/-1}
-    .sum-money,.sum-net{grid-template-columns:1fr 1fr}
+    .sum-money{grid-template-columns:1fr 1fr}
+    /* v40 — 폰에서도 순마진 · 추지 · 페이백은 한 줄 3칸 */
+    .sum-net{grid-template-columns:repeat(3,minmax(0,1fr)) !important}
+    .sum-net .sum-cell{padding:7px 8px}
+    .sum-net .sum-label{font-size:10px;letter-spacing:-.02em}
+    .sum-net .sum-value b{font-size:15.5px;letter-spacing:-.045em}
+    .sum-net .sum-value i{font-size:9.5px;margin-left:0}
+    .sum-net .kpi-paren{font-size:9.5px}
     .sum-month{border-right:0;border-bottom:1px solid var(--line);justify-content:space-between;padding:5px 11px;gap:5px}
     .sum-cell{padding:7px 11px}
     .sum-label{font-size:11.5px;gap:4px}
@@ -1530,6 +1553,10 @@
     .toolbar{gap:7px;padding:8px 10px}
     .result-count{order:9}
     section{margin-bottom:12px}
+  }
+  /* 아주 좀은 폰(360px 미만)에서는 라벨이 넘치지 않게 '(추지)'를 접는다 */
+  @media (max-width:359px){
+    .sum-net .kpi-paren{display:none}
   }
 
   /* ---------- v33 — 태블릿·폴드 펼침(약 900~1200px) 레이아웃 ----------
@@ -1985,7 +2012,8 @@
   .m-stamp{margin-top:2px;font-size:11px;font-weight:700;color:#94A3B8;font-variant-numeric:tabular-nums}
 
   /* ---------- ③ 입금 지급 확인서 창 ---------- */
-  .slip-dlg{width:min(1000px,calc(100vw - 20px));display:none;flex-direction:column;max-height:calc(100vh - 24px)}
+  .slip-dlg{width:min(1000px,calc(100vw - 20px));display:none;flex-direction:column;
+    max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px)}
   .slip-dlg[open]{display:flex}
   .slip-dlg .dlg-head{flex:none;padding:14px 18px 10px}
   .slip-dlg .dlg-body{flex:1 1 auto;min-height:0;max-height:none;overflow:auto;padding:12px 18px 18px}
@@ -1997,20 +2025,34 @@
   .slip-date{height:29px;padding:0 8px;border-radius:8px;border:1px solid var(--line-strong);
     font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
   .slip-date[hidden]{display:none !important}
+  /* v40 — 담당자별 필터 */
+  .slip-staff{height:29px;padding:0 8px;border-radius:8px;border:1px solid var(--line-strong);
+    font-size:12px;font-weight:700;color:var(--ink);background:#fff;max-width:130px}
   .slip-bar-sum{font-size:12px;font-weight:800;color:#334155;margin-left:auto;white-space:nowrap}
   .slip-bar-sum b{color:var(--blue-700);font-variant-numeric:tabular-nums}
-  .slip-list{display:flex;flex-direction:column;gap:5px}
-  .slip-list .slip-none{padding:26px 8px;text-align:center;font-size:13px;font-weight:700;color:var(--slate-400)}
+  .slip-list{display:flex;flex-direction:column;gap:5px;padding-top:2px}
+  .slip-list .slip-none{padding:30px 10px 26px;text-align:center;font-size:13px;font-weight:700;
+    color:var(--slate-400);line-height:1.65}
+  /* v40 — 목록이 0건일 때는 미리보기를 접어 안내 문구가 위 바에 가리지 않게 한다 */
+  .slip-pv-head[hidden],.slip-preview[hidden]{display:none !important}
   .slip-empty-note{margin:auto;padding:40px 10px;text-align:center;font-size:13.5px;font-weight:700;color:#94A3B8}
   .slip-row{display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid var(--line);
     border-radius:10px;background:#fff;font-size:13px}
   .slip-row.on{border-color:#BBD7FB;background:#F8FBFF}
   .slip-row .slip-ck{width:18px;height:18px;flex:none;accent-color:var(--blue-600)}
   .slip-row .sr-main{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0;flex:1 1 auto}
-  .slip-row .sr-date{font-size:11.5px;font-weight:800;color:var(--slate-500);font-variant-numeric:tabular-nums}
-  .slip-row .sr-name{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .slip-row .sr-date{font-size:11.5px;font-weight:800;color:var(--slate-500);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .slip-row .sr-name{font-size:13.5px;font-weight:800;color:var(--ink);white-space:nowrap}
   .slip-row .sr-acct{font-size:11.5px;font-weight:600;color:var(--slate-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
   .slip-row .sr-money{font-size:13.5px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  /* v40 — 페이백(입금) · 추가지원금 구분 배지와 내역 */
+  .slip-tag{font-size:10px;font-weight:800;border-radius:5px;padding:1px 5px;white-space:nowrap;
+    border:1px solid #CFE3FA;background:#F0F7FF;color:#0B4AA2}
+  .slip-tag.extra{border-color:#F1D8A6;background:#FFF8E9;color:#8A5A00}
+  .slip-tag.card{border-color:#E3D7F5;background:#F7F3FF;color:#5B3A9E}
+  .slip-row .slip-pay-sub{display:block;font-size:10.5px;font-weight:700;color:var(--slate-500);white-space:nowrap}
+  .slip-pay-tags{display:flex;align-items:center;gap:4px;flex-wrap:wrap;margin-top:2px}
+  .slip-pay-kind{font-size:9.5px;font-weight:700;color:#5B6B83;white-space:nowrap}
   .slip-row .sr-done{height:26px;padding:0 9px;font-size:11.5px;font-weight:800;flex:none;white-space:nowrap}
   .slip-row .sr-done.done{background:#E9F7EF;border-color:#7FCEA6;color:#0B6B47}
   .slip-pv-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 7px;
@@ -2023,7 +2065,16 @@
   /* 확인서 한 칸 — 종이 양식(티앤제이통신 입금 지급 확인서) 그대로 */
   .slip-page{width:210mm;min-height:297mm;box-sizing:border-box;padding:10mm;background:#fff;
     display:flex;flex-direction:column;gap:4mm;box-shadow:0 6px 18px -12px rgba(15,23,42,.5)}
-  .slip{box-sizing:border-box;height:64mm;display:flex;flex-direction:column;background:#fff;
+  /* v40 — 페이지 구분 표기([추지·카드결제 확인용] / [계좌 입금 지급용]) : 한 장에 4칸이 계속 들어가게 카드 높이를 62mm 로 */
+  .slip-page-tag{flex:none;display:flex;align-items:center;gap:2mm;height:5mm;font-size:8pt;font-weight:900;
+    letter-spacing:.01em;color:#0F172A}
+  .slip-page-tag .dot{width:2.2mm;height:2.2mm;border-radius:50%;background:#0F172A;flex:none}
+  .slip-page-tag.ga{color:#8A5A00}
+  .slip-page-tag.ga .dot{background:#D79A2B}
+  .slip-page-tag.gb{color:#0B4AA2}
+  .slip-page-tag.gb .dot{background:#2B6FD4}
+  .slip-page-tag .cnt{margin-left:auto;font-size:7.4pt;font-weight:700;color:#64748B}
+  .slip{box-sizing:border-box;height:62mm;display:flex;flex-direction:column;background:#fff;
     border:1.1pt solid #0F172A;color:#0F172A;overflow:hidden}
   .slip-hd{display:flex;align-items:center;justify-content:space-between;gap:3mm;
     min-height:9mm;padding:1.4mm 2.4mm;border-bottom:.9pt solid #0F172A}
@@ -2039,8 +2090,35 @@
   .slip-tb th.w44{width:31mm}
   .slip-tb td{font-size:9.5pt;font-weight:600;color:#0B1220}
   .slip-tb tr{height:33.33%}
-  .slip-tb td.slip-money{font-size:15pt;font-weight:900;letter-spacing:-.01em;text-align:right;
-    font-variant-numeric:tabular-nums;padding-right:3mm}
+  .slip-tb td.slip-money,.slip-tb .slip-money{font-size:15pt;font-weight:900;letter-spacing:-.01em;text-align:right;
+    font-variant-numeric:tabular-nums;padding-right:3mm;line-height:1.15}
+  /* A4 칸 안의 구분 배지 — 종이 크기에 맞춰 pt 로 */
+  .slip-tb .slip-pay-tags{gap:1.2mm;margin-top:.8mm;justify-content:flex-end}
+  .slip-tb .slip-tag{font-size:6.2pt;padding:.2mm 1.2mm;border-radius:1mm;display:inline-flex;align-items:center;gap:.9mm}
+  .slip-tb .slip-tag em{font-style:normal;font-size:5.4pt;font-weight:700;color:#64748B}
+  /* v40 — 추지(추가지원금)는 개통 때 이미 처리된 돈 → 종이의 노란 형광펜처럼 칠한다 (미리보기·인쇄 공통) */
+  .slip-tb .slip-tag.extra{background:#fef08a;border-color:#e6c96a;color:#4A3400}
+  .slip-tb .slip-tag.extra em{color:#6B5200}
+  .hl{background:#fef08a;color:inherit;padding:0 .7mm;border-radius:.6mm;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
+  .slip-tb .slip-tag.extra .hl{background:none;padding:0}
+  .slip-tb td.slip-dim{color:#94A3B8;font-weight:600}
+  .slip-kind{font-size:6pt;font-weight:900;border-radius:1mm;padding:0 1mm;border:.6pt solid #CBD5E1;color:#334155}
+  .slip-kind.ka{background:#fffbe6;border-color:#E7CE7E;color:#7A5B00}
+  .slip-kind.kb{background:#eef5ff;border-color:#C3D9F5;color:#0B4AA2}
+  .slip-note{margin-top:auto;padding:.8mm 2.4mm 1.2mm;font-size:6.6pt;font-weight:700;color:#475569;
+    border-top:.6pt dashed #C7D2E0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  /* v40 — 지급 금액 아래 계산식 줄 : 추지(형광펜) + 카드결제 / 입금 */
+  .slip-calc{display:flex;align-items:center;justify-content:flex-end;gap:1.2mm;flex-wrap:wrap;
+    margin-top:.9mm;font-size:6.8pt;font-weight:800;color:#1F2A37;line-height:1.35}
+  .slip-calc .plus{font-weight:900;color:#94A3B8}
+  .slip-calc .calc-item{font-weight:800}
+  .slip-calc .calc-item.bank{color:#0B4AA2}
+  .slip-calc .calc-sub{font-style:normal;font-size:5.6pt;font-weight:700;color:#64748B;margin-left:.7mm}
+  .slip-calc .hl{background:#fef08a;padding:0 .9mm;border-radius:.6mm;color:#3F2D00;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  /* 폰 목록에서도 추지 금액은 형광펜으로 */
+  .slip-row .slip-tag.extra{background:#fef08a;border-color:#e6c96a;color:#4A3400}
   .slip-tb td.slip-check{background:#fff}
   .slip-foot{margin-top:auto;padding-top:1.4mm;border-top:.8pt dashed #9AA7B8;text-align:right;
     font-size:8pt;font-weight:700;color:#475569;font-variant-numeric:tabular-nums}
@@ -2056,11 +2134,23 @@
       box-shadow:none;gap:4mm;break-after:page;page-break-after:always}
     body.print-slips #paySlipPrint .slip-page:last-child{break-after:auto;page-break-after:auto}
     body.print-slips #paySlipPrint .slip{break-inside:avoid;page-break-inside:avoid}
+    /* v40 — 추지 형광펜 색이 인쇄(PDF)에서도 그대로 나오게 */
+    body.print-slips, body.print-slips *{-webkit-print-color-adjust:exact;print-color-adjust:exact;color-adjust:exact}
   }
   @media (max-width:640px){
     .slip-dlg .dlg-head,.slip-bar,.slip-dlg .dlg-body{padding-left:12px;padding-right:12px}
     .slip-bar-sum{margin-left:0;width:100%}
     .slip-preview{padding:6px}
+  }
+  /* v40 — 폰: 확인서 목록 한 줄을 격자로 (날짜·이름·배지 / 금액·내역 / 상태) */
+  @media (max-width:560px){
+    .slip-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;
+      grid-template-areas:"ck main main" ". money btn";gap:4px 8px;align-items:center;padding:8px 9px}
+    .slip-row .slip-ck{grid-area:ck}
+    .slip-row .sr-main{grid-area:main}
+    .slip-row .sr-money{grid-area:money;justify-self:end;text-align:right;max-width:100%;
+      white-space:normal;word-break:keep-all}
+    .slip-row .slip-done,.slip-row .sr-done{grid-area:btn}
   }
 </style>
 </head>
@@ -2203,17 +2293,22 @@
       </div>
     </div>
 
-    <!-- 관리자 전용 — 총 순마진 · 추지·페이백 합계 -->
+    <!-- 관리자 전용 — 총 순마진 · 추가지원금(추지) · 페이백 -->
     <div class="sum-cells sum-net admin-only" id="sumNetRow">
       <div class="sum-cell kpi-key kpi-c-green" id="sumNetCell">
         <span class="sum-label">총 순마진 <span class="tag">관리자</span></span>
         <span class="sum-value"><b class="num" id="kpiNet">0</b><i>원</i></span>
         <span class="sum-sub" id="kpiNetSub">리베이트 − 추지·페이백</span>
       </div>
+      <div class="sum-cell" id="sumExtraCell">
+        <span class="sum-label">추가지원금<span class="kpi-paren">(추지)</span></span>
+        <span class="sum-value"><b class="num" id="kpiExtra">0</b><i>원</i></span>
+        <span class="sum-sub" id="kpiExtraSub">개통 시 수납한 지원금</span>
+      </div>
       <div class="sum-cell" id="sumPayCell">
-        <span class="sum-label">추지·페이백 합계</span>
+        <span class="sum-label">페이백</span>
         <span class="sum-value"><b class="num" id="kpiPay">0</b><i>원</i></span>
-        <span class="sum-sub" id="kpiPaySub">추가지원금 + 페이백(카드·입금)</span>
+        <span class="sum-sub" id="kpiPaySub">카드결제 + 입금</span>
       </div>
     </div>
 
@@ -2269,7 +2364,8 @@
               <th>유선<br>약갱</th>
               <th>제휴<br>카드</th>
               <th class="sb-money">총 리베이트</th>
-              <th class="sb-money">추지·페이백</th>
+              <th class="sb-money">추지</th>
+              <th class="sb-money">페이백</th>
               <th class="sb-money">순마진</th>
               <th class="sb-point">포인트<br><small>무선+유선</small></th>
             </tr>
@@ -2278,6 +2374,8 @@
           <tfoot id="staffBoardFoot"></tfoot>
         </table>
       </div>
+      <!-- v40 — 열이 하나 늘어 폰에서는 옆으로 넘겨야 끝 칸이 보인다 → 넘길 수 있다고 알려 준다 -->
+      <p class="sb-hint" id="sbHint" hidden>← 표를 좌우로 넘기면 추지 · 페이백 · 순마진 · 포인트까지 보입니다</p>
     </div>
 
     <div class="chips sum-chips" id="kpiBreakdown"></div>
@@ -2346,9 +2444,10 @@
                 title="모든 달 기록에서 봅니다"><span class="es-l" id="easyScopeAllLabel">전체 기간</span><span class="es-n" id="easyScopeAllN">0건</span></button>
       </div>
     </div>
-    <!-- v30 — 관리자 전용 ⚠️ 미기재 확인 (v33: 리베이트·중고폰 금액만 · 추지·페이백 제외) -->
-    <button type="button" class="miss-filter admin-only" id="missingFilter" aria-pressed="false"
-            title="관리자 전용 — 무선·유선 리베이트와 중고폰 금액이 비어 있는 건만 모아 봅니다">
+    <!-- v30 — ⚠️ 미기재 확인 (v33: 리베이트·중고폰 금액만 · 추지·페이백 제외)
+         v40 — 직원 모드에서도 보인다 (직원에게는 '중고폰 금액 미기재' 만 잡힌다) -->
+    <button type="button" class="miss-filter" id="missingFilter" aria-pressed="false"
+            title="무선·유선 리베이트와 중고폰 금액이 비어 있는 건만 모아 봅니다">
       <span class="mf-ico" aria-hidden="true">⚠️</span><span>미기재 확인</span><span class="mf-count" id="missingCount">0건</span>
     </button>
     <button class="btn sm btn-ghost" id="resetFilters">초기화</button>
@@ -3055,7 +3154,7 @@
   <div class="dlg-head">
     <div>
       <h2>🖨️ 입금 지급 확인서<span class="pd-admin pd-all">전 직원</span></h2>
-      <p>페이백(입금)이 있는 건만 모읍니다 · A4 세로 1장에 4칸 · 체크한 건만 인쇄합니다.</p>
+      <p>추가지원금 · 페이백(카드결제·입금)이 있는 건을 모읍니다 · A4 세로 1장에 4칸 · 체크한 건만 인쇄합니다.</p>
     </div>
     <button type="button" class="dlg-close" id="slipClose" aria-label="닫기">×</button>
   </div>
@@ -3066,13 +3165,17 @@
       <button type="button" class="pchip" data-slip-filter="date" aria-pressed="false">특정 일자</button>
     </div>
     <input type="date" id="slipDate" class="slip-date" hidden aria-label="특정 일자">
+    <!-- v40 — 담당자별로 골라서 체크·미리보기·인쇄 -->
+    <select id="slipStaff" class="slip-staff" aria-label="담당자별 확인서 보기">
+      <option value="">전체 담당자</option>
+    </select>
     <span class="slip-bar-sum" id="slipBarSum">—</span>
     <button type="button" class="btn sm btn-ghost" id="slipAllBtn">전체 선택</button>
     <button type="button" class="btn sm btn-primary" id="slipPrintBtn">🖨️ 인쇄하기</button>
   </div>
   <div class="dlg-body">
     <div class="slip-list" id="slipList"></div>
-    <div class="slip-pv-head"><span>A4 미리보기</span><span id="slipPvNote">—</span></div>
+    <div class="slip-pv-head" id="slipPvHead"><span>A4 미리보기</span><span id="slipPvNote">—</span></div>
     <div class="slip-preview" id="slipPreview"><div class="slip-pv-inner" id="slipPvInner"></div></div>
   </div>
 </dialog>
@@ -3176,6 +3279,9 @@
 
   // 매장 직원 — 담당자 빠른 선택용 (다른 이름도 직접 입력 가능)
   var STAFF_LIST = ['김태양', '김설화', '이건엽', '권영한', '전국현'];
+
+  /* v40 — '전체 유형' 상자에 넣는 인터넷·TV(유선) 전체 보기 값 (option value) */
+  var WIRED_ALL_KEY = '__wired_all__';
 
   // 기종 빠른 선택 — 최근 2년 이내 KT 주력 단말기만 유지한다
   // (신모델 출시 시 추가, 2년 지난 구형·KT 요금제 변동은 이 목록만 고친다)
@@ -3284,6 +3390,8 @@
      · [입금은행:국민은행] [입금예금주:홍길동] [입금계좌:123-456-7890] [입금완료]
      · [작성일:2026-11-22 11:30] — 신규 저장 때 자동, 수정할 때는 최초 값 유지 */
   var PAY_DONE_MARK = '[입금완료]';
+  /* v40 — 지급 미완료를 직접 고른 건 (추지 단독은 기본이 '수납완료' 라, 되돌린 상태를 따로 남긴다) */
+  var PAY_UNDONE_MARK = '[지급미완료]';
 
   /* 등록(작성) 일시 — 'YYYY-MM-DD HH:MM' (초·타임존 없이 매장 시계 기준) */
   function writeStampNow() {
@@ -4515,8 +4623,8 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '', payBank: '', payHolder: '', payAcct: '', payDone: false, writtenAt: '' };
-    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop'], [PAY_DONE_MARK, 'payDone']];
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '', payBank: '', payHolder: '', payAcct: '', payDone: false, payUndone: false, writtenAt: '' };
+    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop'], [PAY_DONE_MARK, 'payDone'], [PAY_UNDONE_MARK, 'payUndone']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
       if (s.indexOf(tags[i][0]) < 0) continue;
@@ -4652,6 +4760,10 @@
     if (bankHolder) head.push('[입금예금주:' + bankHolder + ']');
     if (bankAcct) head.push('[입금계좌:' + bankAcct + ']');
     if (parseNumber(rec.페이백입금) && normalizeDone(rec.입금완료) === '완료') head.push(PAY_DONE_MARK);
+    // v40 — 추지·카드만 있는 건도 '완료' 를 시트까지 갖고 간다 (추지 단독은 기본이 완료라 표기가 필요 없다)
+    else if (String(rec.입금완료 == null ? '' : rec.입금완료).trim() === '완료' &&
+             (parseNumber(rec.추가지원금) || parseNumber(rec.페이백카드))) head.push(PAY_DONE_MARK);
+    else if (String(rec.입금완료 == null ? '' : rec.입금완료).trim() === '미지급') head.push(PAY_UNDONE_MARK);
     var stamp = normWriteStamp(rec.작성일 || t.writtenAt);
     if (stamp) head.push('[작성일:' + stamp + ']');
     if (!head.length) return m;
@@ -4709,7 +4821,10 @@
     o.입금은행 = String(tags.payBank || (r && r.입금은행) || '').trim();
     o.입금예금주 = String(tags.payHolder || (r && r.입금예금주) || '').trim();
     o.입금계좌 = String(tags.payAcct || (r && r.입금계좌) || '').trim();
-    o.입금완료 = (tags.payDone || normalizeDone(r && r.입금완료) === '완료') ? '완료' : '';
+    o.입금완료 = tags.payDone ? '완료'
+      : (tags.payUndone ? '미지급'
+      : (normalizeDone(r && r.입금완료) === '완료' ? '완료'
+      : (String((r && r.입금완료) || '').trim() === '미지급' ? '미지급' : '')));
     // v39 — 등록(작성) 일시: 메모 표기 → createdAt(밀리초) 순서로 되살린다
     var wStamp = normWriteStamp(tags.writtenAt || (r && r.작성일));
     if (!wStamp && o.createdAt) wStamp = stampFromMs(o.createdAt);
@@ -5195,7 +5310,9 @@
     snap.입금은행 = String(rec.입금은행 || '').trim();
     snap.입금예금주 = String(rec.입금예금주 || '').trim();
     snap.입금계좌 = String(rec.입금계좌 || '').trim();
-    snap.입금완료 = normalizeDone(rec.입금완료);
+    // v40 — '미지급' 을 직접 고른 건은 그대로 보낸다 (추지 단독 기본완료를 되돌린 상태)
+    snap.입금완료 = normalizeDone(rec.입금완료) === '완료' ? '완료'
+      : (String(rec.입금완료 == null ? '' : rec.입금완료).trim() === '미지급' ? '미지급' : '');
     snap.작성일 = normWriteStamp(rec.작성일);
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
@@ -6057,6 +6174,28 @@
       var n = Number(mm[1]) * 1000;
       if (n >= 30000 && n <= 200000) best = Math.max(best, n);
     }
+    if (best) return best;
+    // v40 — 가격 없이 요금제 이름만 적힌 경우(베이직4 · 베이직4GB · 초이스110 …) 마스터의 월정액으로
+    return planMonthlyByName(t);
+  }
+
+  /* v40 — `베이직4` → `베이직4GB` (37,000) 처럼 KT_PLANS 마스터 이름과 맞춰 월정액을 찾는다
+     · 공백 · GB · (이월) 표기를 지우고 같거나 서로 포함하면 인정 (긴 이름 우선) */
+  function planMonthlyByName(text) {
+    var key = mkey(text).replace(/gb/g, '');
+    if (!key || key.length < 2) return 0;
+    var best = 0, bestLen = 0, i, pl, nm;
+    for (i = 0; i < KT_PLANS.length; i++) {
+      pl = KT_PLANS[i];
+      if (!pl || !pl.p || pl.tab !== 'mobile') continue;
+      nm = mkey(pl.name).replace(/gb/g, '');
+      if (!nm || nm.length < 2) continue;
+      if (nm === key) return pl.p;
+      if (nm.length >= 3 && (key.indexOf(nm) >= 0 || nm.indexOf(key) >= 0) && nm.length > bestLen) {
+        best = pl.p;
+        bestLen = nm.length;
+      }
+    }
     return best;
   }
 
@@ -6078,7 +6217,10 @@
     var planTxt = String((rec && rec.요금제) || '');
     if (/키즈|주니어|시니어|복지/.test(planTxt)) return true;
     var age = ageAt(rec && rec.생년월일, rec && rec.개통일);
-    return age >= 65;
+    if (age < 65) return false;
+    // v40 — 만 65세 이상은 월정액 28,600원 이상이면 37K 구간으로 인정 (예: 베이직600MB 28,900)
+    //        음성 18.7(18,700)·음성 12.1 은 제외
+    return planMonthly(rec && rec.요금제) >= 28600;
   }
 
   function planForPolicy(rec) {
@@ -7931,7 +8073,9 @@
     else month = f.month;
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
-      if (f.type && !typeHasPart(r.개통유형, f.type)) return false;
+      if (f.type === WIRED_ALL_KEY) {
+        if (!typeSlots(r.개통유형).l) return false;      // v40 — 유선(인터넷·TV)이 하나라도 있는 건만
+      } else if (f.type && !typeHasPart(r.개통유형, f.type)) return false;
       if (f.staff && (r.담당자 || '') !== f.staff) return false;
       if (f.due) {
         var ds = [];
@@ -8119,18 +8263,22 @@
 
   function missingIssues(r) {
     var out = [];
-    if (!r || !isAdmin()) return out;
-    var slots = typeSlots(r.개통유형 || '');
-    // 1) 리베이트 — 무선은 정책 자동 산정값도 '산정됨'으로 본다 (2ND 는 정책 대상이 아니라 뺀다)
-    if (slots.w && slots.w !== '2ND') {
-      var v = wirelessRebateView(r);
-      if (!v.manual && !v.auto) out.push({ key: 'rebateW', label: '무선 리베이트 미기재' });
+    if (!r) return out;
+    // v40 — 리베이트는 금액이 사장님 몫이라 관리자만 본다 (직원 화면에서는 중고폰 금액만)
+    if (isAdmin()) {
+      var slots = typeSlots(r.개통유형 || '');
+      // 1) 리베이트 — 무선은 정책 자동 산정값도 '산정됨'으로 본다 (2ND 는 정책 대상이 아니라 뺀다)
+      if (slots.w && slots.w !== '2ND') {
+        var v = wirelessRebateView(r);
+        if (!v.manual && !v.auto) out.push({ key: 'rebateW', label: '무선 리베이트 미기재' });
+      }
+      if (slots.l && !(Number(r.유선리베이트) > 0)) out.push({ key: 'rebateL', label: '유선 리베이트 미기재' });
     }
-    if (slots.l && !(Number(r.유선리베이트) > 0)) out.push({ key: 'rebateL', label: '유선 리베이트 미기재' });
-    // 2) 중고폰 금액 — 금액·모델이 없고 [미반납] 로 확인된 표기도 없는 건
+    // 2) 중고폰 금액 — 관리자·직원 공통. 모델명(반납)만 적고 금액이 비었거나 둘 다 비면 잡는다
+    //    ([미반납] 으로 확인한 건만 제외)
     var usedTxt = String(r.중고폰 == null ? '' : r.중고폰).trim();
     var usedNone = payNoneKeys(r).indexOf('중고폰') >= 0 || usedTxt === '미반납';
-    if (!(Number(r.중고폰금액) > 0) && !usedTxt && !usedNone) {
+    if (!(Number(r.중고폰금액) > 0) && !usedNone) {
       out.push({ key: 'used', label: '중고폰 금액 미기재' });
     }
     // v33 — 추지·페이백(추가지원금·카드·입금)은 '미기재' 목록에서 뺐다
@@ -8139,7 +8287,6 @@
 
   // 지금 걸린 월·검색·유형·담당자·알림·권매 필터 기준 미기재 건수 (미기재 필터 자신은 뺀다)
   function missingCount() {
-    if (!isAdmin()) return 0;
     var base = visibleRecords(true, true);
     var n = 0;
     for (var i = 0; i < base.length; i++) if (missingIssues(base[i]).length) n++;
@@ -8150,14 +8297,16 @@
     if (!el.missingFilter) return;
     var n = missingCount();
     var on = !!state.filters.missing;
-    el.missingFilter.hidden = !isAdmin();
+    el.missingFilter.hidden = false;       // v40 — 직원 모드에서도 보인다 (중고폰 금액만)
     if (el.missingCount) el.missingCount.textContent = n + '건';
     el.missingFilter.classList.toggle('on', on);
     el.missingFilter.classList.toggle('zero', n === 0 && !on);
     el.missingFilter.setAttribute('aria-pressed', on ? 'true' : 'false');
     el.missingFilter.title = on
       ? '⚠️ 미기재 필터 켜짐 — 다시 누르면 전체 목록'
-      : '관리자 전용 — 무선·유선 리베이트와 중고폰 금액이 비어 있는 건만 (현재 ' + n + '건)';
+      : (isAdmin()
+        ? '무선·유선 리베이트와 중고폰 금액이 비어 있는 건만 (현재 ' + n + '건)'
+        : '중고폰 금액이 비어 있는 건만 (현재 ' + n + '건)');
   }
 
   /* v39 — 목록·카드의 입금 완료 배지 (페이백(입금) 금액이 있는 건 · 관리자만) */
@@ -8189,7 +8338,7 @@
 
   // 표·폰 카드에 붙는 '무엇이 비었는지' 배지 (관리자 모드에서만 — 금액 정보라서)
   function missingBadgesHtml(r) {
-    if (!isAdmin()) return '';
+    // v40 — 직원 모드에서도 '중고폰 금액 미기재' 배지는 보인다 (missingIssues 가 알아서 걸러 준다)
     var list = missingIssues(r);
     if (!list.length) return '';
     var html = '';
@@ -8221,18 +8370,76 @@
   /* =========================================================
      v39 — 🖨️ 입금 지급 확인서 (관리자 전용 · A4 세로 1장 4칸)
      ---------------------------------------------------------
-     · 모으는 건 : 페이백(입금) > 0 뿐 — 추가지원금은 이미 수납된 돈이라 절대 섞지 않는다
-     · 필터    : 미지급만 / 당월 전체 / 특정 일자
-     · 인쇄    : 체크한 건을 4칸씩 끊어 A4 한 장씩 (장 하단에 총 N건 · 입금 합계 · 출력일)
+     · 모으는 건 : 추가지원금 · 페이백(카드결제) · 페이백(입금) 중 하나라도 금액이 있으면 전부
+       (v40 — 사장님이 손으로 쓰던 종이처럼 한 칸에 셋을 함께 적는다)
+     · 금액    : 합계 = 추가지원금 + 페이백(카드결제) + 페이백(입금),
+                 그 아래 줄에 항목별 금액을 태그로 (추지 · 카드결제(위약금/선결제) · 입금)
+     · 완료 판정: 추가지원금만 있는 건은 개통 때 수납이 끝나므로 기본이 '✓ 수납완료'
+                 (1탭으로 되돌릴 수 있고, 되돌린 상태는 메모 [지급미완료] 로 시트까지 왕복)
+     · 필터    : 미지급만 / 당월 전체 / 특정 일자 · 인쇄: 체크한 건을 4칸씩 A4 한 장씩
      ========================================================= */
-  var slipState = { filter: 'unpaid', date: '', sel: {} };
+  var slipState = { filter: 'unpaid', date: '', staff: '', sel: {} };
 
-  // 페이백(입금)이 있는 건 전부 (필터 없음)
+  /* v40 — 확인서 한 건의 지급액 = 추가지원금 + 페이백(카드결제) + 페이백(입금) */
+  function slipPayParts(r) {
+    var extra = Number(r.추가지원금) || 0;
+    var card = Number(r.페이백카드) || 0;
+    var bank = Number(r.페이백입금) || 0;
+    return { extra: extra, card: card, bank: bank, total: extra + card + bank };
+  }
+
+  // 카드결제 내역 — '위약금·1일예정 251,870 · 할부금·선결제 100,000'
+  function slipCardDetailText(r) {
+    var list = pcDetailParse(r.페이백카드상세), out = [], i;
+    for (i = 0; i < list.length; i++) {
+      var d = list[i];
+      if (!(Number(d.amt) > 0)) continue;
+      out.push((d.kind || '카드') + (d.when ? '·' + PC_WHEN_LABEL[d.when] : '') + ' ' + fmtNum(d.amt));
+    }
+    return out.join(' · ');
+  }
+
+  /* v40 — 지급 완료 판정
+     · 장부에 '완료' 가 있으면 완료
+     · '미지급' 을 직접 고른 건(추지 단독 기본완료를 되돌린 건)은 미완료
+     · 표시가 없으면 : 추가지원금만 있는 건은 개통 때 이미 수납됐으므로 '완료' 로 본다 */
+  function slipDoneOf(r) {
+    if (normalizeDone(r.입금완료) === '완료') return true;
+    if (String(r.입금완료 == null ? '' : r.입금완료).trim() === '미지급') return false;
+    var p = slipPayParts(r);
+    return !!(p.extra > 0 && !p.card && !p.bank);
+  }
+  // 완료 배지 글자 — 추지 단독은 '수납완료', 그 밖은 '입금완료'
+  function slipDoneLabel(r) {
+    var p = slipPayParts(r);
+    if (!p.card && !p.bank && p.extra > 0) return '✓ 수납완료';
+    return '✓ 입금완료';
+  }
+
+  // 목록 한 줄 금액 — 합계 + (여러 항목이면) 항목별 내역
+  function slipPayText(r) {
+    var p = slipPayParts(r), sub = [];
+    if (p.extra) sub.push('추지 ' + fmtNum(p.extra));
+    if (p.card) sub.push('카드 ' + fmtNum(p.card));
+    if (p.bank) sub.push('입금 ' + fmtNum(p.bank));
+    return fmtNum(p.total) + '원' +
+      (sub.length > 1 ? '<span class="slip-pay-sub">' + sub.join(' · ') + '</span>' : '');
+  }
+  // 목록의 구분 배지 — 페이백(입금) / 추가지원금 / 카드결제
+  function slipPayTags(r, short) {
+    var p = slipPayParts(r), out = '';
+    if (p.extra) out += '<span class="slip-tag extra">' + (short ? '추지' : '추가지원금') + '</span>';
+    if (p.card) out += '<span class="slip-tag card">' + (short ? '카드결제' : '페이백(카드결제)') + '</span>';
+    if (p.bank) out += '<span class="slip-tag bank">' + (short ? '입금' : '페이백(입금)') + '</span>';
+    return out;
+  }
+
+  // 추가지원금 · 페이백(카드결제) · 페이백(입금) 중 하나라도 있는 건 전부 (필터 없음)
   function slipBaseRecords() {
     var out = [];
     for (var i = 0; i < state.records.length; i++) {
       var r = state.records[i];
-      if (!(Number(r.페이백입금) > 0)) continue;
+      if (!(slipPayParts(r).total > 0)) continue;
       out.push(r);
     }
     return out;
@@ -8243,8 +8450,10 @@
     var f = slipState.filter;
     var month = currentMonth();
     var day = slipState.date;
+    var staff = slipState.staff || '';
     var list = slipBaseRecords().filter(function (r) {
-      if (f === 'unpaid' && normalizeDone(r.입금완료) === '완료') return false;
+      if (staff && String(r.담당자 == null ? '' : r.담당자).trim() !== staff) return false;
+      if (f === 'unpaid' && slipDoneOf(r)) return false;
       if (f === 'month' && monthOf(r.개통일) !== month) return false;
       if (f === 'date') {
         if (!day) return false;
@@ -8273,7 +8482,7 @@
   }
 
   function slipRowHtml(r) {
-    var done = normalizeDone(r.입금완료) === '완료';
+    var done = slipDoneOf(r);
     var line = payBankLine(r);
     var holder = String(r.입금예금주 || '').trim();
     var acctText = line || holder
@@ -8287,61 +8496,116 @@
       '<div class="sr-main">' +
         '<span class="sr-date">' + esc(normalizeDate(r.개통일) || r.개통일 || '—') + '</span>' +
         '<span class="sr-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
+        slipPayTags(r) +
         '<span class="sr-acct">' + acctText + '</span>' +
       '</div>' +
-      '<span class="sr-money">' + fmtNum(r.페이백입금) + '원</span>' +
+      '<span class="sr-money">' + slipPayText(r) + '</span>' +
       '<button type="button" class="pchip sr-done' + (done ? ' done' : '') + '" data-slip-done="' + esc(r.id) + '"' +
-        ' title="누를 때마다 미지급 ↔ 입금 완료">' + (done ? '✓ 입금완료' : '미지급') + '</button>' +
+        ' title="누를 때마다 미지급 ↔ 지급 완료">' + (done ? slipDoneLabel(r) : '미지급') + '</button>' +
     '</div>';
   }
 
   function slipPaintBar() {
     var base = slipBaseRecords(), unpaid = 0, i;
-    for (i = 0; i < base.length; i++) if (normalizeDone(base[i].입금완료) !== '완료') unpaid++;
+    for (i = 0; i < base.length; i++) if (!slipDoneOf(base[i])) unpaid++;
     var sel = slipSelected(), sum = 0;
-    for (i = 0; i < sel.length; i++) sum += Number(sel[i].페이백입금) || 0;
+    for (i = 0; i < sel.length; i++) sum += slipPayParts(sel[i]).total;
     var box = $('slipBarSum');
     if (!box) return;
-    box.innerHTML = '입금 건 <b>' + base.length + '</b> · 미지급 <b>' + unpaid + '</b>' +
+    box.innerHTML = '지급 건 <b>' + base.length + '</b> · 미지급 <b>' + unpaid + '</b>' +
       ' · 선택 <b>' + sel.length + '</b>건 <b>' + fmtNum(sum) + '원</b>';
   }
 
+  /* v40 — 출력 칸 만들기 : 한 건이 [추지·카드] 칸과 [계좌입금] 칸으로 나뉠 수 있다
+     예) 추지 200,000 + 카드 200,000 + 입금 200,000 → A 칸(추지+카드 400,000) + B 칸(입금 200,000) */
+  function slipRows(list) {
+    var out = [], i, p;
+    for (i = 0; i < list.length; i++) {
+      p = slipPayParts(list[i]);
+      if (p.extra || p.card) {
+        out.push({ r: list[i], kind: 'A', amount: p.extra + p.card, extra: p.extra, card: p.card, bank: 0 });
+      }
+      if (p.bank) {
+        out.push({ r: list[i], kind: 'B', amount: p.bank, extra: 0, card: 0, bank: p.bank });
+      }
+    }
+    return out;
+  }
+
   // 확인서 한 칸 — 종이 양식 그대로 (제목 + 2열 컴팩트 표 3줄)
-  function slipCardHtml(r) {
-    var done = normalizeDone(r.입금완료) === '완료';
+  //   kind A(추지·카드) 는 그 금액만, kind B(계좌입금) 는 입금 금액만 + 계좌 정보
+  function slipCardHtml(e) {
+    var r = e.r, kind = e.kind;
+    var done = slipDoneOf(r);
     var phone = formatPhone(r.연락처) || String(r.연락처 || '');
     var birth = String(r.생년월일 || '').trim();
     var phoneBirth = [phone, birth].filter(function (x) { return !!x; }).join(' / ');
-    var bankLine = payBankLine(r);
-    var holder = String(r.입금예금주 || '').trim();
+    var bankLine = kind === 'B' ? payBankLine(r) : '';
+    var holder = kind === 'B' ? String(r.입금예금주 || '').trim() : '';
     var d = normalizeDate(r.개통일) || String(r.개통일 || '');
-    return '<div class="slip">' +
+    var cardDetail = slipCardDetailText(r);
+    // v40 — 총액 한 줄 + 바로 아래 '추지 200,000원 + 카드결제 251,870원' 계산식 (추지는 노란 형광펜)
+    var calc = [];
+    if (e.extra) calc.push('<span class="hl">추지 ' + fmtNum(e.extra) + '원</span><em class="calc-sub">개통시 결제완료</em>');
+    if (e.card) calc.push('<span class="calc-item">카드결제 ' + fmtNum(e.card) + '원' +
+      (cardDetail ? '<em class="calc-sub">' + esc(cardDetail) + '</em>' : '') + '</span>');
+    if (e.bank) calc.push('<span class="calc-item bank">입금 ' + fmtNum(e.bank) + '원</span>');
+    var payCell = '<div class="slip-money">총액 ' + fmtNum(e.amount) + '원</div>' +
+      '<div class="slip-calc">' + calc.join('<span class="plus">+</span>') + '</div>';
+    // 기종 · 반납 중고폰 — 종이 여백처럼 카드 아래 한 줄
+    var notes = [];
+    if (r.기종) notes.push('기종 ' + String(r.기종).trim());
+    if (r.중고폰) notes.push('중고폰 반납 ' + String(r.중고폰).trim());
+    var stateLabel = done ? (kind === 'B' ? '입금완료' : '수납완료') : '미지급';
+    return '<div class="slip slip-k' + kind + '">' +
       '<div class="slip-hd">' +
         '<span class="slip-title">티앤제이통신 입금 지급 확인서</span>' +
         '<span class="slip-meta">개통일: ' + esc(d || '—') + ' · 담당: ' + esc(String(r.담당자 || '').trim() || '—') +
-          '<span class="slip-state ' + (done ? 'done' : 'wait') + '">' + (done ? '입금완료' : '미지급') + '</span></span>' +
+          '<span class="slip-kind ' + (kind === 'A' ? 'ka' : 'kb') + '">' +
+            (kind === 'A' ? '추지·카드' : '계좌입금') + '</span>' +
+          '<span class="slip-state ' + (done ? 'done' : 'wait') + '">' + stateLabel + '</span></span>' +
       '</div>' +
       '<table class="slip-tb"><tbody>' +
         '<tr><th>가입자명</th><td>' + esc(r.고객명 || '') + '</td>' +
           '<th class="w44">연락처 / 생년월일</th><td>' + esc(phoneBirth) + '</td></tr>' +
-        '<tr><th>은행 / 계좌번호</th><td>' + esc(bankLine) + '</td>' +
-          '<th>예금주</th><td>' + esc(holder) + '</td></tr>' +
-        '<tr><th>지급 금액</th><td class="slip-money">' + fmtNum(r.페이백입금) + '원</td>' +
+        '<tr><th>은행 / 계좌번호</th><td class="slip-bank' + (kind === 'A' ? ' slip-dim' : '') + '">' +
+          (kind === 'B' ? esc(bankLine) : '—') + '</td>' +
+          '<th>예금주</th><td' + (kind === 'A' ? ' class="slip-dim"' : '') + '>' +
+          (kind === 'B' ? esc(holder) : '—') + '</td></tr>' +
+        '<tr><th>지급 금액</th><td>' + payCell +
           '<th>확인</th><td class="slip-check"></td></tr>' +
       '</tbody></table>' +
+      (notes.length ? '<div class="slip-note">' + esc(notes.join(' · ')) + '</div>' : '') +
     '</div>';
   }
 
-  // 4칸씩 한 장 — 장마다 하단에 합계 줄
+  /* v40 — 확인서는 두 묶음을 섞지 않는다
+     · A : 추가지원금·페이백(카드결제) → [추지·카드결제 확인용]
+     · B : 페이백(입금) → [계좌 입금 지급용] (같은 고객이라도 새 A4 장에 따로 한 칸)
+     · 한 묶음 안에서는 4칸씩 한 장, 장 하단에 그 장에 찍힌 금액만 합산 */
+  var SLIP_GROUPS = [
+    { key: 'A', label: '추지·카드결제 확인용', hint: '개통 때 수납·카드결제로 이미 나간 돈' },
+    { key: 'B', label: '계좌 입금 지급용', hint: '통장으로 입금해 줄 건' }
+  ];
+
   function slipPagesHtml(list) {
-    var html = '';
-    for (var i = 0; i < list.length; i += 4) {
-      var chunk = list.slice(i, i + 4), sum = 0, j;
-      for (j = 0; j < chunk.length; j++) sum += Number(chunk[j].페이백입금) || 0;
-      html += '<div class="slip-page">';
-      for (j = 0; j < chunk.length; j++) html += slipCardHtml(chunk[j]);
-      html += '<div class="slip-foot">총 ' + chunk.length + '건 · 입금 합계 ' + fmtNum(sum) + '원 · 출력 ' + todayISO() + '</div>';
-      html += '</div>';
+    var rows = slipRows(list), html = '';
+    for (var g = 0; g < SLIP_GROUPS.length; g++) {
+      var grp = SLIP_GROUPS[g], mine = [], i;
+      for (i = 0; i < rows.length; i++) if (rows[i].kind === grp.key) mine.push(rows[i]);
+      for (i = 0; i < mine.length; i += 4) {
+        var chunk = mine.slice(i, i + 4), sum = 0, j;
+        for (j = 0; j < chunk.length; j++) sum += chunk[j].amount;
+        html += '<div class="slip-page">' +
+          '<div class="slip-page-tag ' + (grp.key === 'A' ? 'ga' : 'gb') + '">' +
+            '<span class="dot" aria-hidden="true"></span>[' + grp.label + '] ' + grp.hint +
+            '<span class="cnt">' + mine.length + '칸 중 ' + (i + 1) + '~' + (i + chunk.length) + '</span>' +
+          '</div>';
+        for (j = 0; j < chunk.length; j++) html += slipCardHtml(chunk[j]);
+        html += '<div class="slip-foot">[' + grp.label + '] 총 ' + chunk.length + '칸 · 지급 합계 ' +
+          fmtNum(sum) + '원 · 출력 ' + todayISO() + '</div>';
+        html += '</div>';
+      }
     }
     return html;
   }
@@ -8367,9 +8631,16 @@
       ? slipPagesHtml(list)
       : '<div class="slip-page"><div class="slip-empty-note">인쇄할 확인서를 위에서 체크해 주세요.</div></div>';
     var note = $('slipPvNote');
-    if (note) note.textContent = list.length
-      ? (Math.ceil(list.length / 4) + '장 · ' + list.length + '칸')
-      : '선택 없음';
+    if (note) {
+      // v40 — 한 건이 [추지·카드] + [계좌입금] 두 칸이 될 수 있으므로 칸·장을 출력 칸 기준으로 센다
+      var cells = slipRows(list), pages = 0, g, n;
+      for (g = 0; g < SLIP_GROUPS.length; g++) {
+        n = 0;
+        for (var q = 0; q < cells.length; q++) if (cells[q].kind === SLIP_GROUPS[g].key) n++;
+        pages += Math.ceil(n / 4);
+      }
+      note.textContent = cells.length ? (pages + '장 · ' + cells.length + '칸') : '선택 없음';
+    }
     setTimeout(fitSlipPreview, 0);
   }
 
@@ -8378,10 +8649,37 @@
     if (box) {
       var html = '';
       for (var i = 0; i < list.length; i++) html += slipRowHtml(list[i]);
-      box.innerHTML = html || '<div class="slip-none">조건에 맞는 입금 건이 없습니다.<br>필터를 바꾸거나 [당월 전체]를 눌러 보세요.</div>';
+      box.innerHTML = html || '<div class="slip-none">조건에 맞는 지급 건이 없습니다.<br>필터를 바꾸거나 [당월 전체]를 눌러 보세요.</div>';
     }
+    /* v40 — 0건이면 미리보기를 접고(안내만 남김) 스크롤을 맨 위로 되돌린다
+       → 전에는 미리보기 높이 때문에 본문이 스크롤된 상태로 남아, 안내 문구가 위 `slip-bar` 에 가려졌다 */
+    var empty = !list.length;
+    var pvHead = $('slipPvHead'), pvBox = $('slipPreview');
+    if (pvHead) pvHead.hidden = empty;
+    if (pvBox) pvBox.hidden = empty;
+    var dlg = $('paySlipDialog'), dlgBody = dlg ? dlg.querySelector('.dlg-body') : null;
+    if (dlgBody) dlgBody.scrollTop = 0;
     slipPaintBar();
     slipRenderPreview();
+  }
+
+  /* v40 — 담당자 선택 칸 (매장 명단 + 장부에만 있는 다른 담당자) */
+  function renderSlipStaff() {
+    var box = $('slipStaff');
+    if (!box) return;
+    var names = [], i, n;
+    for (i = 0; i < STAFF_LIST.length; i++) names.push(STAFF_LIST[i]);
+    var base = slipBaseRecords();
+    for (i = 0; i < base.length; i++) {
+      n = String(base[i].담당자 == null ? '' : base[i].담당자).replace(/\s+/g, ' ').trim();
+      if (n && names.indexOf(n) < 0) names.push(n);
+    }
+    var html = '<option value="">전체 담당자</option>';
+    for (i = 0; i < names.length; i++) {
+      html += '<option value="' + esc(names[i]) + '">' + esc(names[i]) + '</option>';
+    }
+    box.innerHTML = html;
+    box.value = slipState.staff || '';
   }
 
   function slipRepaint() {
@@ -8418,8 +8716,9 @@
       if (state.records[i].id === id) { rec = state.records[i]; break; }
     }
     if (!rec) return;
-    var on = normalizeDone(rec.입금완료) !== '완료';
-    rec.입금완료 = on ? '완료' : '';
+    var on = !slipDoneOf(rec);
+    // v40 — '미지급' 도 값으로 남긴다 (추지 단독은 표시가 없으면 기본이 '수납완료' 라 되돌린 상태가 사라진다)
+    rec.입금완료 = on ? '완료' : '미지급';
     rec.수정일시 = new Date().toISOString();
     persist();
     render();
@@ -8457,6 +8756,7 @@
     // v39 — 확인서 출력은 직원도 바로 쓸 수 있다(손님 앞에서 지급 확인서를 떼어 준다)
     if (!slipState.date) slipState.date = todayISO();
     if ($('slipDate')) $('slipDate').value = slipState.date;
+    renderSlipStaff();
     var dlg = $('paySlipDialog');
     slipRepaint();
     if (dlg && !dlg.open) dlg.showModal();
@@ -8466,6 +8766,10 @@
   function bindPaySlip() {
     if ($('paySlipBtn')) $('paySlipBtn').addEventListener('click', openPaySlip);
     if ($('slipClose')) $('slipClose').addEventListener('click', function () { $('paySlipDialog').close(); });
+    if ($('slipStaff')) $('slipStaff').addEventListener('change', function () {
+      slipState.staff = this.value || '';
+      slipRepaint();
+    });
     var dlg = $('paySlipDialog');
     if (dlg) dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
     if ($('slipFilters')) $('slipFilters').addEventListener('click', function (e) {
@@ -8723,9 +9027,9 @@
         : '중고폰 매입·판매 합계';
     }
 
-    // 관리자 전용 — 총 순마진 · 추지·페이백 합계
+    // 관리자 전용 — 총 순마진 · 추가지원금(추지) · 페이백
     if (el.kpiNet) {
-      var netSum = 0, paySum = 0, extraSum = 0, cardSum = 0, bankSum = 0, negN = 0;
+      var netSum = 0, paySum = 0, extraSum = 0, cardSum = 0, bankSum = 0, negN = 0, extraN = 0, payN = 0;
       for (i = 0; i < list.length; i++) {
         var nm = netMargin(list[i]);
         netSum += nm.total;
@@ -8733,6 +9037,8 @@
         extraSum += nm.extra;
         cardSum += nm.card;
         bankSum += nm.bank;
+        if (nm.extra) extraN++;
+        if (nm.card || nm.bank) payN++;
         if (nm.total < 0) negN++;
       }
       el.kpiNet.textContent = (netSum < 0 ? '−' : '') + fmtNum(Math.abs(netSum));
@@ -8746,12 +9052,19 @@
           ? '리베이트 ' + fmtNum(sumAll + usedSum) + ' − 추지·페이백 ' + fmtNum(paySum) + (negN ? ' · 마이너스 ' + negN + '건' : '')
           : '리베이트 − 추지·페이백';
       }
-      if (el.kpiPay) el.kpiPay.textContent = fmtNum(paySum);
+      if (el.kpiPay) el.kpiPay.textContent = fmtNum(cardSum + bankSum);
       if (el.kpiPaySub) {
-        el.kpiPaySub.textContent = paySum
-          ? '추지 ' + fmtNum(extraSum) + ' · 카드 ' + fmtNum(cardSum) + ' · 입금 ' + fmtNum(bankSum)
-          : '추가지원금 + 페이백(카드·입금)';
+        el.kpiPaySub.textContent = (cardSum || bankSum)
+          ? '카드 ' + fmtNum(cardSum) + ' · 입금 ' + fmtNum(bankSum) + ' · ' + payN + '건'
+          : '카드결제 + 입금';
         el.kpiPaySub.title = el.kpiPaySub.textContent;
+      }
+      if (el.kpiExtra) el.kpiExtra.textContent = fmtNum(extraSum);
+      if (el.kpiExtraSub) {
+        el.kpiExtraSub.textContent = extraSum
+          ? extraN + '건 · 평균 ' + fmtNum(Math.round(extraSum / extraN)) + '원'
+          : '개통 시 수납한 지원금';
+        el.kpiExtraSub.title = el.kpiExtraSub.textContent;
       }
     }
 
@@ -8828,7 +9141,8 @@
   }
 
   /* v30 — 관리자 전용: 이번 달(기준 월) 직원별 실적 표
-     · 건수(무선 개통 · 유선 신규 · 유선 약갱 · 제휴카드) + 금액(총 리베이트 · 추지·페이백 · 순마진) + 포인트
+     · 건수(무선 개통 · 유선 신규 · 유선 약갱 · 제휴카드) + 금액(총 리베이트 · 추지 · 페이백 · 순마진) + 포인트
+     · v40 — `추지·페이백` 한 칸을 `추지` · `페이백` 두 칸으로 나췄다(페이백 = 카드결제 + 입금 합계)
      · 직원 모드에서는 통째로 숨김(.admin-only) / 담당자 필터를 고르면 그 담당자만 */
   function renderStaffBoard() {
     var box = $('staffBoard'), body = $('staffBoardBody'), foot = $('staffBoardFoot');
@@ -8848,7 +9162,7 @@
     function slot(name) {
       var n = String(name == null ? '' : name).replace(/\s+/g, ' ').trim() || '미지정';
       if (!map[n]) {
-        map[n] = { name: n, w: 0, ln: 0, lr: 0, card: 0, rebate: 0, pay: 0, net: 0, pw: 0, pl: 0, n: 0 };
+        map[n] = { name: n, w: 0, ln: 0, lr: 0, card: 0, rebate: 0, pay: 0, extra: 0, pback: 0, net: 0, pw: 0, pl: 0, n: 0 };
         order.push(n);
       }
       return map[n];
@@ -8872,6 +9186,8 @@
       var nm = netMargin(r);
       o.rebate += nm.wireless + nm.wired;
       o.pay += nm.payback;
+      o.extra += nm.extra;
+      o.pback += nm.card + nm.bank;
       o.net += nm.total;
       var ps = pointSplit(r);
       o.pw += ps.w;
@@ -8900,11 +9216,17 @@
       if (!t) return '<span class="sb-zero">0.0P</span>';
       return '<span class="sb-pt">' + t.toFixed(1) + 'P<small>' + a.toFixed(1) + '+' + b.toFixed(1) + '</small></span>';
     }
-    var html = '', tot = { w: 0, ln: 0, lr: 0, card: 0, rebate: 0, pay: 0, net: 0, pw: 0, pl: 0, n: 0 };
+    function payCell(v) {
+      // v40 — 추지 · 페이백은 순마진에서 빠지는 돈이라 기존 칸과 같이 앞에 '−' 를 붙인다
+      if (!v) return '<span class="sb-zero">0</span>';
+      return '−' + fmtNum(v);
+    }
+    var html = '', tot = { w: 0, ln: 0, lr: 0, card: 0, rebate: 0, pay: 0, extra: 0, pback: 0, net: 0, pw: 0, pl: 0, n: 0 };
     for (i = 0; i < rows.length; i++) {
       var q = rows[i];
       tot.w += q.w; tot.ln += q.ln; tot.lr += q.lr; tot.card += q.card;
-      tot.rebate += q.rebate; tot.pay += q.pay; tot.net += q.net; tot.pw += q.pw; tot.pl += q.pl; tot.n += q.n;
+      tot.rebate += q.rebate; tot.pay += q.pay; tot.extra += q.extra; tot.pback += q.pback;
+      tot.net += q.net; tot.pw += q.pw; tot.pl += q.pl; tot.n += q.n;
       html += '<tr data-staff-row="' + esc(q.name) + '">' +
         '<td class="sb-name">' + esc(q.name) + '</td>' +
         '<td>' + cnt(q.w) + '</td>' +
@@ -8912,7 +9234,8 @@
         '<td>' + cnt(q.lr) + '</td>' +
         '<td>' + cnt(q.card) + '</td>' +
         '<td>' + money(q.rebate) + '</td>' +
-        '<td>' + (q.pay ? '−' + fmtNum(q.pay) : '<span class="sb-zero">0</span>') + '</td>' +
+        '<td>' + payCell(q.extra) + '</td>' +
+        '<td>' + payCell(q.pback) + '</td>' +
         '<td>' + netCell(q.net) + '</td>' +
         '<td>' + ptCell(q.pw, q.pl) + '</td>' +
         '</tr>';
@@ -8926,11 +9249,22 @@
         '<td>' + cnt(tot.lr) + '</td>' +
         '<td>' + cnt(tot.card) + '</td>' +
         '<td>' + money(tot.rebate) + '</td>' +
-        '<td>' + (tot.pay ? '−' + fmtNum(tot.pay) : '<span class="sb-zero">0</span>') + '</td>' +
+        '<td>' + payCell(tot.extra) + '</td>' +
+        '<td>' + payCell(tot.pback) + '</td>' +
         '<td>' + netCell(tot.net) + '</td>' +
         '<td>' + ptCell(tot.pw, tot.pl) + '</td>' +
         '</tr>';
     }
+    syncStaffOverflow();
+  }
+
+  /* v40 — 직원별 실적 표가 화면보다 넓으면 '좌우로 넘기세요' 안내를 띄운다 */
+  function syncStaffOverflow() {
+    var box = $('staffBoard'), hint = $('sbHint');
+    if (!box || !hint) return;
+    var sc = box.querySelector('.sb-scroll');
+    if (!sc || box.hidden) { hint.hidden = true; return; }
+    hint.hidden = !(sc.scrollWidth > sc.clientWidth + 1);
   }
 
   // 펼쳤을 때: 전 직원의 요금제 변경 · 부가서비스 해지 예정 전체
@@ -8949,7 +9283,7 @@
       var phone = u.r.연락처 ? String(u.r.연락처).trim() : '';
       var birth = u.r.생년월일 ? String(u.r.생년월일).trim() : '';
       var meta = '';
-      if (phone) meta += '<button type="button" class="dn-ph ph-copy" data-copy-phone="' + esc(phone) + '" title="눌러서 전화번호 복사">' + esc(phone) + '</button>';
+      if (phone) meta += telLink(phone, 'dn-ph');
       if (birth) meta += '<span class="dn-bd">' + esc(birth) + '</span>';
       html += '<div class="duerow" data-due-item="1" role="button" tabindex="0">' +
         '<span class="dk ' + (isPlan ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
@@ -9230,8 +9564,7 @@
         '</div>' +
       '</div>' +
       '<div class="mcard-detail">' +
-        mRowOpt('연락처', r.연락처
-          ? '<button type="button" class="ph-copy" data-copy-phone="' + esc(r.연락처) + '" title="눌러서 전화번호 복사">' + esc(formatPhone(r.연락처) || r.연락처) + '</button>' : '') +
+        mRowOpt('연락처', telLink(r.연락처)) +
         mRowOpt('생년월일', r.생년월일 ? esc(r.생년월일) : '') +
         mRowOpt('요금제', r.요금제 ? esc(r.요금제) : '') +
         mRowOpt('변경요금제', r.변경요금제 ? esc(r.변경요금제) : '') +
@@ -9296,7 +9629,7 @@
     renderMissingFilter();
     if (state.filters.missing) scopeTag = scopeTag ? scopeTag + ' · 미기재' : '미기재';
     // 필터가 켜져 있을 때는 목록과 버튼 건수가 반드시 같아야 한다 (같은 rows 를 쓴다)
-    if (state.filters.missing && el.missingCount && isAdmin()) el.missingCount.textContent = rows.length + '건';
+    if (state.filters.missing && el.missingCount) el.missingCount.textContent = rows.length + '건';
     if (state.filters.easy) {
       var easyTag = '권매·쉬움' + (easyScopeNow() === 'all' ? ' · 전체 기간' : ' · ' + monthLabel(easyMonthKey()));
       scopeTag = scopeTag ? scopeTag + ' · ' + easyTag : easyTag;
@@ -9396,9 +9729,7 @@
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
         '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + missingBadgesHtml(r) + '</td>' +
-        '<td data-label="연락처" class="nowrap">' + (r.연락처
-          ? '<button type="button" class="ph-copy" data-copy-phone="' + esc(r.연락처) + '" title="눌러서 전화번호 복사">' + esc(formatPhone(r.연락처) || r.연락처) + '</button>'
-          : '<span class="muted">—</span>') + '</td>' +
+        '<td data-label="연락처" class="nowrap">' + (telLink(r.연락처) || '<span class="muted">—</span>') + '</td>' +
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
         '<td data-label="기종"><span class="ellip" title="' + esc(r.기종) + '">' + (r.기종 ? esc(r.기종) : '<span class="muted">—</span>') + '</span>' + policyBadgesHtml(r) + '</td>' +
@@ -9622,6 +9953,8 @@
     }
     var legacy = Object.keys(seen).sort();
     var html = '<option value="">전체 유형</option>';
+    // v40 — 인터넷·TV(유선)만 모아 보기 : 무선이 섞인 건도 유선이 있으면 포함
+    html += '<option value="' + WIRED_ALL_KEY + '">인터넷·TV 전체 (유선)</option>';
     html += '<optgroup label="무선 개통">';
     for (i = 0; i < WIRELESS_TYPES.length; i++) {
       html += '<option value="' + esc(WIRELESS_TYPES[i]) + '">' + esc(WIRELESS_TYPES[i]) + '</option>';
@@ -9698,8 +10031,7 @@
     }
     // 직원 모드로 돌아가면 관리자 전용 창(단가표)은 닫는다
     if (!admin && el.priceDialog && el.priceDialog.open) el.priceDialog.close();
-    // v30 — 직원 모드에서는 '미기재 확인' 필터를 끈다 (관리자 전용 목록)
-    if (!admin && state.filters.missing) state.filters.missing = false;
+    // v40 — 미기재 확인은 직원도 쓴다 (직원에게는 중고폰 금액만) → 직원 모드로 돌아가도 필터를 끄지 않는다
     // v30 — 관리자 모드면 10분 미사용 타이머를 걸고, 직원 모드면 타이머를 끈다
     if (admin) touchAdminIdle(); else clearAdminIdle();
     // 행 안의 삭제 버튼은 다시 그려야 반영된다
@@ -9938,29 +10270,19 @@
     }
   }
 
-  /* ---------------- v30 — 전화번호 1탭 복사 ---------------- */
-  function copyPhoneText(raw) {
-    var txt = formatPhone(raw) || String(raw == null ? '' : raw).trim();
-    if (!txt) return;
-    function done() { toast('📋 ' + txt + ' 복사됨'); }
-    function fallback() {
-      try {
-        var ta = document.createElement('textarea');
-        ta.value = txt;
-        ta.setAttribute('readonly', '');
-        ta.style.position = 'fixed';
-        ta.style.top = '-1000px';
-        ta.style.opacity = '0';
-        document.body.appendChild(ta);
-        ta.select();
-        var ok = document.execCommand && document.execCommand('copy');
-        document.body.removeChild(ta);
-        if (ok) done(); else toast('복사하지 못했습니다. 번호를 길게 눌러 복사해 주세요.', true);
-      } catch (e) { toast('복사하지 못했습니다. 번호를 길게 눌러 복사해 주세요.', true); }
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(txt).then(done).catch(fallback);
-    } else fallback();
+  /* ---------------- v40 — 전화번호 1탭 통화 (tel:) ---------------- */
+  // 번호를 누르면 복사 없이 바로 다이얼/통화창이 뜬다. 번호는 숫자만 남긴다 (010-1234-5678 → tel:01012345678)
+  function telHref(raw) {
+    var d = String(raw == null ? '' : raw).replace(/[^\d+]/g, '');
+    return d ? 'tel:' + d : '';
+  }
+  function telLink(raw, extraCls) {
+    var href = telHref(raw);
+    if (!href) return '';
+    var label = formatPhone(raw) || String(raw == null ? '' : raw).trim();
+    if (!label) return '';
+    // onclick stopPropagation — 폰 카드 펼치기·목록 행 클릭과 겹치지 않게 (기본 동작인 통화 연결은 그대로)
+    return '<a class="ph-copy' + (extraCls ? ' ' + extraCls : '') + '" href="' + esc(href) + '" title="눌러서 바로 전화" onclick="event.stopPropagation()">' + esc(label) + '</a>';
   }
 
   /* ---------------- toast ---------------- */
@@ -11520,9 +11842,8 @@
       setMonthFilter(ym);
       toast(monthLabel(ym) + ' 권매·쉬움만 보기로 이동했습니다.');
     });
-    // v30 — ⚠️ 미기재 확인 (관리자 전용 · 1탭 토글)
+    // v30 → v40 — ⚠️ 미기재 확인 (관리자·직원 공통 · 1탭 토글)
     if (el.missingFilter) el.missingFilter.addEventListener('click', function () {
-      if (!isAdmin()) { openAdminDialog(); return; }
       state.filters.missing = !state.filters.missing;
       render();
       if (state.filters.missing) {
@@ -11669,15 +11990,8 @@
       });
     }
 
-    // v30 — 전화번호를 누르면 1탭 복사 (표 · 폰 카드 · 임박 알림 공통)
-    //   capture 단계에서 받아 stopPropagation — 폰 카드 펼치기·임박 필터·수정 모달이 같이 열리지 않는다
-    document.addEventListener('click', function (e) {
-      var b = e.target && e.target.closest ? e.target.closest('[data-copy-phone]') : null;
-      if (!b) return;
-      e.preventDefault();
-      e.stopPropagation();
-      copyPhoneText(b.getAttribute('data-copy-phone'));
-    }, true);
+    // v40 — 전화번호는 복사 대신 `tel:` 링크로 바로 통화창을 띄운다 (표 · 폰 카드 · 임박 알림 공통)
+    //   링크 자체의 onclick="event.stopPropagation()" 이 폰 카드 펼치기·임박 필터와의 클릭 충돌을 막는다
 
     // KPI 칩 → 유형 필터
     el.kpiBreakdown.addEventListener('click', function (e) {
@@ -11752,7 +12066,7 @@
         saveView();
         applyViewMode();
       });
-      window.addEventListener('resize', function () { applyViewMode(); syncTableOverflow(); });
+      window.addEventListener('resize', function () { applyViewMode(); syncTableOverflow(); syncStaffOverflow(); });
     }
 
     // 빈 상태 버튼 — 샘플·가져오기는 관리자 모드 전용
@@ -12318,7 +12632,10 @@
       kpiPointTSub: $('kpiPointTSub'),
       kpiPay: $('kpiPay'),
       kpiPaySub: $('kpiPaySub'),
+      kpiExtra: $('kpiExtra'),
+      kpiExtraSub: $('kpiExtraSub'),
       sumNetCell: $('sumNetCell'),
+      sumExtraCell: $('sumExtraCell'),
       sumPayCell: $('sumPayCell'),
       formRisk: $('formRisk'),
       planPeriodChips: $('planPeriodChips'),
