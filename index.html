@@ -759,6 +759,8 @@
   .field{display:flex;flex-direction:column;gap:5px;min-width:0}
   .field.span2{grid-column:1/-1}
   #planLWrap[hidden]{display:none}
+  /* v48 — 유선 단독(무선 유형 없이 유선만)일 때 무선 전용 칸을 숨긴다 (값은 그대로 남겨 둔다) */
+  .won-hide{display:none !important}
   .field label{font-size:12.5px;font-weight:700;color:var(--slate-600);display:flex;align-items:center;gap:4px}
   /* v21 — 라벨 줄 안에 작은 체크 칩을 나란히 (세로 공간 0) */
   .field-head{display:flex;align-items:center;gap:7px;min-width:0}
@@ -2486,7 +2488,7 @@
     <div class="sum-staff admin-only" id="staffBoard">
       <div class="sb-head">
         <span class="sb-title">🧑‍💼 직원별 실적 <span class="tag" id="sbMonthLabel">—</span></span>
-        <span class="sb-note">담당자별 건수 · 리베이트 · 순마진 · 포인트</span>
+        <span class="sb-note">담당자별 건수 · 리베이트 · 중고폰 · 순마진 · 포인트</span>
       </div>
       <div class="sb-scroll">
         <table class="sb-table" id="staffBoardTable">
@@ -2497,7 +2499,8 @@
               <th>유선<br>신규</th>
               <th>유선<br>약갱</th>
               <th>제휴<br>카드</th>
-              <th class="sb-money">총 리베이트</th>
+              <th class="sb-money admin-only">총 리베이트</th>
+              <th class="sb-money admin-only">중고폰</th>
               <th class="sb-money">추지</th>
               <th class="sb-money">페이백</th>
               <th class="sb-money">순마진</th>
@@ -2509,7 +2512,7 @@
         </table>
       </div>
       <!-- v40 — 열이 하나 늘어 폰에서는 옆으로 넘겨야 끝 칸이 보인다 → 넘길 수 있다고 알려 준다 -->
-      <p class="sb-hint" id="sbHint" hidden>← 표를 좌우로 넘기면 추지 · 페이백 · 순마진 · 포인트까지 보입니다</p>
+      <p class="sb-hint" id="sbHint" hidden>← 표를 좌우로 넘기면 중고폰 · 추지 · 페이백 · 순마진 · 포인트까지 보입니다</p>
     </div>
 
     <div class="chips sum-chips" id="kpiBreakdown"></div>
@@ -2720,7 +2723,7 @@
           <span class="hint" id="usedComboHint">번호이동·신규가입·중고 개통은 결합 여부를 골라야 저장됩니다.</span>
         </div>
 
-        <div class="field span2">
+        <div class="field span2" id="modelWrap">
           <label for="f_model">기종 <span class="opt">선택 · 최근 2년 KT 주력 단말기</span></label>
           <!-- v38 — list="modelList"(datalist) 는 안드로이드에서 탭해도 값이 안 바뀌어서 뺐다.
                이제 바로 아래 커스텀 목록(#sug_f_model)에서 한 번 탭하면 바뀐다.
@@ -2732,7 +2735,7 @@
           <div class="staff-chips model-chips" id="modelChips"></div>
         </div>
 
-        <div class="field span2">
+        <div class="field span2" id="discWrap">
           <label id="f_discLabel">할인 유형 <span class="opt">선택</span></label>
           <input id="f_discount" type="hidden" value="">
           <div class="type-group disc-chips" id="discChips" role="group" aria-labelledby="f_discLabel"></div>
@@ -2748,7 +2751,7 @@
           <div class="fsec-head"><span class="fsec-bar" aria-hidden="true"></span>요금제 · 보험 · 카드</div>
           <div class="fsec-body">
 
-        <div class="field span2">
+        <div class="field span2" id="planWWrap">
           <div class="field-head">
             <label for="f_plan">요금제(무선) <span class="req">*</span></label>
             <button type="button" class="field-pick" data-plan-pick="f_plan">모바일 요금제</button>
@@ -2778,7 +2781,7 @@
           </div>
         </div>
 
-        <div class="field span2 ins-field">
+        <div class="field span2 ins-field" id="insWrap">
           <label id="f_insLabel">단말 보험 <span class="req">*</span></label>
           <input id="f_ins" type="hidden" value="">
           <div class="ins-chips" id="insChips" role="group" aria-labelledby="f_insLabel">
@@ -8546,6 +8549,27 @@
     if (!on && el.editDialog && !el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
   }
 
+  /* v48 — 유선 단독(무선 유형 없이 인터넷·TV만)인가?
+     평소(유형 미선택)이거나 무선이 함께 있으면 false — 기존 화면과 100% 똑같이 보인다. */
+  function wiredOnlyOn() {
+    var slots = typeSlots($('f_type') ? $('f_type').value : '');
+    return !!slots.l && !slots.w;
+  }
+
+  /* v48 — 유선 단독일 때만 무선 전용 5칸을 숨긴다.
+     · 숨김: 기종(#modelWrap) · 할인유형(#discWrap) · 단말보험(#insWrap) · 무선 요금제(#planWWrap) · 요금제 변경(#planBox) + 무선 정책 자동 계산(#pvBox)
+     · 그대로 둠: 제휴카드 · 부가서비스 · 중고폰 · 유선 요금제(#planLWrap) · 유선 사은품 · 유선 리베이트
+     값은 지우지 않는다 — 무선 칩을 다시 누르면 적어 둔 값 그대로 돌아온다(저장할 때만 collectForm 이 무선값을 비운다). */
+  function syncWiredOnlyFields() {
+    var only = wiredOnlyOn();
+    var ids = ['modelWrap', 'discWrap', 'insWrap', 'planWWrap', 'planBox', 'pvBox'];
+    for (var i = 0; i < ids.length; i++) {
+      var e = $(ids[i]);
+      if (e) e.classList.toggle('won-hide', only);
+    }
+    if (only && $('formRisk')) { $('formRisk').hidden = true; $('formRisk').innerHTML = ''; }
+  }
+
   function openSyncDialog() {
     if (!el.syncDialog) return;
     var staff = !isAdmin();
@@ -10043,7 +10067,7 @@
     function slot(name) {
       var n = String(name == null ? '' : name).replace(/\s+/g, ' ').trim() || '미지정';
       if (!map[n]) {
-        map[n] = { name: n, w: 0, ln: 0, lr: 0, card: 0, rebate: 0, pay: 0, extra: 0, pback: 0, net: 0, pw: 0, pl: 0, n: 0 };
+        map[n] = { name: n, w: 0, ln: 0, lr: 0, card: 0, rebate: 0, used: 0, pay: 0, extra: 0, pback: 0, net: 0, pw: 0, pl: 0, n: 0 };
         order.push(n);
       }
       return map[n];
@@ -10065,6 +10089,8 @@
       o.card += cardCountOf(r.제휴카드);
       var nm = netMargin(r);
       o.rebate += nm.wireless + nm.wired;
+      // v48 — 중고폰금액 합계(담당자별·매장 합계)
+      o.used += Number(nm.used) || 0;
       o.pay += nm.payback;
       o.extra += nm.extra;
       o.pback += nm.card + nm.bank;
@@ -10101,11 +10127,11 @@
       if (!v) return '<span class="sb-zero">0</span>';
       return '−' + fmtNum(v);
     }
-    var html = '', tot = { w: 0, ln: 0, lr: 0, card: 0, rebate: 0, pay: 0, extra: 0, pback: 0, net: 0, pw: 0, pl: 0, n: 0 };
+    var html = '', tot = { w: 0, ln: 0, lr: 0, card: 0, rebate: 0, used: 0, pay: 0, extra: 0, pback: 0, net: 0, pw: 0, pl: 0, n: 0 };
     for (i = 0; i < rows.length; i++) {
       var q = rows[i];
       tot.w += q.w; tot.ln += q.ln; tot.lr += q.lr; tot.card += q.card;
-      tot.rebate += q.rebate; tot.pay += q.pay; tot.extra += q.extra; tot.pback += q.pback;
+      tot.rebate += q.rebate; tot.used += q.used; tot.pay += q.pay; tot.extra += q.extra; tot.pback += q.pback;
       tot.net += q.net; tot.pw += q.pw; tot.pl += q.pl; tot.n += q.n;
       html += '<tr data-staff-row="' + esc(q.name) + '">' +
         '<td class="sb-name">' + esc(q.name) + '</td>' +
@@ -10114,6 +10140,7 @@
         '<td>' + cnt(q.lr) + '</td>' +
         '<td>' + cnt(q.card) + '</td>' +
         '<td>' + money(q.rebate) + '</td>' +
+        '<td class="admin-only">' + money(q.used) + '</td>' +
         '<td>' + payCell(q.extra) + '</td>' +
         '<td>' + payCell(q.pback) + '</td>' +
         '<td>' + netCell(q.net) + '</td>' +
@@ -10129,6 +10156,7 @@
         '<td>' + cnt(tot.lr) + '</td>' +
         '<td>' + cnt(tot.card) + '</td>' +
         '<td>' + money(tot.rebate) + '</td>' +
+        '<td class="admin-only">' + money(tot.used) + '</td>' +
         '<td>' + payCell(tot.extra) + '</td>' +
         '<td>' + payCell(tot.pback) + '</td>' +
         '<td>' + netCell(tot.net) + '</td>' +
@@ -11358,6 +11386,7 @@
     if (typeof renderPlanPickerBody === 'function') renderPlanPickerBody();
     if (planSug && planSug.input) showPlanSuggest(planSug.input);
     syncWiredPlanField();
+    syncWiredOnlyFields();   // v48 — 유선 단독이면 무선 전용 5칸을 숨기고, 무선을 다시 찍으면 되돌린다
     syncWiredGiftField(true);   // 유선 유형을 모두 해제하면 숨기고 값을 비운다
     syncOnestopField(true);      // v30 — 유선 신규가 아니면 원스톱 칸을 숨기고 값을 비운다
     syncUsedComboField(true);   // v27 · v31 — 결합 여부 칸이 필요 없는 유형이면 숨기고 값을 비운다
@@ -11745,6 +11774,7 @@
     $('f_plan').value = pp.w;
     $('f_plan_l').value = pp.l;
     syncWiredPlanField();
+    syncWiredOnlyFields();   // v48 — 저장된 유형이 유선 단독이면 무선 전용 5칸을 처음부터 숨긴다
     // v30 — 원스톱 체크 복원 · 유선 신규가 아니면 숨김 (수정 시 저장값은 지우지 않는다)
     setOnestop(!!isOnestop(r.원스톱));
     syncOnestopField(false);
@@ -11817,7 +11847,12 @@
     var phone = $('f_phone').value.trim();
     var birth = $('f_birth').value.trim();
     var date = $('f_date').value;
-    var planW = $('f_plan').value.trim();
+    var typeVal = $('f_type').value;
+    var slots = typeSlots(typeVal);
+    // v48 — 유선 단독이면 무선 전용 칸(기종·할인유형·단말보험·무선 요금제·요금제 변경)은 저장하지 않는다.
+    //        칸의 값 자체는 그대로 두어 무선 칩을 다시 누르면 되살아난다.
+    var wiredOnly = !!slots.l && !slots.w;
+    var planW = wiredOnly ? '' : $('f_plan').value.trim();
     var planL = $('f_plan_l') ? $('f_plan_l').value.trim() : '';
     // v19 — 저장은 요금제 한 칸: 무선 + 유선 (시트 20컴럼 그대로)
     var plan = joinPlanValue(planW, planL);
@@ -11826,8 +11861,6 @@
     // 필수 = 개인정보(고객명·연락처·생년월일) + 요금제 (+ 개통일)
     // 요금제 변경·리베이트·유형은 바꿀 때만 넣는 선택 항목이다.
     var need = [], i;
-    var typeVal = $('f_type').value;
-    var slots = typeSlots(typeVal);
     var modelVal = $('f_model').value.trim();
     if (!name) need.push({ label: '고객명', el: $('f_name') });
     if (!phone) need.push({ label: '연락처', el: $('f_phone') });
@@ -11873,7 +11906,8 @@
     if (slots.w && !only2nd && !doubleCardBad && !normalizeCard($('f_card').value)) need.push({ label: '제휴카드', el: $('cardChips') });
     // 요금제 변경 · 부가서비스 — '변경 없음'/'미가입'을 골랐거나, 내용을 적었을 때만 저장된다
     var hasPlanChange = !!($('f_newplan').value.trim() || $('f_newdate').value || (period.plan && period.plan !== 'none'));
-    if (!planNoneOn() && !hasPlanChange) need.push({ label: '요금제 변경', el: $('planNoneChips') });
+    // v48 — 유선 단독이면 '요금제 변경' 칸 자체가 숨겨지므로 필수 체크에서 면제한다
+    if (!wiredOnly && !planNoneOn() && !hasPlanChange) need.push({ label: '요금제 변경', el: $('planNoneChips') });
     var hasAddon = !!($('f_addon').value.trim() || $('f_addondate').value || (period.addon && period.addon !== 'none'));
     if (!addonNoneOn() && !hasAddon) need.push({ label: '부가서비스', el: $('addonNoneChips') });
     // v19 — 추지·페이백·중고폰: [미기입]/[미반납] 칩을 눌렀거나 금액·중고폰을 적어야 통과한다
@@ -11985,16 +12019,16 @@
       연락처: formatPhone(phone),
       생년월일: birth,
       개통유형: $('f_type').value,
-      기종: $('f_model').value.trim(),
-      단말보험: normalizeIns($('f_ins').value),
+      기종: wiredOnly ? '' : $('f_model').value.trim(),
+      단말보험: wiredOnly ? '' : normalizeIns($('f_ins').value),
       외국인: foreignOn() ? '외국인' : '',
       성별: genderOn(),
       제휴카드: syncCardValue(),
-      할인유형: normalizeDiscount($('f_discount').value),
+      할인유형: wiredOnly ? '' : normalizeDiscount($('f_discount').value),
       특수조건: condText(condList($('f_cond').value)),
       요금제: plan,
-      변경요금제: $('f_newplan').value.trim(),
-      요금제변경일자: normalizeDate($('f_newdate').value),
+      변경요금제: wiredOnly ? '' : $('f_newplan').value.trim(),
+      요금제변경일자: wiredOnly ? '' : normalizeDate($('f_newdate').value),
       부가서비스: $('f_addon').value.trim(),
       부가서비스유지: period.addon === '4' ? '4개월'
         : period.addon === '6' ? '6개월'
