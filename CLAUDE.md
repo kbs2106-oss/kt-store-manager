@@ -497,6 +497,7 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
   - **빨간 차단 표시(v46 유지)**: 4칩 줄이 한 줄이 되었으므로 `.pc-chips-row.bad` 에 빨간 테두리를 **한 번만** 두르고, 안쪽 `.pc-tags.bad`·`.pc-done-row.bad` 는 `outline-color` 만 남겨 겹치지 않게 했다(클래스·색은 v46 규칙 그대로).
   - `sw.js` `CACHE_VERSION = 'v47'` · **`Code.gs`·시트 20컬럼 무수정**(새 컬럼·새 메모 태그 없음). 기종 예시 안내도 `예) 갤럭시 S26 / 아이폰 18 프로` 로 최신화.
   - 테스트 `qa-kt/v47_payback_exclusive_test.py`(**70/70**: 카드 줄 `1일 결제`↔`완료` 전환 4회(종류·금액 유지) · 2줄 독립 · 입금 `1일 입금`↔`완료` 전환(계좌 유지) · 저장/✏️ 복원 · 예전 기록 완료 우선 · v46 차단+즉시 해제 · 390·1280 세 칸 좌우 끝선 1px 이내(입력칸 x·[미기입] 오른쪽 x·폭·높이) · 4칩+[+ 추가] 한 줄 · 중고폰 `+ 추가` 위치 · 시트 메모 `[입금완료]`/`[1일입금]` 상호 교체 · 스크린샷 3장) ·
+    라이브 `qa-kt/live_check_v47.py`(**13/13** · md5 일치 `8354268455f2b77c4ecf680072ce8553` · SW 캐시 `kt-ledger-v47` · 라이브에서 카드/입금 상호 전환 · 390 세 칸 끝선·4칩 한 줄) ·
     회귀 `v46_payback_required`(42) · `v45_carddone_label`(68) · `v44_payback_done`(60) · `v43_used_multi`(61) · `v42_double_card`(59) · `v41_slip_amount`(38) · `v40_split_tel`(74) · `v39_pay_slip`(75) · `policy_calc`(74) · `v34_easy_sale_scope`(72) · `v32_approval_payback_used`(49) 전부 통과 ·
     `1일`과 `완료`를 함께 켜 두던 회귀 기대값(`v45` D·L 블록의 `입금완료 · 1일 입금`, 예전 기록 F3)은 v47 상호 배타에 맞게 정비하고, `v46`·`v45`·`v44`·`v43`·`v40_split_tel`·`v34` 의 CACHE_VERSION 검사를 v47 로 맞췄다 ·
     스크린샷 `downloads/개통장부-v47-상호배타.png`(PC) · `downloads/개통장부-v47-상호배타-모바일.png` · `downloads/개통장부-v47-상호배타-모바일-2줄.png`.
