@@ -232,7 +232,10 @@
   .result-count.is-allsearch{color:var(--blue-700)}
   .sum-rows{grid-column:2;display:flex;flex-direction:column;justify-content:center;min-width:0}
   .sum-cells{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));grid-column:auto}
+  /* v51 — '무선 개통' 칸을 없애고 4칸(총 건수 · 유선 신규 · 유선 약갱 · 제휴카드)을 한 줄에 놓는다 */
+  .sum-cells.sum-count{grid-template-columns:repeat(4,minmax(0,1fr))}
   body.role-staff .sum-cells{grid-template-columns:repeat(3,minmax(0,1fr))}
+  body.role-staff .sum-cells.sum-count{grid-template-columns:repeat(4,minmax(0,1fr))}
   .sum-cell{display:flex;flex-direction:column;justify-content:center;min-width:0;overflow:hidden;
     padding:9px 15px;border-right:1px solid var(--line)}
   .sum-cell:last-child{border-right:0}
@@ -409,6 +412,16 @@
     .sum-money .sum-value b,.sum-points .sum-value b{font-size:18px}
     .sum-label{overflow:visible}
     #sumPointRow .sum-cell:last-child{grid-column:1/-1}
+    /* v51 — 폰에서도 건수 4칸은 한 줄 (칸 경계선도 4칸 기준으로 다시 긋는다) */
+    .sum-cells.sum-count{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+    .sum-count .sum-cell{padding:7px 8px;border-top:0;border-right:1px solid var(--line)}
+    .sum-count .sum-cell:nth-child(2n){border-right:1px solid var(--line)}
+    .sum-count .sum-cell:last-child{border-right:0}
+    .sum-count .sum-label{font-size:10.5px;letter-spacing:-.03em;gap:0}
+    .sum-count .sum-value b{font-size:17px}
+    .sum-count .sum-value i{font-size:10px}
+    /* v51 — 무선 개통 칸이 없어져 무선·유선 건수는 '총 건수' 아래 문구가 유일하다 → 폰에서도 보인다 */
+    .sum-count .sum-sub{display:block;font-size:9.5px;letter-spacing:-.02em;margin-top:1px}
   }
 
   /* ---------- 요금제·부가서비스 임박 알림 바 (접기/펼치기) ---------- */
@@ -417,6 +430,20 @@
     padding:0;overflow:hidden;transition:border-color .15s,box-shadow .15s}
   .duebar.has-soon{border-color:#F0DFBB}
   .duebar.has-late{border-color:#EFCBC4}
+  /* v51 — 오늘(D-DAY) · 기한 지남 미완료 건이 있으면 접어 두지 않고 펼친 채로 눈에 띄게 */
+  .duebar.alert{border-color:#E8A497;background:linear-gradient(180deg,#FFF8F6 0%,#fff 64%);
+    box-shadow:0 0 0 3px rgba(180,35,24,.10),0 12px 26px -22px rgba(180,35,24,.6)}
+  .duebar.alert.has-soon:not(.has-late){border-color:#EBCB90;background:linear-gradient(180deg,#FFFAF0 0%,#fff 64%);
+    box-shadow:0 0 0 3px rgba(180,83,9,.12),0 12px 26px -22px rgba(180,83,9,.55)}
+  .due-alert-tag{display:inline-flex;align-items:center;gap:3px;flex:none;border-radius:5px;padding:1px 6px;
+    font-size:10px;font-weight:900;letter-spacing:0;color:#B42318;background:#FEE4E2}
+  .duebar.has-soon:not(.has-late) .due-alert-tag{color:#8A5200;background:#FFEDCB}
+  .due-alert-tag[hidden]{display:none}
+  /* v51 — 펼친 목록의 구역 머리글 (내 담당 / 다른 직원) */
+  .due-sec{display:flex;align-items:center;gap:5px;padding:6px 14px;font-size:11.5px;font-weight:900;
+    color:#8A5200;background:#FFF8E8;border-bottom:1px solid #F3E3BE}
+  .due-sec b{font-variant-numeric:tabular-nums}
+  .due-sec.rest{color:#475569;background:#F4F7FB;border-bottom:1px solid #E5EBF3}
   .duebar-top{display:flex;align-items:center;gap:8px;padding:8px 12px;flex-wrap:wrap}
   .duebar-ico{width:28px;height:28px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;
     background:#F1F5F9;color:var(--slate-500)}
@@ -1646,6 +1673,7 @@
     .duebar-main{flex:1 1 calc(100% - 42px);min-width:0}
     .duebar-title{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12.5px}
     .duebar-title .tag{display:none}
+    .due-alert-tag{display:none}
     .duebar-sub{font-size:12px;color:#475569}
     .due-acts{width:100%;justify-content:flex-end;gap:5px;margin-left:0}
     .dstat{height:28px;padding:0 9px;font-size:11px;gap:4px}
@@ -2053,6 +2081,10 @@
   /* ---------- 7) 폰 폭에서 입력 글자 확대 방지(16px) · 터치 기기 최소 높이 ---------- */
   @media (max-width:430px){
     .easy-group{gap:5px}
+    /* v51 — 건수 칩을 기본 화면에서 빼, 필터 칩 줄 여백을 줄여 네 칩이 한 줄에 모이게 */
+    .toolbar{gap:6px}
+    .miss-filter{padding:0 9px}
+    #resetFilters,#viewToggle{padding:0 9px}
     .easy-scope{padding:1px;gap:0}
     .easy-scope .es-nav{width:20px;height:26px;font-size:8px}
     .easy-scope .es-btn{padding:0 7px;font-size:11px}
@@ -2071,6 +2103,16 @@
     #editDialog .dlg-head{padding:12px 14px 8px}
     .fsec-head{padding:5px 9px;font-size:11px}
     .fsec-body{padding:8px 9px 9px}
+    /* v51 — 고객 정보는 폰에서도 딱 2줄: [고객명 · 외국인] [연락처] / [생년월일 · 남·여] [개통일] */
+    .fsec-4{grid-template-columns:minmax(0,1.06fr) minmax(0,.94fr);gap:7px 9px}
+    .fsec-4 .field-head{gap:5px}
+    .fsec-4 .field-head .foreign-chip{height:18px;padding:0 5px;font-size:9.5px}
+    .fsec-4 .field .birth-row{gap:3px}
+    .fsec-4 .field .birth-row #f_birth{flex:1 1 0;min-width:0;max-width:none;padding:0 6px;letter-spacing:0}
+    .fsec-4 .field .birth-row .gender-chip{height:30px;padding:0 5px;font-size:10.5px}
+    .fsec-4 .field .birth-row .gender-chip.on{padding:0 4px}
+    .fsec-4 .field .rrn-badge{height:22px;padding:0 6px;font-size:11px}
+    .fsec-4 .field input[type="date"]{padding:0 7px}
   }
   @media (pointer:coarse){
     .field input,.field select{height:40px}
@@ -2425,17 +2467,13 @@
     </div>
 
     <div class="sum-rows">
-    <div class="sum-cells">
+    <div class="sum-cells sum-count">
       <div class="sum-cell kpi-key kpi-c-blue">
         <span class="sum-label">총 건수 <span class="tag" id="kpiMonthLabel">—</span></span>
         <span class="sum-value"><b class="num" id="kpiTotal">0</b><i>건</i></span>
         <span class="sum-sub" id="kpiTotalSub">이번 달 개통</span>
       </div>
-      <div class="sum-cell">
-        <span class="sum-label">무선 개통</span>
-        <span class="sum-value"><b class="num" id="kpiWirelessN">0</b><i>건</i></span>
-        <span class="sum-sub" id="kpiWirelessNSub">기변·번이·신규·중고</span>
-      </div>
+      <!-- v51 — '무선 개통' 칸은 없애고 무선·유선 건수를 총 건수 아래 문구에 함께 적는다 -->
       <div class="sum-cell">
         <span class="sum-label">유선 신규</span>
         <span class="sum-value"><b class="num" id="kpiWiredNewN">0</b><i>건</i></span>
@@ -2572,7 +2610,7 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3a4.6 4.6 0 0 1 4.6 4.6c0 3.1 1.1 4.2 1.6 4.7H3.8c.5-.5 1.6-1.6 1.6-4.7A4.6 4.6 0 0 1 10 3z"/><path d="M8.2 15.4a1.9 1.9 0 0 0 3.6 0"/></svg>
       </span>
       <div class="duebar-main">
-        <div class="duebar-title">요금제 변경 · 부가서비스 해지 예정 <span class="tag">전 직원 공용</span></div>
+        <div class="duebar-title">요금제 변경 · 부가서비스 해지 예정 <span class="tag">전 직원 공용</span> <span class="due-alert-tag" id="dueAlertTag" hidden>🔔 오늘 처리할 알림</span></div>
         <div class="duebar-sub" id="dueHint">오늘 변경 · 해지할 요금제 · 부가서비스가 없습니다</div>
       </div>
       <div class="due-acts">
@@ -9865,6 +9903,24 @@
     if (el.dueBar) el.dueBar.classList.toggle('open', open);
   }
 
+  /* v51 — 알림 바를 자동으로 펼 때, 사용자가 직접 펼치기/접기를 누른 뒤로는 다시 손대지 않는다 */
+  var dueAutoTouched = false;
+
+  /* v51 — 이 기기에서 '내 담당'으로 볼 이름
+     · v49 직원 인증(kt_chilgeum_staff_auth_v1) 이름 → 직원 모드 기기 이름 순서
+     · 사장님(관리자) 기기는 빈 값 — 전 직원 건을 담당자명과 함께 보여 준다 */
+  function dueMyName() {
+    if (isAdmin()) return '';
+    var a = staffAuth();
+    if (a && String(a.name || '').trim()) return String(a.name).trim();
+    return String(sync.name || '').trim();
+  }
+
+  function dueIsMine(r) {
+    var me = dueMyName();
+    return !!me && String((r || {}).담당자 || '').trim() === me;
+  }
+
   /* =========================================================
      v39 — 🖨️ 입금 지급 확인서 (관리자 전용 · A4 세로 1장 4칸)
      ---------------------------------------------------------
@@ -10473,11 +10529,6 @@
 
     el.kpiTotal.textContent = fmtNum(list.length);
     if (el.kpiMonthLabel) el.kpiMonthLabel.textContent = m ? monthLabel(m) : '전체 기간';
-    if (el.kpiTotalSub) {
-      el.kpiTotalSub.textContent = (state.filters.staff ? state.filters.staff + ' · ' : '') +
-        (m ? '이번 달 개통 건수' : '전체 기간 개통 건수');
-      el.kpiTotalSub.title = state.filters.staff ? state.filters.staff + ' 담당자 기록 기준' : '매장 전체 기록 기준';
-    }
 
     // 실적 건수 4종 — 돈이 아니라 건수만 보여 준다(직원 모드 기본)
     var nWireless = 0, nWiredNew = 0, nWiredRenew = 0, nCard = 0;
@@ -10499,6 +10550,12 @@
     if (el.kpiWiredRenewN) el.kpiWiredRenewN.textContent = fmtNum(nWiredRenew);
     if (el.kpiCardN) el.kpiCardN.textContent = fmtNum(nCard);
     if (el.kpiCardNSub) el.kpiCardNSub.textContent = nCard ? '카드 판매 ' + nCard + '건' : '카드 판매 건수';
+    // v51 — 없앤 '무선 개통' 칸 대신, 총 건수 아래에 무선 · 유선 건수를 함께 적는다
+    if (el.kpiTotalSub) {
+      el.kpiTotalSub.textContent = '무선 ' + fmtNum(nWireless) + ' · 유선 ' + fmtNum(nWiredNew + nWiredRenew);
+      el.kpiTotalSub.title = (state.filters.staff ? state.filters.staff + ' 담당자 기록 · ' : '매장 전체 기록 · ') +
+        (m ? monthLabel(m) : '전체 기간') + ' — 무선(기변·번이·신규·중고) / 유선(신규·약갱)';
+    }
 
     // 유형별 건수 — 복합(무선 + 유선)은 들어 있는 유형마다 하나씩 센다
     var counts = {};
@@ -10661,16 +10718,37 @@
     if (el.dueBar) {
       el.dueBar.classList.toggle('has-soon', soon > 0);
       el.dueBar.classList.toggle('has-late', late > 0);
+      // v51 — 오늘 · 기한 지남 건이 있으면 접혀 있던 바를 강조 상태로 바꿔 눈에 띄게
+      el.dueBar.classList.toggle('alert', (soon + late) > 0);
+    }
+    if (el.dueAlertTag) el.dueAlertTag.hidden = !(soon + late);
+    // v51 — 직원 폰에서는 본인 담당 건부터 (사장님 기기는 전 직원 건을 담당자명과 함께)
+    var dueMe = dueMyName();
+    var dueMineN = 0, dueRestN = 0;
+    for (i = 0; i < upcoming.length; i++) {
+      if (dueMe && String(upcoming[i].r.담당자 || '').trim() === dueMe) dueMineN++;
+      else dueRestN++;
     }
     if (el.dueHint) {
       if (!soon && !late) {
         el.dueHint.textContent = '오늘 변경 · 해지할 요금제 · 부가서비스가 없습니다';
+      } else if (dueMe) {
+        el.dueHint.textContent = dueMineN
+          ? '🔔 ' + dueMe + ' 님, 오늘 처리할 알림 ' + fmtNum(dueMineN) + '건'
+            + (dueRestN ? ' · 다른 직원 ' + fmtNum(dueRestN) + '건' : '')
+          : '오늘 처리할 내 담당 알림은 없습니다 · 다른 직원 ' + fmtNum(dueRestN) + '건';
       } else {
         var parts = [];
         if (late) parts.push('기한 지남 ' + fmtNum(late) + '건');
         if (soon) parts.push('오늘(D-DAY) ' + fmtNum(soon) + '건');
         el.dueHint.textContent = parts.join(' · ');
       }
+    }
+    // v51 — 알림이 있으면 앱을 열었을 때 접어 두지 않고 바로 펼쳐 보여 준다
+    //        (직원이 직접 접기를 누른 뒤로는 다시 자동으로 펼치지 않는다)
+    if (!dueAutoTouched) {
+      var wantOpen = (soon + late) > 0;
+      if (wantOpen !== !!state.dueOpen) { state.dueOpen = wantOpen; applyDueOpen(); }
     }
 
     upcoming.sort(function (a, b) { return a.d - b.d; });
@@ -10810,35 +10888,54 @@
   }
 
   // 펼쳤을 때: 전 직원의 요금제 변경 · 부가서비스 해지 예정 전체
+  //  v51 — 직원 폰에서는 내 담당 건을 먼저 모아 보여 주고, 나머지는 '다른 직원'으로 아래에 둔다.
+  //         사장님(관리자) 기기는 예전처럼 D-Day 순서로 전 직원 건을 담당자명과 함께 한 번에 보여 준다.
+  function dueRowHtml(u) {
+    var ddCls = u.d < 0 ? 'dd-late' : (u.d === 0 ? 'dd-today' : 'dd-soon');
+    var isPlan = u.kind === '요금제';
+    // 고객명 아래 줄에 연락처 · 생년월일을 함께 노출 (임박 알림에서 바로 전화 걸 수 있게)
+    var phone = u.r.연락처 ? String(u.r.연락처).trim() : '';
+    var birth = u.r.생년월일 ? String(u.r.생년월일).trim() : '';
+    var meta = '';
+    if (phone) meta += telLink(phone, 'dn-ph');
+    if (birth) meta += '<span class="dn-bd">' + esc(birth) + '</span>';
+    return '<div class="duerow" data-due-item="1" role="button" tabindex="0" data-mine="' + (dueIsMine(u.r) ? '1' : '0') + '">' +
+      '<span class="dk ' + (isPlan ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
+      '<span class="dn"><span class="dn-name">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
+        (meta ? '<span class="dn-meta">' + meta + '</span>' : '') + '</span>' +
+      '<span class="dw">' + esc(u.what) + '</span>' +
+      '<span class="dd2">' + esc(String(u.date)) + '</span>' +
+      '<span class="dds"><span class="dd ' + ddCls + '">' + ddLabel(u.d) + '</span></span>' +
+      '<span class="ds">' + (u.r.담당자 ? esc(u.r.담당자) : '—') + '</span>' +
+      '<span class="db"><button type="button" class="mini-done" data-act="done" data-kind="' + (isPlan ? 'plan' : 'addon') +
+        '" data-id="' + esc(u.r.id) + '" title="누르면 알림에서 빠지고 모든 직원 기기에 표시됩니다">' +
+        (isPlan ? '변경 완료' : '해지 완료') + '</button></span>' +
+      '</div>';
+  }
+
   function renderDueList(upcoming) {
     if (!el.dueList) return;
     if (!upcoming.length) {
       el.dueList.innerHTML = '<p class="due-empty">오늘 변경 · 해지할 요금제 · 부가서비스가 없습니다.</p>';
       return;
     }
+    var meName = dueMyName();
+    var mine = [], rest = [], i;
+    for (i = 0; i < upcoming.length; i++) {
+      if (meName && String(upcoming[i].r.담당자 || '').trim() === meName) mine.push(upcoming[i]);
+      else rest.push(upcoming[i]);
+    }
     var html = '';
-    for (var i = 0; i < upcoming.length; i++) {
-      var u = upcoming[i];
-      var ddCls = u.d < 0 ? 'dd-late' : (u.d === 0 ? 'dd-today' : 'dd-soon');
-      var isPlan = u.kind === '요금제';
-      // 고객명 아래 줄에 연락처 · 생년월일을 함께 노출 (임박 알림에서 바로 전화 걸 수 있게)
-      var phone = u.r.연락처 ? String(u.r.연락처).trim() : '';
-      var birth = u.r.생년월일 ? String(u.r.생년월일).trim() : '';
-      var meta = '';
-      if (phone) meta += telLink(phone, 'dn-ph');
-      if (birth) meta += '<span class="dn-bd">' + esc(birth) + '</span>';
-      html += '<div class="duerow" data-due-item="1" role="button" tabindex="0">' +
-        '<span class="dk ' + (isPlan ? 'k-plan' : 'k-addon') + '">' + u.kind + '</span>' +
-        '<span class="dn"><span class="dn-name">' + esc(u.r.고객명 || '(이름 없음)') + '</span>' +
-          (meta ? '<span class="dn-meta">' + meta + '</span>' : '') + '</span>' +
-        '<span class="dw">' + esc(u.what) + '</span>' +
-        '<span class="dd2">' + esc(String(u.date)) + '</span>' +
-        '<span class="dds"><span class="dd ' + ddCls + '">' + ddLabel(u.d) + '</span></span>' +
-        '<span class="ds">' + (u.r.담당자 ? esc(u.r.담당자) : '—') + '</span>' +
-        '<span class="db"><button type="button" class="mini-done" data-act="done" data-kind="' + (isPlan ? 'plan' : 'addon') +
-          '" data-id="' + esc(u.r.id) + '" title="누르면 알림에서 빠지고 모든 직원 기기에 표시됩니다">' +
-          (isPlan ? '변경 완료' : '해지 완료') + '</button></span>' +
-        '</div>';
+    if (mine.length) {
+      html += '<div class="due-sec mine">🔔 ' + esc(meName) + ' 님, 오늘 처리할 알림 <b>' +
+        fmtNum(mine.length) + '건</b></div>';
+      for (i = 0; i < mine.length; i++) html += dueRowHtml(mine[i]);
+    }
+    if (rest.length) {
+      if (mine.length) {
+        html += '<div class="due-sec rest">다른 직원 <b>' + fmtNum(rest.length) + '건</b></div>';
+      }
+      for (i = 0; i < rest.length; i++) html += dueRowHtml(rest[i]);
     }
     el.dueList.innerHTML = html;
   }
@@ -11198,6 +11295,11 @@
     if (searchAll) scopeTag = scopeTag ? scopeTag + ' · 전체 기간 검색' : '전체 기간 검색';
     el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') + rows.length + '건';
     el.resultCount.classList.toggle('is-allsearch', searchAll);
+    // v51 — 기본 화면에서는 맨 위 '이번 달 총 N건'과 겹치는 건수 칩을 숨긴다(필터 줄에 혼자 떨어지는 원인).
+    //        검색·필터를 걸었을 때만 결과 건수를 보여 준다.
+    var countNeeded = !!(state.filters.q.trim() || state.filters.type || state.filters.staff ||
+      state.filters.due || state.filters.easy || state.filters.missing || !state.filters.month || scopeTag);
+    el.resultCount.hidden = !countNeeded;
     el.footCount.textContent = state.records.length + '건 저장됨';
 
     // 정렬 화살표
@@ -12422,6 +12524,19 @@
     $('f_addon').value = r.부가서비스 || '';
     paintAddonChips();
     $('f_addondate').value = normalizeDate(r.부가서비스해지일자) || '';
+    // v51 — 기존 건을 ✏️ 수정으로 열 때, 내용이 비어 있으면 [변경 없음] · [미가입] 을 켠 채로 연다.
+    //   (이 두 칸은 시트 20컬럼에 빈칸으로만 저장되므로, 예전처럼 풀린 채 열리면 한 번 더 눌러야 저장됐다)
+    if (rec) {
+      var wiredOnlyRec = (function () { var sW = typeSlots(r.개통유형 || ''); return !!sW.l && !sW.w; })();
+      if (!wiredOnlyRec && !String(r.변경요금제 || '').trim() && !$('f_newdate').value) {
+        $('f_plan_none').value = '변경 없음';
+      }
+      if (!String(r.부가서비스 || '').trim() && !$('f_addondate').value
+          && !String(r.부가서비스유지 || '').trim()) {
+        $('f_addon_none').value = '미가입';
+      }
+      paintNoneChips();
+    }
     var baseDate = normalizeDate(r.개통일) || todayISO();
     period.plan = inferPeriod($('f_newdate').value, baseDate);
     period.addon = (r.부가서비스유지 === '4개월') ? '4'
@@ -13688,6 +13803,7 @@
     el.dueOverdueStat.addEventListener('click', function () { toggleDue('late'); });
     if (el.dueToggle) {
       el.dueToggle.addEventListener('click', function () {
+        dueAutoTouched = true;   // v51 — 직접 접으면 다시 자동으로 펼치지 않는다
         state.dueOpen = !state.dueOpen;
         applyDueOpen();
       });
@@ -14266,6 +14382,7 @@
       dueToggle: $('dueToggle'),
       dueToggleText: $('dueToggleText'),
       dueHint: $('dueHint'),
+      dueAlertTag: $('dueAlertTag'),
       searchInput: $('searchInput'),
       clearSearch: $('clearSearch'),
       typeFilter: $('typeFilter'),
