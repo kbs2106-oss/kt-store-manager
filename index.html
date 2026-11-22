@@ -2303,23 +2303,32 @@
   .slip-note{margin-top:auto;padding:.8mm 2.4mm 1.2mm;font-size:6.6pt;font-weight:700;color:#475569;
     border-top:.6pt dashed #C7D2E0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   /* v41 — 지급 금액 칸 : 결제·입금해 줄 돈만 크게(한 줄씩) · 항목이 2개 이상일 때만 점선 아래 '총액' */
-  .slip-calc{display:flex;flex-direction:column;align-items:flex-end;gap:0;
-    font-size:11pt;font-weight:900;color:#0B1220;line-height:1.14;letter-spacing:-.02em;
+  /* v53 — 지급 금액 칸을 칸 너비 전체로 쓴다.
+     · 전에는 오른쪽 끝에만 붙어 왼쪽 절반이 늘 비어 있었고, 그 상태로 세부 내역은 7.6pt 라
+       A4 로 인쇄하면 읽기 어려웠다.
+     · 지금: 금액은 칸 왼쪽부터, 처리 상태(개통시 결제완료 · 카드결제 완료)는 같은 줄 오른쪽 끝
+       → 좌우가 모두 채워져 빈 공란 없이 보인다.
+     · 세부 내역(위약금 · 할부금 …)은 9.8pt 진한 글씨로 키우고, 총액 줄도 9.5pt 왼쪽 정렬. */
+  .slip-calc{display:flex;flex-direction:column;align-items:stretch;gap:0;
+    font-size:11pt;font-weight:900;color:#0B1220;line-height:1.15;letter-spacing:-.02em;
     font-variant-numeric:tabular-nums}
-  .slip-calc .calc-line{display:flex;align-items:baseline;justify-content:flex-end;flex-wrap:wrap;
-    max-width:100%}
-  .slip-calc .calc-item{font-weight:900;white-space:nowrap}
+  .slip-calc .calc-line{display:flex;align-items:baseline;justify-content:space-between;gap:1.6mm;
+    flex-wrap:wrap;max-width:100%}
+  .slip-calc .calc-item{font-weight:900;white-space:nowrap;flex:0 1 auto;min-width:0}
   .slip-calc .calc-item.bank{color:#0B4AA2}
-  /* 카드 결제 내역 — 한 줄에 하나씩, 7.6pt 진한 회색 */
-  .slip-calc .calc-detail{font-size:7.6pt;font-weight:700;color:#334155;white-space:nowrap;
-    max-width:100%;text-align:right;line-height:1.3}
-  .slip-calc .calc-sub{font-style:normal;font-size:7.4pt;font-weight:700;color:#334155;
-    margin-left:1mm;letter-spacing:0;white-space:nowrap}
+  /* 카드 결제 내역 — 한 줄에 하나씩, 9.8pt 진한 글씨(인쇄해도 또렷) */
+  .slip-calc .calc-detail{display:flex;align-items:baseline;justify-content:space-between;gap:1.4mm;
+    flex-wrap:wrap;font-size:9.8pt;font-weight:800;color:#1F2A37;white-space:nowrap;
+    max-width:100%;text-align:left;line-height:1.22;padding-left:3mm;position:relative}
+  .slip-calc .calc-detail::before{content:'·';position:absolute;left:.8mm;top:0;
+    color:#94A3B8;font-weight:900}
+  .slip-calc .calc-sub{font-style:normal;font-size:9pt;font-weight:800;color:#334155;
+    margin-left:auto;letter-spacing:0;white-space:nowrap}
   .slip-calc .hl{background:#fef08a;padding:0 1mm;border-radius:.6mm;color:#3F2D00;
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
-  /* 총액 — 항목이 2개 이상일 때만, 얇은 점선 아래 작은 합계 줄 */
-  .slip-calc .slip-money{width:100%;margin-top:1mm;padding-top:.9mm;border-top:1px dashed #CBD5E1;
-    font-size:8pt;font-weight:800;color:#475569;text-align:right;line-height:1.15;
+  /* 총액 — 항목이 2개 이상일 때만, 얇은 점선 아래 합계 줄(9.5pt 왼쪽 정렬) */
+  .slip-calc .slip-money{width:100%;margin-top:.8mm;padding-top:.8mm;border-top:1px dashed #CBD5E1;
+    font-size:9.5pt;font-weight:900;color:#0F172A;text-align:left;line-height:1.15;
     letter-spacing:0;white-space:nowrap;font-variant-numeric:tabular-nums}
   /* 폰 목록에서도 추지 금액은 형광펜으로 */
   .slip-row .slip-tag.extra{background:#fef08a;border-color:#e6c96a;color:#4A3400}
@@ -10426,6 +10435,8 @@
     renderFilterUi();
     el.footCount.textContent = state.records.length + '건 저장됨';
     renderSyncUi();
+    // v53 — 이제부터는 역할이 바뀔 때 applyRole() 이 상단 숫자까지 직접 다시 그린다
+    roleRenderReady = true;
   }
 
   /* ---------------- 오늘 · 이번 달 직원별 개통 건수 ----------------
@@ -11685,6 +11696,10 @@
     } catch (e) {}
   }
 
+  /* v53 — 관리자 PIN 을 넣은 그 자리에서 상단 숫자까지 다시 그리기 위한 표시
+     · 첫 부팅에서는 applyRole() 뒤에 render() 가 한 번에 그리므로 두 번 그리지 않는다 */
+  var roleRenderReady = false;
+
   function applyRole() {
     var admin = isAdmin();
     document.body.classList.toggle('role-admin', admin);
@@ -11705,6 +11720,17 @@
     if (admin) touchAdminIdle(); else clearAdminIdle();
     // 행 안의 삭제 버튼은 다시 그려야 반영된다
     renderTable();
+    /* v53 — 관리자 PIN 을 넣은 즉시(딜레이 0) 상단 '무선 리베이트 · 리베이트 합계 ·
+       총 순마진' 과 '직원별 실적' 표가 바로 뜨게, KPI·요약까지 같은 자리에서 다시 그린다.
+       (전에는 renderTable() 만 그려서, 잠금 해제 직후 관리자 숫자가 직원 모드 값 그대로였고
+        다른 창 · 달력에 갔다 와야 render() 가 돌아 숫자가 채워졌다.) */
+    if (roleRenderReady) {
+      invalidateMplus();   // 역할에 따라 정책 자동 리베이트 합산이 달라진다
+      renderKpis();        // KPI + 요금제 알림 + 직원별 실적 표(renderStaffBoard)
+      renderOverview();    // 오늘 · 이번 달 담당자 칩
+    }
+    // 등록·수정 창이 열려 있으면 정책 미리보기(무선 리베이트)도 지금 역할 기준으로 다시 계산
+    refreshPolicy(false);
   }
 
   /* v30 — SHA-256 (동기 계산 · 외부 라이브러리 없음)
@@ -13920,13 +13946,10 @@
       });
     }
     if ($('pvYDum')) $('pvYDum').addEventListener('change', function () { refreshPolicy(false); });
-    // 요금제를 치는 동안에도 정책 계산이 따라오게 (입력 200ms 뒤)
-    var polTimer = null;
+    // v53 — 요금제를 치는 즉시 정책 계산(무선 리베이트 미리보기)이 따라오게
+    //        (전에는 200ms 뒤에야 계산해서 '바로 반영이 안 된다'고 느껴졌다)
     if ($('f_plan')) {
-      $('f_plan').addEventListener('input', function () {
-        clearTimeout(polTimer);
-        polTimer = setTimeout(function () { refreshPolicy(false); }, 200);
-      });
+      $('f_plan').addEventListener('input', function () { refreshPolicy(false); });
     }
 
     // 요금제 빠른 검색(숫자·이름) + 요금제 선택 창
