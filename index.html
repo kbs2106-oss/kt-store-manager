@@ -910,6 +910,10 @@
   .sync-status.ok{background:var(--green-bg);border-color:#BFE3D3;color:#0B5F45}
   .sync-status.err{background:var(--red-bg);border-color:#F3C9C2;color:var(--red)}
   .sync-status b{font-weight:800}
+  /* v39 — 서버 기준으로 다시 불러오기 */
+  .sync-hard-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-6px 0 12px}
+  .sync-hard-row .hint{flex:1 1 160px;min-width:0;margin:0}
+  .sync-hard-row .btn{flex:none}
   .sync-help{font-size:11.5px;color:var(--slate-400);line-height:1.6;margin-top:2px}
   .sync-help code{background:#F1F5F9;border-radius:5px;padding:1px 5px;font-size:11px}
 
@@ -1555,6 +1559,7 @@
   /* ---------- 단가표 관리 (관리자 전용) ---------- */
   .price-dlg{width:min(900px,calc(100vw - 24px))}
   .pd-admin{font-size:10.5px;font-weight:800;color:var(--violet);background:var(--violet-bg);border-radius:999px;padding:2px 8px;vertical-align:2px;margin-left:5px}
+  .pd-admin.pd-all{color:var(--blue-700);background:var(--blue-50)}
   .pd-sec-head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;margin:14px 0 7px}
   .pd-sec-head:first-child{margin-top:2px}
   .pd-sec-title{font-size:12.5px;font-weight:800;color:var(--slate-600);letter-spacing:.01em}
@@ -1931,6 +1936,129 @@
     .field .birth-row .gender-chip{height:30px}
     #editDialog .dlg-foot .btn{height:44px}
   }
+
+  /* ============================================================
+     v39 — ① 페이백(입금) 은행·예금주·계좌번호 + 입금 완료 1탭
+            ② 메모 아래 '등록 MM-DD HH:MM' 작은 회색 글씨
+            ③ 🖨️ 입금 지급 확인서 (A4 세로 1장 4칸 · 관리자·직원 모두)
+            · 시트 20컴럼은 그대로 — 모두 메모 표기로만 왕복한다
+     ============================================================ */
+
+  /* ---------- ① 페이백(입금) 계좌 3칸 (선택 입력) ---------- */
+  .paybank-acct{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,.9fr) minmax(0,1.35fr);gap:5px;margin-top:6px}
+  .paybank-acct input{
+    width:100%;height:32px;padding:0 9px;border-radius:9px;border:1px solid var(--line-strong);
+    background:#fff;font-size:12.5px;font-weight:600;color:var(--ink);min-width:0;
+  }
+  .paybank-acct input::placeholder{color:#B4C0D0;font-weight:500;font-size:11.5px}
+  .paybank-acct input:focus{outline:none;border-color:#8FB4EE;box-shadow:0 0 0 3px rgba(11,87,208,.14)}
+  .paybank-acct input:disabled{background:#F5F8FC;color:#9AA7B8;border-color:#E2E9F2}
+  .paybank-acct.off{opacity:.5}
+  .paybank-done{display:flex;align-items:center;gap:7px;margin-top:6px;flex-wrap:wrap}
+  .paybank-done[hidden]{display:none !important}
+  .paybank-done .paydone-chip{
+    height:28px;padding:0 11px;font-size:12px;font-weight:800;border-color:var(--line-strong);
+    background:#fff;color:var(--slate-500);display:inline-flex;align-items:center;gap:5px;
+  }
+  .paybank-done .paydone-chip .pd-tick{font-weight:900;opacity:.35}
+  .paybank-done .paydone-chip.on{background:#E9F7EF;border-color:#7FCEA6;color:#0B5F45}
+  .paybank-done .paydone-chip.on .pd-tick{opacity:1;color:#0B8A55}
+  .paybank-done .pd-state{font-size:11.5px;font-weight:800;color:var(--slate-400)}
+  .paybank-done .pd-state.done{color:#0B6B47}
+  @media (max-width:560px){
+    .paybank-acct{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+    .paybank-acct #f_paybank_acct{grid-column:1/-1}
+  }
+
+  /* ---------- 목록·카드의 입금 상태 배지 ---------- */
+  .pay-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:999px;
+    font-size:10.5px;font-weight:900;line-height:1.5;white-space:nowrap;margin-left:4px;
+    background:#E9F7EF;color:#0B6B47;border:1px solid #A9DCC8}
+  .pay-badge.wait{background:#FFF6E5;color:#8A5200;border-color:#F0D59A}
+
+  /* ---------- ② 메모 아래 등록일시 ---------- */
+  .memo-stamp{display:block;margin-top:2px;font-size:10.5px;font-weight:700;color:#94A3B8;
+    letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .m-stamp{margin-top:2px;font-size:11px;font-weight:700;color:#94A3B8;font-variant-numeric:tabular-nums}
+
+  /* ---------- ③ 입금 지급 확인서 창 ---------- */
+  .slip-dlg{width:min(1000px,calc(100vw - 20px));display:none;flex-direction:column;max-height:calc(100vh - 24px)}
+  .slip-dlg[open]{display:flex}
+  .slip-dlg .dlg-head{flex:none;padding:14px 18px 10px}
+  .slip-dlg .dlg-body{flex:1 1 auto;min-height:0;max-height:none;overflow:auto;padding:12px 18px 18px}
+  .slip-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 18px;
+    border-bottom:1px solid var(--line);background:linear-gradient(180deg,#FCFDFF,#F4F8FF);flex:none}
+  .slip-bar .slip-filters{gap:5px}
+  .slip-bar .slip-filters .pchip{height:29px;padding:0 11px;font-size:12px}
+  .slip-bar .slip-filters .pchip.on{background:#0F172A;color:#fff;border-color:#0F172A}
+  .slip-date{height:29px;padding:0 8px;border-radius:8px;border:1px solid var(--line-strong);
+    font-size:12px;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+  .slip-date[hidden]{display:none !important}
+  .slip-bar-sum{font-size:12px;font-weight:800;color:#334155;margin-left:auto;white-space:nowrap}
+  .slip-bar-sum b{color:var(--blue-700);font-variant-numeric:tabular-nums}
+  .slip-list{display:flex;flex-direction:column;gap:5px}
+  .slip-list .slip-none{padding:26px 8px;text-align:center;font-size:13px;font-weight:700;color:var(--slate-400)}
+  .slip-empty-note{margin:auto;padding:40px 10px;text-align:center;font-size:13.5px;font-weight:700;color:#94A3B8}
+  .slip-row{display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid var(--line);
+    border-radius:10px;background:#fff;font-size:13px}
+  .slip-row.on{border-color:#BBD7FB;background:#F8FBFF}
+  .slip-row .slip-ck{width:18px;height:18px;flex:none;accent-color:var(--blue-600)}
+  .slip-row .sr-main{display:flex;align-items:center;gap:7px;flex-wrap:wrap;min-width:0;flex:1 1 auto}
+  .slip-row .sr-date{font-size:11.5px;font-weight:800;color:var(--slate-500);font-variant-numeric:tabular-nums}
+  .slip-row .sr-name{font-size:13.5px;font-weight:800;color:var(--ink)}
+  .slip-row .sr-acct{font-size:11.5px;font-weight:600;color:var(--slate-500);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .slip-row .sr-money{font-size:13.5px;font-weight:900;color:var(--ink);font-variant-numeric:tabular-nums;white-space:nowrap}
+  .slip-row .sr-done{height:26px;padding:0 9px;font-size:11.5px;font-weight:800;flex:none;white-space:nowrap}
+  .slip-row .sr-done.done{background:#E9F7EF;border-color:#7FCEA6;color:#0B6B47}
+  .slip-pv-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:16px 0 7px;
+    font-size:12px;font-weight:800;color:#334155}
+  .slip-pv-head span:last-child{font-size:11.5px;font-weight:700;color:var(--slate-400)}
+  .slip-preview{position:relative;background:#E9EEF5;border:1px solid var(--line);border-radius:12px;
+    padding:10px;overflow:hidden}
+  .slip-pv-inner{transform-origin:top left;display:flex;flex-direction:column;gap:12px;width:210mm}
+
+  /* 확인서 한 칸 — 종이 양식(티앤제이통신 입금 지급 확인서) 그대로 */
+  .slip-page{width:210mm;min-height:297mm;box-sizing:border-box;padding:10mm;background:#fff;
+    display:flex;flex-direction:column;gap:4mm;box-shadow:0 6px 18px -12px rgba(15,23,42,.5)}
+  .slip{box-sizing:border-box;height:64mm;display:flex;flex-direction:column;background:#fff;
+    border:1.1pt solid #0F172A;color:#0F172A;overflow:hidden}
+  .slip-hd{display:flex;align-items:center;justify-content:space-between;gap:3mm;
+    min-height:9mm;padding:1.4mm 2.4mm;border-bottom:.9pt solid #0F172A}
+  .slip-title{font-size:11.5pt;font-weight:800;letter-spacing:.01em;white-space:nowrap}
+  .slip-meta{display:flex;align-items:center;gap:1.4mm;font-size:8pt;font-weight:700;color:#1F2A37;white-space:nowrap}
+  .slip-state{display:inline-block;padding:0 1.4mm;border-radius:1mm;border:.8pt solid #B7791F;
+    background:#FFF6E5;color:#8A5200;font-size:7.5pt;font-weight:900;line-height:1.5}
+  .slip-state.done{border-color:#198754;background:#E9F7EF;color:#0B6B47}
+  .slip-tb{width:100%;flex:1 1 auto;border-collapse:collapse;table-layout:fixed;font-size:9pt}
+  .slip-tb th,.slip-tb td{border:.9pt solid #0F172A;padding:1.1mm 2mm;vertical-align:middle;
+    text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .slip-tb th{width:23mm;background:#F1F4F8;font-size:8.2pt;font-weight:800;color:#111827;white-space:normal;line-height:1.25}
+  .slip-tb th.w44{width:31mm}
+  .slip-tb td{font-size:9.5pt;font-weight:600;color:#0B1220}
+  .slip-tb tr{height:33.33%}
+  .slip-tb td.slip-money{font-size:15pt;font-weight:900;letter-spacing:-.01em;text-align:right;
+    font-variant-numeric:tabular-nums;padding-right:3mm}
+  .slip-tb td.slip-check{background:#fff}
+  .slip-foot{margin-top:auto;padding-top:1.4mm;border-top:.8pt dashed #9AA7B8;text-align:right;
+    font-size:8pt;font-weight:700;color:#475569;font-variant-numeric:tabular-nums}
+
+  /* 인쇄 전용 루트 (화면에서는 늘 숨김) */
+  .slip-print{display:none}
+  @page{size:A4 portrait;margin:8mm}
+  @media print{
+    body.print-slips > *{display:none !important}
+    body.print-slips > #paySlipPrint{display:block !important}
+    body.print-slips{background:#fff}
+    body.print-slips #paySlipPrint .slip-page{width:auto;min-height:0;padding:0;background:transparent;
+      box-shadow:none;gap:4mm;break-after:page;page-break-after:always}
+    body.print-slips #paySlipPrint .slip-page:last-child{break-after:auto;page-break-after:auto}
+    body.print-slips #paySlipPrint .slip{break-inside:avoid;page-break-inside:avoid}
+  }
+  @media (max-width:640px){
+    .slip-dlg .dlg-head,.slip-bar,.slip-dlg .dlg-body{padding-left:12px;padding-right:12px}
+    .slip-bar-sum{margin-left:0;width:100%}
+    .slip-preview{padding:6px}
+  }
 </style>
 </head>
 <body>
@@ -1980,6 +2108,7 @@
           <button class="menu-item" id="adminLockBtn" role="menuitem">🔓 관리자 모드 잠금 해제</button>
           <button class="menu-item admin-only" id="devicesBtn" role="menuitem">🛡️ 직원 · 기기 관리 (추방)</button>
           <button class="menu-item admin-only" id="priceBtn" role="menuitem">📋 정책 계산표 · 정산</button>
+          <button class="menu-item" id="paySlipBtn" role="menuitem">🖨️ 입금 지급 확인서</button>
           <button class="menu-item" id="syncNowBtn" role="menuitem" hidden>지금 동기화</button>
           <div class="menu-sep menu-mobile-only"></div>
           <button class="menu-item menu-mobile-only admin-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
@@ -2591,7 +2720,7 @@
                 <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
               </div>
             </div>
-            <div class="field">
+            <div class="field paybank-field">
               <label for="f_paybank">페이백 (입금) <span class="req">*</span></label>
               <div class="pay-row" id="paybankRow">
                 <input id="f_paybank" class="money" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
@@ -2599,6 +2728,19 @@
                 <div class="period-chips none-chips" id="paybankNoneChips" role="group" aria-label="페이백 입금 미기입">
                   <button type="button" class="pchip" data-pay-none="paybank" aria-pressed="false">미기입</button>
                 </div>
+              </div>
+              <!-- v39 — 입금받을 계좌 (선택 입력) · [미기입] 이면 세 칸이 함께 잠긴다 -->
+              <div class="paybank-acct" id="paybankAcct">
+                <input id="f_paybank_bank" type="text" autocomplete="off" placeholder="은행 (선택)" aria-label="입금 은행">
+                <input id="f_paybank_holder" type="text" autocomplete="off" placeholder="예금주 (선택)" aria-label="입금 예금주">
+                <input id="f_paybank_acct" type="text" autocomplete="off" placeholder="계좌번호 (선택)" aria-label="입금 계좌번호">
+              </div>
+              <!-- v39 — 입금 완료 1탭 (금액이 있는 건만 보임) -->
+              <div class="paybank-done" id="paybankDone" hidden>
+                <input id="f_paybank_done" type="hidden" value="">
+                <button type="button" class="pchip paydone-chip" id="paybankDoneChip" aria-pressed="false"
+                        title="누를 때마다 미지급 ↔ 입금 완료"><span class="pd-tick" aria-hidden="true">✓</span>입금 완료</button>
+                <span class="pd-state" id="paybankDoneState">미지급</span>
               </div>
             </div>
           </div>
@@ -2868,6 +3010,12 @@
   </div>
   <div class="dlg-body">
     <div class="sync-status" id="syncStatus">아직 연동하지 않았습니다.</div>
+    <!-- v39 — 시트 목록을 그대로 강제로 다시 받기 (대기열 버리고 서버 기준) -->
+    <div class="sync-hard-row">
+      <button type="button" class="btn sm btn-ghost" id="syncReloadBtn"
+              title="이 기기의 대기열을 버리고 구글 시트 목록을 그대로 다시 받아옵니다">↻ 서버 기준으로 다시 불러오기</button>
+      <span class="hint">시트에서 지운 기록이 이 기기에만 남아 있을 때 1탭으로 정리합니다</span>
+    </div>
     <div class="form-grid">
       <div class="field span2" id="sEnabledField">
         <label class="switch-row" for="s_enabled"><input type="checkbox" id="s_enabled"> 공용 장부 연동 사용</label>
@@ -2898,6 +3046,35 @@
     <button type="button" class="btn btn-primary" id="syncSaveBtn">저장</button>
   </div>
 </dialog>
+
+<!-- ===================== v39 — 입금 지급 확인서 (관리자·직원) ===================== -->
+<dialog id="paySlipDialog" class="slip-dlg">
+  <div class="dlg-head">
+    <div>
+      <h2>🖨️ 입금 지급 확인서<span class="pd-admin pd-all">전 직원</span></h2>
+      <p>페이백(입금)이 있는 건만 모읍니다 · A4 세로 1장에 4칸 · 체크한 건만 인쇄합니다.</p>
+    </div>
+    <button type="button" class="dlg-close" id="slipClose" aria-label="닫기">×</button>
+  </div>
+  <div class="slip-bar">
+    <div class="period-chips slip-filters" id="slipFilters" role="group" aria-label="확인서 필터">
+      <button type="button" class="pchip on" data-slip-filter="unpaid" aria-pressed="true">미지급만</button>
+      <button type="button" class="pchip" data-slip-filter="month" aria-pressed="false">당월 전체</button>
+      <button type="button" class="pchip" data-slip-filter="date" aria-pressed="false">특정 일자</button>
+    </div>
+    <input type="date" id="slipDate" class="slip-date" hidden aria-label="특정 일자">
+    <span class="slip-bar-sum" id="slipBarSum">—</span>
+    <button type="button" class="btn sm btn-ghost" id="slipAllBtn">전체 선택</button>
+    <button type="button" class="btn sm btn-primary" id="slipPrintBtn">🖨️ 인쇄하기</button>
+  </div>
+  <div class="dlg-body">
+    <div class="slip-list" id="slipList"></div>
+    <div class="slip-pv-head"><span>A4 미리보기</span><span id="slipPvNote">—</span></div>
+    <div class="slip-preview" id="slipPreview"><div class="slip-pv-inner" id="slipPvInner"></div></div>
+  </div>
+</dialog>
+<!-- 인쇄 전용 루트 — 화면에서는 숨기고 window.print() 직전에만 채운다 -->
+<div id="paySlipPrint" class="slip-print" aria-hidden="true"></div>
 
 <div class="lock-screen" id="lockScreen" hidden>
   <div class="lock-card">
@@ -3100,6 +3277,36 @@
   ];
   var PAY_FIELDS = ['추가지원금', '페이백카드', '페이백입금'];
 
+  /* v39 — 페이백(입금) 계좌·입금 완료·등록일시 (시트 20컴럼 유지용 메모 표기)
+     · [입금은행:국민은행] [입금예금주:홍길동] [입금계좌:123-456-7890] [입금완료]
+     · [작성일:2026-11-22 11:30] — 신규 저장 때 자동, 수정할 때는 최초 값 유지 */
+  var PAY_DONE_MARK = '[입금완료]';
+
+  /* 등록(작성) 일시 — 'YYYY-MM-DD HH:MM' (초·타임존 없이 매장 시계 기준) */
+  function writeStampNow() {
+    var d = new Date();
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function stampFromMs(ms) {
+    var d = new Date(Number(ms) || 0);
+    if (!d || isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()) +
+      ' ' + pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  // 표기 흔들림(T 구분·초·날짜만)을 'YYYY-MM-DD HH:MM' 하나로 맞춘다
+  function normWriteStamp(v) {
+    var s = String(v == null ? '' : v).trim().replace('T', ' ');
+    var m = /^(\d{4}-\d{2}-\d{2})(?:\s+(\d{1,2}):(\d{2}))?/.exec(s);
+    if (!m) return '';
+    return m[2] ? (m[1] + ' ' + pad2(Number(m[2])) + ':' + m[3]) : (m[1] + ' 00:00');
+  }
+  // 목록·카드에 작게 붙는 짧은 표기 — '등록 11-22 11:30'
+  function stampShort(v) {
+    var s = normWriteStamp(v);
+    return s ? s.slice(5) : '';
+  }
+
   /* v19 — 추지·페이백·중고폰은 '미기입/미반납' 1탭 칩을 누르거나 금액을 적어야 저장된다.
      · input 은 빈칸 그대로 두고(placeholder 0), 칩을 눌렀을 때만 통과 → 빈칸과 0원이 섮이지 않는다
      · 새 등록은 미선택 · 기존 기록 수정은 0/비어 있으면 칩이 켜진 채로 열린다 */
@@ -3133,6 +3340,43 @@
     }
     // v32 — 페이백(카드결제) 여러 줄도 함께 흐리게
     if ($('paycardLines')) pcRefresh();
+    // v39 — 페이백(입금) 은행·예금주·계좌 3칸과 입금 완료 칩도 같이
+    paintPayBankAcct();
+  }
+
+  /* v39 — 페이백(입금) 계좌 3칸 · 입금 완료 1탭 칩의 지금 모양
+     · [미기입] 이면 세 칸을 잠그고 흐리게
+     · 금액이 없으면 입금 완료 칩은 숨긴다(입금할 금액이 없는 건에 상태를 달지 않는다) */
+  function paintPayBankAcct() {
+    var ids = ['f_paybank_bank', 'f_paybank_holder', 'f_paybank_acct'], i;
+    var off = payNoneOn('paybank');
+    var box = $('paybankAcct');
+    if (box) box.classList.toggle('off', off);
+    for (i = 0; i < ids.length; i++) {
+      var inp = $(ids[i]);
+      if (inp) inp.disabled = off;
+    }
+    var doneOn = String(($('f_paybank_done') || {}).value || '') === '완료';
+    var amt = parseNumber(($('f_paybank') || {}).value);
+    var row = $('paybankDone');
+    if (row) row.hidden = off || !(amt > 0);
+    var chip = $('paybankDoneChip');
+    if (chip) {
+      chip.classList.toggle('on', doneOn);
+      chip.setAttribute('aria-pressed', doneOn ? 'true' : 'false');
+    }
+    var st = $('paybankDoneState');
+    if (st) {
+      // 완료일 때는 칩이 이미 '✓ 입금 완료' 라 상태 글씨를 겸치지 않는다
+      st.hidden = doneOn;
+      st.textContent = '미지급';
+      st.classList.toggle('done', doneOn);
+    }
+  }
+
+  function setPayBankDone(on) {
+    if ($('f_paybank_done')) $('f_paybank_done').value = on ? '완료' : '';
+    paintPayBankAcct();
   }
 
   function setPayNone(kind, on) {
@@ -3165,6 +3409,12 @@
           var inp = ls[j].querySelector('.pc-amt');
           if (inp) inp.value = '';
         }
+      }
+      // v39 — 페이백(입금)을 [미기입]으로 두면 은행·예금주·계좌번호와 입금 완료도 함께 비운다
+      if (kind === 'paybank') {
+        var acctIds = ['f_paybank_bank', 'f_paybank_holder', 'f_paybank_acct'];
+        for (var q = 0; q < acctIds.length; q++) if ($(acctIds[q])) $(acctIds[q]).value = '';
+        setPayBankDone(false);
       }
     }
     setPayNone(kind, on);
@@ -4262,8 +4512,8 @@
   // 메모에 붙은 표기([단말보험]·[요금완료]·[부가완료]·[추지:150000] 등)를 모두 떼어 내고 상태를 돌려준다
   function splitMemoTags(memo) {
     var s = String(memo == null ? '' : memo);
-    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '' };
-    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop']];
+    var out = { memo: s, ins: false, planDone: false, addonDone: false, discount: '', conds: [], card: '', foreign: false, gender: '', rrn: 0, wiredGift: '', easy: false, onestop: false, payNone: '', paycardDetail: '', payBank: '', payHolder: '', payAcct: '', payDone: false, writtenAt: '' };
+    var tags = [[INS_MARK, 'ins'], [PLAN_DONE_MARK, 'planDone'], [ADDON_DONE_MARK, 'addonDone'], [FOREIGN_MARK, 'foreign'], [EASY_MARK, 'easy'], [ON_STOP_MARK, 'onestop'], [PAY_DONE_MARK, 'payDone']];
     var hit = false, i;
     for (i = 0; i < tags.length; i++) {
       if (s.indexOf(tags[i][0]) < 0) continue;
@@ -4301,6 +4551,16 @@
     // v32 — 카드결제 상세 [카드상세:할부금/선결제 200000,위약금/1일예정 150000]
     var rePcDetail = /\[카드상세:\s*([^\]]*)\]/g;
     s = s.replace(rePcDetail, function (all, v) { hit = true; out.paycardDetail = String(v || '').trim(); return ' '; });
+    // v39 — 입금 계좌 [입금은행:국민은행] [입금예금주:홍길동] [입금계좌:123-456-7890] · [입금완료]
+    var rePayBank = /\[입금은행:\s*([^\]]*)\]/g;
+    s = s.replace(rePayBank, function (all, v) { hit = true; out.payBank = String(v || '').trim(); return ' '; });
+    var rePayHolder = /\[입금예금주:\s*([^\]]*)\]/g;
+    s = s.replace(rePayHolder, function (all, v) { hit = true; out.payHolder = String(v || '').trim(); return ' '; });
+    var rePayAcct = /\[입금계좌:\s*([^\]]*)\]/g;
+    s = s.replace(rePayAcct, function (all, v) { hit = true; out.payAcct = String(v || '').trim(); return ' '; });
+    // v39 — 등록(작성) 일시 [작성일:2026-11-22 11:30] — 20컬럼 유지용 메모 표기
+    var reWritten = /\[작성일:\s*([^\]]*)\]/g;
+    s = s.replace(reWritten, function (all, v) { hit = true; out.writtenAt = String(v || '').trim(); return ' '; });
     // 할인 유형 · 정책 특수 조건 표기도 떼어 낸다
     for (i = 0; i < DISCOUNT_TYPES.length; i++) {
       var dm = DISCOUNT_MARK[DISCOUNT_TYPES[i]];
@@ -4381,6 +4641,16 @@
     var noneKeys = payNoneKeys(rec);
     if (!noneKeys.length && t.payNone) noneKeys = String(t.payNone).split(',').filter(function (x) { return !!x; });
     if (noneKeys.length) head.push('[미기입:' + noneKeys.join(',') + ']');
+    // v39 — 페이백(입금) 계좌 · 입금 완료 · 등록일시 (모두 메모 표기로만 왕복)
+    var bankName = String(rec.입금은행 || t.payBank || '').replace(/[\[\]]/g, '').trim();
+    var bankHolder = String(rec.입금예금주 || t.payHolder || '').replace(/[\[\]]/g, '').trim();
+    var bankAcct = String(rec.입금계좌 || t.payAcct || '').replace(/[\[\]]/g, '').trim();
+    if (bankName) head.push('[입금은행:' + bankName + ']');
+    if (bankHolder) head.push('[입금예금주:' + bankHolder + ']');
+    if (bankAcct) head.push('[입금계좌:' + bankAcct + ']');
+    if (parseNumber(rec.페이백입금) && normalizeDone(rec.입금완료) === '완료') head.push(PAY_DONE_MARK);
+    var stamp = normWriteStamp(rec.작성일 || t.writtenAt);
+    if (stamp) head.push('[작성일:' + stamp + ']');
     if (!head.length) return m;
     return head.join(' ') + (m ? ' ' + m : '');
   }
@@ -4432,6 +4702,15 @@
       if (pcSum > 0) o.페이백카드 = pcSum;
     }
     if (!o.개통유형) o.개통유형 = '';
+    // v39 — 페이백(입금) 계좌 · 입금 완료 → 메모 표기에서 복원
+    o.입금은행 = String(tags.payBank || (r && r.입금은행) || '').trim();
+    o.입금예금주 = String(tags.payHolder || (r && r.입금예금주) || '').trim();
+    o.입금계좌 = String(tags.payAcct || (r && r.입금계좌) || '').trim();
+    o.입금완료 = (tags.payDone || normalizeDone(r && r.입금완료) === '완료') ? '완료' : '';
+    // v39 — 등록(작성) 일시: 메모 표기 → createdAt(밀리초) 순서로 되살린다
+    var wStamp = normWriteStamp(tags.writtenAt || (r && r.작성일));
+    if (!wStamp && o.createdAt) wStamp = stampFromMs(o.createdAt);
+    o.작성일 = wStamp;
     // 하위 호환: 단일 리베이트뿐이면 유선 유형 → 유선리베이트, 그 밖 → 무선리베이트
     if (legacyRebate !== null && !o.무선리베이트 && !o.유선리베이트) {
       if (isWiredType(o.개통유형)) o.유선리베이트 = legacyRebate;
@@ -4909,6 +5188,12 @@
     snap.미기입 = String(rec.미기입 || '').replace(/\s/g, '');
     // v32 — 카드결제 상세도 스냅사진에 담는다 (빠뜨리면 서버 왕복 뒤 [카드상세:…] 표기가 풀린다)
     snap.페이백카드상세 = String(rec.페이백카드상세 || '').trim();
+    // v39 — 입금 계좌·입금 완료·등록일시도 담는다 (빠뜨리면 서버 왕복 뒤 메모 표기가 풀린다)
+    snap.입금은행 = String(rec.입금은행 || '').trim();
+    snap.입금예금주 = String(rec.입금예금주 || '').trim();
+    snap.입금계좌 = String(rec.입금계좌 || '').trim();
+    snap.입금완료 = normalizeDone(rec.입금완료);
+    snap.작성일 = normWriteStamp(rec.작성일);
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
@@ -4969,30 +5254,86 @@
     if (syncing) return Promise.resolve(false);
     syncing = true;
     renderSyncUi();
+    var pushErr = null;
+    /* v39 — 대기열 올리기가 실패해도(차단·승인 대기는 예외) 서버 목록은 반드시 받아 온다.
+       · 전에는 첫 실패에서 catch 로 빠져 pullList() 가 아예 돌지 않았고,
+         시트에서 지운 기록(0건)이 이 기기에 유령처럼 계속 남았다. */
     return flushPending()
+      .catch(function (err) {
+        if (err && (err.blocked || err.pending)) throw err;   // 차단·기기 승인 대기는 그대로 화면 전환
+        pushErr = err;
+        return null;
+      })
       .then(function () { return pullList(); })
       .then(function (list) {
         applyServerList(list);
         sync.lastSync = Date.now();
-        sync.lastError = '';
+        sync.lastError = pushErr ? errText(pushErr) : '';
         saveSync();
         syncing = false;
         // v32 — 승인이 떨어졌으면 대기 화면을 내린다
         if (pendingStored()) clearPending();
         renderSyncUi();
-        if (!o.quiet) toast('공용 장부와 동기화했습니다.');
+        if (sync.lastError) {
+          if (!o.quietFail) toast('동기화 실패 · ' + sync.lastError + ' · 서버 목록은 새로 받았습니다', true);
+        } else if (!o.quiet) {
+          toast('공용 장부와 동기화했습니다.');
+        }
         return true;
       })
       .catch(function (err) {
-        sync.lastError = String((err && err.message) || err || '연결 실패');
+        sync.lastError = errText(err);
         syncing = false;
         saveSync();
         renderSyncUi();
         if (!o.quietFail && !(err && (err.blocked || err.pending))) {
-          toast('공용 장부 연결 실패 · 이 기기에는 저장됐습니다', true);
+          toast('동기화 실패 · ' + sync.lastError + ' · 이 기기에는 저장돼 있습니다', true);
         }
         return false;
       });
+  }
+
+  // 오류 문구를 한 줄로 짧게 (토스트·상태줄에 원인을 같이 보여 준다)
+  function errText(err) {
+    var s = String((err && err.message) || err || '연결 실패').replace(/\s+/g, ' ').trim();
+    if (/^failed to fetch$/i.test(s) || /networkerror|load failed/i.test(s)) s = '네트워크 연결 실패';
+    if (s.length > 80) s = s.slice(0, 80) + '…';
+    return s;
+  }
+
+  /* v39 — 서버 기준으로 다시 불러오기
+     · 이 기기의 대기열을 버리고 시트 목록을 그대로 반영한다 (캐시 꼬임 1탭 해소)
+     · 이 기기에만 있는(아직 못 올린) 기록은 사라지므로 반드시 확인을 받는다 */
+  function hardReloadFromServer() {
+    if (!syncOn()) { toast('공용 장부 연동이 꺼져 있습니다. 먼저 연동을 켜 주세요.', true); return; }
+    var n = sync.pending.length;
+    askConfirm('서버 기준으로 다시 불러오기',
+      '이 기기에 아직 못 올린 기록 <b>' + n + '건</b>의 대기열을 버리고, 구글 시트(<b>전체_통합</b>)의 목록을 그대로 다시 받아옵니다.<br>' +
+      '<b>이 기기에만 있던 기록은 화면에서 사라집니다.</b> 시트에 있는 기록은 그대로 남습니다.',
+      '다시 불러오기', true).then(function (ok) {
+      if (!ok) return;
+      sync.pending = [];
+      sync.lastError = '';
+      saveSync();
+      renderSyncUi();
+      if (el.syncStatus) {
+        el.syncStatus.className = 'sync-status';
+        el.syncStatus.textContent = '서버 목록을 다시 받는 중…';
+      }
+      pullList().then(function (list) {
+        applyServerList(list);
+        sync.lastSync = Date.now();
+        sync.lastError = '';
+        saveSync();
+        renderSyncUi();
+        toast('서버 기준으로 ' + list.length + '건을 다시 받았습니다.');
+      }).catch(function (err) {
+        sync.lastError = errText(err);
+        saveSync();
+        renderSyncUi();
+        toast('다시 불러오기 실패 · ' + sync.lastError, true);
+      });
+    });
   }
 
   // 이 기기에서 기록이 바뀌었을 때 (등록·수정·삭제·가져오기·전체삭제)
@@ -5028,6 +5369,8 @@
     }
     el.syncPill.className = cls;
     el.syncPillText.textContent = text;
+    // v39 — 왜 실패했는지 상태 배지에 마우스를 올리면 보이게
+    el.syncPill.title = (on && sync.lastError) ? '마지막 오류: ' + sync.lastError : (on ? '공용 장부 연결 상태' : '');
 
     if (el.footStorage) {
       el.footStorage.innerHTML = on
@@ -7325,7 +7668,8 @@
     if (!syncOn()) { openSyncDialog(); return; }
     runSync({ quiet: true }).then(function (ok) {
       updateSyncDialogStatus();
-      toast(ok ? '지금 동기화했습니다.' : '동기화 실패 · 이 기기에는 저장돼 있습니다', !ok);
+      toast(ok ? (sync.lastError ? '동기화 실패 · ' + sync.lastError + ' · 서버 목록은 새로 받았습니다' : '지금 동기화했습니다.')
+        : '동기화 실패 · ' + (sync.lastError || '연결 실패'), !ok || !!sync.lastError);
     });
   }
 
@@ -7813,6 +8157,27 @@
       : '관리자 전용 — 무선·유선 리베이트와 중고폰 금액이 비어 있는 건만 (현재 ' + n + '건)';
   }
 
+  /* v39 — 목록·카드의 입금 완료 배지 (페이백(입금) 금액이 있는 건 · 관리자만) */
+  function payDoneBadgeHtml(r) {
+    if (!isAdmin()) return '';
+    var amt = Number(r && r.페이백입금) || 0;
+    if (!(amt > 0)) return '';
+    if (normalizeDone(r.입금완료) !== '완료') return '';
+    return '<span class="pay-badge" title="페이백(입금) ' + fmtNum(amt) + '원 입금 완료">✓ 입금완료</span>';
+  }
+  // 페이백(입금) 계좌 한 줄 — '국민은행 123-456-7890'
+  function payBankLine(r) {
+    var bank = String((r && r.입금은행) || '').trim();
+    var acct = String((r && r.입금계좌) || '').trim();
+    return [bank, acct].filter(function (x) { return !!x; }).join(' ');
+  }
+  /* v39 — 메모 아래 작은 회색 글씨 '등록 11-22 11:30' */
+  function memoStampHtml(r) {
+    var s = stampShort(r && r.작성일);
+    if (!s) return '';
+    return '<span class="memo-stamp" title="이 기기에 등록한 날짜·시각 (개통일과 다를 수 있습니다)">등록 ' + esc(s) + '</span>';
+  }
+
   // 표·폰 카드에 붙는 '무엇이 비었는지' 배지 (관리자 모드에서만 — 금액 정보라서)
   function missingBadgesHtml(r) {
     if (!isAdmin()) return '';
@@ -7842,6 +8207,302 @@
     el.dueToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (el.dueToggleText) el.dueToggleText.textContent = open ? '접기' : '펼치기';
     if (el.dueBar) el.dueBar.classList.toggle('open', open);
+  }
+
+  /* =========================================================
+     v39 — 🖨️ 입금 지급 확인서 (관리자 전용 · A4 세로 1장 4칸)
+     ---------------------------------------------------------
+     · 모으는 건 : 페이백(입금) > 0 뿐 — 추가지원금은 이미 수납된 돈이라 절대 섞지 않는다
+     · 필터    : 미지급만 / 당월 전체 / 특정 일자
+     · 인쇄    : 체크한 건을 4칸씩 끊어 A4 한 장씩 (장 하단에 총 N건 · 입금 합계 · 출력일)
+     ========================================================= */
+  var slipState = { filter: 'unpaid', date: '', sel: {} };
+
+  // 페이백(입금)이 있는 건 전부 (필터 없음)
+  function slipBaseRecords() {
+    var out = [];
+    for (var i = 0; i < state.records.length; i++) {
+      var r = state.records[i];
+      if (!(Number(r.페이백입금) > 0)) continue;
+      out.push(r);
+    }
+    return out;
+  }
+
+  // 지금 필터에 걸리는 건 (최근 개통일이 먼저)
+  function slipFiltered() {
+    var f = slipState.filter;
+    var month = currentMonth();
+    var day = slipState.date;
+    var list = slipBaseRecords().filter(function (r) {
+      if (f === 'unpaid' && normalizeDone(r.입금완료) === '완료') return false;
+      if (f === 'month' && monthOf(r.개통일) !== month) return false;
+      if (f === 'date') {
+        if (!day) return false;
+        if ((normalizeDate(r.개통일) || r.개통일) !== day) return false;
+      }
+      return true;
+    });
+    list.sort(function (a, b) {
+      var va = a.개통일 || '', vb = b.개통일 || '';
+      if (va !== vb) return va < vb ? 1 : -1;
+      return (Number(a.createdAt) || 0) < (Number(b.createdAt) || 0) ? 1 : -1;
+    });
+    return list;
+  }
+
+  function slipSelected() {
+    var list = slipFiltered(), out = [];
+    for (var i = 0; i < list.length; i++) if (slipState.sel[list[i].id]) out.push(list[i]);
+    return out;
+  }
+
+  function slipResetSel() {
+    var list = slipFiltered(), sel = {};
+    for (var i = 0; i < list.length; i++) sel[list[i].id] = true;
+    slipState.sel = sel;
+  }
+
+  function slipRowHtml(r) {
+    var done = normalizeDone(r.입금완료) === '완료';
+    var line = payBankLine(r);
+    var holder = String(r.입금예금주 || '').trim();
+    var acctText = line || holder
+      ? esc(line + (holder 
+        ? (line ? ' · 예금주 ' + holder : '예금주 ' + holder) 
+        : ''))
+      : '<span class="muted">계좌 미입력</span>';
+    return '<div class="slip-row' + (slipState.sel[r.id] ? ' on' : '') + '" data-slip-row="' + esc(r.id) + '">' +
+      '<input type="checkbox" class="slip-ck" data-slip-ck="' + esc(r.id) + '"' +
+        (slipState.sel[r.id] ? ' checked' : '') + ' aria-label="' + esc(r.고객명 || '') + ' 확인서 선택">' +
+      '<div class="sr-main">' +
+        '<span class="sr-date">' + esc(normalizeDate(r.개통일) || r.개통일 || '—') + '</span>' +
+        '<span class="sr-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
+        '<span class="sr-acct">' + acctText + '</span>' +
+      '</div>' +
+      '<span class="sr-money">' + fmtNum(r.페이백입금) + '원</span>' +
+      '<button type="button" class="pchip sr-done' + (done ? ' done' : '') + '" data-slip-done="' + esc(r.id) + '"' +
+        ' title="누를 때마다 미지급 ↔ 입금 완료">' + (done ? '✓ 입금완료' : '미지급') + '</button>' +
+    '</div>';
+  }
+
+  function slipPaintBar() {
+    var base = slipBaseRecords(), unpaid = 0, i;
+    for (i = 0; i < base.length; i++) if (normalizeDone(base[i].입금완료) !== '완료') unpaid++;
+    var sel = slipSelected(), sum = 0;
+    for (i = 0; i < sel.length; i++) sum += Number(sel[i].페이백입금) || 0;
+    var box = $('slipBarSum');
+    if (!box) return;
+    box.innerHTML = '입금 건 <b>' + base.length + '</b> · 미지급 <b>' + unpaid + '</b>' +
+      ' · 선택 <b>' + sel.length + '</b>건 <b>' + fmtNum(sum) + '원</b>';
+  }
+
+  // 확인서 한 칸 — 종이 양식 그대로 (제목 + 2열 컴팩트 표 3줄)
+  function slipCardHtml(r) {
+    var done = normalizeDone(r.입금완료) === '완료';
+    var phone = formatPhone(r.연락처) || String(r.연락처 || '');
+    var birth = String(r.생년월일 || '').trim();
+    var phoneBirth = [phone, birth].filter(function (x) { return !!x; }).join(' / ');
+    var bankLine = payBankLine(r);
+    var holder = String(r.입금예금주 || '').trim();
+    var d = normalizeDate(r.개통일) || String(r.개통일 || '');
+    return '<div class="slip">' +
+      '<div class="slip-hd">' +
+        '<span class="slip-title">티앤제이통신 입금 지급 확인서</span>' +
+        '<span class="slip-meta">개통일: ' + esc(d || '—') + ' · 담당: ' + esc(String(r.담당자 || '').trim() || '—') +
+          '<span class="slip-state ' + (done ? 'done' : 'wait') + '">' + (done ? '입금완료' : '미지급') + '</span></span>' +
+      '</div>' +
+      '<table class="slip-tb"><tbody>' +
+        '<tr><th>가입자명</th><td>' + esc(r.고객명 || '') + '</td>' +
+          '<th class="w44">연락처 / 생년월일</th><td>' + esc(phoneBirth) + '</td></tr>' +
+        '<tr><th>은행 / 계좌번호</th><td>' + esc(bankLine) + '</td>' +
+          '<th>예금주</th><td>' + esc(holder) + '</td></tr>' +
+        '<tr><th>지급 금액</th><td class="slip-money">' + fmtNum(r.페이백입금) + '원</td>' +
+          '<th>확인</th><td class="slip-check"></td></tr>' +
+      '</tbody></table>' +
+    '</div>';
+  }
+
+  // 4칸씩 한 장 — 장마다 하단에 합계 줄
+  function slipPagesHtml(list) {
+    var html = '';
+    for (var i = 0; i < list.length; i += 4) {
+      var chunk = list.slice(i, i + 4), sum = 0, j;
+      for (j = 0; j < chunk.length; j++) sum += Number(chunk[j].페이백입금) || 0;
+      html += '<div class="slip-page">';
+      for (j = 0; j < chunk.length; j++) html += slipCardHtml(chunk[j]);
+      html += '<div class="slip-foot">총 ' + chunk.length + '건 · 입금 합계 ' + fmtNum(sum) + '원 · 출력 ' + todayISO() + '</div>';
+      html += '</div>';
+    }
+    return html;
+  }
+
+  // A4(210mm ≈ 793.7px @96dpi)를 미리보기 폭에 맞춰 줄인다
+  function fitSlipPreview() {
+    var box = $('slipPreview'), inner = $('slipPvInner');
+    if (!box || !inner) return;
+    var avail = Math.max(150, box.clientWidth - 20);
+    var k = Math.min(1, avail / 793.7);            // 210mm @96dpi
+    var w = 793.7 * k;
+    inner.style.width = '210mm';
+    inner.style.transform = 'scale(' + k + ')';
+    inner.style.marginLeft = Math.max(0, Math.round((avail - w) / 2)) + 'px';
+    box.style.height = Math.max(140, Math.round(inner.offsetHeight * k) + 20) + 'px';
+  }
+
+  function slipRenderPreview() {
+    var inner = $('slipPvInner');
+    if (!inner) return;
+    var list = slipSelected();
+    inner.innerHTML = list.length
+      ? slipPagesHtml(list)
+      : '<div class="slip-page"><div class="slip-empty-note">인쇄할 확인서를 위에서 체크해 주세요.</div></div>';
+    var note = $('slipPvNote');
+    if (note) note.textContent = list.length
+      ? (Math.ceil(list.length / 4) + '장 · ' + list.length + '칸')
+      : '선택 없음';
+    setTimeout(fitSlipPreview, 0);
+  }
+
+  function slipRenderList() {
+    var list = slipFiltered(), box = $('slipList');
+    if (box) {
+      var html = '';
+      for (var i = 0; i < list.length; i++) html += slipRowHtml(list[i]);
+      box.innerHTML = html || '<div class="slip-none">조건에 맞는 입금 건이 없습니다.<br>필터를 바꾸거나 [당월 전체]를 눌러 보세요.</div>';
+    }
+    slipPaintBar();
+    slipRenderPreview();
+  }
+
+  function slipRepaint() {
+    slipResetSel();
+    slipRenderList();
+  }
+
+  function slipSetFilter(f) {
+    slipState.filter = f;
+    var box = $('slipFilters');
+    if (box) {
+      var btns = box.querySelectorAll('button[data-slip-filter]');
+      for (var i = 0; i < btns.length; i++) {
+        var on = btns[i].getAttribute('data-slip-filter') === f;
+        btns[i].classList.toggle('on', on);
+        btns[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+      }
+    }
+    if ($('slipDate')) {
+      var showDate = f === 'date';
+      $('slipDate').hidden = !showDate;
+      if (showDate) {
+        if (!$('slipDate').value) $('slipDate').value = slipState.date || todayISO();
+        slipState.date = $('slipDate').value || todayISO();
+      }
+    }
+    slipRepaint();
+  }
+
+  // 확인서 창 안에서 입금완료 ↔ 미지급 1탭 전환 (장부에도 그대로 저장)
+  function slipToggleDone(id) {
+    var rec = null, i;
+    for (i = 0; i < state.records.length; i++) {
+      if (state.records[i].id === id) { rec = state.records[i]; break; }
+    }
+    if (!rec) return;
+    var on = normalizeDone(rec.입금완료) !== '완료';
+    rec.입금완료 = on ? '완료' : '';
+    rec.수정일시 = new Date().toISOString();
+    persist();
+    render();
+    queueUpsert(rec);
+    syncAfterChange();
+    // 미지급만 보기에서는 완료로 바꾼 건이 목록에서 빠진다
+    if (on) delete slipState.sel[id];
+    slipRenderList();
+    toast((rec.고객명 || '기록') + ' · ' + (on ? '입금 완료로 바꿨습니다.' : '미지급으로 되돌렸습니다.'));
+  }
+
+  function slipPrint() {
+    var list = slipSelected();
+    if (!list.length) { toast('인쇄할 확인서를 먼저 체크해 주세요.', true); return; }
+    var root = $('paySlipPrint');
+    if (!root) return;
+    root.innerHTML = slipPagesHtml(list);
+    document.body.classList.add('print-slips');
+    var cleanup = function () {
+      document.body.classList.remove('print-slips');
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(function () {
+      try { window.print(); } catch (e) {
+        cleanup();
+        toast('인쇄 창을 열지 못했습니다. 브라우저 인쇄로 다시 시도해 주세요.', true);
+        return;
+      }
+      setTimeout(cleanup, 60000);
+    }, 40);
+  }
+
+  function openPaySlip() {
+    // v39 — 확인서 출력은 직원도 바로 쓸 수 있다(손님 앞에서 지급 확인서를 떼어 준다)
+    if (!slipState.date) slipState.date = todayISO();
+    if ($('slipDate')) $('slipDate').value = slipState.date;
+    var dlg = $('paySlipDialog');
+    slipRepaint();
+    if (dlg && !dlg.open) dlg.showModal();
+    setTimeout(fitSlipPreview, 80);
+  }
+
+  function bindPaySlip() {
+    if ($('paySlipBtn')) $('paySlipBtn').addEventListener('click', openPaySlip);
+    if ($('slipClose')) $('slipClose').addEventListener('click', function () { $('paySlipDialog').close(); });
+    var dlg = $('paySlipDialog');
+    if (dlg) dlg.addEventListener('click', function (e) { if (e.target === dlg) dlg.close(); });
+    if ($('slipFilters')) $('slipFilters').addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-slip-filter]') : null;
+      if (b) slipSetFilter(b.getAttribute('data-slip-filter'));
+    });
+    if ($('slipDate')) $('slipDate').addEventListener('change', function () {
+      slipState.date = this.value || todayISO();
+      slipRepaint();
+    });
+    if ($('slipAllBtn')) $('slipAllBtn').addEventListener('click', function () {
+      var list = slipFiltered(), allOn = true, i;
+      for (i = 0; i < list.length; i++) if (!slipState.sel[list[i].id]) allOn = false;
+      for (i = 0; i < list.length; i++) slipState.sel[list[i].id] = !allOn;
+      slipRenderList();
+    });
+    if ($('slipPrintBtn')) $('slipPrintBtn').addEventListener('click', slipPrint);
+    if ($('slipList')) $('slipList').addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      var doneBtn = t.closest('button[data-slip-done]');
+      if (doneBtn) { slipToggleDone(doneBtn.getAttribute('data-slip-done')); return; }
+      var ck = t.closest('input[data-slip-ck]');
+      var row = t.closest('.slip-row');
+      if (ck) {
+        var id = ck.getAttribute('data-slip-ck');
+        slipState.sel[id] = ck.checked;
+        if (row) row.classList.toggle('on', ck.checked);
+        slipPaintBar();
+        slipRenderPreview();
+        return;
+      }
+      if (row) {
+        var box = row.querySelector('input[data-slip-ck]');
+        if (!box) return;
+        var next = !box.checked;
+        box.checked = next;
+        slipState.sel[box.getAttribute('data-slip-ck')] = next;
+        row.classList.toggle('on', next);
+        slipPaintBar();
+        slipRenderPreview();
+      }
+    });
+    window.addEventListener('resize', function () {
+      if ($('paySlipDialog') && $('paySlipDialog').open) fitSlipPreview();
+    });
   }
 
   /* ---------------- rendering ---------------- */
@@ -8541,6 +9202,7 @@
           '<span class="m-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
           easyBadgeHtml(r) +
           missingBadgesHtml(r) +
+          payDoneBadgeHtml(r) +
           foreignTagHtml(r.외국인) +
           typeBadgesHtml(r.개통유형) +
           ddBadge +
@@ -8586,8 +9248,17 @@
         (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
         (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세) : '') : '') +
         (isAdmin() ? mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' : '') : '') +
+        (isAdmin() && (payBankLine(r) || Number(r.페이백입금) > 0)
+          ? mRow('입금 계좌', (payBankLine(r) ? esc(payBankLine(r)) : '<span class="muted">계좌 미입력</span>') +
+              (String(r.입금예금주 || '').trim() ? ' <span class="muted">· 예금주 ' + esc(r.입금예금주) + '</span>' : '') +
+              (Number(r.페이백입금) > 0
+                ? ' <span class="pay-badge' + (normalizeDone(r.입금완료) === '완료' ? '' : ' wait') + '">' +
+                  (normalizeDone(r.입금완료) === '완료' ? '✓ 입금완료' : '미지급') + '</span>'
+                : ''))
+          : '') +
         (isAdmin() ? mRow('순마진', '<b>' + netText(r) + '원</b>') : '') +
         mRowOpt('메모', r.메모 ? esc(r.메모) : '') + riskBadgesHtml(r) +
+        (memoStampHtml(r) ? '<div class="m-stamp">등록 ' + esc(stampShort(r.작성일)) + '</div>' : '') +
         mRow('담당자', r.담당자 ? esc(r.담당자) : '') +
         '<div class="m-actions">' + rowActionButtons(r) + '</div>' +
       '</div>' +
@@ -8715,7 +9386,7 @@
 
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
-        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + missingBadgesHtml(r) + '</td>' +
+        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + missingBadgesHtml(r) + payDoneBadgeHtml(r) + '</td>' +
         '<td data-label="연락처" class="nowrap">' + (r.연락처
           ? '<button type="button" class="ph-copy" data-copy-phone="' + esc(r.연락처) + '" title="눌러서 전화번호 복사">' + esc(formatPhone(r.연락처) || r.연락처) + '</button>'
           : '<span class="muted">—</span>') + '</td>' +
@@ -8733,7 +9404,7 @@
         '<td data-label="무선 리베이트" class="money admin-only">' + wirelessRebateCell(r) + '</td>' +
         '<td data-label="유선 리베이트" class="money admin-only">' + (r.유선리베이트 ? fmtNum(r.유선리베이트) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="순마진" class="money admin-only">' + netCellHtml(r) + '</td>' +
-        '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span>' + riskBadgesHtml(r) + '</td>' +
+        '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span>' + riskBadgesHtml(r) + memoStampHtml(r) + '</td>' +
         '<td data-label="담당자" class="nowrap">' + (r.담당자 ? esc(r.담당자) : '<span class="muted">—</span>') + '</td>' +
         '<td class="actions">' + rowActionButtons(r) + '</td>' +
       '</tr>';
@@ -9754,7 +10425,12 @@
     if (!el.editDialog || !el.editDialog.open) return;
     function hideHint() { if (hint) { hint.textContent = ''; hint.hidden = true; } }
     var slots = typeSlots($('f_type').value);
-    if (!slots.l || !isAdmin()) { hideHint(); return; }
+    if (!slots.l) { hideHint(); return; }
+    /* v39 — 직원 모드에서도 유선 리베이트 **자동 계산은 그대로 실행**한다.
+       (칸 `#f_rebate_l` 은 관리자 전용이라 직원 화면에는 안 보이지만, 값은 collectForm 이 저장한다.
+        전에는 !isAdmin() 로 조기 return 해서 직원이 등록한 유선 건이 0원(미기재)으로 저장됐다.)
+       안내 문구(#rebateLHint)만 관리자에게 보인다. */
+    var showHint = isAdmin();
     var calc = wiredRebateCalc(slots.l, $('f_plan_l') ? $('f_plan_l').value : '', !!slots.w, onestopOn());
     if (!calc) { hideHint(); return; }
     var cur = parseNumber(input.value);
@@ -9765,7 +10441,7 @@
         input.removeAttribute('data-auto');
         wiredAutoLast = null;
       }
-      if (hint) {
+      if (hint && showHint) {
         hint.textContent = '⚠️ ' + calc.label + (calc.onestop ? ' — 원스톱 +100,000원도 직접 더해 주세요.' : '');
         hint.hidden = false;
       }
@@ -9778,12 +10454,12 @@
       input.setAttribute('data-auto', '1');
       wiredAutoLast = calc.amount;
       input.classList.remove('bad');
-      if (hint) {
+      if (hint && showHint) {
         hint.textContent = '🧮 자동 계산: ' + calc.label + ' → ' + fmtNum(calc.amount) + '원' +
           (calc.onestop ? ' (원스톱 +100,000 포함)' : '') + ' · 고치면 수기 값으로 저장됩니다';
         hint.hidden = false;
       }
-    } else if (hint) {
+    } else if (hint && showHint) {
       hint.textContent = '✍️ 수기 입력 ' + fmtNum(cur) + '원 유지 · 자동 계산은 ' + fmtNum(calc.amount) +
         '원 (' + calc.label + ') — 자동값을 쓰려면 칸을 비우세요.';
       hint.hidden = false;
@@ -9863,6 +10539,11 @@
     // v32 — 페이백(카드결제)은 여러 줄(할부금/위약금 · 선결제/1일예정)로 복원한다
     pcSetRows(r.페이백카드상세 || '', Number(r.페이백카드) || 0);
     $('f_paybank').value = r.페이백입금 ? fmtNum(r.페이백입금) : '';
+    // v39 — 페이백(입금) 계좌 3칸 + 입금 완료 상태 복원
+    $('f_paybank_bank').value = r.입금은행 || '';
+    $('f_paybank_holder').value = r.입금예금주 || '';
+    $('f_paybank_acct').value = r.입금계좌 || '';
+    $('f_paybank_done').value = normalizeDone(r.입금완료) === '완료' ? '완료' : '';
     setWiredGift(r.유선혜택 || '');
     syncWiredGiftField(false);   // 수정할 때 저장값은 유선 유형이 없어도 지우지 않는다
     // v19 — 새 등록은 미선택, 기존 기록 수정은 0·빈칸이면 [미기입]/[미반납]을 켠 채로 열어 수정 흐름을 깨지 않는다
@@ -10052,6 +10733,12 @@
       페이백카드: pcTotal(),
       페이백카드상세: pcDetailText(pcAll()),
       페이백입금: parseNumber($('f_paybank').value),
+      // v39 — 페이백(입금) 계좌(선택) + 입금 완료 상태
+      입금은행: payNoneOn('paybank') ? '' : $('f_paybank_bank').value.trim(),
+      입금예금주: payNoneOn('paybank') ? '' : $('f_paybank_holder').value.trim(),
+      입금계좌: payNoneOn('paybank') ? '' : $('f_paybank_acct').value.trim(),
+      입금완료: (!payNoneOn('paybank') && parseNumber($('f_paybank').value) > 0 &&
+        String($('f_paybank_done').value) === '완료') ? '완료' : '',
       유선혜택: wiredGiftOn(),
       // v30 — 원스톱 체크 (유선 리베이트 +10만원 · 유선 포인트 +1.0P)
       원스톱: onestopOn() ? '원스톱' : '',
@@ -10084,6 +10771,8 @@
           ? normalizeDone(before.요금제변경완료) : '';
         data.부가서비스해지완료 = normalizeDate(data.부가서비스해지일자) === normalizeDate(before.부가서비스해지일자)
           ? normalizeDone(before.부가서비스해지완료) : '';
+        // v39 — 등록(작성) 일시는 최초 저장 때 것을 그대로 유지 (수정해도 바뀌지 않는다)
+        data.작성일 = before.작성일 || stampFromMs(before.createdAt) || writeStampNow();
         state.records[idx] = normalizeRecord(data);
         persist();
         render();
@@ -10097,6 +10786,8 @@
     }
 
     var rec = normalizeRecord(data);
+    // v39 — 신규 저장 순간의 날짜·시각을 '작성일'로 남긴다 ([작성일:YYYY-MM-DD HH:MM])
+    if (!rec.작성일) rec.작성일 = writeStampNow();
     state.records.push(rec);
     persist();
     render();
@@ -10139,6 +10830,10 @@
       $('f_extra').value = '';
       pcSetRows('', 0);
       $('f_paybank').value = '';
+      $('f_paybank_bank').value = '';
+      $('f_paybank_holder').value = '';
+      $('f_paybank_acct').value = '';
+      setPayBankDone(false);
       setPayNone('extra', false);
       setPayNone('paycard', false);
       setPayNone('paybank', false);
@@ -10958,6 +11653,7 @@
     if (el.syncSaveBtn) el.syncSaveBtn.addEventListener('click', saveSyncSettings);
     if (el.syncTestBtn) el.syncTestBtn.addEventListener('click', testSyncConnection);
     if (el.syncNowBtn2) el.syncNowBtn2.addEventListener('click', syncNowFromDialog);
+    if (el.syncReloadBtn) el.syncReloadBtn.addEventListener('click', hardReloadFromServer);
     if (el.syncDialog) {
       el.syncDialog.addEventListener('click', function (e) {
         if (e.target === el.syncDialog) el.syncDialog.close();
@@ -11241,6 +11937,19 @@
         };
         inp.addEventListener('input', typed);
         inp.addEventListener('change', typed);
+      });
+    });
+
+    // v39 — 페이백(입금) 은행·예금주·계좌 3칸 + 입금 완료 1탭 칩
+    if ($('f_paybank')) $('f_paybank').addEventListener('input', paintPayBankAcct);
+    if ($('paybankDoneChip')) $('paybankDoneChip').addEventListener('click', function () {
+      setPayBankDone(String(($('f_paybank_done') || {}).value || '') !== '완료');
+    });
+    ['f_paybank_bank', 'f_paybank_holder', 'f_paybank_acct'].forEach(function (id) {
+      var inp = $(id);
+      if (!inp) return;
+      inp.addEventListener('input', function () {
+        if (payNoneOn('paybank')) setPayNone('paybank', false);
       });
     });
 
@@ -11661,6 +12370,7 @@
       syncOpenBtn: $('syncOpenBtn'),
       syncNowBtn: $('syncNowBtn'),
       syncNowBtn2: $('syncNowBtn2'),
+      syncReloadBtn: $('syncReloadBtn'),
       syncSaveBtn: $('syncSaveBtn'),
       syncTestBtn: $('syncTestBtn'),
       syncClose: $('syncClose'),
@@ -11679,6 +12389,8 @@
     loadView();
     loadRole();
     bindEvents();
+    bindPaySlip();
+    paintPayBankAcct();
     applyRole();
     applyDueOpen();
     renderStaffChips(el.staffChips, $('f_staff'));
