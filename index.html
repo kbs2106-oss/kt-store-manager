@@ -1979,6 +1979,9 @@
   /* ---------- ② 메모 아래 등록일시 ---------- */
   .memo-stamp{display:block;margin-top:2px;font-size:10.5px;font-weight:700;color:#94A3B8;
     letter-spacing:-.01em;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .memo-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:3px}
+  .memo-meta .memo-stamp{display:inline;margin:0;line-height:1.4}
+  .memo-meta .pay-badge{margin:0;line-height:1.4}
   .m-stamp{margin-top:2px;font-size:11px;font-weight:700;color:#94A3B8;font-variant-numeric:tabular-nums}
 
   /* ---------- ③ 입금 지급 확인서 창 ---------- */
@@ -8177,6 +8180,12 @@
     if (!s) return '';
     return '<span class="memo-stamp" title="이 기기에 등록한 날짜·시각 (개통일과 다를 수 있습니다)">등록 ' + esc(s) + '</span>';
   }
+  /* v39 — 표의 메모 칸 아래 한 줄: [✓ 입금완료] 등록 11-22 11:30 (둘 다 없으면 빈 값) */
+  function memoMetaHtml(r) {
+    var badge = payDoneBadgeHtml(r), stamp = memoStampHtml(r);
+    if (!badge && !stamp) return '';
+    return '<div class="memo-meta">' + badge + stamp + '</div>';
+  }
 
   // 표·폰 카드에 붙는 '무엇이 비었는지' 배지 (관리자 모드에서만 — 금액 정보라서)
   function missingBadgesHtml(r) {
@@ -9386,7 +9395,7 @@
 
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
-        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + missingBadgesHtml(r) + payDoneBadgeHtml(r) + '</td>' +
+        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + missingBadgesHtml(r) + '</td>' +
         '<td data-label="연락처" class="nowrap">' + (r.연락처
           ? '<button type="button" class="ph-copy" data-copy-phone="' + esc(r.연락처) + '" title="눌러서 전화번호 복사">' + esc(formatPhone(r.연락처) || r.연락처) + '</button>'
           : '<span class="muted">—</span>') + '</td>' +
@@ -9404,7 +9413,7 @@
         '<td data-label="무선 리베이트" class="money admin-only">' + wirelessRebateCell(r) + '</td>' +
         '<td data-label="유선 리베이트" class="money admin-only">' + (r.유선리베이트 ? fmtNum(r.유선리베이트) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="순마진" class="money admin-only">' + netCellHtml(r) + '</td>' +
-        '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span>' + riskBadgesHtml(r) + memoStampHtml(r) + '</td>' +
+        '<td data-label="메모"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span>' + riskBadgesHtml(r) + memoMetaHtml(r) + '</td>' +
         '<td data-label="담당자" class="nowrap">' + (r.담당자 ? esc(r.담당자) : '<span class="muted">—</span>') + '</td>' +
         '<td class="actions">' + rowActionButtons(r) + '</td>' +
       '</tr>';
