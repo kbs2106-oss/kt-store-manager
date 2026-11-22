@@ -1009,12 +1009,9 @@
   .paycard-line .pc-chips-row{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
   .paycard-line .pc-tags{display:flex;align-items:center;gap:5px;flex-wrap:wrap;min-width:0}
   .paycard-line .pc-done-row{margin-top:0;gap:5px;flex-wrap:nowrap;min-width:0}
-  /* v47 — [×] 는 4칩 줄 오른쪽 끝 (금액칸 폭을 위아래 칸과 같게 두기 위해) */
-  .paycard-line .pc-chips-row .pc-del{margin-left:auto;flex:none}
-  /* v47 — [+ 추가] 는 4칩 줄 오른쪽 끝 · 줄이 늘면 마지막 줄로 따라간다
-     · [×] 가 있으면 [×] 가 오른쪽을 잡고 [+ 추가] 가 바로 뒤에 붙는다 */
-  .paycard-line .pc-chips-row .pc-add{margin-left:auto;flex:none;padding:0 9px;font-size:12px}
-  .paycard-line .pc-chips-row .pc-del:not([hidden]) + .pc-add{margin-left:4px}
+  /* v47 — 오른쪽 도구 묶음([×] · [+ 추가]) 은 한 덩어리로 오른쪽 끝에 (줄바꿈되어도 오른쪽) */
+  .paycard-line .pc-tools{display:flex;align-items:center;gap:4px;margin-left:auto;flex:none}
+  .paycard-line .pc-chips-row .pc-add{margin-left:0;flex:none;padding:0 9px;font-size:12px}
   .paycard-line .pc-chips{gap:4px}
   .paycard-line .pc-chips .pchip{height:26px;padding:0 9px;font-size:12px;font-weight:800}
   .paycard-line .pc-chips .pchip.on{background:#0F172A;color:#fff;border-color:#0F172A}
@@ -2970,10 +2967,11 @@
                               title="누를 때마다 미결제 ↔ 결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>결제 완료</button>
                       <span class="pd-state">미결제</span>
                     </div>
-                    <!-- v47 — [×] 는 4칩 줄 오른쪽 끝 (금액칸 폭을 위아래 칸과 같게 두기 위해) -->
-                    <button type="button" class="pchip pc-del" data-pc-del="1" aria-label="이 줄 삭제" hidden>×</button>
-                    <!-- v47 — [+ 추가] 는 2줄(4칩 줄) 오른쪽 끝 · 줄이 늘면 마지막 줄로 따라간다 -->
-                    <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
+                    <!-- v47 — [×] · [+ 추가] 는 4칩 줄 오른쪽 끝에 한 덩어리로 -->
+                    <div class="pc-tools">
+                      <button type="button" class="pchip pc-del" data-pc-del="1" aria-label="이 줄 삭제" hidden>×</button>
+                      <button type="button" class="pchip pc-add" id="paycardAdd" title="할부금·위약금을 따로 적을 때 한 줄 더">+ 추가</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -4084,7 +4082,9 @@
             'title="누를 때마다 미결제 ↔ 결제 완료"><span class="pd-tick" aria-hidden="true">✓</span>결제 완료</button>' +
           '<span class="pd-state">미결제</span>' +
         '</div>' +
-        '<button type="button" class="pchip pc-del" data-pc-del="' + n + '" aria-label="이 줄 삭제">×</button>' +
+        '<div class="pc-tools">' +
+          '<button type="button" class="pchip pc-del" data-pc-del="' + n + '" aria-label="이 줄 삭제">×</button>' +
+        '</div>' +
       '</div>';
     box.appendChild(line);
     var inp = line.querySelector('.pc-amt');
@@ -4147,11 +4147,12 @@
   function pcPlaceAdd() {
     if (!pcAddBtn) return;
     var ls = pcLines();
-    var row = ls.length ? ls[ls.length - 1].querySelector('.pc-chips-row') : null;
-    if (!row) return;
+    var last = ls.length ? ls[ls.length - 1] : null;
+    var box = last ? last.querySelector('.pc-tools') : null;
+    if (!box) return;
     // 이미 제자리에 있으면 건드리지 않는다 (노드를 옮기면 눌린 버튼의 click 이 사라진다)
-    if (pcAddBtn.parentNode === row && row.lastElementChild === pcAddBtn) return;
-    row.appendChild(pcAddBtn);
+    if (pcAddBtn.parentNode === box && box.lastElementChild === pcAddBtn) return;
+    box.appendChild(pcAddBtn);
   }
 
   /* v47 — 한 줄에서 `1일 결제` 와 `✓ 결제 완료` 는 둘 중 하나만 켜진다
