@@ -2420,6 +2420,17 @@
     -webkit-print-color-adjust:exact;print-color-adjust:exact}
   .slip-calc .hl .cl-badge,.slip-calc .hl .calc-sub,.slip-calc .hl .cl-r{color:#3F2D00}
   .slip-calc .cd-r.hl{color:#3F2D00}
+  /* v62 — [추지·카드] 칸 : '카드결제' 합계 줄 없이 추지 줄 아래에 결제 항목을 그대로 적는다
+     (사장님: “결제항목이 너무 많은데” · “추지란 아래에 할부금 결제해줘도 되는 건 같이 있어도 돼”)
+     · 추지와 같은 줄맞춤(왼쪽 항목명 + 처리 상태 · 점선 리더 · 오른쪽 금액)에 한 급만 작게 — 62mm 안에 여러 줄이 들어간다
+     · 결제 완료된 항목은 줄 전체를 노란 형광펜(추지와 같은 #fef08a), 아직 안 된 항목은 흰 바탕 */
+  .slip-calc .ci-main{padding:.15mm 1mm;align-items:center}
+  .slip-calc .cl-badge.ci{font-size:10pt}
+  .slip-calc .cl-r.ci-r{font-size:12.4pt}
+  .slip-calc .ci-st{font-style:normal;font-size:8.2pt;font-weight:900;letter-spacing:0;
+    color:#475569;background:#EDF1F6;border-radius:.8mm;padding:.15mm 1.2mm;
+    -webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .slip-calc .cl-main.hl .ci-st{background:#FFF7D6;color:#3F2D00;border:.5pt solid #E6C96A}
   /* 총액 — 항목이 2개 이상일 때만 얇은 점선 아래 */
   .slip-calc .slip-money{display:flex;align-items:baseline;justify-content:space-between;gap:1.6mm;
     width:100%;margin-top:.7mm;padding-top:.7mm;border-top:1px dashed #CBD5E1;
@@ -10390,6 +10401,7 @@
       out.push({ label: pcComboLabel(d.kind, d.when, insts[k]) + ' ' + fmtNum(d.amt) + '원',
                  kindLabel: kindLabel,
                  whenLabel: wh ? PC_WHEN_LABEL[wh] : '',
+                 amt: Number(d.amt) || 0,
                  amtText: fmtNum(d.amt) + '원',
                  done: states[i] === '1',
                  rank: pcSlipRank(d.kind), idx: k });
@@ -10401,7 +10413,7 @@
     out.sort(function (a, b) { return (a.rank - b.rank) || (a.idx - b.idx); });
     return out.map(function (x) {
       return { label: x.label, kindLabel: x.kindLabel, whenLabel: x.whenLabel,
-               amtText: x.amtText, done: x.done };
+               amt: x.amt, amtText: x.amtText, done: x.done };
     });
   }
 
@@ -10605,6 +10617,19 @@
       '</span></div>';
   }
 
+  /* v62 — [추지·카드] 칸의 결제 항목 한 줄 (사장님: “결제항목이 너무 많은데” ·
+     “추지란 아래에 할부금 결제해줘도 되는 건 같이 있어도 돼”)
+     · 왼쪽 항목명 + 처리 상태(1일 결제 / 카드결제 완료) · 점선 리더 · 오른쪽 금액
+     · 결제 완료된 항목은 줄 전체를 노란 형광펜(#fef08a), 아직 안 된 항목은 흰 바탕 */
+  function slipItemHtml(kindLabel, status, amount, done) {
+    return '<div class="calc-line ci-line"><span class="cl-main ci-main' + (done ? ' hl' : '') + '">' +
+      '<span class="cl-l"><span class="cl-badge ci">' + esc(kindLabel) + '</span>' +
+        (status ? ' <em class="ci-st">' + esc(status) + '</em>' : '') + '</span> ' +
+      '<span class="cl-lead" aria-hidden="true"></span>' +
+      '<span class="cl-r ci-r">' + fmtNum(amount) + '원</span>' +
+      '</span></div>';
+  }
+
   function slipCardHtml(e) {
     var r = e.r, kind = e.kind;
     var phone = formatPhone(r.연락처) || String(r.연락처 || '');
@@ -10614,27 +10639,29 @@
     var cardItems = slipCardDetailItems(r);
     var cardInf = cardDoneInfo(r);
     var cardAllDone = cardInf.total > 0 && cardInf.done === cardInf.total;
-    var payCount = (e.extra ? 1 : 0) + (e.card ? 1 : 0) + (e.bank ? 1 : 0);
-    var rows = [], details = [], ci;
+    var payCount;
+    var rows = [], ci;
 
-    /* 합계 줄 — 왼쪽 라벨 · 오른쪽 금액(13.5pt) · 처리 상태는 라벨 옆 작은 글씨
-       완료(추지 · 전 줄 카드결제 · 입금완료)는 그 줄 전체를 노란 형광펜으로 */
+    /* v62 — [추지·카드] 칸은 `카드결제` 합계 줄을 따로 쓰지 않는다.
+       추지 줄 바로 아래에 실제 결제 항목(위약금 → 할부금(새 기기·전 단말) → 요금수납)을 한 줄씩
+       추지와 같은 크기·같은 줄맞춤으로 적어, 같은 돈이 두 번 보이지 않고 완료·예정 건이 한자리에 모인다.
+       결제 완료된 항목은 줄 전체 노란 형광펜, 아직 안 된 항목은 흰 바탕. */
     if (e.extra) rows.push(slipLineHtml('추지', e.extra, true, '개통시 결제완료'));
     if (e.card) {
-      var cardSub = '';
-      if (cardAllDone) cardSub = '카드결제 완료';
-      else if (cardInf.done > 0) cardSub = cardInf.done + '/' + cardInf.total + ' 완료';
-      rows.push(slipLineHtml('카드결제', e.card, cardAllDone, cardSub));
-      /* 세부 내역 — 위약금 먼저, 그다음 할부금(새 기기 · 전 단말) (slipCardDetailItems 가 정렬) */
-      for (ci = 0; ci < cardItems.length; ci++) {
-        var cIt = cardItems[ci];
-        details.push('<div class="calc-detail">' +
-          '<span class="cd-l">' + esc(cIt.kindLabel) +
-            (cIt.whenLabel ? ' · <em class="cd-when">' + esc(cIt.whenLabel) + '</em>' : '') +
-            (cIt.done ? ' <em class="cd-done">카드결제 완료</em>' : '') + '</span> ' +
-          '<span class="cd-lead" aria-hidden="true"></span>' +
-          '<span class="cd-r' + (cIt.done ? ' hl' : '') + '">' + esc(cIt.amtText) + '</span>' +
-          '</div>');      }
+      var restAmt = e.card, ii;
+      for (ii = 0; ii < cardItems.length; ii++) {
+        var cIt = cardItems[ii];
+        rows.push(slipItemHtml(cIt.kindLabel, cIt.done ? '카드결제 완료' : cIt.whenLabel,
+                               cIt.amt, cIt.done));
+        restAmt -= cIt.amt;
+      }
+      /* 상세 줄이 없는 옛 기록(카드 금액만 있는 건)이나 상세 합계가 모자란 기록도
+         금액을 잃지 않게 한 줄로 남긴다 */
+      if (!cardItems.length || restAmt > 0) {
+        var restSub = cardAllDone ? '카드결제 완료'
+          : (cardInf.done > 0 ? cardInf.done + '/' + cardInf.total + ' 완료' : '');
+        rows.push(slipItemHtml('카드결제', restSub, cardItems.length ? restAmt : e.card, cardAllDone));
+      }
     }
     if (e.bank) {
       var bankDone = normalizeDone(r.입금완료) === '완료';
@@ -10643,7 +10670,9 @@
         .filter(function (x) { return !!x; }).join(' · ');
       rows.push(slipLineHtml('입금', e.bank, bankDone, bankSub));
     }
-    var payBlock = '<div class="slip-calc">' + rows.join('') + details.join('') +
+    /* 추지 + 결제 항목이 합쳐 2줄 이상일 때만 맨 아래 총액 줄 */
+    payCount = rows.length;
+    var payBlock = '<div class="slip-calc">' + rows.join('') +
       (payCount > 1 ? '<div class="slip-money"><span class="sm-l">총액</span> <span class="sm-r">' +
         fmtNum(e.amount) + '원</span></div>' : '') + '</div>';
 
