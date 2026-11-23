@@ -2326,7 +2326,8 @@
     display:flex;flex-direction:column;gap:3.4mm;box-shadow:0 6px 18px -12px rgba(15,23,42,.5)}
   /* v40 — 페이지 구분 표기([추지·카드결제 확인용] / [계좌 입금 지급용]) : 한 장에 4칸이 계속 들어가게 카드 높이를 62mm 로
      v60 — 장 맨 위 바가 「담당자 · 개통일 (N건 · 합계)」 + 문서 종류 + 칸 범위를 함께 적는다.
-           한 장(5mm) 안에 다 넣어 4칸 1장 규격을 건드리지 않는다. */
+           한 장(5mm) 안에 다 넣어 4칸 1장 규격을 건드리지 않는다.
+     v64 — 한 장에 여러 날이 들어가므로 날짜 자리는 `11-13 ~ 11-14` 범위도 들어가게 조금 좁혔다(8.2pt). */
   .slip-page-tag{flex:none;display:flex;align-items:center;gap:1.5mm;height:5mm;font-size:8pt;font-weight:900;
     letter-spacing:.01em;color:#0F172A;padding:0 1.8mm;border-radius:1mm;white-space:nowrap;overflow:hidden;
     background:#F8FAFC;border-bottom:.6pt solid #E2E8F0}
@@ -2341,8 +2342,8 @@
   /* v60 — 담당자 · 개통일 (N건 · 합계) */
   .slip-page-tag .gh-who{flex:none;font-size:8.6pt;font-weight:900;letter-spacing:-.01em}
   .slip-page-tag .gh-sep{flex:none;color:#A3B0C0;font-weight:900}
-  .slip-page-tag .gh-date{flex:none;font-size:8.4pt;font-weight:900;font-variant-numeric:tabular-nums;
-    letter-spacing:-.01em}
+  .slip-page-tag .gh-date{flex:none;font-size:8.2pt;font-weight:900;font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em}
   .slip-page-tag .gh-sum{flex:none;font-size:7.6pt;font-weight:800;color:#475569;
     font-variant-numeric:tabular-nums;letter-spacing:0}
   .slip-page-tag .gh-kind{margin-left:auto;flex:none;font-size:7.2pt;font-weight:900;letter-spacing:.01em}
@@ -3564,7 +3565,7 @@
   <div class="dlg-head">
     <div>
       <h2>🖨️ 입금 지급 확인서<span class="pd-admin pd-all">전 직원</span></h2>
-      <p>추가지원금 · 페이백(카드결제·입금)이 있는 건을 모읍니다 · 담당자·개통일별로 나눠 A4 한 장에 4칸씩 · 체크한 건만 인쇄합니다.</p>
+      <p>추가지원금 · 페이백(카드결제·입금)이 있는 건을 모읍니다 · 담당자·구분별로 A4 한 장에 4칸씩 꽉 채워 인쇄합니다(날짜가 달라도 이어 붙임) · 체크한 건만 인쇄합니다.</p>
     </div>
     <button type="button" class="dlg-close" id="slipClose" aria-label="닫기">×</button>
   </div>
@@ -10727,11 +10728,15 @@
     { key: 'B', label: '계좌 입금 지급용', hint: '통장으로 입금해 줄 건' }
   ];
 
-  /* v60 — 인쇄 묶음은 「담당자 → 개통일」로 끊는다
-     (사장님: “입금 내역도 직원별 일자별 나눠서 각각 출력해줘 전체로 찍고해도”)
-     · 담당자 순서 = 명부 순서(김태양·최지수·김설화·이건엽·권영한·전국현) → 명부에 없는 이름 → 담당자 없음
-     · 같은 담당자 안에서는 최신 개통일이 먼저, 같은 날 안에서는 [추지·카드] 장 다음에 [계좌입금] 장
-     · (담당자, 개통일) 묶음마다 **새 A4 장에서 시작**하고, 그 장 맨 위 바에 담당자·날짜·건수·합계를 적는다 */
+  /* v64 — 인쇄 묶음은 「담당자 → 구분」으로 끊고, 4칸을 꽉 채운다
+     (사장님: “이건 밑에 공란이 이렇게 많은데 왜 안 붙어 있어 한 장에 ?” · “입금 건도 아닌데”)
+     · v60 은 (담당자, 개통일)마다 무조건 새 A4 장 → 하루 1건이면 3칸이 빈 종이로 남았다
+     · v64 : 같은 담당자·같은 구분([추지·카드] / [계좌입금])이면 개통일이 달라도 한 장에 4칸까지 이어 붙인다
+             → 4칸이 차면 다음 장, 담당자가 바뀌거나 구분이 바뀔 때만 새 장에서 시작
+     · 순서 = 담당자 명부 순서(김태양·최지수·김설화·이건엽·권영한·전국현) → 명부에 없는 이름 → 담당자 없음
+              같은 담당자 안에서는 최신 개통일 먼저 → [추지·카드] 장 다음 [계좌입금] 장
+     · 장 위 바 = 하루치면 `김설화 · 2026-11-14 (1건 · 합계 197,400원)`,
+                  여러 날이면 `김설화 · 11-13 ~ 11-14 (4건 · 합계 …원)` (건수·합계는 그 장에 찍힌 칸 기준) */
   function slipStaffRank(name) {
     var n = String(name == null ? '' : name).replace(/\s+/g, ' ').trim();
     if (!n) return 9000;                       // 담당자 없음 — 맨 끝
@@ -10740,47 +10745,69 @@
     return i >= 0 ? i : 5000;                  // 명부에 없는 다른 이름 — 명부 다음
   }
 
-  function slipDayGroups(list) {
-    var rows = slipRows(list), map = {}, order = [], i;
+  // 칸 하나의 개통일 (YYYY-MM-DD 로 맞춘다 · 없으면 '—')
+  function slipCellDay(e) {
+    return normalizeDate(e.r.개통일) || String(e.r.개통일 || '') || '—';
+  }
+
+  // 같은 담당자 안에서 최신 개통일이 먼저 (같은 날은 원래 순서 그대로)
+  function slipSortByDayDesc(cells) {
+    var box = [];
+    for (var i = 0; i < cells.length; i++) box.push({ e: cells[i], i: i });
+    box.sort(function (a, b) {
+      var da = slipCellDay(a.e), db = slipCellDay(b.e);
+      if (da !== db) return da < db ? 1 : -1;
+      return a.i - b.i;
+    });
+    return box.map(function (x) { return x.e; });
+  }
+
+  function slipStaffGroups(list) {
+    var rows = slipRows(list), map = {}, order = [], i, k;
     for (i = 0; i < rows.length; i++) {
-      var e = rows[i], r = e.r;
-      var staff = String(r.담당자 == null ? '' : r.담당자).replace(/\s+/g, ' ').trim();
-      var day = normalizeDate(r.개통일) || String(r.개통일 || '') || '—';
-      var key = staff + '\u0001' + day;
-      if (!map[key]) {
-        map[key] = { staff: staff, date: day, cells: { A: [], B: [] }, ids: {}, count: 0, sum: 0 };
-        order.push(key);
+      var e = rows[i];
+      var staff = String(e.r.담당자 == null ? '' : e.r.담당자).replace(/\s+/g, ' ').trim();
+      if (!map[staff]) {
+        map[staff] = { staff: staff, cells: { A: [], B: [] } };
+        order.push(staff);
       }
-      var g = map[key];
-      g.cells[e.kind].push(e);
-      if (!g.ids[r.id]) { g.ids[r.id] = 1; g.count++; }
-      g.sum += e.amount;
+      map[staff].cells[e.kind].push(e);
     }
     var groups = [];
-    for (i = 0; i < order.length; i++) groups.push(map[order[i]]);
+    for (i = 0; i < order.length; i++) {
+      var g = map[order[i]];
+      for (k = 0; k < SLIP_GROUPS.length; k++) g.cells[SLIP_GROUPS[k].key] = slipSortByDayDesc(g.cells[SLIP_GROUPS[k].key]);
+      groups.push(g);
+    }
     groups.sort(function (a, b) {
       var ra = slipStaffRank(a.staff), rb = slipStaffRank(b.staff);
       if (ra !== rb) return ra - rb;
       var na = a.staff || '', nb = b.staff || '';
       if (na !== nb) return na < nb ? -1 : 1;
-      if (a.date !== b.date) return a.date < b.date ? 1 : -1;   // 최신 개통일 먼저
       return 0;
     });
     return groups;
   }
 
-  // 장 하나 = (담당자, 개통일) 묶음 안에서 문서 종류별 4칸
+  // 장 하나 = (담당자, 구분) 묶음 안에서 4칸씩 — 날짜가 달라도 이어 붙인다
   function slipPagesPlan(list) {
-    var groups = slipDayGroups(list), pages = [], gi, ki, i, j;
+    var groups = slipStaffGroups(list), pages = [], gi, ki, i, j;
     for (gi = 0; gi < groups.length; gi++) {
       var g = groups[gi];
       for (ki = 0; ki < SLIP_GROUPS.length; ki++) {
         var grp = SLIP_GROUPS[ki], cells = g.cells[grp.key], n = cells.length;
         var pageCnt = Math.ceil(n / 4);
         for (i = 0; i < n; i += 4) {
-          var chunk = cells.slice(i, i + 4), sum = 0;
-          for (j = 0; j < chunk.length; j++) sum += chunk[j].amount;
-          pages.push({ grp: grp, group: g, chunk: chunk, sum: sum, cells: n,
+          var chunk = cells.slice(i, i + 4), sum = 0, days = [], ids = {}, cnt = 0;
+          for (j = 0; j < chunk.length; j++) {
+            sum += chunk[j].amount;
+            var d = slipCellDay(chunk[j]);
+            if (days.indexOf(d) < 0) days.push(d);
+            var rid = chunk[j].r.id;
+            if (!ids[rid]) { ids[rid] = 1; cnt++; }
+          }
+          days.sort();
+          pages.push({ grp: grp, group: g, chunk: chunk, sum: sum, count: cnt, days: days, cells: n,
             pageNo: Math.floor(i / 4) + 1, pageCnt: pageCnt });
         }
       }
@@ -10788,17 +10815,28 @@
     return pages;
   }
 
-  // 장 맨 위 바 — 담당자 · 2026-11-03 (2건 · 합계 600,000원) [추지·카드결제 확인용] 2칸 중 1~2
-  //   같은 날 [추지·카드]와 [계좌입금] 장이 둘 다 있으면 그 숫자는 '그 날 전체'라서 `이 날 합계` 로 적는다
+  // 장 위 날짜 표기 — 하루치 `2026-11-14` · 여러 날 `11-13 ~ 11-14` · 해가 다르면 `2025-12-31 ~ 2026-01-02`
+  function slipDayRangeText(days) {
+    var ds = [];
+    for (var i = 0; i < (days || []).length; i++) if (days[i] && days[i] !== '—') ds.push(days[i]);
+    if (!ds.length) return '—';
+    if (ds.length === 1) return ds[0];
+    var a = ds[0], b = ds[ds.length - 1];
+    if (a.slice(0, 4) === b.slice(0, 4)) return a.slice(5) + ' ~ ' + b.slice(5);
+    return a + ' ~ ' + b;
+  }
+
+  // 장 맨 위 바 — 김설화 · 11-13 ~ 11-14 (4건 · 합계 900,300원) [추지·카드결제 확인용] 4칸
+  //   건수·합계는 그 장에 실제로 찍힌 칸만 센다 (4칸이 차서 다음 장으로 넘어가면 장마다 따로)
   function slipPageTagHtml(p) {
-    var g = p.group;
-    var split = (g.cells.A.length > 0 && g.cells.B.length > 0);
+    var g = p.group, range = slipDayRangeText(p.days);
     return '<div class="slip-page-tag slip-group-head ' + (p.grp.key === 'A' ? 'ga' : 'gb') + '">' +
       '<span class="dot" aria-hidden="true"></span>' +
       '<span class="gh-who" data-slip-who="' + esc(g.staff) + '">' + esc(g.staff || '담당자 없음') + '</span>' +
       '<span class="gh-sep">·</span>' +
-      '<span class="gh-date" data-slip-day="' + esc(g.date) + '">' + esc(g.date || '—') + '</span>' +
-      '<span class="gh-sum">(' + g.count + '건 · ' + (split ? '이 날 합계 ' : '합계 ') + fmtNum(g.sum) + '원)</span>' +
+      '<span class="gh-date" data-slip-day="' + esc(range) + '" data-slip-days="' + esc((p.days || []).join(',')) + '">' +
+        esc(range) + '</span>' +
+      '<span class="gh-sum">(' + p.count + '건 · 합계 ' + fmtNum(p.sum) + '원)</span>' +
       '<span class="gh-kind">[' + p.grp.label + ']</span>' +
       '<span class="cnt">' + (p.pageCnt > 1 ? p.pageNo + '/' + p.pageCnt + '장 · ' : '') +
         p.chunk.length + '칸</span>' +
@@ -10809,7 +10847,7 @@
     var pages = slipPagesPlan(list), html = '', i, j;
     for (i = 0; i < pages.length; i++) {
       var p = pages[i];
-      html += '<div class="slip-page" data-slip-group="' + esc((p.group.staff || '') + '|' + p.group.date) + '">' +
+      html += '<div class="slip-page" data-slip-group="' + esc((p.group.staff || '') + '|' + p.grp.key) + '">' +
         slipPageTagHtml(p);
       for (j = 0; j < p.chunk.length; j++) html += slipCardHtml(p.chunk[j]);
       html += '<div class="slip-foot">[' + p.grp.label + '] 총 ' + p.chunk.length + '칸 · 지급 합계 ' +
@@ -10843,6 +10881,7 @@
     if (note) {
       // v40 — 한 건이 [추지·카드] + [계좌입금] 두 칸이 될 수 있으므로 칸·장을 출력 칸 기준으로 센다
       // v60 — 장은 「담당자 → 개통일」 묶음마다 새로 시작하므로 실제 장 계획으로 센다
+      // v64 — 장은 「담당자 → 구분」 묶음 4칸씩이라 실제 장 계획으로 센다
       var cells = slipRows(list), pages = slipPagesPlan(list);
       note.textContent = cells.length ? (pages.length + '장 · ' + cells.length + '칸') : '선택 없음';
     }
