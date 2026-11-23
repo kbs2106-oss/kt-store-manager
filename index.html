@@ -870,7 +870,8 @@
   .type-chip.on::before{content:"✓ ";font-weight:900}
   .type-chip.legacy{opacity:.85}
   /* v28 — 유선 개통유형 [신규] · [약갱] 그룹 버튼 + 펼친 세부 유형 */
-  .type-chip.group-chip{display:inline-flex;align-items:center;gap:5px;background:#F7F9FC}
+  /* v57 — 무선 칩과 같은 흰 배경 */
+  .type-chip.group-chip{display:inline-flex;align-items:center;gap:5px;background:#fff}
   .type-chip.group-chip .gc-sub{font-size:10px;font-weight:700;color:var(--slate-400)}
   .type-chip.group-chip::after{content:"▾";font-size:10px;color:var(--slate-400)}
   .type-chip.group-chip.open{background:var(--blue-50);border-color:#9DBDF0;color:var(--blue-700)}
@@ -1984,7 +1985,9 @@
   .type-chip{height:28px;padding:0 10px;font-size:12px;font-weight:700;color:#334155;border-color:#CBD5E1}
   .type-chip.on{background:#0B57D0;border-color:#0B57D0;color:#fff;box-shadow:0 1px 4px rgba(11,87,208,.28)}
   .type-chip.on::before{content:"✓ ";color:#fff;font-weight:900}
-  .type-chip.group-chip{background:#EEF2F8}
+  /* v57 — 유선 [신규 ▾] · [약갱 ▾] 도 무선 칩과 똑같은 흰 칩(배경 #fff · 테두리 #CBD5E1 · 둥근 모서리 9px)
+     접히는 동작은 그대로라서 오른쪽 ▾ / ▴ 화살표로만 접힘을 알린다 */
+  .type-chip.group-chip{background:#fff;border-color:#CBD5E1;color:#334155}
   .type-chip.group-chip.open{background:#E1EDFF;border-color:#8FB8EE;color:#0B3E8F}
   .type-chip.group-chip.on{background:#0B57D0;border-color:#0B57D0;color:#fff}
   .type-chip.group-chip.on .gc-sub{color:#D7E5FF}
@@ -12295,7 +12298,8 @@
     html += '</div></div>';
 
     // 유선 — [신규] · [약갱] 그룹 버튼만 두고, 누른 그룹의 세부 유형만 아래에 펼친다
-    html += '<div class="type-row wired-row"><span class="type-row-label l">유선 <small>인터넷·TV</small></span><div class="type-chip-wrap">';
+    // v57 — 라벨도 위 '무선 개통'과 같은 길이·모양으로 (인터넷·TV 라는 설명은 title 로 남긴다)
+    html += '<div class="type-row wired-row"><span class="type-row-label l" title="유선 인터넷·TV 개통">유선 개통</span><div class="type-chip-wrap">';
     for (i = 0; i < WIRED_GROUPS.length; i++) {
       var g = WIRED_GROUPS[i];
       var gOn = !!selGroup && selGroup === g.key;
