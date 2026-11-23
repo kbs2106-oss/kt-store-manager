@@ -1,86 +1,63 @@
 #!/usr/bin/env python3
-"""KT 칠금점 개통장부 — 레거시 런처 아이콘(ic_launcher, ic_launcher_round) 생성기.
+"""KT 칠금점 개통장부 — 런처 아이콘 생성기 (v2 아이콘)
 
-안드로이드 8.0 미만 기기에서 쓰이는 PNG 아이콘을 그린다.
-(8.0 이상은 mipmap-anydpi-v26/ic_launcher.xml 의 adaptive 아이콘을 쓴다.)
+흰 바탕 + KT 공식 `kt` 마크(블랙·레드) + 붉은 `칠금점` + `개통장부` 아이콘을
+밀도별 PNG로 만든다. 원본(마스터) 두 장만 있으면 되고, 그림은 여기서 다시 그리지 않는다.
+
+  icon-master-512.png       레거시 아이콘(모서리 둥근 흰 카드) — 이 파일에서 48~192px
+  icon-foreground-512.png   adaptive 전경(투명 배경, 안전 영역 안에 내용) — 108~432px
 
 사용: python3 make_icons.py <res 디렉터리 경로>
 """
-import os
+import pathlib
 import sys
 
 from PIL import Image, ImageDraw
 
-SS = 8  # 슈퍼샘플링 배수
-TOP = (0x1D, 0x4E, 0xD8)
-BOTTOM = (0x0F, 0x4C, 0x81)
-WHITE = (0xFF, 0xFF, 0xFF, 0xFF)
+HERE = pathlib.Path(__file__).resolve().parent
+MASTER = HERE / "icon-master-512.png"
+FOREGROUND = HERE / "icon-foreground-512.png"
 
-# 글리프 좌표(0~1 정규화). adaptive 아이콘의 전경 벡터와 같은 비율.
-K_STEM = [(0.220, 0.330), (0.268, 0.330), (0.268, 0.670), (0.220, 0.670)]
-K_UP = [(0.260, 0.520), (0.395, 0.330), (0.452, 0.330), (0.317, 0.520)]
-K_DOWN = [(0.317, 0.480), (0.452, 0.670), (0.395, 0.670), (0.260, 0.480)]
-T_BAR = [(0.480, 0.330), (0.780, 0.330), (0.780, 0.378), (0.480, 0.378)]
-T_STEM = [(0.603, 0.378), (0.657, 0.378), (0.657, 0.670), (0.603, 0.670)]
-
-DENSITIES = {
-    "mdpi": 48,
-    "hdpi": 72,
-    "xhdpi": 96,
-    "xxhdpi": 144,
-    "xxxhdpi": 192,
-}
+LEGACY = {"mdpi": 48, "hdpi": 72, "xhdpi": 96, "xxhdpi": 144, "xxxhdpi": 192}
+ADAPTIVE = {"mdpi": 108, "hdpi": 162, "xhdpi": 216, "xxhdpi": 324, "xxxhdpi": 432}
+SS = 4  # 원형 마스크 슈퍼샘플링
 
 
-def gradient(size):
-    img = Image.new("RGB", (size, size))
-    px = img.load()
-    for y in range(size):
-        for x in range(size):
-            t = (x * 0.35 + y * 0.65) / max(1, size - 1)
-            px[x, y] = tuple(int(TOP[i] + (BOTTOM[i] - TOP[i]) * t) for i in range(3))
-    return img
-
-
-def draw_icon(size, round_shape):
+def rounded(img, size, circular=False):
     s = size * SS
-    base = gradient(s).convert("RGBA")
-
-    # 모양 마스크
     mask = Image.new("L", (s, s), 0)
     md = ImageDraw.Draw(mask)
-    if round_shape:
+    if circular:
         md.ellipse([0, 0, s - 1, s - 1], fill=255)
     else:
-        r = int(s * 0.18)
-        md.rounded_rectangle([0, 0, s - 1, s - 1], radius=r, fill=255)
-
-    bg = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    bg.paste(base, (0, 0), mask)
-
-    glyph = Image.new("RGBA", (s, s), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(glyph)
-    for poly in (K_STEM, K_UP, K_DOWN, T_BAR, T_STEM):
-        gd.polygon([(x * s, y * s) for x, y in poly], fill=WHITE)
-
-    out = Image.alpha_composite(bg, glyph)
+        md.rounded_rectangle([0, 0, s - 1, s - 1], radius=int(s * 0.22), fill=255)
+    base = img.resize((s, s), Image.LANCZOS)
+    out = Image.new("RGBA", (s, s), (255, 255, 255, 255))
+    out.paste(base, (0, 0), mask)
     return out.resize((size, size), Image.LANCZOS)
 
 
-def main():
-    if len(sys.argv) < 2:
-        print(__doc__)
-        return 1
-    res_dir = sys.argv[1]
-    for density, px in DENSITIES.items():
-        folder = os.path.join(res_dir, "mipmap-" + density)
-        os.makedirs(folder, exist_ok=True)
-        draw_icon(px, False).save(os.path.join(folder, "ic_launcher.png"), optimize=True)
-        draw_icon(px, True).save(os.path.join(folder, "ic_launcher_round.png"), optimize=True)
-        print("wrote", folder, px)
-    # 스플래시/스토어용 큰 이미지(참고용, 앱 리소스로는 쓰지 않음)
-    return 0
+def main(res):
+    res = pathlib.Path(res)
+    legacy = Image.open(MASTER).convert("RGB")
+    fg = Image.open(FOREGROUND).convert("RGBA")
+
+    for d, sz in LEGACY.items():
+        out = res / ("mipmap-%s" % d)
+        out.mkdir(parents=True, exist_ok=True)
+        rounded(legacy, sz).convert("RGB").save(out / "ic_launcher.png")
+        rounded(legacy, sz, circular=True).convert("RGB").save(out / "ic_launcher_round.png")
+        print("mipmap-%s/ic_launcher.png  %dpx" % (d, sz))
+
+    for d, sz in ADAPTIVE.items():
+        out = res / ("mipmap-%s" % d)
+        out.mkdir(parents=True, exist_ok=True)
+        fg.resize((sz, sz), Image.LANCZOS).save(out / "ic_launcher_foreground.png")
+        print("mipmap-%s/ic_launcher_foreground.png  %dpx" % (d, sz))
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    if len(sys.argv) < 2:
+        print(__doc__)
+        sys.exit(1)
+    main(sys.argv[1])

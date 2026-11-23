@@ -163,6 +163,7 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     - 달을 고르면 **`setMonthFilter(YYYY-MM)`** → 그 달 기록만 보인다. 기존 `◀`·`▶`·`이번 달`·`전체 기간` 버튼도 모두 `setMonthFilter()` 를 거친다(동작 그대로).
   - **검색 = 전체 기간**: `visibleRecords()` 는 **검색어(`f.q`)가 있으면 기준 월을 무시**하고 `state.records` 전체를 찾는다(`allSearch`). 검색어를 지우면 다시 기준 월 목록(`f.month`)으로 복귀.
     유형·담당자·알림·권매·쉬움 필터는 검색과 함께 그대로 적용된다. **상단 KPI 는 기준 월 그대로**(`kpiRecords()` 미변경).
+  - **v61 — 검색 대상 카테고리(전체 / 메모만)**: 툴바 검색 상자 맨 앞의 `#searchScopeMode` 로 고른다. `전체`(기본)는 **메모를 빼고** 고객명·연락처·생년월일·기종·요금제·개통유형·담당자 등에서 찾고, `메모만` 은 **직원이 적은 메모 본문**(`splitMemoTags(r.메모).memo`)에서만 찾는다(앱 전용 표기 제외). 검색창은 하나 그대로이고, 카테고리를 바꾸면 입력값을 유지한 채 그 자리에서 다시 찾는다 — 아래 v61 항목.
   - **표시**: `#resultCount` 가 **`전체 기간 검색 · N건`**(`.is-allsearch`), 툴바 아래 안내 줄 **`#searchScopeHint`**(`updateSearchScopeHint()` — `전체 기간에서 찾는 중 — 검색어를 지우면 2026년 11월 목록으로 돌아갑니다.`),
     검색 결과가 없으면 빈 화면 문구가 **`“검색어” 검색 결과가 없습니다 / 기준 달과 상관없이 전체 기간에서 찾았지만 없습니다.`** 로 바뀐다.
   - **달을 움직이면 검색어는 지운다**: `setMonthFilter()` 가 `clearSearchTerm()` 으로 검색어를 비우고(남아 있었다면) `검색어를 지우고 2024년 3월 보기로 이동했습니다.` 토스트 — 전체 기간 검색 때문에 달 이동이 무효로 보이는 것을 막는다.
@@ -590,6 +591,16 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     `v40_slip`(B11 · C2 · C4) · `v45`(G6 · G7 · G9) · `v44`(G8) · `v41`(A8b · A8d · C4) · `v51`(D5 화이트리스트) · `v53_slip_amount`(S1 · S2 · S6e) 의 기대값을 카드형 영수증(라벨 왼쪽 · 금액 오른쪽 · 위약금 먼저)에 맞게 정비하고, 구버전 테스트의 `CACHE_VERSION` 기대값을 v54 로 올렸다.
     `v43_used_multi` F4(수정 저장 시 `⚠️ 미입력 항목: 요금제 변경, 부가서비스` 로 막혀 뒤 단계가 멈춤)는 **v53(HEAD) 기준선에서도 같은 실패** — 이번 변경과 무관한 기존 문제 ·
     스크린샷 `downloads/개통장부-v54-할부금구분-모달.png`(390) · `downloads/개통장부-v54-할부금구분-확인서.png`(A4 4칸) · `downloads/개통장부-v54-할부금구분-확인서-확대.png`(카드 1칸).
+- **v61 — 검색창 맨 앞 `전체` / `메모만` · 관리자 모드에서만 캡처(APK 2.0.0) · 새 앱 아이콘** (사장님: “검색에 대한 카테고리는 따로 만들어줬으면 좋겠어 … 맨앞에 카테고리를 메모만 따로 검색창 선택할 수 있게 한 검색창으로” · “전체에는 메모 안 나오게” · “관리자모드에서만 캡쳐하게 할수있나 ?” · “새 APK 를 만들어줘” · “어플모양이 너무 짜친다 … 누가봐도 저마크에 개통장부어플인걸 알수있게”):
+  - **검색 대상 고르기** (`#searchScopeMode` · `state.filters.qMode` · `paintSearchScope`): 툴바 `.search` 상자 **맨 앞(돋보기 왼쪽)**에 `전체 ▾` / `메모만` 선택칸. 한 검색창 안에 `[카테고리] │ [🔍 입력칸]` 으로 들어가고, 상자 테두리는 `inset` 그림자라 높이가 옆 필터(36px·터치 44px)와 정확히 같다. 바꾸면 **입력값을 그대로 둔 채 그 자리에서** 다시 찾고(`change` → `render()`), 안내문도 `고객명 · 연락처 · 기종 · 요금제 검색` ↔ `메모 내용 검색` 으로 바뀐다.
+  - **[전체] 는 메모를 안 본다**: 검색 대상에서 `r.메모` 를 빼고 고객명·연락처·생년월일·기종·요금제·변경요금제·부가서비스·중고폰·개통유형·담당자(+`개통유형` 옛 표기·`단말보험`·`권매쉬움`)만 본다. **[메모만]** 은 `splitMemoTags(r.메모).memo` — 직원이 적은 본문에서만 찾고 `[단말보험]`·`[카드:…]`·`[카드상세:…]`·`[유선혜택:…]`·`[추지:…]` 같은 앱 전용 표기에는 걸리지 않는다.
+  - **관리자 모드에서만 캡처** (`syncCaptureAllowed` ← `applyRole`): 안드로이드 앱이 심는 `window.KtSecure.setCaptureAllowed(boolean)` 을 역할이 바뀔 때마다 부른다 — 직원 모드·수동 잠금·10분 자동 잠금 = `false`(즉시 `FLAG_SECURE` 재적용), 관리자 PIN 통과 = `true`(해제). 브라우저(PWA)에는 `KtSecure` 가 없어 아무 일도 하지 않는다.
+  - **APK 2.0.0** (`android/` · `KT-칠금점-개통장부.apk`): `versionCode 2` · `versionName 2.0.0` · UA ` KTChilgeumLedgerApp/2.0`. `MainActivity.SecureBridge`(`@JavascriptInterface setCaptureAllowed`)가 `clearFlags`/`addFlags(FLAG_SECURE)` 를 UI 스레드에서 실행하고, **앱이 뒤로 가면 다시 가리고 `onResume` 에서 마지막 상태(관리자=허용)를 되살린다**(최근 앱 미리보기에 장부가 남지 않음). 서명은 기존과 **같은 debug 키**라 지금 폰의 앱 위에 덮어 설치되고 장부(localStorage)가 유지된다.
+  - **새 아이콘**: 흰 바탕 + KT 공식 `kt` 마크(블랙 k · 레드 플래그) + 빨간 알약 `칠금점` + 큰 검정 `개통장부`. 원본 마스터는 `android/tools/icon-master-512.png`·`icon-foreground-512.png` 이고 `android/tools/make_icons.py` 가 **레거시 48~192px(모서리 둥근 흰 카드)·원형·adaptive 전경 108~432px** 을 만든다(`mipmap-anydpi-v26` 은 배경 `#FFFFFF` + `@mipmap/ic_launcher_foreground`). PWA 아이콘(`icons/icon-192.png`·`icon-512.png`·`apple-touch-icon.png`)도 같은 그림으로 교체.
+  - `sw.js` `CACHE_VERSION = 'v61'` · **`Code.gs`·시트 20컬럼 무수정**.
+  - 테스트 `qa-kt/v61_search_mode_capture_test.py`(**44/44**: 구조·순서·기본값(A1~A7) · [전체] 검색 4종 + 메모 제외(B1~B8) · [메모만] 본문만·이름/기종/내부표기 제외(C1~C10) · 폰 390 넘침 0·44px(E1~E7) · KtSecure 직원 false/관리자 true/잠금 false/자동잠금 false/브라우저 무해(F1~F8) · 버전(G1~G3) · 스크린샷) ·
+    라이브 `qa-kt/live_check_v61.py` · 회귀 `qa-kt/_run_v61_regress.sh`(46종) — 새로 깨진 것 0, v60 에서 이미 깨져 있던 9종은 실패 항목이 글자 그대로 같다. 구버전 20개 테스트의 `CACHE_VERSION` 기대값을 v61 로 올렸다.
+  - 스크린샷 `downloads/개통장부-v61-검색카테고리-pc.png` · `downloads/개통장부-v61-검색카테고리-모바일.png` · `downloads/KT-칠금점-개통장부-아이콘-v2.png`.
 - **v60 — 입금 지급 확인서를 `담당자별 → 개통일별`로 끊어 출력 · 장 위 바에 담당자·날짜·건수·합계** (사장님: “그리고 입금 내역도 직원별 일자별 나눠서 각각 출력해줘 전체로 찍고해도”):
   - **묶음 순서** (`slipDayGroups` · `slipPagesPlan`): 인쇄·미리보기 묶음을 **(담당자, 개통일)** 로 나눈다. 담당자 순서는 **명부 순서**(`staffNames()` — 김태양·최지수·김설화·이건엽·권영한·전국현) → 명부에 없는 다른 이름 → **담당자 없음** 이며, 같은 담당자 안에서는 **최신 개통일 먼저**, 같은 날은 `[추지·카드결제 확인용]` 장 다음 `[계좌 입금 지급용]` 장이다.
   - **묶음마다 새 A4 장**(`.slip-page`): 다른 직원·다른 날짜 건이 같은 종이에 섞이지 않는다. 한 묶음이 4칸을 넘으면 4칸마다 다음 장으로 이어지고, `N칸 중 a~b` 대신 **`1/2장 · 4칸`** 처럼 장 번호를 적는다.
@@ -873,7 +884,9 @@ kt-store-manager/
 | `staffLineText(map)` | 날짜 그룹 머리글용 한 줄 요약 `'김태양 2 · 김설화 1'` |
 | `renderTable()` | 날짜 그룹 머리글 + 표 + 폰용 카드(`#mlist`) 렌더 |
 | `renderTypeFilter()` | 유형 필터를 무선 / 유선 / (예전 유형) 묶음으로 다시 그린다 |
-| `visibleRecords()` | 검색·월·유형·담당자·알림 필터 + 정렬. v25: `visibleRecords(true)` 면 `권매·쉬움` 조건만 건너뜀(건수 계산용) · v26: 검색어가 있으면 **기준 월을 무시하고 전체 기간**에서 찾음 · v34: 세 번째 인자 `forceMonth` 로 그 달(빈 값 = 전체 기간)을 강제 |
+| `visibleRecords()` | 검색·월·유형·담당자·알림 필터 + 정렬. v25: `visibleRecords(true)` 면 `권매·쉬움` 조건만 건너뜀(건수 계산용) · v26: 검색어가 있으면 **기준 월을 무시하고 전체 기간**에서 찾음 · v34: 세 번째 인자 `forceMonth` 로 그 달(빈 값 = 전체 기간)을 강제 · **v61: `state.filters.qMode` — `all` 은 메모를 뺀 필드에서, `memo` 는 `splitMemoTags(r.메모).memo` 에서만 찾음** |
+| `paintSearchScope()` | **v61** — 검색창 앞 `#searchScopeMode`(전체/메모만)의 값·색·툴팁과 검색창 안내문(placeholder)을 지금 상태에 맞춰 칠한다 |
+| `syncCaptureAllowed()` | **v61** — `window.KtSecure.setCaptureAllowed(isAdmin())`. APK 2.0.0 이 `FLAG_SECURE` 를 켜고 끄는 유일한 통로(브라우저에서는 없으므로 무해) |
 | `easyScopeNow()` / `easyMonthKey()` / `easyScopeCounts()` / `renderEasyScope()` / `countEasy()` / `easyListMonth()` | **v34** — `★ 권매·쉬움만` 기간 범위(이 달만/전체 기간) 판정 · 토글 건수·켜짐·잠금 |
 | `mjpYears()` / `mjpMonthCounts()` / `mjpRender()` / `mjpOpen()` / `mjpClose()` / `mjpPosition()` | v26 — 연도·월 점프 팝업 그리기(연도 범위·달별 건수)·열고 닫기·버튼 아래 위치 |
 | `usedComboTypeOn()` / `usedComboPickValue()` / `usedComboOn()` | v27 — 중고신규·중고MNP 일 때만 열리는 `중고 결합 여부` 판정(`단독`·`결합`·미선택) |

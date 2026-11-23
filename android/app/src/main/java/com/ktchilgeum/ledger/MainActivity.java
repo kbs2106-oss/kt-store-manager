@@ -54,8 +54,10 @@ public class MainActivity extends Activity {
     private static final String APP_URL = "https://kbs2106-oss.github.io/kt-store-manager/";
     private static final String APP_HOST = "kbs2106-oss.github.io";
     private static final String APP_PATH = "/kt-store-manager";
-    private static final String UA_SUFFIX = " KTChilgeumLedgerApp/1.0";
+    private static final String UA_SUFFIX = " KTChilgeumLedgerApp/2.0";
     private static final String BRIDGE_NAME = "KTChilgeumApp";
+    /** v2 — 웹 장부가 관리자 모드에서만 캡처를 허용하도록 부르는 다리 */
+    private static final String SECURE_BRIDGE_NAME = "KtSecure";
     private static final String SAVE_FOLDER = "KT칠금점개통장부";
     private static final int REQ_FILE_CHOOSER = 1001;
     private static final int REQ_WRITE_STORAGE = 1002;
@@ -63,6 +65,8 @@ public class MainActivity extends Activity {
 
     private WebView webView;
     private ProgressBar progressBar;
+    /** 웹(applyRole)이 마지막으로 요청한 캡처 허용 상태 — 기본은 차단 */
+    private boolean captureAllowed = false;
     private ValueCallback<Uri[]> pendingFileCallback;
     private long lastBackPressedAt = 0L;
 
@@ -142,6 +146,7 @@ public class MainActivity extends Activity {
         CookieManager.getInstance().setAcceptCookie(true);
 
         webView.addJavascriptInterface(new AppBridge(), BRIDGE_NAME);
+        webView.addJavascriptInterface(new SecureBridge(), SECURE_BRIDGE_NAME);
         webView.setWebViewClient(new AppWebViewClient());
         webView.setWebChromeClient(new AppChromeClient());
         webView.setDownloadListener(new AppDownloadListener());
@@ -372,7 +377,38 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String appVersion() {
-            return "1.0.0";
+            return "2.0.0";
+        }
+    }
+
+    /**
+     * v2 — 관리자 모드에서만 캡처(스크린샷·화면 녹화·최근 앱 미리보기)를 허용한다.
+     *
+     * <p>웹 장부의 applyRole() 이 역할이 바뀔 때마다
+     * {@code window.KtSecure.setCaptureAllowed(isAdmin())} 를 부른다.
+     * 관리자 PIN 으로 들어가면 true → FLAG_SECURE 해제, 직원 모드·10분 자동 잠금·수동 잠금이면
+     * false → FLAG_SECURE 즉시 재적용.</p>
+     */
+    public class SecureBridge {
+
+        @JavascriptInterface
+        public void setCaptureAllowed(final boolean allowed) {
+            captureAllowed = allowed;
+            runOnUiThread(() -> applyCaptureFlag(allowed));
+        }
+
+        @JavascriptInterface
+        public boolean isCaptureAllowed() {
+            return captureAllowed;
+        }
+    }
+
+    /** allowed=true 면 FLAG_SECURE 를 풀고, false 면 다시 건다. */
+    private void applyCaptureFlag(boolean allowed) {
+        if (allowed) {
+            getWindow().clearFlags(WindowManager.LayoutParams.FLAG_SECURE);
+        } else {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         }
     }
 
@@ -644,6 +680,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onPause() {
         super.onPause();
+        // v2 — 앱이 뒤로 가면 관리자 모드여도 최근 앱 미리보기에는 장부가 남지 않게 다시 가린다.
+        //      돌아오면(onResume) 웹이 마지막으로 요청한 상태(관리자=허용)를 그대로 되살린다.
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         if (webView != null) {
             webView.onPause();
         }
@@ -652,6 +691,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        applyCaptureFlag(captureAllowed);
         if (webView != null) {
             webView.onResume();
         }
@@ -669,6 +709,7 @@ public class MainActivity extends Activity {
     protected void onDestroy() {
         if (webView != null) {
             webView.removeJavascriptInterface(BRIDGE_NAME);
+            webView.removeJavascriptInterface(SECURE_BRIDGE_NAME);
             webView.destroy();
             webView = null;
         }

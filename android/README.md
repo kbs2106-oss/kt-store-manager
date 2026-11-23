@@ -1,28 +1,39 @@
 # KT 칠금점 개통장부 (Android APK)
 
 충주 KT대리점 칠금점 개통장부 웹앱(`https://kbs2106-oss.github.io/kt-store-manager/`)을
-안드로이드 앱으로 감싸고, **화면 캡처(스크린샷)·화면 녹화·최근 앱 미리보기를 막은** 앱입니다.
+안드로이드 앱으로 감싼 앱입니다. **기본은 화면 캡처(스크린샷)·화면 녹화·최근 앱 미리보기를 막고,
+관리자 모드에서만 캡처를 허용**합니다(v2).
 
 | 항목 | 값 |
 | --- | --- |
 | 앱 이름 | `KT 칠금점 개통장부` |
 | 패키지 | `com.ktchilgeum.ledger` |
-| 버전 | 1.0.0 (versionCode 1) |
+| 버전 | 2.0.0 (versionCode 2) |
 | 최소 안드로이드 | 7.0 (API 24) |
 | 로드 주소 | `https://kbs2106-oss.github.io/kt-store-manager/` |
-| User-Agent 식별자 | `... KTChilgeumLedgerApp/1.0` |
+| User-Agent 식별자 | `... KTChilgeumLedgerApp/2.0` |
 
-## 캡처 차단
+## 캡처 차단 (v2 — 관리자 모드에서만 허용)
 
-`MainActivity.onCreate()`에서 `FLAG_SECURE`를 켭니다.
+1. `MainActivity.onCreate()` 에서 **무조건** 켭니다.
 
-```java
-getWindow().setFlags(
-        WindowManager.LayoutParams.FLAG_SECURE,
-        WindowManager.LayoutParams.FLAG_SECURE);
-```
+   ```java
+   getWindow().setFlags(
+           WindowManager.LayoutParams.FLAG_SECURE,
+           WindowManager.LayoutParams.FLAG_SECURE);
+   ```
 
-이 한 줄로 스크린샷, 화면 녹화, 최근 앱(작업 전환) 미리보기가 모두 검게 가려집니다.
+2. 웹 장부가 `window.KtSecure.setCaptureAllowed(true|false)` 로 상태를 알려 줍니다.
+   (`applyRole()` 이 역할이 바뀔 때마다 호출 — 직원 모드·수동 잠금·10분 자동 잠금 = `false`, 관리자 PIN 통과 = `true`)
+
+   ```java
+   @JavascriptInterface
+   public void setCaptureAllowed(final boolean allowed) { … }   // clearFlags / addFlags(FLAG_SECURE)
+   ```
+
+3. 앱이 **뒤로 가면(`onPause`) 다시 가리고**, 돌아오면(`onResume`) 마지막 상태를 되살립니다.
+   그래서 관리자 모드로 보던 중에 홈으로 나가도 최근 앱 미리보기에는 장부가 남지 않습니다.
+4. 인쇄 → PDF 저장은 막지 않습니다(장부 출력 용도). 캡처 차단은 화면 캡처·녹화·미리보기에 한정됩니다.
 
 ## 웹 ↔ 앱 연결
 
@@ -32,6 +43,17 @@ getWindow().setFlags(
 - 파일 선택(`<input type="file">`) → 안드로이드 파일 선택기(백업 JSON·엑셀 가져오기).
 - `tel:` → 전화 다이얼, `mailto:` → 메일 앱, 그 밖의 외부 링크(`docs.google.com` 등) → 외부 브라우저.
 - 뒤로가기 → WebView 히스토리 우선, 히스토리가 없으면 "한 번 더 누르면 종료".
+- 캡처 허용/차단 → `window.KtSecure`(위 항목).
+
+## 아이콘
+
+흰 바탕 + KT 공식 `kt` 마크(블랙 k · 레드 플래그) + 빨간 알약 `칠금점` + 큰 검정 `개통장부`.
+
+- 원본(마스터): `android/tools/icon-master-512.png`(레거시 카드) · `android/tools/icon-foreground-512.png`(adaptive 전경, 투명)
+- 생성: `python3 android/tools/make_icons.py android/app/src/main/res` (Pillow 필요)
+  → `mipmap-*dpi/ic_launcher.png` · `ic_launcher_round.png`(48~192px) · `ic_launcher_foreground.png`(108~432px)
+- `mipmap-anydpi-v26/ic_launcher.xml` 은 배경 `#FFFFFF` + `@mipmap/ic_launcher_foreground` (adaptive)
+- PWA 아이콘(`icons/icon-192.png`·`icon-512.png`·`apple-touch-icon.png`)도 같은 그림입니다.
 
 ## 빌드
 
@@ -47,13 +69,12 @@ gradle assembleRelease      # 또는 ./gradlew assembleRelease
 # 결과: android/app/build/outputs/apk/release/app-release.apk
 ```
 
-아이콘 PNG를 다시 만들려면:
-
-```bash
-python3 android/tools/make_icons.py android/app/src/main/res   # Pillow 필요
-```
+**서명 키**: 릴리스도 debug keystore 로 서명합니다. 이미 배포된 앱 위에 덮어 설치하려면
+`KT_DEBUG_KEYSTORE=<keystore 경로>` 로 **같은 키**를 지정해야 합니다(다르면 기존 앱을 지우고 설치해야 하고
+WebView 로컬 데이터가 초기화됩니다). 기본 경로는 `android/.keystore/kt-debug.keystore` 입니다.
 
 ## 참고
 
 - 웹 쪽 파일(`index.html`, `sw.js`, `CLAUDE.md`)은 이 앱 작업에서 건드리지 않습니다.
-- 인쇄 → PDF 저장은 막지 않습니다(장부 출력 용도로 필요). 캡처 차단은 화면 캡처·녹화·미리보기에 한정됩니다.
+  단 v61 에서는 웹이 `KtSecure` 를 부르도록 `index.html` 에 한 줄(`syncCaptureAllowed()`)이 들어갔습니다.
+- APK 는 실시간 사이트를 불러오므로 웹만 고칠 때는 재빌드가 필요 없습니다.

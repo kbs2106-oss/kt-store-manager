@@ -527,15 +527,26 @@
 
   /* ---------- toolbar ---------- */
   .toolbar{padding:9px 11px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-  .search{position:relative;flex:1 1 240px;min-width:190px;display:flex;align-items:center}
-  .search svg{position:absolute;left:11px;width:15px;height:15px;color:var(--slate-400);pointer-events:none}
-  .search input{
-    width:100%;height:36px;padding:0 32px 0 34px;border-radius:9px;border:1px solid var(--line-strong);
-    background:#FBFCFE;font-size:13.5px;
+  /* v61 — 검색 상자: 맨 앞 검색 대상 select + 한 검색창 (테두리는 상자 전체에) */
+  .search{flex:1 1 240px;min-width:190px;display:flex;align-items:stretch;
+    border-radius:9px;background:#FBFCFE;overflow:hidden;
+    box-shadow:inset 0 0 0 1px var(--line-strong)}
+  .search:focus-within{background:#fff;box-shadow:inset 0 0 0 1px #9DBDF0, 0 0 0 3px rgba(11,87,208,.15)}
+  .search-mode{
+    flex:0 0 auto;align-self:stretch;padding:0 20px 0 9px;border:0;border-right:1px solid var(--line-strong);
+    background:transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%2364748B' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 7px center;
+    -webkit-appearance:none;appearance:none;font-size:12.5px;font-weight:800;color:var(--slate-600);cursor:pointer;
   }
-  .search input:focus{outline:none;background:#fff;border-color:#9DBDF0;box-shadow:0 0 0 3px rgba(11,87,208,.15)}
+  .search-mode:focus{outline:none}
+  .search-mode.memo{color:var(--blue-700);background-color:#EAF1FD}
+  .search-field{position:relative;flex:1 1 auto;min-width:0;display:flex;align-items:center;height:36px}
+  .search svg{position:absolute;left:9px;width:15px;height:15px;color:var(--slate-400);pointer-events:none}
+  .search input{
+    width:100%;height:36px;padding:0 32px 0 31px;border:0;border-radius:0;background:transparent;font-size:13.5px;
+  }
+  .search input:focus{outline:none;background:transparent;border:0;box-shadow:none}
   .search .clear{
-    position:absolute;right:6px;width:26px;height:26px;border:0;border-radius:8px;background:transparent;
+    position:absolute;right:4px;width:26px;height:26px;border:0;border-radius:8px;background:transparent;
     color:var(--slate-400);font-size:16px;line-height:1;display:none;align-items:center;justify-content:center;
   }
   .search .clear.show{display:flex}
@@ -1601,6 +1612,8 @@
     .chip-btn{height:36px}
     .icon-btn{width:38px;height:38px}
     .search input,select.filter,.month-control input[type=month],.sum-month input[type=month]{height:44px}
+    .search-field{height:44px}
+    .search-mode{font-size:13px}
     .field input,.field select{height:46px}
     .dstat{height:34px}
     .easy-scope{height:36px}
@@ -2742,9 +2755,16 @@
 
   <section class="card toolbar">
     <div class="search">
-      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13.2 13.2 17 17"/></svg>
-      <input id="searchInput" type="search" placeholder="고객명 · 연락처 · 기종 · 메모 검색" autocomplete="off">
-      <button class="clear" id="clearSearch" title="검색 지우기" aria-label="검색 지우기">×</button>
+      <!-- v61 — 검색 창 하나에 검색 대상 고르기: 전체(메모 제외) / 메모만 -->
+      <select id="searchScopeMode" class="search-mode" aria-label="검색 대상">
+        <option value="all">전체</option>
+        <option value="memo">메모만</option>
+      </select>
+      <div class="search-field">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13.2 13.2 17 17"/></svg>
+        <input id="searchInput" type="search" placeholder="고객명 · 연락처 · 기종 · 요금제 검색" autocomplete="off">
+        <button class="clear" id="clearSearch" title="검색 지우기" aria-label="검색 지우기">×</button>
+      </div>
     </div>
     <!-- v26 — 검색 중에는 기준 월과 상관없이 전체 기간에서 찾는다는 안내 -->
     <span class="search-scope" id="searchScopeHint" hidden></span>
@@ -5078,7 +5098,7 @@
   var state = {
     records: [],
     // v34 — easyScope: 권매·쉬움만의 기간 범위('month' 이 달만 | 'all' 전체 기간) · easyMonth: 마지막으로 보던 달
-    filters: { q: '', month: '', type: '', staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: '', missing: false },
+    filters: { q: '', qMode: 'all', month: '', type: '', staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: '', missing: false },
     sort: { key: '개통일', dir: 'desc' },
     view: 'compact',
     role: 'staff',
@@ -9933,12 +9953,20 @@
       // v30 → v33 — ⚠️ 미기재 확인 : 리베이트·중고폰 금액이 비어 있는 건만 (관리자 전용 · 추지·페이백 제외)
       if (!ignoreMissing && f.missing && !missingIssues(r).length) return false;
       if (q) {
-        var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.부가서비스, r.중고폰, r.메모, r.개통유형, r.담당자].join(' ').toLowerCase();
-        // v28 — 예전 표기('인터넷+TV 신규가입')로 저장된 건도 '인티 신규' 로 찾힌다
-        if (r.개통유형) hay += ' ' + typeParts(r.개통유형).map(wiredTypeCanon).join(' ').toLowerCase();
-        if (normalizeIns(r.단말보험) === '가입') hay += ' 단말보험 보험가입 가입';
-        if (isEasy(r.권매쉬움)) hay += ' 권매쉬움 권매 쉬움';
-        if (hay.indexOf(q) < 0) return false;
+        if (f.qMode === 'memo') {
+          // v61 — [메모만] : 직원이 적은 메모 본문에서만 찾는다.
+          //        [단말보험]·[카드상세:…]·[유선혜택:…] 같은 앱 전용 표기는 떼고 본다.
+          if (splitMemoTags(r.메모).memo.toLowerCase().indexOf(q) < 0) return false;
+        } else {
+          // v61 — [전체] : 고객명·연락처·생년월일·기종·요금제·개통유형·담당자 등에서 찾고
+          //        **메모(r.메모)는 검색 대상에서 빠진다** (메모로 찾으려면 [메모만])
+          var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.부가서비스, r.중고폰, r.개통유형, r.담당자].join(' ').toLowerCase();
+          // v28 — 예전 표기('인터넷+TV 신규가입')로 저장된 건도 '인티 신규' 로 찾힌다
+          if (r.개통유형) hay += ' ' + typeParts(r.개통유형).map(wiredTypeCanon).join(' ').toLowerCase();
+          if (normalizeIns(r.단말보험) === '가입') hay += ' 단말보험 보험가입 가입';
+          if (isEasy(r.권매쉬움)) hay += ' 권매쉬움 권매 쉬움';
+          if (hay.indexOf(q) < 0) return false;
+        }
       }
       return true;
     });
@@ -12040,6 +12068,7 @@
     renderStaffFilter();
     el.dueOnly.checked = state.filters.due;
     el.searchInput.value = state.filters.q;
+    paintSearchScope();   // v61 — 검색 대상(전체/메모만) + 검색창 안내문
     el.clearSearch.classList.toggle('show', !!state.filters.q);
     el.thisMonthBtn.classList.toggle('on', state.filters.month === currentMonth());
     el.allMonthBtn.classList.toggle('on', !state.filters.month);
@@ -12055,6 +12084,24 @@
   var searchTimer = null;
   // v35 — scope: 'top' = 상단 기준 월 버튼에서 연 팝업 · 'easy' = 권매·쉬움 범위 바의 월 버튼에서 연 팝업
   var mjpState = { open: false, year: 0, scope: 'top' };
+
+  /* v61 — 검색 대상 고르기 (전체 / 메모만)
+     · 한 검색창 앞의 select 값과 검색창 안내문을 지금 상태에 맞춰 칠한다
+     · [전체] 는 고객명·연락처·기종·요금제 등에서 찾고 **메모는 빼고**,
+       [메모만] 은 직원이 적은 **메모 본문에서만** 찾는다 (visibleRecords) */
+  function paintSearchScope() {
+    var memo = state.filters.qMode === 'memo';
+    if (el.searchScopeMode) {
+      el.searchScopeMode.value = memo ? 'memo' : 'all';
+      el.searchScopeMode.classList.toggle('memo', memo);
+      el.searchScopeMode.title = memo
+        ? '메모 본문에서만 찾습니다'
+        : '고객명 · 연락처 · 기종 · 요금제에서 찾습니다 (메모는 빠짐)';
+    }
+    if (el.searchInput) {
+      el.searchInput.placeholder = memo ? '메모 내용 검색' : '고객명 · 연락처 · 기종 · 요금제 검색';
+    }
+  }
 
   // 검색어가 기준 월을 넘어 전체 기간을 찾고 있음을 알리는 작은 안내 줄
   function updateSearchScopeHint() {
@@ -12273,6 +12320,18 @@
   /* ---------------- 관리자 / 직원 모드 ---------------- */
   function isAdmin() { return state.role === 'admin'; }
 
+  /* v61 — 안드로이드 앱(KT 칠금점 개통장부 2.0)에서는 **관리자 모드에서만** 캡처를 허용한다.
+     · 앱이 심어 둔 window.KtSecure.setCaptureAllowed(boolean) 를 부른다
+       → true: 앱이 FLAG_SECURE 를 풀어 스크린샷·화면 녹화를 허용
+       → false: 즉시 다시 가려 최근 앱 미리보기까지 막는다
+     · 브라우저(PWA)에서는 KtSecure 가 없으므로 아무 일도 하지 않는다 */
+  function syncCaptureAllowed() {
+    try {
+      var s = window.KtSecure;
+      if (s && typeof s.setCaptureAllowed === 'function') s.setCaptureAllowed(!!isAdmin());
+    } catch (e) {}
+  }
+
   function loadRole() {
     try {
       var r = sessionStorage.getItem(ROLE_KEY);
@@ -12296,6 +12355,8 @@
 
   function applyRole() {
     var admin = isAdmin();
+    // v61 — 역할이 바뀔 때마다 앱의 캡처 차단 상태를 바로 맞춘다 (관리자=허용 / 직원=차단)
+    syncCaptureAllowed();
     document.body.classList.toggle('role-admin', admin);
     document.body.classList.toggle('role-staff', !admin);
     if (el.adminLockBtn) {
@@ -14128,6 +14189,12 @@
       render();
       el.searchInput.focus();
     });
+    // v61 — 검색 대상(전체 / 메모만)을 바꾸면 그 자리에서 바로 다시 찾는다
+    if (el.searchScopeMode) el.searchScopeMode.addEventListener('change', function () {
+      state.filters.qMode = this.value === 'memo' ? 'memo' : 'all';
+      paintSearchScope();
+      render();
+    });
 
     // 월 — ◀ / ▶ 화살표
     function shiftMonth(ym, delta) {
@@ -15025,6 +15092,7 @@
       mjpYearPrev: $('mjpYearPrev'),
       mjpYearNext: $('mjpYearNext'),
       searchScopeHint: $('searchScopeHint'),
+      searchScopeMode: $('searchScopeMode'),
       saveState: $('saveState'),
       footCount: $('footCount'),
       storageWarn: $('storageWarn'),
