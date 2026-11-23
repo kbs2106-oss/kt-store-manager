@@ -10775,48 +10775,101 @@
     slipRepaint();
   }
 
+  /* =========================================================
+     v59 — 인쇄 · PDF 저장 (안드로이드 PDF 가 장부 목록으로 찍히던 문제)
+     ---------------------------------------------------------
+     · 안드로이드(삼성 인터넷·크롬)는 window.print() 가 비동기라 인쇄를 누른 직후
+       가짜 afterprint·focus 가 먼저 날아온다. 예전에는 그때 "1.5초 뒤 정리" 를 예약해 두어,
+       사용자가 인쇄 미리보기에서 [PDF로 저장] 을 누르기 전에 body.print-slips 가 지워졌고
+       그래서 PDF 에 확인서(#paySlipPrint)가 아니라 뒤의 장부 목록이 찍혔다.
+     · 이제는 **스스로 지우지 않는다**. 진짜로 앱에 돌아왔을 때만 원래 화면으로 돌린다.
+       ① 화면 터치/클릭(pointerdown)·키(keydown) → 바로
+       ② afterprint·focus·pageshow·다시 보임(visibilitychange) → 1초 이상 지난 뒤
+          (인쇄 직후 0.5초 안에 오는 가짜 신호는 무시하고 재예약도 하지 않는다)
+       ③ 안전 장치로 120초 뒤에는 무조건 복귀 (사용자가 아무것도 안 해도 앱이 잠기지 않게)
+     · [🖨️ 인쇄하기] 는 모달을 닫고 인쇄한다(v41 — 탑레이어가 인쇄 화면을 가리지 않게).
+       브라우저 메뉴(인쇄)로 인쇄해도 beforeprint 에서 확인서를 채우고 인쇄 모드를 붙인다.
+     ========================================================= */
+  var SLIP_PRINT_FAKE_MS = 500;      // 인쇄 직후 오는 가짜 신호 — 이 안이면 무시
+  var SLIP_PRINT_SLOW_MS = 1000;     // afterprint·focus·다시 보임은 이만큼 지나야 진짜 복귀로 본다
+  var SLIP_PRINT_FAST_MS = 300;      // 터치·키는 이만큼만 지나면 진짜 복귀로 본다
+  var slipPrintState = { active: false, t0: 0, wasOpen: false, safety: null, sig: null, vis: null };
+
+  function slipPrintDetach() {
+    var st = slipPrintState;
+    if (st.sig) {
+      window.removeEventListener('afterprint', st.sig);
+      window.removeEventListener('focus', st.sig);
+      window.removeEventListener('pageshow', st.sig);
+      document.removeEventListener('pointerdown', st.sig, true);
+      document.removeEventListener('keydown', st.sig, true);
+      st.sig = null;
+    }
+    if (st.vis) { document.removeEventListener('visibilitychange', st.vis); st.vis = null; }
+    if (st.safety) { clearTimeout(st.safety); st.safety = null; }
+  }
+
+  // minAge 안에 들어온 신호는 가짜로 보고 무시한다 (다시 예약하지 않는다 — 그게 v59 의 핵심)
+  function slipPrintCleanup(force, minAge) {
+    var st = slipPrintState;
+    if (!st.active) return;
+    if (!force && Date.now() - st.t0 < (minAge || SLIP_PRINT_SLOW_MS)) return;
+    st.active = false;
+    slipPrintDetach();
+    document.body.classList.remove('print-slips');
+    var dlg = $('paySlipDialog');
+    if (st.wasOpen && dlg) { try { if (!dlg.open) dlg.showModal(); } catch (e) {} }
+    setTimeout(fitSlipPreview, 60);
+  }
+
+  function slipPrintArm(wasOpen) {
+    var st = slipPrintState;
+    slipPrintDetach();
+    st = slipPrintState = { active: true, t0: Date.now(), wasOpen: !!wasOpen, safety: null, sig: null, vis: null };
+    document.body.classList.add('print-slips');
+    var slow = function () { slipPrintCleanup(false, SLIP_PRINT_SLOW_MS); };
+    var fast = function () { slipPrintCleanup(false, SLIP_PRINT_FAST_MS); };
+    var vis = function () { if (!document.hidden) slipPrintCleanup(false, SLIP_PRINT_SLOW_MS); };
+    st.sig = slow; st.vis = vis;
+    window.addEventListener('afterprint', slow);
+    window.addEventListener('focus', slow);
+    window.addEventListener('pageshow', slow);
+    document.addEventListener('visibilitychange', vis);
+    document.addEventListener('pointerdown', fast, true);
+    document.addEventListener('keydown', fast, true);
+    st.safety = setTimeout(function () { slipPrintCleanup(true); }, 120000);
+  }
+
   function slipPrint() {
     var list = slipSelected();
     if (!list.length) { toast('인쇄할 확인서를 먼저 체크해 주세요.', true); return; }
     var root = $('paySlipPrint');
     if (!root) return;
     root.innerHTML = slipPagesHtml(list);
-    document.body.classList.add('print-slips');
-    /* v41 — 안드로이드(삼성 인터넷·크롬) 인쇄 미리보기가 백지로 뜨는 문제
-       ① 모달(top layer)이 인쇄 화면을 가림 → 인쇄 전에 닫고, 끝나면 도로 연다
-       ② 인쇄 직후 afterprint 가 바로 와서 body.print-slips 가 먼저 지워짐
-          → 너무 빨리 온 afterprint 는 무시하고 최소 1.5초는 인쇄 모드를 유지한다 */
     var dlg = $('paySlipDialog'), wasOpen = !!(dlg && dlg.open);
     if (wasOpen) dlg.close();
-    var printStartedAt = Date.now(), cleaned = false;
-    var reopen = function () {
-      if (!wasOpen || !dlg) return;
-      try { if (!dlg.open) dlg.showModal(); } catch (e) {}
-    };
-    var cleanup = function () {
-      if (cleaned) return;
-      var wait = 1500 - (Date.now() - printStartedAt);
-      if (wait > 0) { setTimeout(cleanup, wait); return; }
-      cleaned = true;
-      document.body.classList.remove('print-slips');
-      window.removeEventListener('afterprint', cleanup);
-      window.removeEventListener('focus', cleanup);
-      reopen();
-      setTimeout(fitSlipPreview, 60);
-    };
-    window.addEventListener('afterprint', cleanup);
-    window.addEventListener('focus', cleanup);
+    slipPrintArm(wasOpen);
     setTimeout(function () {
       try { window.print(); } catch (e) {
-        document.body.classList.remove('print-slips');
-        window.removeEventListener('afterprint', cleanup);
-        window.removeEventListener('focus', cleanup);
-        if (wasOpen && dlg) { try { dlg.showModal(); } catch (e2) {} }
+        slipPrintCleanup(true);
         toast('인쇄 창을 열지 못했습니다. 브라우저 인쇄로 다시 시도해 주세요.', true);
         return;
       }
-      setTimeout(cleanup, 60000);
     }, 40);
+  }
+
+  /* v59 — 브라우저 메뉴(⋮ → 인쇄)로 인쇄해도 확인서가 찍히게
+     · 확인서 창이 열려 있을 때만 (다른 화면 인쇄는 예전 그대로) */
+  function bindSlipBeforePrint() {
+    window.addEventListener('beforeprint', function () {
+      var dlg = $('paySlipDialog'), root = $('paySlipPrint');
+      if (!dlg || !root || !dlg.open) return;
+      var list = slipSelected();
+      if (!list.length) return;
+      root.innerHTML = slipPagesHtml(list);
+      if (!slipPrintState.active) slipPrintArm(true);
+      document.body.classList.add('print-slips');
+    });
   }
 
   function openPaySlip() {
@@ -10858,6 +10911,7 @@
       slipRenderList();
     });
     if ($('slipPrintBtn')) $('slipPrintBtn').addEventListener('click', slipPrint);
+    bindSlipBeforePrint();   // v59 — 브라우저 메뉴 인쇄에서도 확인서가 찍히게
     if ($('slipList')) $('slipList').addEventListener('click', function (e) {
       var t = e.target;
       if (!t || !t.closest) return;
