@@ -1008,6 +1008,8 @@
   .wired-gift{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line)}
   .wired-gift[hidden]{display:none !important}
   .wired-gift .gift-chips{display:flex;flex-wrap:wrap;gap:6px}
+  /* v56 — 유선 신규인데 사은품 처리를 안 고르면 칩 줄에 빨간 테두리 */
+  .gift-chips.bad{outline:2px solid #DC2626;outline-offset:2px;border-radius:10px}
   .gift-badge{background:#EAF6EF;color:#0B5F45;border-color:#BFE3D3;margin-left:6px}
   /* ---------- v19 추지·페이백·중고폰 — [미기입]/[미반납] 1탭 칩 ---------- */
   /* v47 — 추지·페이백 세 칸은 화면 폭과 상관없이 한 줄에 하나씩 (위/아래 칸 좌우 끝선을 맞추기 위해) */
@@ -12469,6 +12471,30 @@
     var g = normalizeWiredGift(v);
     if (!g) return;
     setWiredGift(wiredGiftOn() === g ? '' : g);
+    if (wiredGiftOn()) clearWiredGiftBad();   // v56 — 고르는 순간 빨간 테두리를 지운다
+  }
+
+  /* ---------- v56 — 유선 신규(인티 신규 · 인터넷 신규 단품 · TV 단품)는 사은품 처리가 필수 ----------
+     · 유선 단독이든 무선 동판이든 유선 신규 유형이면 반드시 [상품권 고객 지급] · [단말할인쿠폰 결제] 중 하나를 고른다
+     · 약갱(인티 약갱 · 인터넷 약정갱신)은 예전처럼 선택 사항이다 */
+  function wiredGiftRequired() {
+    return onestopTypeOn();
+  }
+
+  function clearWiredGiftBad() {
+    var box = $('wiredGiftChips');
+    if (box) box.classList.remove('bad');
+    // 남은 빨간 칸이 하나도 없으면 안내 배너도 같이 닫는다 (다른 칸이 아직 비었으면 그대로 둔다)
+    if (el.editDialog && !el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
+  }
+
+  // 라벨 — 유선 신규면 '*' 와 '필수', 약갱이면 '선택'
+  function paintWiredGiftLabel() {
+    var lb = $('f_wiredgiftLabel');
+    if (!lb) return;
+    lb.innerHTML = wiredGiftRequired()
+      ? '유선 사은품 처리 <span class="req">*</span> <span class="opt">필수 · 상품권 · 단말할인쿠폰</span>'
+      : '유선 사은품 처리 <span class="opt">선택 · 상품권 · 단말할인쿠폰</span>';
   }
 
   // 유선 개통유형이 하나라도 골라져 있을 때만 보인다 · 모두 해제하면 숨기고 값을 비운다
@@ -12478,6 +12504,9 @@
     var on = !!typeSlots($('f_type').value).l;
     wrap.hidden = !on;
     if (!on && clear !== false) setWiredGift('');
+    paintWiredGiftLabel();
+    // 필수가 아니게 되면(유선 없음 · 약갱) 빨간 테두리를 지운다
+    if (!(on && wiredGiftRequired())) clearWiredGiftBad();
   }
 
   /* =========================================================
@@ -12842,6 +12871,9 @@
     if (!slots.w && !slots.l) need.push({ label: '개통유형', el: $('typeChips') });
     // v19 — 유선 개통유형을 골랐으면 유선 요금제 칸도 반드시 채운다
     if (slots.l && !planL) need.push({ label: '유선 요금제', el: $('f_plan_l') });
+    // v56 — 유선 신규(인티 신규 · 인터넷 신규 단품 · TV 단품)면 유선 사은품 처리를 반드시 고른다
+    if (wiredGiftRequired() && !wiredGiftOn())
+      need.push({ label: '유선 사은품 처리', el: $('wiredGiftChips') });
     // v27 · v31 — 번호이동·신규가입·중고신규·중고MNP 는 [결합 여부]를 반드시 고른다
     if (usedComboTypeOn() && !usedComboPickValue())
       need.push({ label: '결합 여부', el: $('usedComboChips') });
@@ -13131,6 +13163,8 @@
       if ($('f_usedcombo')) $('f_usedcombo').value = '';
       paintUsedComboChips();
       syncUsedComboField(false);
+      // v56 — 유선 신규는 사은품이 필수이므로 칩 줄에 남은 빨간 테두리를 지운다
+      clearWiredGiftBad();
       setForeignChip(false);
       setGenderChips('');
       setEasyChip(false);
