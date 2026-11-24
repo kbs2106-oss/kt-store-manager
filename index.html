@@ -13228,7 +13228,7 @@
     var mergedAway = rawRows.length - allRows.length;
     var totalRows = allRows.length;
     /* 건수가 적은 달을 보다가 기록이 늘어도 덜 그리지 않도록, 상한은 500 아래로 내려가지 않는다 */
-    if (renderLimit < TABLE_ROW_CAP) renderLimit = TABLE_ROW_CAP;
+    if (renderLimit < (lightRender ? TABLE_ROW_STEP : TABLE_ROW_CAP)) renderLimit = lightRender ? TABLE_ROW_STEP : TABLE_ROW_CAP;
     if (renderStart < 0 || renderStart >= renderLimit) renderStart = 0;
     if (renderLimit - renderStart > TABLE_ROW_MAX) renderStart = renderLimit - TABLE_ROW_MAX;
     var rows = allRows.slice(renderStart, Math.min(renderLimit, totalRows));
