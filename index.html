@@ -10269,7 +10269,20 @@
     //    ([미반납] 으로 확인한 건만 제외)
     var usedTxt = String(r.중고폰 == null ? '' : r.중고폰).trim();
     var usedNone = payNoneKeys(r).indexOf('중고폰') >= 0 || usedTxt === '미반납';
-    if (!(Number(r.중고폰금액) > 0) && !usedNone) {
+    // v66 — 중고폰을 2~3대 반납하고 그중 일부만 금액을 적은 건도 잡는다.
+    //   합계(중고폰금액)만 보면 한 대만 적어도 0원이 아니어서 빠져 버렸다.
+    //   → 모델명이 적힌 줄(중고상세 / 예전 1줄 기록)의 개별 금액을 하나하나 본다.
+    var usedRowsMissing = false;
+    if (!usedNone) {
+      var usedLineList = usedRowsFromRecord(r);
+      for (var ulIdx = 0; ulIdx < usedLineList.length; ulIdx++) {
+        var ulRow = usedLineList[ulIdx] || {};
+        var ulNm = String(ulRow.name == null ? '' : ulRow.name).trim();
+        if (!ulNm || ulNm === '미반납') continue;      // 모델명이 없으면 금액도 따질 것이 없다
+        if (!(Number(ulRow.amt) > 0)) { usedRowsMissing = true; break; }
+      }
+    }
+    if (!usedNone && (!(Number(r.중고폰금액) > 0) || usedRowsMissing)) {
       out.push({ key: 'used', label: '중고폰 금액 미기재' });
     }
     // v33 — 추지·페이백(추가지원금·카드·입금)은 '미기재' 목록에서 뺐다
