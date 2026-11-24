@@ -1484,6 +1484,47 @@
     .more-bar .more-btn{width:100%;min-height:44px;font-size:14px}
   }
 
+  /* v72 — 동일 명의·번호 고객 개통 이력 묶음
+     · 대표 줄 옆 `이력 +N건 ▾` — 누르면 바로 아래에 최신순 연혁(타임라인)이 펼쳐진다
+     · 연혁의 각 줄을 누르면 그 개통 건의 수정 창이 열린다 */
+  .hist-btn{display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 9px;margin-left:6px;
+    border-radius:999px;background:#EEF4FF;border:1px solid #9DBDF0;color:var(--blue-700);
+    font-size:11.5px;font-weight:800;white-space:nowrap;cursor:pointer;vertical-align:middle;
+    font-variant-numeric:tabular-nums;line-height:1}
+  .hist-btn:hover{background:#E2EDFF}
+  .hist-btn.on{background:var(--blue-700);border-color:var(--blue-700);color:#fff}
+  .hist-btn.m-hist{margin-left:0;height:26px;padding:0 10px;font-size:12px}
+  .c-namewrap{display:flex;align-items:center;gap:6px;min-width:0;max-width:100%}
+  .c-namewrap .c-name{flex:0 1 auto;min-width:0}
+  tr.hist-row > td{background:#F8FAFD;padding:0 !important;border-bottom:1px solid #DCE6F4}
+  .hist-wrap{padding:11px 16px 13px}
+  .hist-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    font-size:11.5px;font-weight:800;color:#475569;margin-bottom:10px}
+  .hist-head .hist-sub{color:#64748B;font-weight:700;font-size:11px}
+  .hist-list{list-style:none;margin:0;padding:0}
+  .hist-item{position:relative;display:block;padding:0 0 11px 18px;margin-left:5px;
+    border-left:2px solid #CBD5E1;cursor:pointer;border-radius:0 8px 8px 0}
+  .hist-item:last-child{border-left-color:transparent;padding-bottom:2px}
+  .hist-item:hover{background:#EFF5FD}
+  .hist-item:focus-visible{outline:2px solid #9DBDF0;outline-offset:1px}
+  .hist-dot{position:absolute;left:-6px;top:3px;width:10px;height:10px;border-radius:50%;
+    background:#94A3B8;border:2px solid #F8FAFD}
+  .hist-item.latest .hist-dot{background:var(--blue-700);box-shadow:0 0 0 2px #D9E7FF}
+  .hist-top{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .hist-date{font-size:12px;font-weight:800;color:#0F172A;font-variant-numeric:tabular-nums}
+  .hist-item.latest .hist-date{color:var(--blue-700)}
+  .hist-sub2{display:block;font-size:12.5px;font-weight:700;color:#334155;margin-top:3px}
+  .hist-meta{display:block;font-size:11px;font-weight:700;color:#64748B;margin-top:1px}
+  .hist-item.latest .hist-meta{color:var(--blue-700)}
+  .hist-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:6px;
+    background:#F1F5F9;color:#475569;font-size:11px;font-weight:800}
+  .m-end{margin-left:auto;display:inline-flex;align-items:center;gap:6px}
+  .m-end .m-caret{margin-left:0}
+  .mcard.hist-open{border-color:#9DBDF0;box-shadow:0 10px 24px -20px rgba(11,87,208,.9)}
+  .mcard-hist{display:none;border-top:1px dashed #C9D8EC;background:#F8FAFD}
+  .mcard.hist-open .mcard-hist{display:block}
+  .mcard-hist .hist-wrap{padding:11px 14px 12px}
+
   /* 모바일 간단히 보기 카드 */
   .mlist{display:none}
   .mgroup-head{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;padding:14px 16px 7px;font-size:12px;font-weight:800;color:var(--blue-800)}
@@ -2625,6 +2666,7 @@
           <button class="menu-item menu-mobile-only admin-only" id="templateBtnMobile" role="menuitem">엑셀 양식 받기</button>
           <button class="menu-item menu-mobile-only admin-only" id="importBtnMobile" role="menuitem">엑셀 · CSV 가져오기</button>
           <button class="menu-item menu-mobile-only admin-only" id="exportBtnMobile" role="menuitem">엑셀 내보내기</button>
+          <button class="menu-item admin-only" id="smsCsvBtn" role="menuitem" title="알리고·뿌리오에 그대로 올릴 이름·전화번호 CSV — 가림·중복 번호는 자동 제외">📨 대량문자 명단 (CSV)</button>
           <div class="menu-sep"></div>
           <button class="menu-item" id="installHintBtn" role="menuitem">앱 설치 · 홈 화면 추가</button>
           <div class="menu-sep"></div>
@@ -10437,6 +10479,11 @@
       }
       return true;
     });
+    return sortRecordList(list);
+  }
+
+  /* 정렬 규칙 — 목록(visibleRecords)과 v72 고객 이력 묶음이 같은 규칙을 쓴다 */
+  function sortRecordList(list) {
     var key = state.sort.key;
     var dir = state.sort.dir === 'asc' ? 1 : -1;
     list.sort(function (a, b) {
@@ -10449,6 +10496,213 @@
       return 0;
     });
     return list;
+  }
+
+  /* ---------------- v72 — 동일 명의·번호 고객 개통 이력 묶음 ----------------
+     · 고객명과 연락처가 **둘 다 있고 `*` 가림이 전혀 없는 실명 + 실번호**일 때만 같은 고객으로 본다.
+       ([정산이관] 자료의 `강민*` · `01024***587` 처럼 가려진 줄은 절대 묶지 않는다 — 다른 사람이 섞일 수 있다)
+     · 목록에서만 최신 1건을 대표로 남기고, 나머지는 `이력 +N건` 안에 최신순 연혁으로 붙인다.
+     · KPI(총 건수 · 직원별 실적 · 리베이트 · 오늘 개통 · 미기재 · 해지 알림)는 visibleRecords() 원본을 그대로 쓰므로
+       묶어도 5번 개통은 5건이다.
+     · 이력은 record 에 붙이지 않고 histById(대표 레코드 id → 이력 배열)에 따로 둔다 —
+       record 에 __hist 를 붙이면 수정 창을 닫을 때 그대로 저장돼 시트까지 나간다. */
+  var histById = Object.create(null);        // 대표 줄 id → [최신, …, 가장 오래된]
+  var histRepByKey = Object.create(null);    // 고객키(이름|번호) → 대표 줄 id
+  var expandedCustomerKeys = new Set();      // 펼쳐 둔 연혁(화면을 다시 그려도 유지)
+
+  function digitsOnly(v) { return String(v == null ? '' : v).replace(/[^0-9]/g, ''); }
+  function hasMask(v) { return String(v == null ? '' : v).indexOf('*') >= 0; }
+
+  /* 같은 고객으로 묶어도 되는 줄인가 — 실명(가림 없음) + 실번호(가림 없음·숫자 있음) */
+  function customerKeyOf(r) {
+    if (!r) return null;
+    var n = String(r.고객명 == null ? '' : r.고객명).trim();
+    var p = String(r.연락처 == null ? '' : r.연락처).trim();
+    if (!n || !p) return null;
+    if (hasMask(n) || hasMask(p)) return null;
+    var d = digitsOnly(p);
+    if (!d) return null;
+    return n + '|' + d;
+  }
+
+  /* 지금 목록이 '전체 기간' 이거나 검색어로 전체 기간을 훑는 중인가
+     · 해지 알림(임박)·미기재 확인 목록은 한 건 한 건이 할 일이라 묶지 않는다 */
+  function groupingScopeOn() {
+    var f = state.filters;
+    if (f.due || f.missing) return false;
+    return !f.month || !!String(f.q || '').trim();
+  }
+
+  /* a 가 b 보다 최신인가 — 개통일, 같은 날이면 등록·수정 시각 */
+  function newerRecord(a, b) {
+    var da = String(a.개통일 || ''), db = String(b.개통일 || '');
+    if (da !== db) return da > db;
+    return String(a.createdAt || a.수정일시 || '') > String(b.createdAt || b.수정일시 || '');
+  }
+
+  /* 목록(정렬된 원본) → 대표 줄 배열. 같은 고객이 2건 이상일 때만 묶는다. */
+  function groupCustomerRows(list) {
+    histById = Object.create(null);
+    histRepByKey = Object.create(null);
+    if (!list.length) return list;
+    var map = Object.create(null), keys = [], groups = Object.create(null);
+    var i, r, k, multi = 0;
+    for (i = 0; i < list.length; i++) {
+      r = list[i];
+      k = customerKeyOf(r);
+      if (!k) continue;
+      if (!map[k]) { map[k] = []; keys.push(k); }
+      map[k].push(r);
+    }
+    for (i = 0; i < keys.length; i++) {
+      k = keys[i];
+      if (map[k].length > 1) { groups[k] = map[k]; multi++; }
+    }
+    if (!multi) return list;          // 묶을 게 없으면 원본 그대로(이력 버튼도 0개)
+    var out = [], emitted = Object.create(null), hist;
+    for (i = 0; i < list.length; i++) {
+      r = list[i];
+      k = customerKeyOf(r);
+      if (!k || !groups[k]) { out.push(r); continue; }
+      if (emitted[k]) continue;        // 같은 고객의 예전 건은 대표 줄 안으로 들어간다
+      emitted[k] = 1;
+      hist = groups[k].slice().sort(function (a, b) {
+        if (newerRecord(a, b)) return -1;
+        if (newerRecord(b, a)) return 1;
+        return 0;
+      });
+      histById[hist[0].id] = hist;
+      histRepByKey[k] = hist[0].id;
+      out.push(hist[0]);
+    }
+    return sortRecordList(out);       // 대표 줄의 '최신 개통일' 기준으로 다시 세운다
+  }
+
+  function histOf(r) { return (r && histById[r.id]) || null; }
+  function histExtra(r) { var h = histOf(r); return h ? h.length - 1 : 0; }
+  function histIsOpen(r) {
+    var k = customerKeyOf(r);
+    return !!(k && expandedCustomerKeys.has(k));
+  }
+
+  /* 대표 줄 옆 `이력 +N건 ▾` 버튼 (where: 'table' | 'card') */
+  function histButtonHtml(r, where) {
+    var n = histExtra(r);
+    if (!n) return '';
+    var k = customerKeyOf(r) || '';
+    var on = expandedCustomerKeys.has(k);
+    return '<button type="button" class="hist-btn' + (on ? ' on' : '') + (where === 'card' ? ' m-hist' : '') +
+      '" data-hist="' + esc(k) + '" aria-expanded="' + (on ? 'true' : 'false') + '"' +
+      ' title="같은 고객의 이전 개통 ' + n + '건을 연혁으로 봅니다">이력 +' + n + '건 ' + (on ? '▴' : '▾') + '</button>';
+  }
+
+  function ymdParts(v) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(v || ''));
+    return m ? { y: +m[1], m: +m[2], d: +m[3] } : null;
+  }
+
+  /* 최신 개통일에서 얼마나 지났는가 — `1년 7개월 전` */
+  function elapsedText(from, to) {
+    var a = ymdParts(from), b = ymdParts(to);
+    if (!a || !b) return '';
+    var n = (b.y - a.y) * 12 + (b.m - a.m);
+    if (b.d < a.d) n -= 1;
+    if (n < 0) n = 0;
+    if (!n) return '같은 달';
+    var y = Math.floor(n / 12), mm = n % 12;
+    if (y && mm) return y + '년 ' + mm + '개월 전';
+    if (y) return y + '년 전';
+    return mm + '개월 전';
+  }
+
+  /* 연혁 타임라인 — 최신순 · 각 줄을 누르면 그 개통 건의 수정 창이 열린다 */
+  function histPanelHtml(hist) {
+    if (!hist || hist.length < 2) return '';
+    var latest = hist[0] || {}, items = '', i, h, gap;
+    for (i = 0; i < hist.length; i++) {
+      h = hist[i];
+      gap = i === 0 ? '최신 개통' : elapsedText(h.개통일, latest.개통일);
+      items += '<li class="hist-item' + (i === 0 ? ' latest' : '') + '" data-hist-id="' + esc(h.id) + '"' +
+        ' role="button" tabindex="0" title="눌러서 이 개통 상세 보기">' +
+        '<span class="hist-dot"></span>' +
+        '<span class="hist-top"><span class="hist-date">' + esc(h.개통일 || '—') + '</span>' +
+          typeBadgesHtml(h.개통유형) +
+          (h.담당자 ? '<span class="hist-badge">' + esc(h.담당자) + '</span>' : '') +
+        '</span>' +
+        '<span class="hist-sub2">' + (h.기종 ? esc(h.기종) : '<span class="muted">기종 없음</span>') +
+          (h.요금제 ? ' · ' + esc(h.요금제) : '') + '</span>' +
+        '<span class="hist-meta">' + esc(gap) + '</span>' +
+        '</li>';
+    }
+    return '<div class="hist-wrap">' +
+      '<div class="hist-head"><span>📅 전체 개통 연혁 (총 ' + hist.length + '회)</span>' +
+      '<span class="hist-sub">최신순 · 누르면 상세 보기</span></div>' +
+      '<ul class="hist-list">' + items + '</ul></div>';
+  }
+
+  var tableColsCache = 0;
+  function tableColCount() {
+    if (!tableColsCache && el.ledger) {
+      var ths = el.ledger.querySelectorAll('thead th');
+      tableColsCache = ths.length || 20;
+    }
+    return tableColsCache;
+  }
+
+  /* `이력 +N건` 을 눌렀을 때 — 전체를 다시 그리지 않고 그 줄/카드 아래만 열고 닫는다 */
+  function toggleCustomerHistory(key, where) {
+    if (!key) return;
+    var wasOn = expandedCustomerKeys.has(key);
+    if (wasOn) expandedCustomerKeys.delete(key); else expandedCustomerKeys.add(key);
+    var repId = histRepByKey[key] || '';
+    var hist = histById[repId] || null;
+    var n = hist ? hist.length - 1 : 0;
+    var btns = document.querySelectorAll('button[data-hist]'), i, b;
+    for (i = 0; i < btns.length; i++) {
+      b = btns[i];
+      if (b.getAttribute('data-hist') !== key) continue;
+      b.classList.toggle('on', !wasOn);
+      b.setAttribute('aria-expanded', wasOn ? 'false' : 'true');
+      if (n) b.textContent = '이력 +' + n + '건 ' + (wasOn ? '▾' : '▴');
+    }
+    if (where === 'card') {
+      var cards = el.mlist ? el.mlist.querySelectorAll('.mcard') : [], c, card, cb, panel;
+      for (c = 0; c < cards.length; c++) {
+        card = cards[c];
+        cb = card.querySelector('button[data-hist]');
+        if (!cb || cb.getAttribute('data-hist') !== key) continue;
+        card.classList.toggle('hist-open', !wasOn);
+        panel = card.querySelector('.mcard-hist');
+        if (wasOn) {
+          if (panel && panel.parentNode) panel.parentNode.removeChild(panel);
+        } else if (!panel && hist) {
+          panel = document.createElement('div');
+          panel.className = 'mcard-hist';
+          panel.innerHTML = histPanelHtml(hist);
+          var mainEl = card.querySelector('.mcard-main');
+          if (mainEl && mainEl.nextSibling) card.insertBefore(panel, mainEl.nextSibling);
+          else card.appendChild(panel);
+        }
+        break;
+      }
+      return;
+    }
+    /* PC 표 — 대표 줄 바로 아래에 이력 줄을 끼워 넣고, 접을 때는 그 줄만 뺀다 */
+    var trs = el.tbody ? el.tbody.querySelectorAll('tr[data-id]') : [], t, tr, next, hasRow;
+    for (t = 0; t < trs.length; t++) {
+      tr = trs[t];
+      b = tr.querySelector('button[data-hist]');
+      if (!b || b.getAttribute('data-hist') !== key) continue;
+      next = tr.nextElementSibling;
+      hasRow = !!(next && next.classList.contains('hist-row') && next.getAttribute('data-hist-for') === key);
+      if (wasOn) {
+        if (hasRow) tr.parentNode.removeChild(next);
+      } else if (!hasRow && hist) {
+        tr.insertAdjacentHTML('afterend', '<tr class="hist-row" data-hist-for="' + esc(key) + '">' +
+          '<td colspan="' + tableColCount() + '">' + histPanelHtml(hist) + '</td></tr>');
+      }
+      break;
+    }
   }
 
   /* v25 — ⭐ 권매·쉬움 건수 : 지금 걸린 월·검색·유형·담당자·알림 필터 기준
@@ -12402,10 +12656,12 @@
     else if (d === 0) ddBadge = '<span class="dd dd-today">요금제 D-DAY</span>';
     if (ad !== null && ad < 0) ddBadge += '<span class="dd dd-late">부가 ' + Math.abs(ad) + '일 지남</span>';
     else if (ad === 0) ddBadge += '<span class="dd dd-today">부가 D-DAY</span>';
-    return '<div class="mcard' + ((d !== null && d <= 0) || (ad !== null && ad <= 0) ? ' due' : '') + '" data-id="' + esc(r.id) + '">' +
+    return '<div class="mcard' + ((d !== null && d <= 0) || (ad !== null && ad <= 0) ? ' due' : '') +
+      (histIsOpen(r) ? ' hist-open' : '') + '" data-id="' + esc(r.id) + '">' +
       '<div class="mcard-main" data-mtoggle="1">' +
         '<div class="m-line1">' +
           '<span class="m-name">' + esc(r.고객명 || '(이름 없음)') + '</span>' +
+          (histExtra(r) ? histButtonHtml(r, 'card') : '') +
           easyBadgeHtml(r) +
           missingBadgesHtml(r) +
           payDoneBadgeHtml(r) +
@@ -12426,6 +12682,7 @@
           '</span>' +
         '</div>' +
       '</div>' +
+      (histIsOpen(r) ? '<div class="mcard-hist">' + histPanelHtml(histOf(r)) + '</div>' : '') +
       '<div class="mcard-detail">' +
         mRowOpt('연락처', telLink(r.연락처)) +
         mRowOpt('생년월일', r.생년월일 ? esc(r.생년월일) : '') +
@@ -12623,12 +12880,14 @@
       var tb = el.tbody;
       while (tb && tb.firstElementChild && removed < need) {
         var tr = tb.firstElementChild;
-        if (!tr.classList.contains('group-row')) removed++;
+        /* v72 — 이력 줄(hist-row)은 대표 줄에 딸린 것이라 세지 않는다 */
+        if (tr.hasAttribute('data-id')) removed++;
         tb.removeChild(tr);
       }
       while (tb && tb.firstElementChild && !tb.firstElementChild.classList.contains('group-row')) {
-        tb.removeChild(tb.firstElementChild);
-        removed++;
+        var t2 = tb.firstElementChild;
+        if (t2.hasAttribute('data-id')) removed++;
+        tb.removeChild(t2);
       }
     }
     ctx.start += removed;
@@ -12655,7 +12914,8 @@
       if (el.tbody && built.html) el.tbody.insertAdjacentHTML('afterbegin', built.html);
       while (el.tbody && el.tbody.lastElementChild && removed < (to - from)) {
         var lt = el.tbody.lastElementChild;
-        if (!lt.classList.contains('group-row')) removed++;
+        /* v72 — 이력 줄은 대표 줄에 딸린 것이라 세지 않는다 */
+        if (lt.hasAttribute('data-id')) removed++;
         el.tbody.removeChild(lt);
       }
     }
@@ -12680,7 +12940,13 @@
   function renderTable() {
     var sig = filterSignature();
     if (sig !== lastFilterSig) { lastFilterSig = sig; renderLimit = TABLE_ROW_CAP; renderStart = 0; }
-    var allRows = visibleRecords();
+    var rawRows = visibleRecords();
+    /* v72 — 전체 기간·전체 기간 검색에서는 같은 고객(실명+실번호)을 최신 1줄로 묶어 보여 준다.
+       · 특정 1개월 보기에서는 그 달 건을 그대로 모두 보여 준다
+       · KPI·집계·내보내기는 visibleRecords() 원본을 쓰므로 묶어도 5번 개통 = 5건 */
+    var allRows = groupingScopeOn() ? groupCustomerRows(rawRows) : rawRows;
+    if (!groupingScopeOn()) { histById = Object.create(null); histRepByKey = Object.create(null); }
+    var mergedAway = rawRows.length - allRows.length;
     var totalRows = allRows.length;
     /* 건수가 적은 달을 보다가 기록이 늘어도 덜 그리지 않도록, 상한은 500 아래로 내려가지 않는다 */
     if (renderLimit < TABLE_ROW_CAP) renderLimit = TABLE_ROW_CAP;
@@ -12709,6 +12975,8 @@
     // v26 — 전체 기간 검색 중이라는 것을 건수 자리에 분명히 적는다 (상단 KPI 는 기준 월 그대로)
     var searchAll = !!state.filters.q.trim() && !state.filters.due;
     if (searchAll) scopeTag = scopeTag ? scopeTag + ' · 전체 기간 검색' : '전체 기간 검색';
+    /* v72 — 같은 고객 이력이 접혀 있다는 것을 건수 자리에서도 알린다 */
+    if (mergedAway > 0) scopeTag = scopeTag ? scopeTag + ' · 이력 묶음' : '이력 묶음';
     paintResultCount(totalRows, rows.length, scopeTag, searchAll, renderStart);
     el.resultCount.classList.toggle('is-allsearch', searchAll);
     // v51 — 기본 화면에서는 맨 위 KPI '총 건수' 와 겹치는 건수 칩을 숨긴다(필터 줄에 혼자 떨어지는 원인).
@@ -12835,7 +13103,7 @@
 
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
-        '<td data-label="고객명"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + missingBadgesHtml(r) + '</td>' +
+        '<td data-label="고객명"><span class="c-namewrap"><span class="c-name ellip">' + esc(r.고객명 || '(이름 없음)') + '</span>' + histButtonHtml(r, 'table') + '</span>' + foreignTagHtml(r.외국인) + easyCellBadgeHtml(r) + missingBadgesHtml(r) + '</td>' +
         '<td data-label="연락처" class="nowrap">' + (telLink(r.연락처) || '<span class="muted">—</span>') + '</td>' +
         '<td data-label="생년월일" class="nowrap">' + (r.생년월일 ? esc(r.생년월일) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="개통유형">' + (typeBadgesHtml(r.개통유형) || '<span class="muted">—</span>') + '</td>' +
@@ -12855,6 +13123,11 @@
         '<td data-label="담당자" class="nowrap">' + (r.담당자 ? esc(r.담당자) : '<span class="muted">—</span>') + '</td>' +
         '<td class="actions">' + rowActionButtons(r) + '</td>' +
       '</tr>';
+      /* v72 — 펼쳐 둔 이력은 대표 줄 바로 아래 줄로 다시 그린다(더 보기로 이어 붙인 줄에도 적용) */
+      if (wantTable && histIsOpen(r)) {
+        html += '<tr class="hist-row" data-hist-for="' + esc(customerKeyOf(r) || '') + '">' +
+          '<td colspan="' + tableColCount() + '">' + histPanelHtml(histOf(r)) + '</td></tr>';
+      }
 
       if (wantCards) mhtml += mcardHtml(r);
     }
@@ -14873,6 +15146,53 @@
     toast(scopeLabel + ' ' + rows.length + '건을 엑셀로 내보냈습니다.');
   }
 
+  /* ---------------- v72 — 대량문자(알리고 · 뿌리오) 업로드용 명단 CSV ----------------
+     · 알리고·뿌리오에 .csv 를 그대로 올리면 이름·번호가 들어간다 (UTF-8 BOM · `이름,전화번호`)
+     · 가려진 번호(`01024***587`)·빈 번호·형식 불량은 빠고, 같은 번호는 **최신 개통 기준 1명**만 남긴다
+     · 번호는 `010-1234-5678` 모양으로 적는다 — 숫자만 적으면 엑셀이 앞 0을 지워 버린다 */
+  function isMobilePhone(d) { return /^01\d{8,9}$/.test(d); }
+
+  function smsNameOf(r) {
+    var n = String((r && r.고객명) == null ? '' : r.고객명).trim();
+    return (!n || hasMask(n)) ? '고객' : n;
+  }
+
+  function bulkSmsCsv() {
+    if (!isAdmin()) { toast('대량문자 명단은 관리자 모드에서만 받을 수 있습니다.', true); return; }
+    var rows = visibleRecords();       // 고객 묶음 전 전체 — 5번 개통한 고객도 번호는 한 번만 남긴다
+    var total = rows.length;
+    if (!total) { toast('내보낼 장부가 없습니다.', true); return; }
+    var bad = 0, dup = 0, order = [], pick = Object.create(null), i, r, raw, d;
+    for (i = 0; i < total; i++) {
+      r = rows[i];
+      raw = String(r.연락처 == null ? '' : r.연락처).trim();
+      d = digitsOnly(raw);
+      if (!raw || hasMask(raw) || !isMobilePhone(d)) { bad++; continue; }
+      if (pick[d]) {
+        dup++;
+        if (newerRecord(r, pick[d].rec)) pick[d] = { rec: r, name: smsNameOf(r) };
+      } else {
+        pick[d] = { rec: r, name: smsNameOf(r) };
+        order.push(d);
+      }
+    }
+    if (!order.length) {
+      toast('발송 가능한 휴대폰 번호가 없습니다 — 가려진 번호(' + fmtNum(bad) + '건)를 확인해 주세요.', true);
+      return;
+    }
+    var lines = ['이름,전화번호'];
+    for (i = 0; i < order.length; i++) {
+      d = order[i];
+      lines.push(csvCell(pick[d].name) + ',' + csvCell(formatPhone(d)));
+    }
+    var tag = state.filters.due ? (state.filters.dueMode === 'late' ? '기한지남' : '알림대상')
+      : (state.filters.month || '전체');
+    var fname = 'KT개통장부_대량문자명단_' + tag + '_' + todayISO().replace(/-/g, '') + '_' + order.length + '명.csv';
+    downloadBlob(new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' }), fname);
+    toast('전체 ' + fmtNum(total) + '건 중 가림·오류 ' + fmtNum(bad) + '건, 중복 ' + fmtNum(dup) +
+      '건 제외 → 발송 가능 ' + fmtNum(order.length) + '명 내려받기 완료');
+  }
+
   function downloadTemplate() {
     if (!hasXLSX()) {
       exportCsv([], 'KT개통장부_양식.csv');
@@ -15464,19 +15784,48 @@
 
     // 표 안 버튼
     el.tbody.addEventListener('click', function (e) {
+      /* v72 — `이력 +N건` 버튼 → 연혁 펼치기/접기 · 연혁의 한 줄 → 그 개통 건 수정 창 */
+      var histBtn = e.target.closest ? e.target.closest('button[data-hist]') : null;
+      if (histBtn) { toggleCustomerHistory(histBtn.getAttribute('data-hist'), 'table'); return; }
+      var histItem = e.target.closest ? e.target.closest('[data-hist-id]') : null;
+      if (histItem) {
+        var hrec = findRecordById(histItem.getAttribute('data-hist-id'));
+        if (hrec) openEditor(hrec);
+        return;
+      }
       handleRowAct(e.target.closest ? e.target.closest('button[data-act]') : null);
     });
+    /* v72 — 연혁 줄은 키보드(Enter·Space)로도 열린다 */
+    function histKeyOpen(e) {
+      if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+      var it = e.target.closest ? e.target.closest('[data-hist-id]') : null;
+      if (!it) return;
+      e.preventDefault();
+      var rec = findRecordById(it.getAttribute('data-hist-id'));
+      if (rec) openEditor(rec);
+    }
+    el.tbody.addEventListener('keydown', histKeyOpen);
 
     // 모바일 간단히 보기 카드: 탭하면 상세 펼치기, 버튼은 수정/삭제
     if (el.mlist) {
       el.mlist.addEventListener('click', function (e) {
         var actBtn = e.target.closest ? e.target.closest('button[data-act]') : null;
         if (actBtn) { handleRowAct(actBtn); return; }
+        /* v72 — 카드의 `이력 +N건` → 연혁 펼치기/접기 · 연혁의 한 줄 → 상세(수정) 창 */
+        var histBtn = e.target.closest ? e.target.closest('button[data-hist]') : null;
+        if (histBtn) { toggleCustomerHistory(histBtn.getAttribute('data-hist'), 'card'); return; }
+        var histItem = e.target.closest ? e.target.closest('[data-hist-id]') : null;
+        if (histItem) {
+          var hrec = findRecordById(histItem.getAttribute('data-hist-id'));
+          if (hrec) openEditor(hrec);
+          return;
+        }
         var main = e.target.closest ? e.target.closest('.mcard-main') : null;
         if (!main) return;
         var card = main.parentNode;
         if (card) card.classList.toggle('open');
       });
+      el.mlist.addEventListener('keydown', histKeyOpen);
     }
 
     // v71 — [+500건 더 보기] — 다음 500줄만 아래에 이어 붙인다 (PC 표 아래 · 폰 카드 목록 아래)
@@ -15901,6 +16250,8 @@
 
     // 엑셀 / CSV / JSON
     el.exportBtn.addEventListener('click', exportExcel);
+    if ($('smsCsvBtn')) $('smsCsvBtn').addEventListener('click', function () { closeMenu(); bulkSmsCsv(); });
+    if ($('smsCsvBtnMobile')) $('smsCsvBtnMobile').addEventListener('click', function () { closeMenu(); bulkSmsCsv(); });
     el.templateBtn.addEventListener('click', downloadTemplate);
     el.importBtn.addEventListener('click', function () { el.fileInput.value = ''; el.fileInput.click(); });
     el.fileInput.addEventListener('change', function () {
