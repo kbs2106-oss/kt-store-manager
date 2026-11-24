@@ -11384,8 +11384,9 @@
       items.push({ n: n, c: c, i: i });
     }
     items.sort(function (a, b) { return b.c - a.c || a.i - b.i; });
+    /* v70 — 담당자 없는 정산 이관 건('미지정')에는 1위 왕관을 씨우지 않는다 (직원 순위가 아니다) */
     var html = '';
-    var top = items.length > 1 && items[0].c > items[1].c;
+    var top = items.length > 1 && items[0].c > items[1].c && items[0].n !== '미지정';
     for (i = 0; i < items.length; i++) {
       var isTop = top && i === 0;
       html += '<span class="so-chip' + (items[i].c ? '' : ' zero') + (isTop ? ' top' : '') + '">' +
