@@ -3015,8 +3015,11 @@
           <label id="f_onestopLabel">원스톱 <span class="opt">선택 · 유선 신규만</span></label>
           <input id="f_onestop" type="hidden" value="">
           <div class="period-chips onestop-chips" id="onestopChips" role="group" aria-labelledby="f_onestopLabel">
+            <!-- v68 — 금액·포인트는 관리자 모드에서만 (직원 모드에는 '원스톱 체크' 글자만 · 툴팁도 금액 없이) -->
             <button type="button" class="pchip" data-onestop="1" aria-pressed="false"
-                    title="원스톱 결합 개통이면 눌러 주세요 — +10만원 · +1.0P 가 자동으로 붙습니다">원스톱 체크 <span class="mc">+10만원 · +1.0P</span></button>
+                    title="원스톱 결합 개통이면 눌러 주세요"
+                    data-staff-title="원스톱 결합 개통이면 눌러 주세요"
+                    data-admin-title="원스톱 결합 개통이면 눌러 주세요 — +10만원 · +1.0P 가 자동으로 붙습니다">원스톱 체크 <span class="mc admin-only">+10만원 · +1.0P</span></button>
           </div>
         </div>
 
@@ -12048,7 +12051,7 @@
     if (!onestopOf(r)) return '';
     return '<span class="pbadge onestop-badge" title="' + (isAdmin()
       ? '원스톱 · 유선 리베이트 +100,000원 · 유선 포인트 +1.0P'
-      : '원스톱 · +10만원 · +1.0P') + '">원스톱</span>';
+      : '원스톱 체크') + '">원스톱</span>';
   }
 
   // 모바일 '간단히 보기' 카드 : 두 줄 요약 + 탭하면 상세
@@ -12108,7 +12111,10 @@
           : (wirelessRebateView(r).auto ? '정책 ' + fmtNum(wirelessRebateView(r).auto) + '원 (자동)' : '')) : '') +
         (isAdmin() ? mRowOpt('유선 리베이트', r.유선리베이트 ? fmtNum(r.유선리베이트) + '원' : '') : '') +
         mRowOpt('유선 사은품', normalizeWiredGift(r.유선혜택) ? esc(wiredGiftLabel(r.유선혜택)) : '') +
-        (onestopOf(r) ? mRow('원스톱', '<span class="pbadge onestop-badge">체크</span> <span class="muted">유선 +10만원 · +1.0P</span>') : '') +
+        // v68 — 폰 상세 카드의 원스톱 금액·포인트도 관리자 모드에서만
+        (onestopOf(r) ? (isAdmin()
+          ? mRow('원스톱', '<span class="pbadge onestop-badge">체크</span> <span class="muted">유선 +10만원 · +1.0P</span>')
+          : mRow('원스톱', '<span class="pbadge onestop-badge">체크</span>')) : '') +
         (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
         (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세, cardLineInsts(r)) +
           (cardDoneBadgeHtml(r) ? ' ' + cardDoneBadgeHtml(r) : '') : '') : '') +
@@ -12589,6 +12595,13 @@
     syncCaptureAllowed();
     document.body.classList.toggle('role-admin', admin);
     document.body.classList.toggle('role-staff', !admin);
+    /* v68 — 원스톱 체크의 금액·포인트는 직원 모드에서 글자(span.mc, .admin-only)와
+       툴팁(title) 양쪽에서 숨긴다. 기능(메모 [원스톱] · 유선 리베이트 +100,000 자동)은 그대로 */
+    var osChip = document.querySelector('#onestopChips button[data-onestop]');
+    if (osChip) {
+      var osTip = osChip.getAttribute(admin ? 'data-admin-title' : 'data-staff-title');
+      if (osTip) osChip.title = osTip;
+    }
     if (el.adminLockBtn) {
       el.adminLockBtn.textContent = admin ? '🔒 관리자 모드 잠그기' : '🔓 관리자 모드 잠금 해제';
     }
