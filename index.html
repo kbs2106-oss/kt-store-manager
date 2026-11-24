@@ -557,6 +557,39 @@
     -webkit-appearance:none;appearance:none;font-size:13.5px;font-weight:600;color:var(--slate-700);
   }
   select.filter:focus{outline:none;border-color:#9DBDF0;box-shadow:0 0 0 3px rgba(11,87,208,.15)}
+  /* v74 — 유형 다중 선택 드롭다운 (전체 유형 · 무선/유선 나눔 · 44px 탭 줄) */
+  .typefilter{position:relative;display:inline-flex}
+  .typefilter-btn{height:36px;padding:0 30px 0 11px;border-radius:9px;border:1px solid var(--line-strong);
+    background:#fff;font-size:13.5px;font-weight:600;color:var(--slate-700);cursor:pointer;white-space:nowrap;
+    max-width:190px;overflow:hidden;text-overflow:ellipsis;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%2364748B' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-repeat:no-repeat;background-position:right 11px center}
+  .typefilter-btn.on{background-color:#EAF3FF;border-color:#9CC5F8;color:#1D4ED8}
+  .typefilter-btn:focus{outline:none;border-color:#9DBDF0;box-shadow:0 0 0 3px rgba(11,87,208,.15)}
+  .typefilter-panel{position:absolute;top:calc(100% + 6px);left:0;z-index:80;width:268px;max-height:62vh;overflow:auto;
+    background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:0 16px 38px -12px rgba(15,23,42,.3);padding:8px}
+  .typefilter-panel[hidden]{display:none !important}
+  .typefilter-panel .tf-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:4px 6px 8px;border-bottom:1px solid #EEF2F7;margin-bottom:4px}
+  .typefilter-panel .tf-head span{font-size:11.5px;font-weight:800;color:#64748B}
+  .typefilter-panel .tf-done{border:0;background:#0B57D0;color:#fff;font-size:12px;font-weight:800;
+    border-radius:8px;padding:6px 12px;cursor:pointer}
+  .tf-group{font-size:11px;font-weight:800;color:#94A3B8;padding:7px 8px 3px}
+  .typefilter-panel .tf-row{display:flex;align-items:center;gap:9px;width:100%;min-height:40px;padding:0 8px;
+    border:0;background:transparent;border-radius:9px;font-size:13.5px;font-weight:700;color:#334155;
+    text-align:left;cursor:pointer}
+  .typefilter-panel .tf-row:hover{background:#F4F8FE}
+  .typefilter-panel .tf-row.on{background:#EAF3FF;color:#1D4ED8}
+  .typefilter-panel .tf-box{flex:0 0 auto;width:19px;height:19px;border-radius:6px;border:1.6px solid #C3D0E2;
+    background:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;line-height:1}
+  .typefilter-panel .tf-row.on .tf-box{background:#0B57D0;border-color:#0B57D0;color:#fff}
+  @media (max-width:640px){
+    .typefilter{display:flex;flex:1 1 auto;min-width:0}
+    .typefilter-btn{width:100%;max-width:none;height:38px}
+    .typefilter-panel{position:fixed;left:10px;right:10px;bottom:10px;top:auto;width:auto;max-height:72vh;
+      border-radius:16px;box-shadow:0 -8px 34px -8px rgba(15,23,42,.35)}
+    .typefilter-panel .tf-row{min-height:46px;font-size:14px}
+  }
   .check{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:700;color:var(--slate-600);user-select:none;padding:0 3px;cursor:pointer}
   .check input{width:15px;height:15px;accent-color:var(--blue-600);cursor:pointer}
   .result-count{font-size:12px;color:var(--slate-500);font-weight:700;margin-left:auto;white-space:nowrap;
@@ -1463,8 +1496,8 @@
   .view-wide table.ledger td{padding:13px 14px}
   .view-wide table.ledger td{border-bottom:1px solid #E3EAF3}
 
-  /* v71 — [+500건 더 보기] 막대 (PC 표 아래 · 폰 카드 목록 아래)
-     · 누르면 다음 500줄을 아래에 이어 붙이기만 한다(전체를 다시 그리지 않아 빠르다)
+  /* v71 — 더 보기 막대 (PC 표 아래 · 폰 카드 목록 아래) · v74 — 자동 이어보기 칩
+     · 누르면 다음 1,500줄을 아래에 이어 붙이기만 한다(전체를 다시 그리지 않아 빠르다)
      · 스크롤은 건드리지 않아 화면이 튀지 않는다 */
   .more-bar{display:flex;align-items:center;justify-content:center;gap:8px 12px;flex-wrap:wrap;
     padding:13px 16px 15px;border-top:1px solid var(--line);background:#FBFDFF}
@@ -1479,9 +1512,15 @@
   .more-bar .more-btn{min-height:40px;padding:0 18px;font-weight:800;border-radius:11px;
     background:#fff;border:1px solid #BBD7FB;color:var(--blue-800);box-shadow:0 1px 2px rgba(15,23,42,.05)}
   .more-bar .more-btn:active{background:#EEF3F9}
+  /* v74 — 자동 이어보기 켜짐/꺼짐 칩 */
+  .more-bar .more-auto{min-height:32px;padding:0 12px;font-size:12.5px;font-weight:800;border-radius:999px;
+    background:#fff;border:1px solid #CBD5E1;color:#475569;cursor:pointer;transition:background .15s,border-color .15s}
+  .more-bar .more-auto.on{background:#E8F1FF;border-color:#9CC5F8;color:#1D4ED8}
+  .more-bar .more-auto:active{background:#EFF4FA}
   @media (max-width:560px){
     .more-bar{flex-direction:column;gap:7px}
     .more-bar .more-btn{width:100%;min-height:44px;font-size:14px}
+    .more-bar .more-auto{min-height:30px;font-size:12px}
   }
 
   /* v72 — 동일 명의·번호 고객 개통 이력 묶음
@@ -2884,9 +2923,18 @@
     </div>
     <!-- v26 — 검색 중에는 기준 월과 상관없이 전체 기간에서 찾는다는 안내 -->
     <span class="search-scope" id="searchScopeHint" hidden></span>
-    <select class="filter" id="typeFilter" aria-label="개통유형 필터">
-      <option value="">전체 유형</option>
-    </select>
+    <!-- v74 — 유형은 단독 <select> 대신 여러 개를 탭하는 드롭다운 (모바일·PC 공통) -->
+    <div class="typefilter" id="typeFilterWrap">
+      <button type="button" class="filter typefilter-btn" id="typeFilter" aria-haspopup="true" aria-expanded="false"
+              title="유형을 여러 개 함께 고를 수 있습니다">전체 유형</button>
+      <div class="typefilter-panel" id="typeFilterPanel" hidden>
+        <div class="tf-head">
+          <span>유형 · 여러 개 탭 가능</span>
+          <button type="button" class="tf-done" id="typeFilterDone">완료</button>
+        </div>
+        <div class="tf-list" id="typeFilterList"></div>
+      </div>
+    </div>
     <select class="filter" id="staffFilter" aria-label="담당자 필터">
       <option value="">전체 담당자</option>
     </select>
@@ -2924,7 +2972,7 @@
     <!-- v71 — 4,000줄을 넘어 위에서 걷어낸 줄이 있을 때만 보인다 -->
     <div class="more-top" id="moreTop" hidden>
       <span class="more-count" id="moreTopCount"></span>
-      <button type="button" class="more-btn" id="moreTopBtn">▲ 500줄 위로</button>
+      <button type="button" class="more-btn" id="moreTopBtn">▲ 1,500줄 위로</button>
     </div>
     <div class="table-scroll">
       <table class="ledger" id="ledger">
@@ -2955,16 +3003,18 @@
         <tbody id="tbody"></tbody>
       </table>
     </div>
-    <!-- v71 — 500건씩 이어서 보기 (PC 표 아래) -->
+    <!-- v74 — 스크롤만 내리면 자동으로 1,500건씩 이어 붙인다 (PC 표 아래) -->
     <div class="more-bar" id="morePc" hidden>
       <span class="more-count" id="morePcCount"></span>
-      <button type="button" class="btn more-btn" id="morePcBtn">+500건 더 보기</button>
+      <button type="button" class="more-auto on" id="morePcAuto" aria-pressed="true">자동 이어보기 ON</button>
+      <button type="button" class="btn more-btn" id="morePcBtn">+1,500건 더 보기</button>
     </div>
     <div class="mlist" id="mlist"></div>
-    <!-- v71 — 500건씩 이어서 보기 (폰 카드 목록 아래) -->
+    <!-- v74 — 스크롤만 내리면 자동으로 1,500건씩 이어 붙인다 (폰 카드 목록 아래) -->
     <div class="more-bar more-bar-m" id="moreM" hidden>
       <span class="more-count" id="moreMCount"></span>
-      <button type="button" class="btn more-btn" id="moreMBtn">+500건 더 보기</button>
+      <button type="button" class="more-auto on" id="moreMAuto" aria-pressed="true">자동 이어보기 ON</button>
+      <button type="button" class="btn more-btn" id="moreMBtn">+1,500건 더 보기</button>
     </div>
     <div class="empty" id="emptyState" hidden></div>
   </section>
@@ -5270,7 +5320,7 @@
   var state = {
     records: [],
     // v34 — easyScope: 권매·쉬움만의 기간 범위('month' 이 달만 | 'all' 전체 기간) · easyMonth: 마지막으로 보던 달
-    filters: { q: '', qMode: 'all', month: '', type: '', staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: '', missing: false },
+    filters: { q: '', qMode: 'all', month: '', type: '', types: [], staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: '', missing: false },
     sort: { key: '개통일', dir: 'desc' },
     view: 'compact',
     role: 'staff',
@@ -10438,8 +10488,14 @@
     else month = f.month;
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
-      if (f.type === WIRED_ALL_KEY) {
-        if (!typeSlots(r.개통유형).l) return false;      // v40 — 유선(인터넷·TV)이 하나라도 있는 건만
+      // v74 — 유형은 여러 개를 함께 고를 수 있다 (하나라도 들어 있으면 보인다)
+      var ts = typeSel();
+      if (ts.length) {
+        var tok = false;
+        for (var ti = 0; ti < ts.length; ti++) {
+          if (typeFilterHit(r.개통유형, ts[ti])) { tok = true; break; }
+        }
+        if (!tok) return false;
       } else if (f.type && !typeHasPart(r.개통유형, f.type)) return false;
       if (f.staff && (r.담당자 || '') !== f.staff) return false;
       if (f.due) {
@@ -12111,7 +12167,7 @@
       var name = order[i];
       if (!counts[name]) continue;
       var cls = TYPE_CLASS[name] || 't-etc';
-      var on = state.filters.type === name ? ' on' : '';
+      var on = typeSel().indexOf(name) >= 0 ? ' on' : '';
       if (name === '미지정') {
         chips.push('<span class="chip t-etc">미지정 <b>' + counts[name] + '</b></span>');
       } else {
@@ -12839,24 +12895,40 @@
     document.body.classList.toggle('ledger-overflow', over);
   }
 
-  /* v70 — 한 번에 그리는 줄 수 상한 · v71 — [+500건 더 보기] 로 끝까지 이어 본다
+  /* v70 — 한 번에 그리는 줄 수 상한 · v71 — 더 보기로 끝까지 이어 본다 · v74 — 3,500줄부터 자동 이어보기
      · 정산 이관으로 기록이 1만 건 규모가 되면서 '전체 기간'·넓은 검색을 그대로 다 그리면
        폰에서 화면이 멈추거나 렌더러가 죽었다. 한 달치는 가장 많은 달(401건)도 잘리지 않도록 500줄까지 그린다.
      · v71 — 500줄을 넘으면 표(·폰 카드) 아래에 `+500건 더 보기 (남은 N건)` 을 두고,
        누를 때마다 **다음 500줄만 아래에 이어 붙인다**(전체를 다시 그리지 않아 빠르고, 스크롤도 안 튄다).
      · v71 — 그래도 1만 줄(약 55만 DOM 노드)을 한 화면에 다 들면 폰 렌더러가 죽는다(실측: 9천 줄 부근).
-       그래서 화면에 담는 줄은 **4,000줄까지**로 두고, 그보다 더 보면 **위에서부터 500줄씩 걷어낸다**.
-       걷어낸 줄은 표(·카드 목록) **위의 `[▲ 500줄 위로]`** 로 다시 볼 수 있고, 더 보기는 2023년 5월 끝까지 계속된다. */
-  var TABLE_ROW_CAP = 500;
-  var TABLE_ROW_MAX = 4000;                 // 화면에 한꺼번에 담는 최대 줄 수(DOM 한계 안전선)
-  var renderLimit = TABLE_ROW_CAP;          // 지금까지 펼친 끝 줄(필터가 바뀌면 500으로 돌아간다)
-  var renderStart = 0;                      // 화면에 담긴 첫 줄 (4,000줄을 넘으면 앞에서부터 걷어낸다)
+       그래서 화면에 담는 줄은 한 번에 정해진 창까지만 들고, 그보다 더 보면 **위에서부터 걷어낸다**.
+       걷어낸 줄은 표(·카드 목록) **위의 `[▲ 1,500줄 위로]`** 로 다시 볼 수 있고, 더 보기는 2023년 5월 끝까지 계속된다.
+
+     v74 — 사장님: "건수를 더늘려줘" · "1500건도 적어" · "더보기누르면 바로 그냥 전체 다뜨게"
+     · 처음부터 **3,500줄(약 1년 반 치)** 을 그린다. 한 달치는 가장 많은 달(401건)도 잘리지 않는다.
+     · 목록 바닥이 화면 아래 600px 안으로 들어오면 **버튼 없이 자동으로 1,500줄씩** 이어 붙인다.
+     · 화면 창은 **4,500줄**까지 — 넘으면 위에서 1,500줄씩 걷어내되, 걷어낸 높이만큼 스크롤을 되돌려
+       보던 줄이 튀지 않게 한다. 걷어낸 줄은 `[▲ 1,500줄 위로]` 로 되돌아온다.
+     · 폰이 튕기던 것은 **한 줄에 50~60개 조각**이 들어 9천 줄 부근에서 메모리가 꽉 찼기 때문이다.
+       그래서 v74 부터는 **지금 보이는 목록 하나만** DOM 으로 만든다(숨은 표/카드는 만들지 않는다 → 조각 수 절반). */
+  var TABLE_ROW_CAP = 3500;                 // v74 — 처음 그리는 줄 수
+  var TABLE_ROW_MAX = 4500;                 // 화면에 한꺼번에 담는 최대 줄 수(DOM 한계 안전선)
+  var TABLE_ROW_STEP = 1500;                // v74 — 자동 이어보기 한 칸
+  var TABLE_AUTO_PX = 600;                  // v74 — 목록 바닥이 화면 아래 이만큼 안에 오면 자동으로 잇는다
+  var renderLimit = TABLE_ROW_CAP;          // 지금까지 펼친 끝 줄(필터가 바뀌면 3,500으로 돌아간다)
+  var renderStart = 0;                      // 화면에 담긴 첫 줄 (4,500줄을 넘으면 앞에서부터 걷어낸다)
   var renderCtx = null;                     // 이어 붙이기에 필요한 직전 상태(줄 목록·날짜 묶음·건수)
   var lastFilterSig = '';
+  /* v74 — 자동 이어보기 켜짐/꺼짐(기기마다 기억) · 스크롤 이벤트가 겹치지 않게 하는 잠금 */
+  var MORE_AUTO_KEY = 'kt_more_auto_v1';
+  var moreAuto = (function () {
+    try { return localStorage.getItem(MORE_AUTO_KEY) !== '0'; } catch (e) { return true; }
+  })();
+  var moreAutoBusy = false;
 
   function filterSignature() {
     var f = state.filters;
-    return [f.month, f.type, f.staff, f.q, f.qMode, f.due ? 1 : 0, f.dueMode,
+    return [f.month, f.type, f.types ? f.types.join('|') : '', f.staff, f.q, f.qMode, f.due ? 1 : 0, f.dueMode,
       f.easy ? 1 : 0, f.easy ? easyScopeNow() : '', f.missing ? 1 : 0,
       state.sort.key, state.sort.dir].join('\u0001');
   }
@@ -12865,6 +12937,44 @@
     renderLimit = TABLE_ROW_CAP;
     renderStart = 0;
     lastFilterSig = '';
+  }
+
+  /* ---------------- v74 — 유형 다중 선택 ----------------
+     사장님: "유형은 내가 여러 개 탭하게 해줘라" (기기변경 + 번호이동 + 신규가입 동시)
+     · `state.filters.types` 가 진짜 값이고, `type` 은 예전 코드·저장값과의 호환용(첫 번째 값)이다. */
+  function typeSel() {
+    var f = state.filters;
+    if (f.types && f.types.length) return f.types;
+    return f.type ? [f.type] : [];
+  }
+
+  function setTypeSel(arr) {
+    var f = state.filters;
+    var out = [], i;
+    for (i = 0; i < (arr || []).length; i++) {
+      if (out.indexOf(arr[i]) < 0) out.push(arr[i]);
+    }
+    f.types = out;
+    f.type = out.length ? out[0] : '';
+  }
+
+  /* 한 건이 그 유형을 갖고 있는가 (유선 전체 = 유선 슬롯이 하나라도 있으면 맞음) */
+  function typeFilterHit(raw, t) {
+    if (t === WIRED_ALL_KEY) return !!typeSlots(raw).l;
+    return typeHasPart(raw, t);
+  }
+
+  function typeFilterLabel() {
+    var a = typeSel();
+    if (!a.length) return '전체 유형';
+    var first = a[0] === WIRED_ALL_KEY ? '인터넷·TV 전체' : a[0];
+    return a.length === 1 ? first : (first + ' 외 ' + (a.length - 1) + '개');
+  }
+
+  function typeRow(v, label, on) {
+    return '<button type="button" class="tf-row' + (on ? ' on' : '') + '" data-type="' + esc(v) + '" aria-pressed="' +
+      (on ? 'true' : 'false') + '"><span class="tf-box" aria-hidden="true">' + (on ? '✓' : '') + '</span>' +
+      '<span class="tf-name">' + esc(label) + '</span></button>';
   }
 
   /* 결과 건수 칩 — 화면에 그린 줄 수(· 몇 번째 줄부터인지)와 조건에 맞는 전체 건수를 함께 적는다 */
@@ -12878,7 +12988,7 @@
     el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') +
       (more ? fmtNum(total) + '건 중 ' + rangeTxt + ' 표시' : fmtNum(shown) + '건');
     el.resultCount.title = more
-      ? '조건에 맞는 ' + fmtNum(total) + '건 중 ' + rangeTxt + ' 을(를) 그렸습니다 — 아래 [+500건 더 보기] 로 이어서 보거나 기준 월·검색으로 좁혀 보세요'
+      ? '조건에 맞는 ' + fmtNum(total) + '건 중 ' + rangeTxt + ' 을(를) 그렸습니다 — 아래로 내리면 자동으로 이어지고, [+' + fmtNum(TABLE_ROW_STEP) + '건 더 보기] 로 바로 넘길 수도 있습니다'
       : '';
   }
 
@@ -12891,7 +13001,18 @@
   /* 지금 화면에 보이는 목록 종류 — 'cards'(폰 간단히 보기) 또는 'table'(표) */
   function listModeNow() { return mlistVisible() ? 'cards' : 'table'; }
 
-  /* v71 — [+500건 더 보기] 막대의 글자·보임을 맞춘다 (PC 표 아래 · 폰 카드 목록 아래 중 보이는 쪽만) */
+  /* v71 — 더 보기 막대의 글자·보임을 맞춘다 (PC 표 아래 · 폰 카드 목록 아래 중 보이는 쪽만)
+     v74 — 자동 이어보기 상태 칩 · [+1,500건 더 보기] 로 바뀌었다 */
+  function paintAutoChip(b) {
+    if (!b) return;
+    b.textContent = moreAuto ? '자동 이어보기 ON' : '자동 이어보기 OFF';
+    b.classList.toggle('on', moreAuto);
+    b.setAttribute('aria-pressed', moreAuto ? 'true' : 'false');
+    b.title = moreAuto
+      ? '스크롤만 내리면 다음 ' + fmtNum(TABLE_ROW_STEP) + '건이 자동으로 이어집니다 — 눌러서 끕니다'
+      : '눌러서 자동 이어보기를 켜면 스크롤만으로 끝까지 이어집니다';
+  }
+
   function paintMore() {
     var pcBox = $('morePc'), mBox = $('moreM');
     if (!pcBox && !mBox) return;
@@ -12904,37 +13025,51 @@
     var counter = start > 0
       ? ('현재 ' + fmtNum(start + 1) + '~' + fmtNum(shown) + ' / ' + fmtNum(total) + '건 표시')
       : ('현재 ' + fmtNum(shown) + ' / ' + fmtNum(total) + '건 표시');
-    var label = '+500건 더 보기 (남은 ' + fmtNum(remain) + '건)';
+    var label = '+' + fmtNum(TABLE_ROW_STEP) + '건 더 보기 (남은 ' + fmtNum(remain) + '건)';
     var pcCount = $('morePcCount'), mCount = $('moreMCount');
     if (pcCount) pcCount.textContent = counter;
     if (mCount) mCount.textContent = counter;
+    paintAutoChip($('morePcAuto'));
+    paintAutoChip($('moreMAuto'));
     var pcBtn = $('morePcBtn'), mBtn = $('moreMBtn');
     if (pcBtn) { pcBtn.textContent = label; pcBtn.setAttribute('aria-label', label); }
     if (mBtn) { mBtn.textContent = label; mBtn.setAttribute('aria-label', label); }
     var onMobile = mlistVisible();
     if (pcBox) pcBox.hidden = !(show && !onMobile);
     if (mBox) mBox.hidden = !(show && onMobile);
-    /* 위로 걷어낸 줄이 있으면 표·카드 목록 **위**에 [▲ 500줄 위로] */
+    /* 위로 걷어낸 줄이 있으면 표·카드 목록 **위**에 [▲ 1,500줄 위로] */
     var top = $('moreTop');
     if (top) {
       top.hidden = !(start > 0);
+      var topBtn = $('moreTopBtn');
+      if (topBtn) topBtn.textContent = '▲ ' + fmtNum(TABLE_ROW_STEP) + '줄 위로';
       var topTxt = $('moreTopCount');
       if (topTxt) topTxt.textContent = '위 ' + fmtNum(start) + '줄은 화면에서 접었습니다';
     }
   }
 
-  /* v71 — 다음 500줄을 아래에 이어 붙인다
+  /* v71 — 다음 줄을 아래에 이어 붙인다 (v74 — 한 칸 1,500줄 · 창 4,500줄)
      · 전체를 다시 그리지 않으므로 1만 건에서도 빠르고,
-     · 스크롤 위치는 그대로 둔다(버튼을 누른 자리가 틀지 않는다 — 새 줄은 아래로 붙는다).
-     · 4,000줄을 넘으면 앞(위) 500줄을 걷어낸다 — 1만 줄을 한 화면에 들면 폰 렌더러가 죽는다. */
+     · 스크롤 위치는 그대로 둔다(걷어낸 높이만큼 되돌려 보던 줄이 틀지 않는다 — 새 줄은 아래로 붙는다).
+     · 4,500줄을 넘으면 앞(위) 1,500줄을 걷어낸다 — 1만 줄을 한 화면에 들면 폰 렌더러가 죽는다. */
   function showMoreRows() {
     var ctx = renderCtx;
     if (!ctx || !ctx.rows || ctx.rendered >= ctx.total) { paintMore(); return; }
+    var docEl = listScroller();
+    if (!docEl) { paintMore(); return; }
+    var y0 = docEl.scrollTop || window.pageYOffset || 0;
+    var h0 = docEl.scrollHeight;
     /* 맨 위가 넘칠 만큼 펼쳤으면 먼저 걷어낸다 — 그리고 이어 붙이기만 한다(다시 그리지 않음) */
-    var overflow = (ctx.rendered + TABLE_ROW_CAP) - ctx.start - TABLE_ROW_MAX;
-    if (overflow > 0) dropTopRows(overflow);
+    var overflow = (ctx.rendered + TABLE_ROW_STEP) - ctx.start - TABLE_ROW_MAX;
+    if (overflow > 0) {
+      dropTopRows(overflow);
+      /* v74 — 위에서 걷어낸 높이만큼 스크롤을 되돌려, 보던 줄이 화면에서 튀지 않게 한다 */
+      var removedH = h0 - docEl.scrollHeight;
+      if (removedH > 0) { try { docEl.scrollTop = Math.max(0, y0 - removedH); } catch (e) {} }
+    }
     var from = ctx.rendered;
-    var to = Math.min(ctx.total, from + TABLE_ROW_CAP);
+    var to = Math.min(ctx.total, from + TABLE_ROW_STEP);
+    if (to <= from) { paintMore(); return; }
     renderLimit = to;
     var built = ledgerRowsHtml(ctx.rows, from, to, ctx.groupByDate, ctx.counts, ctx.groupStaff, ctx.lastGroup, ctx.mode);
     if (el.tbody && built.html) el.tbody.insertAdjacentHTML('beforeend', built.html);
@@ -12946,6 +13081,59 @@
     /* 가로 스크롤 필요 여부는 화면을 먼저 그리고 나서 확인한다 — 누를 때 렉이 안 걸리게
        · v71 — 1,000줄을 넘으면 다시 재지 않는다(넓은 표 전체 레이아웃을 다시 시키는 일이라 무겁다) */
     if (to <= 1000) setTimeout(function () { syncTableOverflow(); }, 60);
+  }
+
+  /* v74 — 목록 바닥이 화면 아래 600px 안에 오면 버튼 없이 다음 1,500줄을 잇는다
+     · 스크롤할 때마다 부르지만 재는 것(막대 위치)만 해서 가볍다(그리기는 1,500줄 붙일 때 1번) */
+  /* v74 — 지금 목록을 스크롤하는 상자
+     · 폰 카드 목록은 창(문서)이 스크롤되고, PC 표는 .table-scroll 상자 안에서 스크롤된다. */
+  function listScroller() {
+    if (listModeNow() === 'cards') return document.scrollingElement || document.documentElement;
+    return document.querySelector('.table-scroll');
+  }
+
+  function autoMoreMaybe() {
+    if (!moreAuto || moreAutoBusy) return;
+    var ctx = renderCtx;
+    if (!ctx || !ctx.rows || ctx.rendered >= ctx.total) return;
+    if (listModeNow() === 'cards') {
+      var box = $('moreM');
+      if (!box || box.hidden) return;
+      var r = box.getBoundingClientRect();
+      var vh = window.innerHeight || document.documentElement.clientHeight || 0;
+      if (r.top > vh + TABLE_AUTO_PX) return;    // 목록 바닥이 아직 600px 넘게 아래
+      if (r.bottom < -TABLE_AUTO_PX) return;     // 위로 지나쳤다(이어 붙여도 화면 밖)
+    } else {
+      /* PC 표는 .table-scroll 상자 안에서만 스크롤된다 — 상자 바닥에서 600px 안이면 잇는다 */
+      var sc = document.querySelector('.table-scroll');
+      if (!sc) return;
+      if (sc.scrollHeight - sc.scrollTop - sc.clientHeight > TABLE_AUTO_PX) return;
+    }
+    var before = ctx.rendered;
+    moreAutoBusy = true;
+    try { showMoreRows(); } finally { moreAutoBusy = false; }
+    /* 남은 줄이 적어 한 번에 다 못 채우면 화면이 빈 채로 멈추지 않게 한 번 더 */
+    if (renderCtx && renderCtx.rendered > before) setTimeout(autoMoreMaybe, 150);
+  }
+
+  var autoScrollTick = false;
+  function onLedgerScroll() {
+    if (!moreAuto || autoScrollTick) return;
+    autoScrollTick = true;
+    var run = function () { autoScrollTick = false; autoMoreMaybe(); };
+    if (window.requestAnimationFrame) window.requestAnimationFrame(run);
+    else setTimeout(run, 60);
+  }
+
+  /* v74 — 자동 이어보기 켜기/끄기 (기기마다 기억한다) */
+  function toggleAutoMore() {
+    moreAuto = !moreAuto;
+    try { localStorage.setItem(MORE_AUTO_KEY, moreAuto ? '1' : '0'); } catch (e) {}
+    paintMore();
+    toast(moreAuto
+      ? '자동 이어보기 켬 — 스크롤만 내리면 ' + fmtNum(TABLE_ROW_STEP) + '건씩 계속 이어집니다'
+      : '자동 이어보기 끔 — [+' + fmtNum(TABLE_ROW_STEP) + '건 더 보기]로 직접 넘기세요');
+    if (moreAuto) setTimeout(autoMoreMaybe, 60);
   }
 
   /* v71 — 화면이 4,000줄을 넘을 때 위에서부터 걷어낸다
@@ -12993,39 +13181,25 @@
     renderStart = ctx.start;
   }
 
-  /* v71 — 위에서 걷어낸 500줄을 다시 보여 준다 (4,000줄 창을 위로 민다)
-     · 화면을 통째로 다시 그리지 않고, 위쪽 500줄을 새로 만들어 맨 앞에 붙이고 아래에서 같은 수를 걷어낸다. */
+  /* v71 — 위에서 걷어낸 줄을 다시 보여 준다 (4,500줄 창을 위로 민다)
+     · 화면을 통째로 다시 그리지 않고, 위쪽 1,500줄을 새로 만들어 맨 앞에 붙이고 아래에서 같은 수를 걷어낸다. */
   function showPrevRows() {
     var ctx = renderCtx;
     if (!ctx || !ctx.rows || !ctx.start) return;
-    var from = Math.max(0, ctx.start - TABLE_ROW_CAP);
-    var to = ctx.start;
-    var built = ledgerRowsHtml(ctx.rows, from, to, ctx.groupByDate, ctx.counts, ctx.groupStaff, null, ctx.mode);
-    var removed = 0;
-    if (ctx.mode === 'cards') {
-      if (el.mlist && built.mhtml) el.mlist.insertAdjacentHTML('afterbegin', built.mhtml);
-      while (el.mlist && el.mlist.lastElementChild && removed < (to - from)) {
-        var ln = el.mlist.lastElementChild;
-        if (!ln.classList.contains('mgroup-head')) removed++;
-        el.mlist.removeChild(ln);
-      }
-    } else {
-      if (el.tbody && built.html) el.tbody.insertAdjacentHTML('afterbegin', built.html);
-      while (el.tbody && el.tbody.lastElementChild && removed < (to - from)) {
-        var lt = el.tbody.lastElementChild;
-        /* v72 — 이력 줄은 대표 줄에 딸린 것이라 세지 않는다 */
-        if (lt.hasAttribute('data-id')) removed++;
-        el.tbody.removeChild(lt);
-      }
+    /* v74 — 위로는 1,500줄 앞에서 시작하고, 다시 그리는 양은 처음과 같은 3,500줄까지만
+       (4,500줄을 통째로 다시 만들거나 DOM 을 1,500개씩 잘라 붙이면 폰이 무거워진다)
+       · 다시 그리는 동안 스크롤 이벤트가 자동 이어보기를 부르지 않게 잠근다 */
+    moreAutoBusy = true;
+    try {
+      var sc = listScroller();
+      if (sc) { try { sc.scrollTop = 0; } catch (e) {} }
+      scrollToLedgerTop();
+      renderStart = Math.max(0, ctx.start - TABLE_ROW_STEP);
+      renderLimit = Math.min(ctx.rendered, renderStart + TABLE_ROW_CAP);
+      renderTable();
+    } finally {
+      setTimeout(function () { moreAutoBusy = false; }, 400);
     }
-    ctx.start = from;
-    renderStart = from;
-    ctx.rendered = Math.max(from, ctx.rendered - removed);
-    renderLimit = ctx.rendered;
-    ctx.lastGroup = ctx.rendered > 0 ? String((ctx.rows[ctx.rendered - 1] || {}).개통일 || '') : null;
-    paintResultCount(ctx.total, ctx.rendered, ctx.scopeTag, ctx.searchAll, ctx.start);
-    paintMore();
-    scrollToLedgerTop();
   }
 
   function scrollToLedgerTop() {
@@ -13033,6 +13207,9 @@
       var card = document.querySelector('.table-card');
       var y = card ? card.getBoundingClientRect().top + (window.pageYOffset || 0) - 8 : 0;
       window.scrollTo(0, y < 0 ? 0 : y);
+      /* v74 — PC 표는 .table-scroll 상자 안에서 스크롤된다 — 상자도 맨 위로 */
+      var sc = document.querySelector('.table-scroll');
+      if (sc && listModeNow() === 'table') sc.scrollTop = 0;
     } catch (e) {}
   }
 
@@ -13080,7 +13257,7 @@
     el.resultCount.classList.toggle('is-allsearch', searchAll);
     // v51 — 기본 화면에서는 맨 위 KPI '총 건수' 와 겹치는 건수 칩을 숨긴다(필터 줄에 혼자 떨어지는 원인).
     //        검색·필터를 걸었을 때만 결과 건수를 보여 준다. (v52 — 스트립의 '이번 달 총 N건' 줄은 없앴다)
-    var countNeeded = !!(state.filters.q.trim() || state.filters.type || state.filters.staff ||
+    var countNeeded = !!(state.filters.q.trim() || state.filters.type || (state.filters.types && state.filters.types.length) || state.filters.staff ||
       state.filters.due || state.filters.easy || state.filters.missing || !state.filters.month || scopeTag);
     el.resultCount.hidden = !countNeeded;
     paintFootCount();
@@ -13174,10 +13351,11 @@
   function ledgerRowsHtml(rows, from, to, groupByDate, counts, groupStaff, lastGroup, mode) {
     var html = '';
     var mhtml = '';
-    /* v71 — 처음 그리는 500줄은 표·폰 카드를 **둘 다** 만든다(보기 전환·출력·예전 동작 그대로).
-       이어 붙이는 줄부터는 **지금 보이는 목록 하나만** 만든다 — 1만 줄을 두 번 만들면 폰이 버티지 못한다. */
-    var wantTable = (from === 0) || mode !== 'cards';
-    var wantCards = (from === 0) || mode === 'cards';
+    /* v71 — 이어 붙이는 줄부터는 지금 보이는 목록 하나만 만든다 — 1만 줄을 두 번 만들면 폰이 버티지 못한다.
+       v74 — 그러면 숨은 목록(폰 카드/PC 표)이 비어 보이므로, 보기 방식을 바꿀 때 applyViewMode 가
+       같은 창(줄 범위)으로 다시 그린다(그때만 한 번 다시 만든다). */
+    var wantTable = mode !== 'cards';
+    var wantCards = mode === 'cards';
     var i, gk;
     for (i = from; i < to; i++) {
       var r = rows[i];
@@ -13241,7 +13419,6 @@
       el.monthShow.title = state.filters.month ? '' : '전체 기간으로 보는 중입니다. 화살표를 누르면 달 단위로 봅니다.';
     }
     renderTypeFilter();
-    el.typeFilter.value = state.filters.type;
     renderStaffFilter();
     el.dueOnly.checked = state.filters.due;
     el.searchInput.value = state.filters.q;
@@ -13435,9 +13612,9 @@
     }
   }
 
-  // 유형 필터 — 무선 / 유선(인터넷·TV) / (예전 유형) 으로 묶어서
+  // 유형 필터 — 무선 / 유선(인터넷·TV) / (예전 유형) 으로 묶고 **여러 개를 함께 탭**한다
   function renderTypeFilter() {
-    if (!el.typeFilter) return;
+    if (!el.typeFilterList || !el.typeFilter) return;
     var seen = {}, i, j, t;
     for (i = 0; i < state.records.length; i++) {
       var parts = typeParts(state.records[i].개통유형);
@@ -13447,27 +13624,61 @@
       }
     }
     var legacy = Object.keys(seen).sort();
-    var html = '<option value="">전체 유형</option>';
+    var sel = typeSel();
+    var html = typeRow('', '전체 유형', sel.length === 0);
     // v40 — 인터넷·TV(유선)만 모아 보기 : 무선이 섞인 건도 유선이 있으면 포함
-    html += '<option value="' + WIRED_ALL_KEY + '">인터넷·TV 전체 (유선)</option>';
-    html += '<optgroup label="무선 개통">';
+    html += typeRow(WIRED_ALL_KEY, '인터넷·TV 전체 (유선)', sel.indexOf(WIRED_ALL_KEY) >= 0);
+    html += '<div class="tf-group">무선 개통</div>';
     for (i = 0; i < WIRELESS_TYPES.length; i++) {
-      html += '<option value="' + esc(WIRELESS_TYPES[i]) + '">' + esc(WIRELESS_TYPES[i]) + '</option>';
+      html += typeRow(WIRELESS_TYPES[i], WIRELESS_TYPES[i], sel.indexOf(WIRELESS_TYPES[i]) >= 0);
     }
-    html += '</optgroup><optgroup label="유선 (인터넷·TV)">';
+    html += '<div class="tf-group">유선 (인터넷·TV)</div>';
     for (i = 0; i < WIRED_TYPES.length; i++) {
-      html += '<option value="' + esc(WIRED_TYPES[i]) + '">' + esc(WIRED_TYPES[i]) + '</option>';
+      html += typeRow(WIRED_TYPES[i], WIRED_TYPES[i], sel.indexOf(WIRED_TYPES[i]) >= 0);
     }
-    html += '</optgroup>';
     if (legacy.length) {
-      html += '<optgroup label="예전 유형">';
-      for (i = 0; i < legacy.length; i++) html += '<option value="' + esc(legacy[i]) + '">' + esc(legacy[i]) + '</option>';
-      html += '</optgroup>';
+      html += '<div class="tf-group">예전 유형</div>';
+      for (i = 0; i < legacy.length; i++) {
+        html += typeRow(legacy[i], legacy[i], sel.indexOf(legacy[i]) >= 0);
+      }
     }
-    el.typeFilter.innerHTML = html;
-    el.typeFilter.value = state.filters.type;
-    // 고른 유형의 기록이 하나도 없으면 필터를 풀어 전체가 보이게
-    if (el.typeFilter.value !== (state.filters.type || '')) state.filters.type = '';
+    el.typeFilterList.innerHTML = html;
+    paintTypeFilter();
+  }
+
+  /* 버튼 라벨 — 1개면 그 이름, 여러 개면 `기기변경 외 2개`, 0개면 `전체 유형` */
+  function paintTypeFilter() {
+    var btn = el.typeFilter;
+    if (!btn) return;
+    var a = typeSel();
+    btn.textContent = typeFilterLabel();
+    btn.classList.toggle('on', a.length > 0);
+    btn.title = a.length
+      ? ('유형 ' + a.length + '개를 함께 보고 있습니다 — 눌러서 바꿉니다')
+      : '유형을 여러 개 함께 고를 수 있습니다';
+  }
+
+  var typeRenderTimer = null;
+  function scheduleTypeRender() {
+    if (typeRenderTimer) clearTimeout(typeRenderTimer);
+    typeRenderTimer = setTimeout(function () { typeRenderTimer = null; render(); }, 160);
+  }
+  function flushTypeRender() {
+    if (typeRenderTimer) { clearTimeout(typeRenderTimer); typeRenderTimer = null; }
+    render();
+  }
+
+  function typePanelOpen(open) {
+    var p = el.typeFilterPanel;
+    if (!p) return;
+    var wasOpen = !p.hidden;
+    p.hidden = !open;
+    if (el.typeFilter) el.typeFilter.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+      renderTypeFilter();
+    } else if (wasOpen) {
+      flushTypeRender();      // 여러 개 탭한 것을 닫을 때 한 번에 반영
+    }
   }
 
   function renderStaffFilter() {
@@ -13734,11 +13945,17 @@
     document.body.classList.toggle('view-compact', compact);
     document.body.classList.toggle('view-wide', !compact);
     /* v71 — 보이는 목록이 바뀌면(폰 카드 ↔ 표) 그 목록으로 다시 그린다.
-       이어 붙인 상태는 처음 500줄로 돌아간다(1만 줄을 다시 만드는 동안 멈추지 않게). */
+       v74 — 처음부터 보이는 목록 하나만 그리므로, 보기 방식이 바뀌면 **같은 창으로** 반드시 다시 그린다
+       (3,500줄을 넘게 펼쳤으면 처음으로 돌아가지 않고 보던 위치를 지킨다). */
     var mode = listModeNow();
     if (renderCtx && renderCtx.mode !== mode) {
       renderCtx.mode = mode;
-      if (renderCtx.rendered > TABLE_ROW_CAP) { renderLimit = TABLE_ROW_CAP; renderStart = 0; lastFilterSig = ''; renderTable(); }
+      /* v74 — 보던 위치(창의 첫 줄)는 지키되, 다시 그리는 양은 처음과 같은 3,500줄까지만
+         (4,500줄을 통째로 다시 만들면 폰이 잠깐 무거워진다). */
+      renderStart = renderCtx.start;
+      renderLimit = Math.min(renderCtx.rendered, renderStart + TABLE_ROW_CAP);
+      renderTable();
+      scrollToLedgerTop();
     }
     paintMore();   // v71 — 보이는 목록(표·폰 카드)에 맞춰 더 보기 막대 위치를 바꿈
     var b = el.viewToggle;
@@ -15404,6 +15621,7 @@
     state.filters.month = '';     // 가져온 데이터가 바로 보이도록 전체 기간으로
     state.filters.q = '';
     state.filters.type = '';
+    state.filters.types = [];
     persist();
     render();
     el.importDialog.close();
@@ -15599,10 +15817,38 @@
       renderEasyScope();
     });
 
-    // 유형 / 임박
-    el.typeFilter.addEventListener('change', function () {
-      state.filters.type = this.value;
-      render();
+    // 유형 (v74 — 여러 개를 탭하는 드롭다운) / 임박
+    if (el.typeFilter) {
+      el.typeFilter.addEventListener('click', function (e) {
+        e.stopPropagation();
+        typePanelOpen(el.typeFilterPanel ? el.typeFilterPanel.hidden : false);
+      });
+    }
+    if (el.typeFilterList) {
+      el.typeFilterList.addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('button[data-type]') : null;
+        if (!b) return;
+        e.stopPropagation();
+        var v = b.getAttribute('data-type') || '';
+        if (!v) { setTypeSel([]); typePanelOpen(false); return; }     // 전체 유형
+        var arr = typeSel().slice();
+        var at = arr.indexOf(v);
+        if (at >= 0) arr.splice(at, 1); else arr.push(v);
+        setTypeSel(arr);
+        renderTypeFilter();
+        scheduleTypeRender();
+      });
+    }
+    if ($('typeFilterDone')) {
+      $('typeFilterDone').addEventListener('click', function (e) { e.stopPropagation(); typePanelOpen(false); });
+    }
+    document.addEventListener('click', function (e) {
+      if (!el.typeFilterPanel || el.typeFilterPanel.hidden) return;
+      var w = $('typeFilterWrap');
+      if (w && !w.contains(e.target)) typePanelOpen(false);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && el.typeFilterPanel && !el.typeFilterPanel.hidden) typePanelOpen(false);
     });
     el.dueOnly.addEventListener('change', function () {
       state.filters.due = this.checked;
@@ -15655,7 +15901,7 @@
       }
     });
     el.resetFilters.addEventListener('click', function () {
-      state.filters = { q: '', month: currentMonth(), type: '', staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: currentMonth(), missing: false };
+      state.filters = { q: '', month: currentMonth(), type: '', types: [], staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: currentMonth(), missing: false };
       el.searchInput.value = '';
       el.clearSearch.classList.remove('show');
       render();
@@ -15831,12 +16077,15 @@
     // v40 — 전화번호는 복사 대신 `tel:` 링크로 바로 통화창을 띄운다 (표 · 폰 카드 · 임박 알림 공통)
     //   링크 자체의 onclick="event.stopPropagation()" 이 폰 카드 펼치기·임박 필터와의 클릭 충돌을 막는다
 
-    // KPI 칩 → 유형 필터
+    // KPI 칩 → 유형 필터 (v74 — 누를 때마다 그 유형을 함께 켜고 끈다)
     el.kpiBreakdown.addEventListener('click', function (e) {
       var b = e.target.closest ? e.target.closest('button[data-type]') : null;
       if (!b) return;
       var t = b.getAttribute('data-type');
-      state.filters.type = state.filters.type === t ? '' : t;
+      var arr = typeSel().slice();
+      var at = arr.indexOf(t);
+      if (at >= 0) arr.splice(at, 1); else arr.push(t);
+      setTypeSel(arr);
       render();
     });
 
@@ -15927,10 +16176,16 @@
       el.mlist.addEventListener('keydown', histKeyOpen);
     }
 
-    // v71 — [+500건 더 보기] — 다음 500줄만 아래에 이어 붙인다 (PC 표 아래 · 폰 카드 목록 아래)
+    // v71 — 더 보기 — 다음 줄만 아래에 이어 붙인다 (PC 표 아래 · 폰 카드 목록 아래)
+    // v74 — 한 칸 1,500줄 · 스크롤만 내리면 자동으로 잇는다
     if ($('morePcBtn')) $('morePcBtn').addEventListener('click', showMoreRows);
     if ($('moreMBtn')) $('moreMBtn').addEventListener('click', showMoreRows);
-    // v71 — 4,000줄을 넘어 위에서 걷어낸 줄을 다시 본다
+    if ($('morePcAuto')) $('morePcAuto').addEventListener('click', toggleAutoMore);
+    if ($('moreMAuto')) $('moreMAuto').addEventListener('click', toggleAutoMore);
+    window.addEventListener('scroll', onLedgerScroll, { passive: true });
+    var scBox = document.querySelector('.table-scroll');
+    if (scBox) scBox.addEventListener('scroll', onLedgerScroll, { passive: true });
+    // v71 — 4,500줄을 넘어 위에서 걷어낸 줄을 다시 본다
     if ($('moreTopBtn')) $('moreTopBtn').addEventListener('click', showPrevRows);
 
     // 보기 방식 토글
@@ -16424,6 +16679,7 @@
   function resetViewFilters() {
     state.filters.q = '';
     state.filters.type = '';
+    state.filters.types = [];
     state.filters.staff = '';
     state.filters.due = false;
     state.filters.dueMode = 'all';
@@ -16481,6 +16737,8 @@
       searchInput: $('searchInput'),
       clearSearch: $('clearSearch'),
       typeFilter: $('typeFilter'),
+      typeFilterList: $('typeFilterList'),
+      typeFilterPanel: $('typeFilterPanel'),
       dueOnly: $('dueOnly'),
       easyFilter: $('easyFilter'),
       easyFilterCount: $('easyFilterCount'),
