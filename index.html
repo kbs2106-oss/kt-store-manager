@@ -3746,7 +3746,8 @@
 
   // 공용 장부(구글 시트) 연동 설정 키
   var SYNC_KEY = 'kt_chilgeum_sync_v1';
-  var SYNC_TIMEOUT = 15000;
+  // v70 — 정산 이관으로 공용 장부 목록이 1만 건(약 5.3MB)이 되어, 서버 응답 4.9초 + 느린 회선을 감안해 30초로 늘렸다
+  var SYNC_TIMEOUT = 30000;
   // 목록 보기 방식(한눈에/넓게 · 간단히/자세히)
   var VIEW_KEY = 'kt_chilgeum_view_v1';
 
