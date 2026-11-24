@@ -2026,12 +2026,16 @@
   .pchip{height:28px;padding:0 10px;font-size:12px;font-weight:700;color:#334155;border-color:#CBD5E1}
   .pchip.on{background:#0B57D0;border-color:#0B57D0;color:#fff;font-weight:800}
   .none-chips .pchip.on{background:#0F172A;border-color:#0F172A;color:#fff}
-  .none-chips .pchip.on::before{content:"✓ ";font-weight:900}
   /* v67 — [미기입]·[미반납] 칩은 켜지면 ✓ 가 붙고 글자가 굵어져 폭이 12px 늘어난다.
      그 옆 금액칸이 같이 줄어 위·아래 칸과 끝선이 어긋나므로, 꺼진 상태에도 ✓ 자리와 굵기를 미리 잡아 둔다
-     (켜짐/꺼짐 어느 쪽이든 칩 폭·금액칸 폭이 똑같다) */
-  .none-chips .pchip{font-weight:800}
-  .none-chips .pchip::before{content:"✓ ";font-weight:900;opacity:0}
+     (켜짐/꺼짐 어느 쪽이든 칩 폭·금액칸 폭이 똑같다)
+     v69 — v67 은 앞에만 `✓ ` 자리를 잡아 두어 글자가 오른쪽으로 밀려 보였다.
+           앞뒤에 같은 폭의 투명 `✓ ` 자리를 하나씩 두어 꺼졌을 때 글자가 정중앙에 오고,
+           켜져서 `✓ 미기입` 이 되어도 칩 폭이 1px도 변하지 않는다 */
+  .none-chips .pchip{font-weight:800;text-align:center}
+  .none-chips .pchip::before{content:"✓\00a0";font-weight:900;visibility:hidden}
+  .none-chips .pchip.on::before{content:"✓\00a0";font-weight:900;visibility:visible}
+  .none-chips .pchip::after{content:"✓\00a0";font-weight:900;visibility:hidden}
   .addon-chip{height:27px;font-size:12px}
   .combo-chips .pchip{border-color:#E0BE79;background:#FFFBEF;color:#7A4A00}
   .combo-chips .pchip.on[data-used-combo="단독"]{background:#0F172A;border-color:#0F172A;color:#fff}
@@ -2232,6 +2236,28 @@
   .paycard-line .pc-chips[data-pc-kindgrp].bad{outline:2px solid #DC2626;outline-offset:3px;border-radius:10px}
   .paycard-line .pc-chips-row.bad,
   .paybank-done.bad{outline:2px solid #DC2626;outline-offset:3px;border-radius:12px}
+  /* ============================================================
+     v69 — `✓ 결제 완료` · `1일 입금` · `✓ 입금 완료` 를
+            `할부금`·`위약금`·`요금수납`·`1일 결제`(.pchip)와 똑같은 모양·글씨로 통일
+     (전에는 color slate-500 · 테두리 --line-strong · ✓/1 흐림 이라 혼자 연하게 죽어 보였다.
+      글자색·테두리·높이·패딩·글자 크기·굵기·둥근 모서리를 .pchip 과 같은 값으로 맞춘다.
+      눌렀을 때의 노랑(결제·입금 완료)·파랑(1일)은 그대로 — 그 규칙이 더 세므로 덮이지 않는다) */
+  .pc-done-row .paydone-chip,
+  .paybank-done .paydone-chip,
+  .paybank-done .pay1st-chip{
+    height:26px;padding:0 9px;font-size:12px;font-weight:800;border-radius:9px;
+    color:var(--slate-700);background:#fff;border:1px solid #CBD5E1;opacity:1;
+  }
+  .pc-done-row .paydone-chip .pd-tick,
+  .paybank-done .paydone-chip .pd-tick{font-weight:900;opacity:.85;color:inherit}
+  /* v69 — [1일 입금] 앞의 작은 `1` 은 바로 뒤 글자가 이미 `1일` 이라 겹쳐 보였다(1 1일 입금).
+     버튼 글자를 `1일 결제` 와 똑같이 `1일 입금` 으로 보이게 그 배지만 숨긴다(값·기능은 그대로) */
+  .paybank-done .pay1st-chip .pd-1st{display:none}
+  @media (max-width:560px){
+    .pc-done-row .paydone-chip,
+    .paybank-done .paydone-chip,
+    .paybank-done .pay1st-chip{height:24px;padding:0 7px;font-size:11.5px}
+  }
   @media (max-width:560px){
     .paybank-acct{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
     .paybank-acct #f_paybank_acct{grid-column:1/-1}
