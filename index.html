@@ -10498,31 +10498,69 @@
     return list;
   }
 
-  /* ---------------- v72 — 동일 명의·번호 고객 개통 이력 묶음 ----------------
-     · 고객명과 연락처가 **둘 다 있고 `*` 가림이 전혀 없는 실명 + 실번호**일 때만 같은 고객으로 본다.
-       ([정산이관] 자료의 `강민*` · `01024***587` 처럼 가려진 줄은 절대 묶지 않는다 — 다른 사람이 섞일 수 있다)
-     · 목록에서만 최신 1건을 대표로 남기고, 나머지는 `이력 +N건` 안에 최신순 연혁으로 붙인다.
-     · KPI(총 건수 · 직원별 실적 · 리베이트 · 오늘 개통 · 미기재 · 해지 알림)는 visibleRecords() 원본을 그대로 쓰므로
-       묶어도 5번 개통은 5건이다.
-     · 이력은 record 에 붙이지 않고 histById(대표 레코드 id → 이력 배열)에 따로 둔다 —
-       record 에 __hist 를 붙이면 수정 창을 닫을 때 그대로 저장돼 시트까지 나간다. */
+  /* ---------------- v72 → v73 — 같은 번호 고객 개통 이력 묶음 ----------------
+     v72 는 이름·번호가 둘 다 `*` 없는 실명+실번호만 묶어서, [정산이관] 자료 9,554건이 `강민*` 처럼
+     이름만 가려져 있어 10,090건 중 1건만 묶였다. 사장님: "기존 꺼도 묶어줘야징"
+
+     v73 규칙
+       · 번호 — `연락처` 에 `*` 가 없고 숫자가 9자리 이상(010·043·02…)이면 후보.
+         번호가 가려졌거나(`01024***587`) 비었으면 **절대 묶지 않는다** (다른 사람이 섞인다)
+       · 이름 — 같은 온전한 번호 안에서만 맞춘다
+           1) 이름이 똑같으면 같은 고객 (`강민*` = `강민*`)
+           2) 한쪽 실명 · 다른 쪽 `*` 가림이면 가림 위치의 글자가 같을 때 같은 고객
+              (`이석*` ↔ `이석구`, `FAYYAZ MUH*****` ↔ `FAYYAZ MUHAMMAD`)
+           3) 이름이 아예 다르면(가족이 같은 번호를 쓴 `홍길동` vs `김영희`) 따로 둔다
+              — 가림 이름이 실명 후보 2명 이상에 걸리면 어느 쪽인지 알 수 없으니 섞지 않는다
+       · 목록에서만 최신 1건을 대표로 남기고, 나머지는 `이력 +N건` 안에 최신순 연혁으로 붙인다.
+       · KPI(총 건수 · 직원별 실적 · 리베이트 · 오늘 개통 · 미기재 · 해지 알림)는 visibleRecords() 원본을 그대로 쓰므로
+         묶어도 5번 개통은 5건이다.
+       · 이력은 record 에 붙이지 않고 histById(대표 레코드 id → 이력 배열)에 따로 둔다 —
+         record 에 __hist 를 붙이면 수정 창을 닫을 때 그대로 저장돼 시트까지 나간다.
+       · 1만 건에서도 몇 ms — `번호 → 이름 → 고객` 두 단계 맵으로 한 번만 훑는다(O(N)). */
   var histById = Object.create(null);        // 대표 줄 id → [최신, …, 가장 오래된]
   var histRepByKey = Object.create(null);    // 고객키(이름|번호) → 대표 줄 id
+  var custKeyById = Object.create(null);     // record id → 고객키 (가림 이름을 실명으로 합친 뒤의 키)
   var expandedCustomerKeys = new Set();      // 펼쳐 둔 연혁(화면을 다시 그려도 유지)
 
   function digitsOnly(v) { return String(v == null ? '' : v).replace(/[^0-9]/g, ''); }
   function hasMask(v) { return String(v == null ? '' : v).indexOf('*') >= 0; }
+  function nameNorm(v) { return String(v == null ? '' : v).replace(/\s+/g, ' ').trim(); }
 
-  /* 같은 고객으로 묶어도 되는 줄인가 — 실명(가림 없음) + 실번호(가림 없음·숫자 있음) */
+  /* 묶음 후보인 줄의 기본키(자기 이름|온전한 숫자) — 후보가 아니면 null
+     · 연락처에 `*` 가 있거나 숫자 9자리 미만이면 null (가려진 번호는 절대 안 묶는다)
+     · 이름은 가려져 있어도 된다(v73) — 같은 번호 안에서만 맞추기 때문 */
+  function customerBaseKey(r) {
+    if (!r) return null;
+    var n = nameNorm(r.고객명);
+    var p = String(r.연락처 == null ? '' : r.연락처).trim();
+    if (!n || !p || hasMask(p)) return null;
+    var d = digitsOnly(p);
+    if (d.length < 9) return null;
+    return n + '|' + d;
+  }
+
+  /* 고객키 — 묶음 계산 뒤에는 합쳐진 대표 이름 기준 키, 아니면 자기 이름 기준 키 */
   function customerKeyOf(r) {
     if (!r) return null;
-    var n = String(r.고객명 == null ? '' : r.고객명).trim();
-    var p = String(r.연락처 == null ? '' : r.연락처).trim();
-    if (!n || !p) return null;
-    if (hasMask(n) || hasMask(p)) return null;
-    var d = digitsOnly(p);
-    if (!d) return null;
-    return n + '|' + d;
+    return custKeyById[r.id] || customerBaseKey(r);
+  }
+
+  /* 가림 이름 m 이 실명 real 의 가림본인가
+     · 길이가 같으면 `*` 가 아닌 자리마다 글자가 같아야 한다 (`이석*` ↔ `이석구`)
+     · 길이가 다르면 첫 `*` 앞부분이 2글자 이상이고 실명이 그걸로 시작해야 한다 (`이석*…` ↔ `이석구`) */
+  function maskedNameMatches(m, real) {
+    if (!m || !real || m.indexOf('*') < 0) return false;
+    var i, ch;
+    if (m.length === real.length) {
+      for (i = 0; i < m.length; i++) {
+        ch = m.charAt(i);
+        if (ch !== '*' && ch !== real.charAt(i)) return false;
+      }
+      return true;
+    }
+    var p = m.split('*')[0];
+    if (p.length < 2) return false;
+    return real.slice(0, p.length) === p;
   }
 
   /* 지금 목록이 '전체 기간' 이거나 검색어로 전체 기간을 훑는 중인가
@@ -10540,30 +10578,91 @@
     return String(a.createdAt || a.수정일시 || '') > String(b.createdAt || b.수정일시 || '');
   }
 
-  /* 목록(정렬된 원본) → 대표 줄 배열. 같은 고객이 2건 이상일 때만 묶는다. */
+  /* 목록(정렬된 원본) → 대표 줄 배열. 같은 고객이 2건 이상일 때만 묶는다.
+     O(N) — ① 온전한 번호별로 모으고 ② 번호 그룹 안에서 이름을 맞춰 고객키를 정한다.
+     이름 비교는 번호 그룹 안에서만 하므로 1만 건에서도 그룹이 작아 빠르다. */
   function groupCustomerRows(list) {
     histById = Object.create(null);
     histRepByKey = Object.create(null);
+    custKeyById = Object.create(null);
     if (!list.length) return list;
-    var map = Object.create(null), keys = [], groups = Object.create(null);
-    var i, r, k, multi = 0;
+    var i, j, r, nm, m, k, p, cands, hit;
+
+    /* ① 온전한 번호별 묶음 — 후보가 아닌 줄(가린 번호·번호 없음)은 여기 안 들어온다 */
+    var byTel = Object.create(null), telOrder = [];
     for (i = 0; i < list.length; i++) {
       r = list[i];
-      k = customerKeyOf(r);
-      if (!k) continue;
-      if (!map[k]) { map[k] = []; keys.push(k); }
-      map[k].push(r);
+      var base = customerBaseKey(r);
+      if (!base) continue;
+      var d = base.slice(base.lastIndexOf('|') + 1);
+      if (!byTel[d]) { byTel[d] = []; telOrder.push(d); }
+      byTel[d].push(r);
     }
-    for (i = 0; i < keys.length; i++) {
-      k = keys[i];
-      if (map[k].length > 1) { groups[k] = map[k]; multi++; }
+
+    /* ② 번호 그룹 안에서 이름 → 고객키 (실명에 붙는 가림 이름은 실명 키로) */
+    var groups = Object.create(null), multi = 0, groupOrder = [];
+    for (i = 0; i < telOrder.length; i++) {
+      var d2 = telOrder[i], rows = byTel[d2];
+      if (rows.length < 2) {                    // 한 건뿐이면 맞출 상대가 없다
+        custKeyById[rows[0].id] = customerBaseKey(rows[0]);
+        continue;
+      }
+      var nameRecs = Object.create(null), nameOrder = [], realByFirst2 = Object.create(null);
+      for (j = 0; j < rows.length; j++) {
+        r = rows[j];
+        nm = nameNorm(r.고객명);
+        if (!nameRecs[nm]) { nameRecs[nm] = []; nameOrder.push(nm); }
+        nameRecs[nm].push(r);
+      }
+      for (j = 0; j < nameOrder.length; j++) {
+        nm = nameOrder[j];
+        if (nm.indexOf('*') >= 0 || nm.length < 2) continue;
+        var p2 = nm.slice(0, 2);
+        if (!realByFirst2[p2]) realByFirst2[p2] = [];
+        realByFirst2[p2].push(nm);
+      }
+      for (j = 0; j < nameOrder.length; j++) {
+        m = nameOrder[j];
+        if (m.indexOf('*') < 0) continue;
+        p = m.split('*')[0];
+        k = m;                                   // 짝을 못 찾으면 가림 이름 그대로 한 고객
+        if (p.length >= 2) {
+          cands = realByFirst2[p.slice(0, 2)] || [];
+          hit = [];
+          for (var c = 0; c < cands.length; c++) {
+            if (maskedNameMatches(m, cands[c])) hit.push(cands[c]);
+          }
+          if (hit.length === 1) k = hit[0];      // 실명 후보가 딱 1명일 때만 합친다
+        }
+        k = k + '|' + d2;
+        if (!groups[k]) { groups[k] = []; groupOrder.push(k); }
+        for (var q = 0; q < nameRecs[m].length; q++) {
+          custKeyById[nameRecs[m][q].id] = k;
+          groups[k].push(nameRecs[m][q]);
+        }
+      }
+      /* 실명은 자기 이름이 곧 고객키 — 위에서 가림 이름이 붙인 건까지 같이 모인다 */
+      for (j = 0; j < nameOrder.length; j++) {
+        nm = nameOrder[j];
+        if (nm.indexOf('*') >= 0) continue;
+        k = nm + '|' + d2;
+        if (!groups[k]) { groups[k] = []; groupOrder.push(k); }
+        for (var z = 0; z < nameRecs[nm].length; z++) {
+          custKeyById[nameRecs[nm][z].id] = k;
+          groups[k].push(nameRecs[nm][z]);
+        }
+      }
+    }
+
+    for (i = 0; i < groupOrder.length; i++) {
+      if (groups[groupOrder[i]].length > 1) multi++;
     }
     if (!multi) return list;          // 묶을 게 없으면 원본 그대로(이력 버튼도 0개)
     var out = [], emitted = Object.create(null), hist;
     for (i = 0; i < list.length; i++) {
       r = list[i];
-      k = customerKeyOf(r);
-      if (!k || !groups[k]) { out.push(r); continue; }
+      k = custKeyById[r.id];
+      if (!k || !groups[k] || groups[k].length < 2) { out.push(r); continue; }
       if (emitted[k]) continue;        // 같은 고객의 예전 건은 대표 줄 안으로 들어간다
       emitted[k] = 1;
       hist = groups[k].slice().sort(function (a, b) {
@@ -12945,7 +13044,7 @@
        · 특정 1개월 보기에서는 그 달 건을 그대로 모두 보여 준다
        · KPI·집계·내보내기는 visibleRecords() 원본을 쓰므로 묶어도 5번 개통 = 5건 */
     var allRows = groupingScopeOn() ? groupCustomerRows(rawRows) : rawRows;
-    if (!groupingScopeOn()) { histById = Object.create(null); histRepByKey = Object.create(null); }
+    if (!groupingScopeOn()) { histById = Object.create(null); histRepByKey = Object.create(null); custKeyById = Object.create(null); }
     var mergedAway = rawRows.length - allRows.length;
     var totalRows = allRows.length;
     /* 건수가 적은 달을 보다가 기록이 늘어도 덜 그리지 않도록, 상한은 500 아래로 내려가지 않는다 */
