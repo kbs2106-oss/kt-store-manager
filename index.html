@@ -1081,6 +1081,9 @@
   .paycard-line .pc-del{height:26px;width:26px;padding:0;font-size:14px;font-weight:900;line-height:1;
     color:#B42318;border-color:#F1C2BD;background:#FEF3F2;flex:none}
   .paycard-line .pc-del[hidden]{display:none}
+  /* v67 — 2줄째부터의 `[미기입]` 자리표시: 1줄째 칩과 똑같은 폭을 차지하되 보이지도 눌리지도 않는다
+     (그래서 모든 줄의 금액칸 왼쪽·오른쪽 좌표가 1px까지 같다) */
+  .paycard-line .pc-none-spacer{visibility:hidden;pointer-events:none}
   .paycard-line.none-on{opacity:.55}
   .paycard-line .pc-no{font-size:11px;font-weight:800;color:var(--slate-400);min-width:0}
   .paycard-field .pc-total{font-weight:800;color:var(--blue-700)}
@@ -2024,6 +2027,11 @@
   .pchip.on{background:#0B57D0;border-color:#0B57D0;color:#fff;font-weight:800}
   .none-chips .pchip.on{background:#0F172A;border-color:#0F172A;color:#fff}
   .none-chips .pchip.on::before{content:"✓ ";font-weight:900}
+  /* v67 — [미기입]·[미반납] 칩은 켜지면 ✓ 가 붙고 글자가 굵어져 폭이 12px 늘어난다.
+     그 옆 금액칸이 같이 줄어 위·아래 칸과 끝선이 어긋나므로, 꺼진 상태에도 ✓ 자리와 굵기를 미리 잡아 둔다
+     (켜짐/꺼짐 어느 쪽이든 칩 폭·금액칸 폭이 똑같다) */
+  .none-chips .pchip{font-weight:800}
+  .none-chips .pchip::before{content:"✓ ";font-weight:900;opacity:0}
   .addon-chip{height:27px;font-size:12px}
   .combo-chips .pchip{border-color:#E0BE79;background:#FFFBEF;color:#7A4A00}
   .combo-chips .pchip.on[data-used-combo="단독"]{background:#0F172A;border-color:#0F172A;color:#fff}
@@ -3176,6 +3184,7 @@
               <div class="paycard-lines" id="paycardLines">
                 <div class="paycard-line" id="paycardRow" data-pc-row="1">
                   <!-- 1단 — 금액 · [미기입](1줄째만) -->
+                  <!-- v67 — 2줄째부터는 pcAddRow 가 이 [미기입] 자리에 같은 폭의 투명 스페이서(.pc-none-spacer)를 넣는다 -->
                   <div class="pay-row pc-top">
                     <input id="f_paycard" class="money pc-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0">
                     <input id="f_paycard_none" type="hidden" value="">
@@ -4467,6 +4476,10 @@
     line.innerHTML =
       '<div class="pay-row pc-top">' +
         '<input class="money pc-amt" type="text" inputmode="numeric" autocomplete="off" placeholder="0" aria-label="페이백 카드결제 금액 ' + n + '">' +
+        /* v67 — 1줄째의 [미기입] 자리를 그대로 비워 두어(투명 스페이서) `.pc-amt` 가로 폭이 모든 줄에서 같다 */
+        '<div class="period-chips none-chips pc-none-spacer" aria-hidden="true">' +
+          '<button type="button" class="pchip" tabindex="-1">미기입</button>' +
+        '</div>' +
       '</div>' +
       '<div class="pc-chips-row">' +
         '<div class="pc-tags">' + pcChipsHtml() + '</div>' +
