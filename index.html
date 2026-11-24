@@ -1463,6 +1463,27 @@
   .view-wide table.ledger td{padding:13px 14px}
   .view-wide table.ledger td{border-bottom:1px solid #E3EAF3}
 
+  /* v71 — [+500건 더 보기] 막대 (PC 표 아래 · 폰 카드 목록 아래)
+     · 누르면 다음 500줄을 아래에 이어 붙이기만 한다(전체를 다시 그리지 않아 빠르다)
+     · 스크롤은 건드리지 않아 화면이 튀지 않는다 */
+  .more-bar{display:flex;align-items:center;justify-content:center;gap:8px 12px;flex-wrap:wrap;
+    padding:13px 16px 15px;border-top:1px solid var(--line);background:#FBFDFF}
+  .more-bar[hidden]{display:none !important}
+  .more-top{display:flex;align-items:center;justify-content:center;gap:8px 12px;flex-wrap:wrap;
+    padding:10px 16px;border-bottom:1px solid var(--line);background:#F5F9FF}
+  .more-top[hidden]{display:none !important}
+  .more-top .more-count{font-size:12px;font-weight:700;color:#64748B}
+  .more-top .more-btn{min-height:32px;padding:0 12px;font-size:12.5px;font-weight:800;border-radius:9px;
+    background:#fff;border:1px solid #BBD7FB;color:var(--blue-800)}
+  .more-bar .more-count{font-size:12.5px;font-weight:700;color:#64748B;font-variant-numeric:tabular-nums}
+  .more-bar .more-btn{min-height:40px;padding:0 18px;font-weight:800;border-radius:11px;
+    background:#fff;border:1px solid #BBD7FB;color:var(--blue-800);box-shadow:0 1px 2px rgba(15,23,42,.05)}
+  .more-bar .more-btn:active{background:#EEF3F9}
+  @media (max-width:560px){
+    .more-bar{flex-direction:column;gap:7px}
+    .more-bar .more-btn{width:100%;min-height:44px;font-size:14px}
+  }
+
   /* 모바일 간단히 보기 카드 */
   .mlist{display:none}
   .mgroup-head{display:flex;align-items:center;gap:6px 8px;flex-wrap:wrap;padding:14px 16px 7px;font-size:12px;font-weight:800;color:var(--blue-800)}
@@ -2858,6 +2879,11 @@
   </section>
 
   <section class="card table-card">
+    <!-- v71 — 4,000줄을 넘어 위에서 걷어낸 줄이 있을 때만 보인다 -->
+    <div class="more-top" id="moreTop" hidden>
+      <span class="more-count" id="moreTopCount"></span>
+      <button type="button" class="more-btn" id="moreTopBtn">▲ 500줄 위로</button>
+    </div>
     <div class="table-scroll">
       <table class="ledger" id="ledger">
         <thead>
@@ -2887,7 +2913,17 @@
         <tbody id="tbody"></tbody>
       </table>
     </div>
+    <!-- v71 — 500건씩 이어서 보기 (PC 표 아래) -->
+    <div class="more-bar" id="morePc" hidden>
+      <span class="more-count" id="morePcCount"></span>
+      <button type="button" class="btn more-btn" id="morePcBtn">+500건 더 보기</button>
+    </div>
     <div class="mlist" id="mlist"></div>
+    <!-- v71 — 500건씩 이어서 보기 (폰 카드 목록 아래) -->
+    <div class="more-bar more-bar-m" id="moreM" hidden>
+      <span class="more-count" id="moreMCount"></span>
+      <button type="button" class="btn more-btn" id="moreMBtn">+500건 더 보기</button>
+    </div>
     <div class="empty" id="emptyState" hidden></div>
   </section>
 
@@ -6112,6 +6148,149 @@
   }
 
   /* =========================================================
+     v71 — IndexedDB 대용량 캐시 ('kt-ledger-archive')
+     ---------------------------------------------------------
+     · 왜: 정산 이관으로 공용 장부가 1만 건(약 5.3MB)이 되면서 localStorage(약 5MB)에는
+       이관 건을 담을 수 없어(v70) 앱을 열 때마다 서버 응답(4~5초)을 기다려야 했다.
+     · IndexedDB 는 한도가 훨씬 커서 `records` 전체(이관 건 포함)와 `lastSync` 를 그대로 저장한다.
+       앱을 켜면 이 캐시를 **곧바로** 화면에 올리고(서버 응답 전), 최신 목록은 뒤에서 조용히 맞춘다.
+     · localStorage 에는 예전처럼 **비이관 건만** 남긴다(persist) — 하위 호환·백업 그대로.
+     · 캐시가 없거나(첫 실행) 브라우저가 IndexedDB 를 막았으면(시크릿) 예전처럼 서버에서 받는다.
+     ========================================================= */
+  var IDB_NAME = 'kt-ledger-archive';
+  var IDB_VER = 1;
+  var IDB_STORE = 'sync';
+  var IDB_KEY = 'ledger';
+  var idbPromise = null;
+  var idbWriteTimer = null;
+
+  function idbOpen() {
+    if (idbPromise) return idbPromise;
+    idbPromise = new Promise(function (resolve) {
+      if (typeof indexedDB === 'undefined' || !indexedDB) { resolve(null); return; }
+      var req = null;
+      try { req = indexedDB.open(IDB_NAME, IDB_VER); } catch (e) { resolve(null); return; }
+      if (!req) { resolve(null); return; }
+      req.onupgradeneeded = function () {
+        try {
+          var db = req.result;
+          if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+        } catch (e) {}
+      };
+      req.onsuccess = function () {
+        var db = req.result;
+        // 다른 탭이 새 버전을 열면 이 연결은 닫아 준다(막히지 않게)
+        try { db.onversionchange = function () { try { db.close(); } catch (e) {} idbPromise = null; }; } catch (e) {}
+        resolve(db);
+      };
+      req.onerror = function () { resolve(null); };
+      req.onblocked = function () { resolve(null); };
+    });
+    return idbPromise;
+  }
+
+  function idbRun(mode, work) {
+    return idbOpen().then(function (db) {
+      return new Promise(function (resolve) {
+        if (!db) { resolve(null); return; }
+        var tx = null;
+        try { tx = db.transaction(IDB_STORE, mode); } catch (e) { resolve(null); return; }
+        var store = tx.objectStore(IDB_STORE);
+        var req = null;
+        try { req = work(store); } catch (e) { resolve(null); return; }
+        if (req) {
+          req.onsuccess = function () { resolve(req.result == null ? null : req.result); };
+          req.onerror = function () { resolve(null); };
+        } else {
+          tx.oncomplete = function () { resolve(true); };
+          tx.onerror = function () { resolve(null); };
+        }
+      });
+    }).catch(function () { return null; });
+  }
+
+  function idbGet(key) { return idbRun('readonly', function (st) { return st.get(key); }); }
+  function idbPut(key, val) { return idbRun('readwrite', function (st) { st.put(val, key); return null; }); }
+  function idbDel(key) { return idbRun('readwrite', function (st) { st.delete(key); return null; }); }
+
+  /* 캐시 읽기 — 저장해 둔 공용 장부 본(records) + 마지막 동기화 시각 */
+  function archiveCacheRead() {
+    return idbGet(IDB_KEY).then(function (row) {
+      if (!row || !Array.isArray(row.records) || !row.records.length) return null;
+      var out = [];
+      for (var i = 0; i < row.records.length; i++) out.push(normalizeRecord(row.records[i]));
+      return { records: out, lastSync: Number(row.lastSync || 0), savedAt: Number(row.savedAt || 0) };
+    }).catch(function () { return null; });
+  }
+
+  /* 캐시 쓰기 — 동기화가 끝나면 화면의 records 전체(이관 건 포함)를 그대로 담는다
+     · 1만 건 structured clone 은 가볍지 않아, **한가할 때(requestIdleCallback)** 한 번만 쓴다.
+     · 사장님이 목록을 길게 펼치는 중(1,000줄 초과)에는 미루고, 잠시 뒤 다시 시도한다. */
+  function archiveCacheWriteSoon(delay) {
+    if (!syncOn()) return;
+    if (idbWriteTimer) clearTimeout(idbWriteTimer);
+    idbWriteTimer = setTimeout(function () {
+      idbWriteTimer = null;
+      if (!syncOn() || blockedStored()) return;
+      if (moreDepth() > 1000) { archiveCacheWriteSoon(4000); return; }
+      var write = function () {
+        if (!syncOn() || blockedStored()) return;
+        idbPut(IDB_KEY, { records: state.records.slice(0), lastSync: Number(sync.lastSync || 0), savedAt: Date.now() });
+      };
+      if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(write, { timeout: 4000 });
+      } else {
+        setTimeout(write, 600);
+      }
+    }, (delay == null ? 800 : delay));
+  }
+
+  /* 지금 화면에 그려 둔 줄 수 (더 보기로 펼친 깊이) */
+  function moreDepth() {
+    return (renderCtx && renderCtx.rendered) ? renderCtx.rendered : 0;
+  }
+
+  function archiveCacheClear() {
+    if (idbWriteTimer) { clearTimeout(idbWriteTimer); idbWriteTimer = null; }
+    idbDel(IDB_KEY);
+  }
+
+  /* 이 기기(localStorage)에 있는 최신 기록을 캐시 위에 덮는다 — 아직 못 올린 수정이 사라지지 않게 */
+  function mergeCacheWithLocal(cached) {
+    var map = {}, i, r, c;
+    for (i = 0; i < cached.length; i++) if (cached[i] && cached[i].id) map[cached[i].id] = cached[i];
+    var local = loadRecords();
+    for (i = 0; i < local.length; i++) {
+      r = local[i];
+      if (!r || !r.id) continue;
+      c = map[r.id];
+      if (!c || String(r.수정일시 || '') > String(c.수정일시 || '')) map[r.id] = r;
+    }
+    var out = [];
+    for (var id in map) if (map.hasOwnProperty(id)) out.push(map[id]);
+    return out;
+  }
+
+  /* 앱을 켘 때 — 서버 응답을 기다리지 않고 캐시로 먼저 화면을 채운다 */
+  function restoreArchiveCache() {
+    if (!syncOn() || blockedStored()) return Promise.resolve(false);
+    return archiveCacheRead().then(function (c) {
+      if (!c) return false;
+      var merged = mergeCacheWithLocal(c.records);
+      if (merged.length < state.records.length) return false;   // 캐시가 더 오래된 것 같으면 그대로 둔다
+      state.records = merged;
+      if (c.lastSync && c.lastSync > Number(sync.lastSync || 0)) {
+        sync.lastSync = c.lastSync;
+        saveSync();
+      }
+      renderLimit = TABLE_ROW_CAP;
+      renderStart = 0;
+      render();
+      return true;
+    }).catch(function () { return false; });
+  }
+
+  /* =========================================================
      공용 장부(Google 시트) 연동
      ---------------------------------------------------------
      · 설정 : 더보기 → 공용 장부 연동 (주소 · 매장 PIN · 내 이름)
@@ -6233,6 +6412,7 @@
     state.editingId = null;
     sync.pending = [];
     saveSync();
+    archiveCacheClear();   // v71 — 차단된 기기에 캐시가 남아 새로고침으로 보이지 않게
     try {
       localStorage.setItem(BLOCK_KEY, JSON.stringify({
         at: new Date().toISOString(),
@@ -6319,7 +6499,7 @@
     if (btn) { btn.disabled = true; btn.textContent = '확인 중…'; }
     function done() { if (btn) { btn.disabled = false; btn.textContent = '다시 확인'; } }
     if (!syncOn()) { done(); toast('공용 장부 연동 설정이 없습니다. 사장님께 문의해 주세요.', true); return; }
-    runSync({ quiet: true, quietFail: true }).then(function (ok) {
+    runSync({ quiet: true, quietFail: true, force: true }).then(function (ok) {
       done();
       if (ok && !pendingStored()) { showPending(false); toast('승인되었습니다. 장부를 엽니다.'); location.reload(); }
       else toast('아직 사장님 승인을 기다리는 중입니다.', true);
@@ -6942,10 +7122,19 @@
     });
   }
 
+  /* v71 — 같은 목록을 동시에 두 번 받지 않는다(in-flight 락)
+     · 포커스 복귀·동기화 버튼·수정 직후 동기화가 겹치면 5MB짜리 응답이 두 번 오갔다.
+     · 주소·PIN 이 같은 요청만 잠그고 재사용한다(연동 설정의 '연결 확인'은 다른 주소일 수 있다). */
+  var pullInFlight = null, pullInFlightKey = '';
+
   function pullList(base, pin) {
+    var targetBase = base || sync.url;
+    var targetPin = (pin == null ? sync.pin : pin);
+    var lockKey = String(targetBase) + '|' + String(targetPin);
+    if (pullInFlight && pullInFlightKey === lockKey) return pullInFlight;
     var info = deviceInfo();
-    var target = buildUrl(base || sync.url, {
-      pin: (pin == null ? sync.pin : pin),
+    var target = buildUrl(targetBase, {
+      pin: targetPin,
       action: 'list',
       t: String(Date.now()),
       deviceId: info.deviceId,
@@ -6953,7 +7142,7 @@
       name: info.name,
       ua: info.ua
     });
-    return fetchJson(target, { method: 'GET', cache: 'no-store', redirect: 'follow' })
+    var job = fetchJson(target, { method: 'GET', cache: 'no-store', redirect: 'follow' })
       .catch(function () { return jsonpGet(target); })
       .then(function (data) {
         if (data && data.blocked) { onBlocked(data); throw blockedError(); }
@@ -6970,6 +7159,11 @@
         if (cfg) adoptRoster(cfg);
         return keep.map(normalizeRecord);
       });
+    pullInFlight = job;
+    pullInFlightKey = lockKey;
+    var clear = function () { if (pullInFlight === job) { pullInFlight = null; pullInFlightKey = ''; } };
+    job.then(clear, clear);
+    return job;
   }
 
   // 시트로 보낼 레코드 — 단말보험은 메모 표기로 옮겨 담는다 (Code.gs 20컴럼 그대로 씀)
@@ -7119,14 +7313,23 @@
     var out = [];
     for (id in map) if (map.hasOwnProperty(id)) out.push(map[id]);
     state.records = out;
+    renderLimit = TABLE_ROW_CAP;   // v71 — 목록이 통째로 바뀌면 500줄부터 (수천 줄 다시 그리기 방지)
+    renderStart = 0;
     persist();
     render();
   }
+
+  /* v71 — 같은 전체 목록을 60초 안에 두 번 받지 않는다
+     · 목록이 1만 건(약 5.3MB · 서버 응답 4~5초)이라 창을 여닫거나 저장할 때마다 전체를 다시 받으면
+       트래픽과 체감 속도가 모두 나빠진다. 최근에 받은 목록이 있으면 **내 저장(upsert·delete)만 올리고**
+       전체 목록은 건너뛴다. 60초가 지났거나, 사용자가 직접 누른 경우(force)에는 바로 받는다. */
+  var SYNC_MIN_GAP = 60000;
 
   function runSync(opts) {
     var o = opts || {};
     if (!syncOn()) { renderSyncUi(); return Promise.resolve(false); }
     if (syncing) return Promise.resolve(false);
+    var fresh = !!o.force || !sync.lastSync || (Date.now() - Number(sync.lastSync || 0)) >= SYNC_MIN_GAP;
     syncing = true;
     renderSyncUi();
     var pushErr = null;
@@ -7143,22 +7346,38 @@
         pushErr = err;
         return null;
       })
-      .then(function () { return pullList(); })
-      .then(function (list) {
-        applyServerList(list);
-        sync.lastSync = Date.now();
-        sync.lastError = pushErr ? errText(pushErr) : '';
-        saveSync();
-        syncing = false;
-        // v32 — 승인이 떨어졌으면 대기 화면을 내린다
-        if (pendingStored()) clearPending();
-        renderSyncUi();
-        if (sync.lastError) {
-          if (!o.quietFail) toast('동기화 실패 · ' + sync.lastError + ' · 서버 목록은 새로 받았습니다', true);
-        } else if (!o.quiet) {
-          toast('공용 장부와 동기화했습니다.');
+      .then(function () {
+        /* v71 — 방금 받은 목록이 있으면 전체 조회는 건너뛴다 (올린 기록은 이 기기에 이미 반영돼 있다) */
+        if (!fresh) {
+          sync.lastError = pushErr ? errText(pushErr) : '';
+          saveSync();
+          syncing = false;
+          renderSyncUi();
+          if (sync.lastError) {
+            if (!o.quietFail) toast('동기화 실패 · ' + sync.lastError + ' · 이 기기에는 저장돼 있습니다', true);
+          } else if (!o.quiet) {
+            toast('공용 장부에 저장했습니다.');
+          }
+          return true;
         }
-        return true;
+        return pullList()
+          .then(function (list) {
+            applyServerList(list);
+            sync.lastSync = Date.now();
+            sync.lastError = pushErr ? errText(pushErr) : '';
+            saveSync();
+            archiveCacheWriteSoon();   // v71 — 서버 응답 전에 뜨도록 이 기기에 통째로 담아 둔다
+            syncing = false;
+            // v32 — 승인이 떨어졌으면 대기 화면을 내린다
+            if (pendingStored()) clearPending();
+            renderSyncUi();
+            if (sync.lastError) {
+              if (!o.quietFail) toast('동기화 실패 · ' + sync.lastError + ' · 서버 목록은 새로 받았습니다', true);
+            } else if (!o.quiet) {
+              toast('공용 장부와 동기화했습니다.');
+            }
+            return true;
+          });
       })
       .catch(function (err) {
         sync.lastError = errText(err);
@@ -7204,6 +7423,7 @@
         sync.lastSync = Date.now();
         sync.lastError = '';
         saveSync();
+        archiveCacheWriteSoon();
         renderSyncUi();
         toast('서버 기준으로 ' + list.length + '건을 다시 받았습니다.');
       }).catch(function (err) {
@@ -7939,10 +8159,21 @@
     return fallback;
   }
 
+  /* v71 — 같은 요금제 글자의 월정액을 매번 다시 찾지 않는다 (1만 건에서 반복이 매우 많다)
+     · KT_PLANS 는 코드에 고정된 표라 결과가 바뀌지 않는다 → 글자별로 한 번만 계산한다. */
+  var planMonthlyMemo = {};
+
   // 요금제 문자열 → 월정액(원). 무선부가 있으면 무선부만 본다.
   function planMonthly(text) {
     var s = String(text == null ? '' : text);
     if (!s) return 0;
+    if (planMonthlyMemo.hasOwnProperty(s)) return planMonthlyMemo[s];
+    var v = planMonthlyRaw(s);
+    if (Object.keys(planMonthlyMemo).length < 20000) planMonthlyMemo[s] = v;
+    return v;
+  }
+
+  function planMonthlyRaw(s) {
     var parts = splitPlanValue(s);
     var t = (parts.w || '').trim();
     if (!t) t = s.replace(/^[^/]*\/\s*/, '');
@@ -8079,8 +8310,14 @@
      · 한 건에 무선+유선이 같이 적혀 있으면 calcPoints 안에서 이미 계산되므로 짝에서 뺀다
      ========================================================= */
   var mplusCache = null;
+  /* v71 — 정책 자동 리베이트 계산 결과를 한 번의 그리기 안에서 재사용한다
+     · 1만 건에서 상단 KPI · 요약 · 표 · 폰 카드가 같은 건의 정책을 여러 번 계산해
+       '전체 기간'을 여는 데 4초 넘게 걸렸다(계산 결과는 같다).
+     · 기록이 바뀌면 invalidateMplus() 가 비우고, 건너편에 들어 있는 객체가 바뀌었으면(수정 저장)
+       rec 신원이 달라 캐시를 안 쓴다 — 저장값은 항상 새로 계산한다. */
+  var rebateViewCache = {};
 
-  function invalidateMplus() { mplusCache = null; }
+  function invalidateMplus() { mplusCache = null; rebateViewCache = {}; }
 
   function pairKeyOf(r) {
     var name = String((r && r.고객명) || '').replace(/\s/g, '');
@@ -8118,14 +8355,27 @@
       if (slots.w && !slots.l) wires.push(r);
       else if (slots.l && !slots.w) wireds.push(r);
     }
+    /* v71 — 같은 고객 키로 미리 묶어 둔다
+       · 전에는 무선 건마다 유선 건 전체(1천 건)를 훑어 1만 건에서 1초 넘게 걸렸다.
+       · 묶음 안의 순서는 원래 목록 순서 그대로라 결과(가장 이른 날짜의 안 쓴 유선 건)는 같다. */
+    var wkey = [], byKey = {}, k;
+    for (j = 0; j < wireds.length; j++) {
+      k = pairKeyOf(wireds[j]);
+      wkey.push(k);
+      if (!k) continue;
+      if (!byKey[k]) byKey[k] = [];
+      byKey[k].push(j);
+    }
     var map = {}, used = {};
     for (i = 0; i < wires.length; i++) {
       var wk = pairKeyOf(wires[i]);
       if (!wk) continue;
+      var cand = byKey[wk];
+      if (!cand) continue;
       var best = null, bestIso = '';
-      for (j = 0; j < wireds.length; j++) {
+      for (var ci = 0; ci < cand.length; ci++) {
+        j = cand[ci];
         if (used[wireds[j].id]) continue;
-        if (pairKeyOf(wireds[j]) !== wk) continue;
         if (!mplusWindow(wires[i].개통일, wireds[j].개통일)) continue;
         var lIso = normalizeDate(wireds[j].개통일) || '';
         if (!best || lIso < bestIso) { best = wireds[j]; bestIso = lIso; }
@@ -9844,7 +10094,7 @@
     if (el.syncDialog.open) el.syncDialog.close();
 
     if (syncOn()) {
-      runSync({ quiet: true }).then(function (ok) {
+      runSync({ quiet: true, force: true }).then(function (ok) {
         if (ok) toast('공용 장부 연동 완료 · 시트와 맞췄습니다.');
       });
     } else {
@@ -9878,7 +10128,7 @@
 
   function syncNowFromDialog() {
     if (!syncOn()) { openSyncDialog(); return; }
-    runSync({ quiet: true }).then(function (ok) {
+    runSync({ quiet: true, force: true }).then(function (ok) {
       updateSyncDialogStatus();
       toast(ok ? (sync.lastError ? '동기화 실패 · ' + sync.lastError + ' · 서버 목록은 새로 받았습니다' : '지금 동기화했습니다.')
         : '동기화 실패 · ' + (sync.lastError || '연결 실패'), !ok || !!sync.lastError);
@@ -12002,9 +12252,14 @@
     /* v70 — 정산 이관(`[정산이관]`) 건은 그 달의 단가표·정책표를 알 수 없으므로
        지금 정책표로 자동 계산하지 않는다 (과거 달 합계에 없던 돈이 생기면 오해한다) */
     if (isArchiveRec(r)) return { manual: manual, auto: 0, calc: { has: false, total: 0 } };
+    /* v71 — 같은 그리기 안에서 같은 건을 여러 번 계산하지 않는다(계산기는 순수 함수) */
+    var hit = r && r.id ? rebateViewCache[r.id] : null;
+    if (hit && hit.rec === r) return hit.view;
     var c = calcPolicy(r);
     var auto = c.has ? c.total : 0;
-    return { manual: manual, auto: auto, calc: c };
+    var view = { manual: manual, auto: auto, calc: c };
+    if (r && r.id) rebateViewCache[r.id] = { rec: r, view: view };
+    return view;
   }
 
   function wirelessRebateCell(r) {
@@ -12228,18 +12483,211 @@
     document.body.classList.toggle('ledger-overflow', over);
   }
 
-  /* v70 — 한 번에 그리는 줄 수 상한
+  /* v70 — 한 번에 그리는 줄 수 상한 · v71 — [+500건 더 보기] 로 끝까지 이어 본다
      · 정산 이관으로 기록이 1만 건 규모가 되면서 '전체 기간'·넓은 검색을 그대로 다 그리면
        폰에서 화면이 멈추거나 렌더러가 죽었다. 한 달치는 가장 많은 달(401건)도 잘리지 않도록 500줄까지 그린다.
-     · 위(기준 월·검색)에서 좁히면 그대로 다 보이고, 상한을 넘으면 결과 건수 자리에
-       `N건 중 500건 표시` 라고 적어 숨김이 있다는 것을 분명히 알린다. */
+     · v71 — 500줄을 넘으면 표(·폰 카드) 아래에 `+500건 더 보기 (남은 N건)` 을 두고,
+       누를 때마다 **다음 500줄만 아래에 이어 붙인다**(전체를 다시 그리지 않아 빠르고, 스크롤도 안 튄다).
+     · v71 — 그래도 1만 줄(약 55만 DOM 노드)을 한 화면에 다 들면 폰 렌더러가 죽는다(실측: 9천 줄 부근).
+       그래서 화면에 담는 줄은 **4,000줄까지**로 두고, 그보다 더 보면 **위에서부터 500줄씩 걷어낸다**.
+       걷어낸 줄은 표(·카드 목록) **위의 `[▲ 500줄 위로]`** 로 다시 볼 수 있고, 더 보기는 2023년 5월 끝까지 계속된다. */
   var TABLE_ROW_CAP = 500;
+  var TABLE_ROW_MAX = 4000;                 // 화면에 한꺼번에 담는 최대 줄 수(DOM 한계 안전선)
+  var renderLimit = TABLE_ROW_CAP;          // 지금까지 펼친 끝 줄(필터가 바뀌면 500으로 돌아간다)
+  var renderStart = 0;                      // 화면에 담긴 첫 줄 (4,000줄을 넘으면 앞에서부터 걷어낸다)
+  var renderCtx = null;                     // 이어 붙이기에 필요한 직전 상태(줄 목록·날짜 묶음·건수)
+  var lastFilterSig = '';
+
+  function filterSignature() {
+    var f = state.filters;
+    return [f.month, f.type, f.staff, f.q, f.qMode, f.due ? 1 : 0, f.dueMode,
+      f.easy ? 1 : 0, f.easy ? easyScopeNow() : '', f.missing ? 1 : 0,
+      state.sort.key, state.sort.dir].join('\u0001');
+  }
+
+  function resetRenderLimit() {
+    renderLimit = TABLE_ROW_CAP;
+    renderStart = 0;
+    lastFilterSig = '';
+  }
+
+  /* 결과 건수 칩 — 화면에 그린 줄 수(· 몇 번째 줄부터인지)와 조건에 맞는 전체 건수를 함께 적는다 */
+  function paintResultCount(total, shown, scopeTag, searchAll, start) {
+    if (!el.resultCount) return;
+    var from = start || 0;
+    var more = total > shown || from > 0;
+    var rangeTxt = from > 0
+      ? (fmtNum(from + 1) + '~' + fmtNum(from + shown) + '건')
+      : (fmtNum(shown) + '건');
+    el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') +
+      (more ? fmtNum(total) + '건 중 ' + rangeTxt + ' 표시' : fmtNum(shown) + '건');
+    el.resultCount.title = more
+      ? '조건에 맞는 ' + fmtNum(total) + '건 중 ' + rangeTxt + ' 을(를) 그렸습니다 — 아래 [+500건 더 보기] 로 이어서 보거나 기준 월·검색으로 좁혀 보세요'
+      : '';
+  }
+
+  /* 폰 카드 목록(.mlist)이 지금 보이는가 — 보이면 더 보기 막대도 카드 목록 아래에 둔다 */
+  function mlistVisible() {
+    if (!el.mlist) return false;
+    try { return getComputedStyle(el.mlist).display !== 'none'; } catch (e) { return false; }
+  }
+
+  /* 지금 화면에 보이는 목록 종류 — 'cards'(폰 간단히 보기) 또는 'table'(표) */
+  function listModeNow() { return mlistVisible() ? 'cards' : 'table'; }
+
+  /* v71 — [+500건 더 보기] 막대의 글자·보임을 맞춘다 (PC 표 아래 · 폰 카드 목록 아래 중 보이는 쪽만) */
+  function paintMore() {
+    var pcBox = $('morePc'), mBox = $('moreM');
+    if (!pcBox && !mBox) return;
+    var ctx = renderCtx;
+    var total = ctx ? ctx.total : 0;
+    var shown = ctx ? ctx.rendered : 0;
+    var start = ctx && ctx.start ? ctx.start : 0;
+    var remain = total - shown;
+    var show = !!(ctx && remain > 0);
+    var counter = start > 0
+      ? ('현재 ' + fmtNum(start + 1) + '~' + fmtNum(shown) + ' / ' + fmtNum(total) + '건 표시')
+      : ('현재 ' + fmtNum(shown) + ' / ' + fmtNum(total) + '건 표시');
+    var label = '+500건 더 보기 (남은 ' + fmtNum(remain) + '건)';
+    var pcCount = $('morePcCount'), mCount = $('moreMCount');
+    if (pcCount) pcCount.textContent = counter;
+    if (mCount) mCount.textContent = counter;
+    var pcBtn = $('morePcBtn'), mBtn = $('moreMBtn');
+    if (pcBtn) { pcBtn.textContent = label; pcBtn.setAttribute('aria-label', label); }
+    if (mBtn) { mBtn.textContent = label; mBtn.setAttribute('aria-label', label); }
+    var onMobile = mlistVisible();
+    if (pcBox) pcBox.hidden = !(show && !onMobile);
+    if (mBox) mBox.hidden = !(show && onMobile);
+    /* 위로 걷어낸 줄이 있으면 표·카드 목록 **위**에 [▲ 500줄 위로] */
+    var top = $('moreTop');
+    if (top) {
+      top.hidden = !(start > 0);
+      var topTxt = $('moreTopCount');
+      if (topTxt) topTxt.textContent = '위 ' + fmtNum(start) + '줄은 화면에서 접었습니다';
+    }
+  }
+
+  /* v71 — 다음 500줄을 아래에 이어 붙인다
+     · 전체를 다시 그리지 않으므로 1만 건에서도 빠르고,
+     · 스크롤 위치는 그대로 둔다(버튼을 누른 자리가 틀지 않는다 — 새 줄은 아래로 붙는다).
+     · 4,000줄을 넘으면 앞(위) 500줄을 걷어낸다 — 1만 줄을 한 화면에 들면 폰 렌더러가 죽는다. */
+  function showMoreRows() {
+    var ctx = renderCtx;
+    if (!ctx || !ctx.rows || ctx.rendered >= ctx.total) { paintMore(); return; }
+    /* 맨 위가 넘칠 만큼 펼쳤으면 먼저 걷어낸다 — 그리고 이어 붙이기만 한다(다시 그리지 않음) */
+    var overflow = (ctx.rendered + TABLE_ROW_CAP) - ctx.start - TABLE_ROW_MAX;
+    if (overflow > 0) dropTopRows(overflow);
+    var from = ctx.rendered;
+    var to = Math.min(ctx.total, from + TABLE_ROW_CAP);
+    renderLimit = to;
+    var built = ledgerRowsHtml(ctx.rows, from, to, ctx.groupByDate, ctx.counts, ctx.groupStaff, ctx.lastGroup, ctx.mode);
+    if (el.tbody && built.html) el.tbody.insertAdjacentHTML('beforeend', built.html);
+    if (el.mlist && built.mhtml) el.mlist.insertAdjacentHTML('beforeend', built.mhtml);
+    ctx.rendered = to;
+    ctx.lastGroup = built.lastGroup;
+    paintResultCount(ctx.total, to, ctx.scopeTag, ctx.searchAll, ctx.start);
+    paintMore();
+    /* 가로 스크롤 필요 여부는 화면을 먼저 그리고 나서 확인한다 — 누를 때 렉이 안 걸리게
+       · v71 — 1,000줄을 넘으면 다시 재지 않는다(넓은 표 전체 레이아웃을 다시 시키는 일이라 무겁다) */
+    if (to <= 1000) setTimeout(function () { syncTableOverflow(); }, 60);
+  }
+
+  /* v71 — 화면이 4,000줄을 넘을 때 위에서부터 걷어낸다
+     · 통째로 다시 그리지 않고 맨 위 몇 줄만 DOM 에서 지운다(1만 줄 다시 그리기는 GC 쓰레기를 크게 만듭니다).
+     · 날짜 묶음 경계까지만 지워서, 머리글 없는 줄이 생기지 않게 한다. */
+  function dropTopRows(n) {
+    var ctx = renderCtx;
+    if (!ctx || !n || n <= 0) return;
+    var mode = ctx.mode || listModeNow();
+    /* 같은 날짜가 이어지는 만큼 미룬다 */
+    var target = ctx.start + n;
+    while (target < ctx.rendered && target > 0 &&
+           String((ctx.rows[target - 1] || {}).개통일 || '') === String((ctx.rows[target] || {}).개통일 || '')) {
+      target++;
+    }
+    var need = target - ctx.start;
+    var removed = 0;
+    if (mode === 'cards') {
+      var box = el.mlist;
+      while (box && box.firstElementChild && removed < need) {
+        var node = box.firstElementChild;
+        if (!node.classList.contains('mgroup-head')) removed++;
+        box.removeChild(node);
+      }
+      // 경계에 걸린 묶음 머리글은 그대로 둔다
+      while (box && box.firstElementChild && !box.firstElementChild.classList.contains('mgroup-head')) {
+        box.removeChild(box.firstElementChild);
+        removed++;
+      }
+    } else {
+      var tb = el.tbody;
+      while (tb && tb.firstElementChild && removed < need) {
+        var tr = tb.firstElementChild;
+        if (!tr.classList.contains('group-row')) removed++;
+        tb.removeChild(tr);
+      }
+      while (tb && tb.firstElementChild && !tb.firstElementChild.classList.contains('group-row')) {
+        tb.removeChild(tb.firstElementChild);
+        removed++;
+      }
+    }
+    ctx.start += removed;
+    renderStart = ctx.start;
+  }
+
+  /* v71 — 위에서 걷어낸 500줄을 다시 보여 준다 (4,000줄 창을 위로 민다)
+     · 화면을 통째로 다시 그리지 않고, 위쪽 500줄을 새로 만들어 맨 앞에 붙이고 아래에서 같은 수를 걷어낸다. */
+  function showPrevRows() {
+    var ctx = renderCtx;
+    if (!ctx || !ctx.rows || !ctx.start) return;
+    var from = Math.max(0, ctx.start - TABLE_ROW_CAP);
+    var to = ctx.start;
+    var built = ledgerRowsHtml(ctx.rows, from, to, ctx.groupByDate, ctx.counts, ctx.groupStaff, null, ctx.mode);
+    var removed = 0;
+    if (ctx.mode === 'cards') {
+      if (el.mlist && built.mhtml) el.mlist.insertAdjacentHTML('afterbegin', built.mhtml);
+      while (el.mlist && el.mlist.lastElementChild && removed < (to - from)) {
+        var ln = el.mlist.lastElementChild;
+        if (!ln.classList.contains('mgroup-head')) removed++;
+        el.mlist.removeChild(ln);
+      }
+    } else {
+      if (el.tbody && built.html) el.tbody.insertAdjacentHTML('afterbegin', built.html);
+      while (el.tbody && el.tbody.lastElementChild && removed < (to - from)) {
+        var lt = el.tbody.lastElementChild;
+        if (!lt.classList.contains('group-row')) removed++;
+        el.tbody.removeChild(lt);
+      }
+    }
+    ctx.start = from;
+    renderStart = from;
+    ctx.rendered = Math.max(from, ctx.rendered - removed);
+    renderLimit = ctx.rendered;
+    ctx.lastGroup = ctx.rendered > 0 ? String((ctx.rows[ctx.rendered - 1] || {}).개통일 || '') : null;
+    paintResultCount(ctx.total, ctx.rendered, ctx.scopeTag, ctx.searchAll, ctx.start);
+    paintMore();
+    scrollToLedgerTop();
+  }
+
+  function scrollToLedgerTop() {
+    try {
+      var card = document.querySelector('.table-card');
+      var y = card ? card.getBoundingClientRect().top + (window.pageYOffset || 0) - 8 : 0;
+      window.scrollTo(0, y < 0 ? 0 : y);
+    } catch (e) {}
+  }
 
   function renderTable() {
-    var rows = visibleRecords();
-    var totalRows = rows.length;
-    var capped = totalRows > TABLE_ROW_CAP;
-    if (capped) rows = rows.slice(0, TABLE_ROW_CAP);
+    var sig = filterSignature();
+    if (sig !== lastFilterSig) { lastFilterSig = sig; renderLimit = TABLE_ROW_CAP; renderStart = 0; }
+    var allRows = visibleRecords();
+    var totalRows = allRows.length;
+    /* 건수가 적은 달을 보다가 기록이 늘어도 덜 그리지 않도록, 상한은 500 아래로 내려가지 않는다 */
+    if (renderLimit < TABLE_ROW_CAP) renderLimit = TABLE_ROW_CAP;
+    if (renderStart < 0 || renderStart >= renderLimit) renderStart = 0;
+    if (renderLimit - renderStart > TABLE_ROW_MAX) renderStart = renderLimit - TABLE_ROW_MAX;
+    var rows = allRows.slice(renderStart, Math.min(renderLimit, totalRows));
+    var capped = totalRows > rows.length || renderStart > 0;
     var scopeTag = '';
     if (state.filters.due) {
       scopeTag = state.filters.dueMode === 'late' ? '기한지남'
@@ -12261,11 +12709,7 @@
     // v26 — 전체 기간 검색 중이라는 것을 건수 자리에 분명히 적는다 (상단 KPI 는 기준 월 그대로)
     var searchAll = !!state.filters.q.trim() && !state.filters.due;
     if (searchAll) scopeTag = scopeTag ? scopeTag + ' · 전체 기간 검색' : '전체 기간 검색';
-    el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') +
-      (capped ? totalRows + '건 중 ' + TABLE_ROW_CAP + '건 표시' : rows.length + '건');
-    el.resultCount.title = capped
-      ? '조건에 맞는 ' + totalRows + '건 중 ' + TABLE_ROW_CAP + '건만 그렸습니다 — 기준 월·검색으로 좁혀 보세요'
-      : '';
+    paintResultCount(totalRows, rows.length, scopeTag, searchAll, renderStart);
     el.resultCount.classList.toggle('is-allsearch', searchAll);
     // v51 — 기본 화면에서는 맨 위 KPI '총 건수' 와 겹치는 건수 칩을 숨긴다(필터 줄에 혼자 떨어지는 원인).
     //        검색·필터를 걸었을 때만 결과 건수를 보여 준다. (v52 — 스트립의 '이번 달 총 N건' 줄은 없앴다)
@@ -12290,6 +12734,8 @@
       el.ledger.style.display = 'none';
       el.emptyState.hidden = false;
       syncTableOverflow();
+      renderCtx = null;
+      paintMore();
       if (state.records.length === 0) {
         var emptyNote = isAdmin()
           ? '<p>오늘 개통 건부터 바로 적어보세요.<br>엑셀로 쓰던 장부가 있으면 그대로 가져올 수 있습니다.</p>'
@@ -12325,22 +12771,48 @@
     el.ledger.style.display = '';
 
     // 날짜별 그룹 (개통일 정렬일 때만) — 날짜별 총 건수 + 직원별 건수
+    //  v71 — 건수는 **조건에 맞는 전체(allRows)** 기준으로 센다. 500줄에서 잘려도 그 날짜의 총 건수가 맞고,
+    //        이어 붙일 때 이미 그린 날짜 머리글을 다시 그리지 않아도 된다.
     var groupByDate = state.sort.key === '개통일';
     var counts = {}, groupStaff = {}, i, gk;
     if (groupByDate) {
-      for (i = 0; i < rows.length; i++) {
-        gk = rows[i].개통일 || '';
+      for (i = 0; i < allRows.length; i++) {
+        gk = allRows[i].개통일 || '';
         counts[gk] = (counts[gk] || 0) + 1;
-        var gn = String(rows[i].담당자 == null ? '' : rows[i].담당자).trim() || '미지정';
+        var gn = String(allRows[i].담당자 == null ? '' : allRows[i].담당자).trim() || '미지정';
         groupStaff[gk] = groupStaff[gk] || {};
         groupStaff[gk][gn] = (groupStaff[gk][gn] || 0) + 1;
       }
     }
 
+    /* v71 — 새로 그리기 전에 예전 줄을 먼저 비운다.
+       1만 줄을 든 화면에서 달을 바꾸면 (예전 1만 + 새 500 + 문자열)이 동시에 메모리에 올라 렌더러가 죽었다. */
+    el.tbody.innerHTML = '';
+    if (el.mlist) el.mlist.innerHTML = '';
+    var built = ledgerRowsHtml(rows, 0, rows.length, groupByDate, counts, groupStaff, null, listModeNow());
+    el.tbody.innerHTML = built.html;
+    if (el.mlist) el.mlist.innerHTML = built.mhtml;
+    if (rows.length <= 1200) syncTableOverflow();
+    renderCtx = {
+      rows: allRows, start: renderStart, rendered: renderStart + rows.length, total: totalRows,
+      groupByDate: groupByDate,
+      counts: counts, groupStaff: groupStaff, lastGroup: built.lastGroup, mode: listModeNow(),
+      scopeTag: scopeTag, searchAll: searchAll
+    };
+    paintMore();
+  }
+
+  /* v71 — rows[from..to) 를 PC 표 줄 · 폰 카드 HTML 로 만든다 (renderTable · showMoreRows 가 같이 쓴다)
+     · lastGroup — 바로 앞까지 그린 마지막 날짜. 이어 붙일 때 같은 날짜 머리글을 두 번 그리지 않는다. */
+  function ledgerRowsHtml(rows, from, to, groupByDate, counts, groupStaff, lastGroup, mode) {
     var html = '';
     var mhtml = '';
-    var lastGroup = null;
-    for (i = 0; i < rows.length; i++) {
+    /* v71 — 처음 그리는 500줄은 표·폰 카드를 **둘 다** 만든다(보기 전환·출력·예전 동작 그대로).
+       이어 붙이는 줄부터는 **지금 보이는 목록 하나만** 만든다 — 1만 줄을 두 번 만들면 폰이 버티지 못한다. */
+    var wantTable = (from === 0) || mode !== 'cards';
+    var wantCards = (from === 0) || mode === 'cards';
+    var i, gk;
+    for (i = from; i < to; i++) {
       var r = rows[i];
       var d = planPending(r);
       var ad0 = addonPending(r);
@@ -12351,13 +12823,15 @@
         if (gk !== lastGroup) {
           lastGroup = gk;
           var gLine = staffLineText(groupStaff[gk]);
-          html += groupRowHtml(gk, counts[gk], groupStaff[gk]);
-          mhtml += '<div class="mgroup-head"><span class="g-date">' +
+          if (wantTable) html += groupRowHtml(gk, counts[gk], groupStaff[gk]);
+          if (wantCards) mhtml += '<div class="mgroup-head"><span class="g-date">' +
             (gk ? esc(gk) + (weekdayKo(gk) ? ' <span class="g-dow">(' + weekdayKo(gk) + ')</span>' : '') : '날짜 없음') +
             '</span><span class="g-count">총 ' + counts[gk] + '건</span>' +
             (gLine ? '<span class="mgroup-staff">' + esc(gLine) + '</span>' : '') + '</div>';
         }
       }
+
+      if (wantCards && !wantTable) { mhtml += mcardHtml(r); continue; }
 
       html += '<tr' + rowCls + ' data-id="' + esc(r.id) + '">' +
         '<td data-label="개통일" class="c-date">' + esc(r.개통일 || '—') + '</td>' +
@@ -12382,13 +12856,10 @@
         '<td class="actions">' + rowActionButtons(r) + '</td>' +
       '</tr>';
 
-      mhtml += mcardHtml(r);
+      if (wantCards) mhtml += mcardHtml(r);
     }
-    el.tbody.innerHTML = html;
-    if (el.mlist) el.mlist.innerHTML = mhtml;
-    syncTableOverflow();
+    return { html: html, mhtml: mhtml, lastGroup: lastGroup };
   }
-
   function renderFilterUi() {
     // v19 — ◀ · 2026년 11월 · ▶ 로 달을 오간다 (내부 상태값은 'YYYY-MM' 그대로)
     if (el.monthInput) el.monthInput.value = state.filters.month || '';
@@ -12890,6 +13361,14 @@
     var compact = state.view !== 'wide';
     document.body.classList.toggle('view-compact', compact);
     document.body.classList.toggle('view-wide', !compact);
+    /* v71 — 보이는 목록이 바뀌면(폰 카드 ↔ 표) 그 목록으로 다시 그린다.
+       이어 붙인 상태는 처음 500줄로 돌아간다(1만 줄을 다시 만드는 동안 멈추지 않게). */
+    var mode = listModeNow();
+    if (renderCtx && renderCtx.mode !== mode) {
+      renderCtx.mode = mode;
+      if (renderCtx.rendered > TABLE_ROW_CAP) { renderLimit = TABLE_ROW_CAP; renderStart = 0; lastFilterSig = ''; renderTable(); }
+    }
+    paintMore();   // v71 — 보이는 목록(표·폰 카드)에 맞춰 더 보기 막대 위치를 바꿈
     var b = el.viewToggle;
     if (!b) return;
     var narrow = isNarrow();
@@ -14776,7 +15255,7 @@
     if (el.syncNowBtn) el.syncNowBtn.addEventListener('click', function () {
       closeMenu();
       if (!syncOn()) { openSyncDialog(); return; }
-      runSync({ quiet: true }).then(function (ok) {
+      runSync({ quiet: true, force: true }).then(function (ok) {
         toast(ok ? '지금 동기화했습니다.' : '동기화 실패 · 이 기기에는 저장돼 있습니다', !ok);
       });
     });
@@ -14999,6 +15478,12 @@
         if (card) card.classList.toggle('open');
       });
     }
+
+    // v71 — [+500건 더 보기] — 다음 500줄만 아래에 이어 붙인다 (PC 표 아래 · 폰 카드 목록 아래)
+    if ($('morePcBtn')) $('morePcBtn').addEventListener('click', showMoreRows);
+    if ($('moreMBtn')) $('moreMBtn').addEventListener('click', showMoreRows);
+    // v71 — 4,000줄을 넘어 위에서 걷어낸 줄을 다시 본다
+    if ($('moreTopBtn')) $('moreTopBtn').addEventListener('click', showPrevRows);
 
     // 보기 방식 토글
     if (el.viewToggle) {
@@ -15804,9 +16289,23 @@
     }
 
     // 앱을 열면 최신 공용 장부를 먼저 받아온다
+    //  v71 — 그 전에 이 기기에 담아 둔 공용 장부(1만 건)가 있으면 서버 응답을 기다리지 않고 먼저 띄운다
     if (syncOn() && !blockedStored()) {
-      setTimeout(function () { runSync({ quiet: true }); }, 600);
+      restoreArchiveCache();
     }
+    if (syncOn() && !blockedStored()) {
+      /* v71 — 앱을 열 때는 한 번은 반드시 최신 목록을 받는다(화면은 이미 캐시로 떠 있다).
+         60초 제한은 같은 화면에서 수정·포커스 복귀가 겹칠 때만 적용된다. */
+      setTimeout(function () { runSync({ quiet: true, force: true }); }, 600);
+    }
+    // v71 — 폰·탭을 다시 열었을 때: 최근 60초 안에 받은 목록이 있으면 그대로 두고(트래픽 절약),
+    //        오래됐으면 조용히 한 번만 맞춘다.
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden || !syncOn() || blockedStored() || syncing) return;
+      if (!sync.lastSync || Date.now() - Number(sync.lastSync || 0) >= SYNC_MIN_GAP) {
+        runSync({ quiet: true, quietFail: true });
+      }
+    });
   }
 
   if (document.readyState === 'loading') {
