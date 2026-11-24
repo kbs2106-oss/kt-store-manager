@@ -6324,7 +6324,10 @@
     idbWriteTimer = setTimeout(function () {
       idbWriteTimer = null;
       if (!syncOn() || blockedStored()) return;
-      if (moreDepth() > 1000) { archiveCacheWriteSoon(4000); return; }
+      /* v74 — 예전에는 '목록을 1,000줄 넘게 펼친 동안은 캐시 쓰기를 미룬다'였는데,
+         v74 부터 처음부터 3,500줄이라 그 조건이 **항상 참**이 되어 캐시가 영영 안 써졌다
+         (오프라인 복원·다음 실행 즉시 표시가 깨짐). 화면 창은 4,500줄로 고정이라
+         지금 펼친 깊이와 상관없이 idle 에 한 번 쓴다. */
       var write = function () {
         if (!syncOn() || blockedStored()) return;
         idbPut(IDB_KEY, { records: state.records.slice(0), lastSync: Number(sync.lastSync || 0), savedAt: Date.now() });
