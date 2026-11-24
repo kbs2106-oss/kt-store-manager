@@ -11518,7 +11518,7 @@
     for (i = 0; i < list.length; i++) {
       var rw = Number(list[i].무선리베이트) || 0;
       var rl = Number(list[i].유선리베이트) || 0;
-      if (!rw && isAdmin()) {
+      if (!rw && isAdmin() && !isArchiveRec(list[i])) {
         var pc = calcPolicy(list[i]);
         if (pc.has) { rw = pc.total; nPol++; }
       }
@@ -11993,6 +11993,9 @@
   // 장부 표·폰 카드의 무선 리베이트 칸 — 관리자 모드에서는 비어 있어도 정책 자동 계산값을 보여 준다
   function wirelessRebateView(r) {
     var manual = Number(r.무선리베이트) || 0;
+    /* v70 — 정산 이관(`[정산이관]`) 건은 그 달의 단가표·정책표를 알 수 없으므로
+       지금 정책표로 자동 계산하지 않는다 (과거 달 합계에 없던 돈이 생기면 오해한다) */
+    if (isArchiveRec(r)) return { manual: manual, auto: 0, calc: { has: false, total: 0 } };
     var c = calcPolicy(r);
     var auto = c.has ? c.total : 0;
     return { manual: manual, auto: auto, calc: c };
