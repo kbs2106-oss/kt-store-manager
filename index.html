@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
+<meta name="app-version" content="v78">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -17491,25 +17492,67 @@
     syncFab();
   }
 
-  /* ---------- 서비스 워커 (오프라인 · 빠른 실행) ---------- */
+  /* ---------- 서비스 워커 (오프라인 · 빠른 실행 · 새 버전 즉시 반영) ---------- */
+  /* v78(#18345): 새 버전이 배포되면 앱을 껐다 켜지 않아도 화면이 저절로 최신으로 바뀐다.
+     · 앱을 열 때·화면으로 돌아올 때·켜 둔 동안 1분마다 새 버전 확인(reg.update)
+     · sw.js 는 updateViaCache:'none' 으로 HTTP 캐시를 건너뛰고 확인
+     · 새 서비스워커가 이 화면을 넘겨받으면(controllerchange) 한 번만 새로고침 */
   if ('serviceWorker' in navigator) {
     var secure = location.protocol === 'https:' ||
       location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-    if (!secure) {
-      /* file:// 로 열었을 때는 등록 불가 — 앱은 그대로 동작 */
-    } else {
+    if (secure) {
+      var swReg = null;
+      var swLastCheck = 0;
+      var swReloading = false;
+      var swHadController = !!navigator.serviceWorker.controller;
+
+      var swReloadForUpdate = function () {
+        if (swReloading) return;
+        swReloading = true;
+        try {
+          var last = parseInt(sessionStorage.getItem('ktLedgerSwReload') || '0', 10) || 0;
+          if (Date.now() - last < 20000) return;   /* 무한 새로고침 방지 */
+          sessionStorage.setItem('ktLedgerSwReload', String(Date.now()));
+        } catch (e) {}
+        /* 입력 중이면 저장이 날아가지 않게, 입력칸에서 손을 뗀 뒤 새로고침 */
+        var ae = document.activeElement;
+        var typing = ae && (/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName) || ae.isContentEditable);
+        if (typing) {
+          say('새 버전이 준비되었습니다 — 입력을 마치면 화면이 새로 고쳐집니다.', 4200);
+          document.addEventListener('focusout', function () {
+            setTimeout(function () { location.reload(); }, 500);
+          }, { once: true });
+          return;
+        }
+        location.reload();
+      };
+
+      var swCheckUpdate = function () {
+        if (!swReg) return;
+        var now = Date.now();
+        if (now - swLastCheck < 60000) return;   /* 1분에 한 번만 확인 */
+        swLastCheck = now;
+        try { swReg.update(); } catch (e) {}
+      };
+
+      navigator.serviceWorker.addEventListener('controllerchange', function () {
+        if (!swHadController) return;   /* 첫 설치 때는 새로고침하지 않는다 */
+        swReloadForUpdate();
+      });
+
+      document.addEventListener('visibilitychange', function () { if (!document.hidden) swCheckUpdate(); });
+      window.addEventListener('focus', swCheckUpdate);
+      setInterval(function () { if (!document.hidden) swCheckUpdate(); }, 60000);
+
       window.addEventListener('load', function () {
-        navigator.serviceWorker.register('./sw.js').then(function (reg) {
-          /* 새 버전이 준비되면 즉시 적용 */
-          reg.addEventListener('updatefound', function () {
-            var sw = reg.installing;
-            if (!sw) return;
-            sw.addEventListener('statechange', function () {
-              if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-                say('새 버전을 준비했습니다. 다음에 열 때 최신 화면으로 뜹니다.', 4200);
-              }
-            });
-          });
+        navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then(function (reg) {
+          swReg = reg;
+          swCheckUpdate();
+          /* 방금 자동 업데이트로 새로고침된 화면이면 살짝 알린다 */
+          try {
+            var at = parseInt(sessionStorage.getItem('ktLedgerSwReload') || '0', 10) || 0;
+            if (at && Date.now() - at < 8000) say('새 버전으로 자동 업데이트되었습니다.', 3000);
+          } catch (e) {}
         }).catch(function (err) {
           console.warn('[PWA] 서비스 워커 등록 실패:', err && err.message ? err.message : err);
         });

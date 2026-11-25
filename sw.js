@@ -5,12 +5,15 @@
    · 화면(HTML)은 네트워크 우선 → 수정한 파일이 바로 반영됨
    · 나머지 리소스는 캐시 우선 + 뒤에서 갱신(stale-while-revalidate)
    · 새 버전이 설치되면 skipWaiting + clients.claim 으로 즉시 교체
+   · v78(#18345): 화면(HTML)은 HTTP 캐시까지 건너뛰고(cache:'no-store') 항상 네트워크에서 새로 받는다.
+     GitHub Pages 가 index.html 을 10분(max-age=600) 캐시해, 예전에는 한참 전 화면이 떠서
+     "수정이 바로 반영되지 않는다"고 느껴졌다. 오프라인일 때만 캐시로 넘어간다.
    · 데이터는 localStorage 에 있으므로 캐시를 지워도 장부는 그대로입니다.
 
    배포 후 파일을 수정했다면 아래 CACHE_VERSION 을 올려 주세요.
    ============================================================ */
 
-var CACHE_VERSION = 'v77';
+var CACHE_VERSION = 'v78';
 var CACHE_PREFIX = 'kt-ledger-';
 var CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 var SHEETJS_CACHE = CACHE_PREFIX + 'sheetjs';
@@ -95,8 +98,8 @@ self.addEventListener('fetch', function (event) {
   // 외부 도메인은 그대로 네트워크로
   if (url.origin !== self.location.origin) return;
 
-  // 화면 이동: 네트워크 우선(수정 사항 즉시 반영) → 실패 시 캐시
-  if (req.mode === 'navigate' || (req.headers.get('accept') || '').indexOf('text/html') !== -1) {
+  // 화면 이동·index.html·'/' 요청: 네트워크 우선(HTTP 캐시 무시 → 항상 최신) → 실패 시 캐시
+  if (isDocRequest(req, url)) {
     event.respondWith(networkFirstPage(req));
     return;
   }
@@ -106,10 +109,17 @@ self.addEventListener('fetch', function (event) {
 });
 
 /* ---------------- strategies ---------------- */
+/* 화면(HTML) 요청인지 — 주소 이동 / index.html / '/' / text/html */
+function isDocRequest(req, url) {
+  if (req.mode === 'navigate') return true;
+  if (url.pathname === '/' || /\/index\.html$/.test(url.pathname)) return true;
+  return (req.headers.get('accept') || '').indexOf('text/html') !== -1;
+}
+
 async function networkFirstPage(req) {
   var cache = await caches.open(CACHE_NAME);
   try {
-    var fresh = await fetch(req);
+    var fresh = await fetch(req, { cache: 'no-store' });
     if (fresh && fresh.ok) {
       cache.put('./index.html', fresh.clone()).catch(function () {});
       return fresh;
