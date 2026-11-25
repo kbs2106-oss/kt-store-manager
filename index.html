@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v80">
+<meta name="app-version" content="v81">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -2990,7 +2990,7 @@
     <!-- v71 — 4,000줄을 넘어 위에서 걷어낸 줄이 있을 때만 보인다 -->
     <div class="more-top" id="moreTop" hidden>
       <span class="more-count" id="moreTopCount"></span>
-      <button type="button" class="more-btn" id="moreTopBtn">▲ 1,500줄 위로</button>
+      <button type="button" class="more-btn" id="moreTopBtn">▲ 200줄 위로</button>
     </div>
     <div class="table-scroll">
       <table class="ledger" id="ledger">
@@ -3021,18 +3021,18 @@
         <tbody id="tbody"></tbody>
       </table>
     </div>
-    <!-- v74 — 스크롤만 내리면 자동으로 1,500건씩 이어 붙인다 (PC 표 아래) -->
+    <!-- v81 — 스크롤만 내리면 자동으로 200건씩 이어 붙인다 (PC 표 아래) -->
     <div class="more-bar" id="morePc" hidden>
       <span class="more-count" id="morePcCount"></span>
       <button type="button" class="more-auto on" id="morePcAuto" aria-pressed="true">자동 이어보기 ON</button>
-      <button type="button" class="btn more-btn" id="morePcBtn">+1,500건 더 보기</button>
+      <button type="button" class="btn more-btn" id="morePcBtn" hidden>+200건 더 보기</button>
     </div>
     <div class="mlist" id="mlist"></div>
-    <!-- v74 — 스크롤만 내리면 자동으로 1,500건씩 이어 붙인다 (폰 카드 목록 아래) -->
+    <!-- v81 — 스크롤만 내리면 자동으로 200건씩 이어 붙인다 (폰 카드 목록 아래) -->
     <div class="more-bar more-bar-m" id="moreM" hidden>
       <span class="more-count" id="moreMCount"></span>
       <button type="button" class="more-auto on" id="moreMAuto" aria-pressed="true">자동 이어보기 ON</button>
-      <button type="button" class="btn more-btn" id="moreMBtn">+1,500건 더 보기</button>
+      <button type="button" class="btn more-btn" id="moreMBtn" hidden>+200건 더 보기</button>
     </div>
     <div class="empty" id="emptyState" hidden></div>
   </section>
@@ -4174,6 +4174,28 @@
     { n: '아이패드 미니6', c: ['IPADM6'], a: ['iPad mini 6'] }
   ];
 
+  /* v81 — 계열 이름('아이폰'·'갤럭시')으로 찾을 때 쓰는 코드 접두어
+     · '아이폰'은 모델 40개(말 125개)라 아래 `words.length > 60` 상한에 걸려 확장이 통째로 취소됐고,
+       그래서 AIP15·AIP16·AIP17 같은 코드 행이 하나도 안 잡히고 이름에 '아이폰'이 든 18건만 나왔다.
+     · 계열은 모델 말을 다 늘어놓지 않고 **코드 접두어**로 찾는다 — 접두어 몇 개면 1만 건도 빠르다.
+       · 아이폰: aip+숫자 / uip+숫자 / iphone / ipp+숫자 / ip+숫자(IP14·IP17 — IPAD 는 빠진다)
+         (뒤에 숫자를 꼭 붙여, 요금제 'Google AI **P**lus' 처럼 'aip' 가 우연히 든 글자를 잡지 않는다)
+       · 갤럭시: sm- + 영문자 + 숫자 (SM-S931 · SM-M446 · SM-R865 …)
+         ('sm-' 만 보면 아이폰 XS 맥스 코드 AIPX**SM-T**AC 가 걸린다 — 뒤에 숫자까지 확인한다)
+         장부에 이름으로 적은 건 '갤럭시' 글자로 잡힌다)
+     · `extra: true` 인 계열은 접두어로 안 잡히는 코드(애플 모델번호 A3106 · AIPA · AIPSE3 …)를
+       모델 표에서 뽑아 함께 넣는다. */
+  var MODEL_FAMILIES = [
+    { keys: ['아이폰', 'iphone'], name: '아이폰', pre: 'aip\\d|uip\\d|iphone|ipp\\d|ip\\d', extra: true, lit: ['아이폰'] },
+    { keys: ['갤럭시', 'galaxy'], name: '갤럭시', pre: 'sm-[a-z]\\d', extra: false, lit: ['갤럭시'] }
+  ];
+  function modelFamilyOf(qN) {
+    for (var i = 0; i < MODEL_FAMILIES.length; i++) {
+      if (MODEL_FAMILIES[i].keys.indexOf(qN) >= 0) return MODEL_FAMILIES[i];
+    }
+    return null;
+  }
+
   /* 검색용 글자 맞추기 — 소문자로 만들고 띄어쓰기 · 밑줄 · 괄호를 지운다
      · '점프 3' = '점프3' · 'SM-S931NK512' = 'sm-s931nk512' → 'S931' 로도 잡힌다
      · **하이픈은 남긴다** — 지우면 'AIP15PS-256'(아이폰 15 플러스 256GB) 이 'PS256' 안의 'S25' 로
@@ -4233,7 +4255,7 @@
 
   // 검색어 하나 → 같이 찾을 말들(코드 + 이름). 기종이 코드로 적혔든 이름으로 적혔든 이어 준다
   function buildSearchQuery(q, memoMode) {
-    var qs = { q: String(q || '').trim().toLowerCase(), qN: '', re: null, aliasNames: [] };
+    var qs = { q: String(q || '').trim().toLowerCase(), qN: '', re: null, aliasNames: [], fam: '' };
     qs.qN = searchNorm(qs.q);
     if (memoMode || !qs.qN) return qs;
     var hits = modelAliasHits(qs.qN), i, j, g, words = [];
@@ -4241,6 +4263,30 @@
       g = MODEL_ALIAS_INDEX[hits[i]];
       if (qs.aliasNames.indexOf(g.name) < 0) qs.aliasNames.push(g.name);
       for (j = 0; j < g.toks.length; j++) if (words.indexOf(g.toks[j]) < 0) words.push(g.toks[j]);
+    }
+    /* v81 — 계열 이름('아이폰'·'갤럭시')은 말 개수 상한에 걸리기 전에 코드 접두어로 찾는다
+       · 찾을 코드 목록은 **계열 대표 이름**('아이폰')으로 모델 표를 다시 뒤져 만든다 —
+         'iphone' 으로 쳐도 '아이폰' 과 완전히 같은 결과가 나온다. */
+    var fam = modelFamilyOf(qs.qN);
+    if (fam) {
+      var famHits = (fam.name === qs.qN) ? hits : modelAliasHits(searchNorm(fam.name));
+      var alt = [fam.pre], seen = {}, preRe = new RegExp(fam.pre), cn;
+      for (i = 0; i < (fam.lit || []).length; i++) alt.push(fam.lit[i]);
+      if (fam.extra) {
+        for (i = 0; i < famHits.length; i++) {
+          g = MODEL_ALIAS_INDEX[famHits[i]];
+          for (j = 0; j < g.codes.length; j++) {
+            cn = searchNorm(g.codes[j]);
+            if (!cn || seen[cn] || preRe.test(cn)) continue;
+            seen[cn] = 1;
+            alt.push(cn.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+          }
+        }
+      }
+      try { qs.re = new RegExp(alt.join('|')); } catch (e) { qs.re = null; }
+      qs.aliasNames = [];      // 40개 이름을 안내 줄에 늘어놓지 않는다
+      qs.fam = fam.name;
+      return qs;
     }
     /* 말이 너무 많으면(예: '갤럭시') 한 줄씩 훑기엔 무거우니 넓히기를 접고 그 글자만 찾는다 */
     if (words.length > 60) { qs.aliasNames = []; return qs; }
@@ -5940,15 +5986,26 @@
 
   // 유선(인터넷·TV) 개통인가? (예전 '인터넷+TV' 포함)
   // 복합 값('번호이동 + 인터넷+TV 신규가입')은 조각 단위로 판정한다.
+  // v81 — 1만 건을 훑을 때 같은 개통유형 글자를 수천 번 다시 다듬지 않게 글자별로 한 번만 판정
+  var isWiredMemo = {};
   function isWiredType(t) {
+    var key = String(t == null ? '' : t);
+    if (isWiredMemo.hasOwnProperty(key)) return isWiredMemo[key];
     var parts = typeParts(t);
-    if (parts.length !== 1) return false;
-    var s = wiredTypeCanon(parts[0]).replace(/\s/g, '');
-    if (!s) return false;
-    for (var i = 0; i < WIRED_TYPES.length; i++) {
-      if (WIRED_TYPES[i].replace(/\s/g, '') === s) return true;
+    var v = false;
+    if (parts.length === 1) {
+      var s = wiredTypeCanon(parts[0]).replace(/\s/g, '');
+      if (s) {
+        v = /인터넷|TV|티비|iptv|인티/i.test(s);
+        if (!v) {
+          for (var i = 0; i < WIRED_TYPES.length; i++) {
+            if (WIRED_TYPES[i].replace(/\s/g, '') === s) { v = true; break; }
+          }
+        }
+      }
     }
-    return /인터넷|TV|티비|iptv|인티/i.test(s);
+    if (Object.keys(isWiredMemo).length < 20000) isWiredMemo[key] = v;
+    return v;
   }
 
   /* v28 — 유선 개통유형 그룹 */
@@ -9286,30 +9343,53 @@
     return String(s == null ? '' : s).replace(/\s+/g, '').replace(/\(.*?\)/g, '').toLowerCase();
   }
 
+  /* v81 — '전체 기간'이 느리던 진짜 무거운 곳 — 정책표 행 찾기
+     · 1만 건을 화면에 올리면 건마다 MRA-01·MRA-02·MRA-03 행을 찾느라
+       정책표 별칭 100여 개를 **매번 mkey()(정규식)로 다시 다듬고** 비교했다(실측 359ms).
+     · 별칭 다듬은 값은 행에 한 번만 담고(`__mk`), 결과는 정책·기종 글자·용량별로 한 번만 찾아 둔다(`__frow`).
+       정책표는 코드에 고정된 표라 결과가 바뀌지 않는다(관리자가 고친 금액은 polCell 이 따로 본다). */
+  function polRowMk(row) {
+    if (row.__mk) return row.__mk;
+    var out = [], i;
+    for (i = 0; i < (row.match || []).length; i++) out.push(mkey(row.match[i]));
+    row.__mk = out;
+    return out;
+  }
+
   // 기종 입력칸 값에서 정책표 행 찾기 (정확 일치 우선 → 긴 이름 포함)
   function polFindRow(pol, modelText, conds) {
+    if (!pol) return null;
+    var wantCap = (conds || []).indexOf('512G') >= 0 ? '512G' : '256G';
+    var memoKey = wantCap + '\u0001' + mkey(modelText);
+    var memo = pol.__frow || (pol.__frow = {});
+    if (memo.hasOwnProperty(memoKey)) return memo[memoKey];
     var models = modelParts(modelText), norm = [], i, j, b;
     for (i = 0; i < models.length; i++) {
       var n = mkey(models[i]);
       if (n) norm.push(n);
     }
-    if (!norm.length) return null;
-    var wantCap = (conds || []).indexOf('512G') >= 0 ? '512G' : '256G';
-    var exact = null, best = null, bestLen = 0;
-    for (i = 0; i < pol.rows.length; i++) {
-      var row = pol.rows[i];
-      if (row.cap && row.cap !== wantCap) continue;
-      var aliases = row.match || [];
-      for (j = 0; j < aliases.length; j++) {
-        b = mkey(aliases[j]);
-        if (!b) continue;
-        for (var k = 0; k < norm.length; k++) {
-          if (norm[k] === b && !exact) exact = row;
-          else if (b.length >= 4 && norm[k].indexOf(b) >= 0 && b.length > bestLen) { best = row; bestLen = b.length; }
+    var found = null;
+    if (norm.length) {
+      var exact = null, best = null, bestLen = 0;
+      for (i = 0; i < pol.rows.length; i++) {
+        var row = pol.rows[i];
+        if (row.cap && row.cap !== wantCap) continue;
+        var aliases = polRowMk(row);
+        for (j = 0; j < aliases.length; j++) {
+          b = aliases[j];
+          if (!b) continue;
+          for (var k = 0; k < norm.length; k++) {
+            if (norm[k] === b && !exact) exact = row;
+            else if (b.length >= 4 && norm[k].indexOf(b) >= 0 && b.length > bestLen) { best = row; bestLen = b.length; }
+          }
         }
       }
+      found = exact || best;
     }
-    return exact || best;
+    /* 글자별 결과는 몇 백 개뿐 — 무한히 쌓이지 않게 4,000개까지만 담는다 */
+    var keys = Object.keys(memo);
+    if (keys.length < 4000) memo[memoKey] = found;
+    return found;
   }
 
   // 생년월일(6·8자리) → 개통일(없으면 오늘) 기준 만 나이
@@ -13878,14 +13958,16 @@
     document.body.classList.toggle('ledger-overflow', over);
   }
 
-  /* v70 — 한 번에 그리는 줄 수 상한 · v71 — 더 보기로 끝까지 이어 본다 · v74 — 3,500줄부터 자동 이어보기
+  /* v70 — 한 번에 그리는 줄 수 상한 · v71 — 더 보기로 끝까지 이어 본다 · v74 — 자동 이어보기
+     · v81 — 처음 200줄 + **스크롤하면 자동으로 200줄씩**(버튼 없음) · 화면 창 2,000줄
+       (v74의 3,500줄은 10,097건 '전체 기간'에서 2.5초 멈춤을 만들었다 — 원인은 서버가 아니라 그리기 양)
      · 정산 이관으로 기록이 1만 건 규모가 되면서 '전체 기간'·넓은 검색을 그대로 다 그리면
-       폰에서 화면이 멈추거나 렌더러가 죽었다. 한 달치는 가장 많은 달(401건)도 잘리지 않도록 500줄까지 그린다.
+       폰에서 화면이 멈추거나 렌더러가 죽었다. 한 달치는 가장 많은 달(401건)도 잘리지 않도록 그린다.
      · v71 — 500줄을 넘으면 표(·폰 카드) 아래에 `+500건 더 보기 (남은 N건)` 을 두고,
        누를 때마다 **다음 500줄만 아래에 이어 붙인다**(전체를 다시 그리지 않아 빠르고, 스크롤도 안 튄다).
      · v71 — 그래도 1만 줄(약 55만 DOM 노드)을 한 화면에 다 들면 폰 렌더러가 죽는다(실측: 9천 줄 부근).
        그래서 화면에 담는 줄은 한 번에 정해진 창까지만 들고, 그보다 더 보면 **위에서부터 걷어낸다**.
-       걷어낸 줄은 표(·카드 목록) **위의 `[▲ 1,500줄 위로]`** 로 다시 볼 수 있고, 더 보기는 2023년 5월 끝까지 계속된다.
+       걷어낸 줄은 표(·카드 목록) **위의 `[▲ 200줄 위로]`** 로 다시 볼 수 있고, 더 보기는 2023년 5월 끝까지 계속된다.
 
      v74 — 사장님: "건수를 더늘려줘" · "1500건도 적어" · "더보기누르면 바로 그냥 전체 다뜨게"
      · 처음부터 **3,500줄(약 1년 반 치)** 을 그린다. 한 달치는 가장 많은 달(401건)도 잘리지 않는다.
@@ -13894,12 +13976,20 @@
        보던 줄이 튀지 않게 한다. 걷어낸 줄은 `[▲ 1,500줄 위로]` 로 되돌아온다.
      · 폰이 튕기던 것은 **한 줄에 50~60개 조각**이 들어 9천 줄 부근에서 메모리가 꽉 찼기 때문이다.
        그래서 v74 부터는 **지금 보이는 목록 하나만** DOM 으로 만든다(숨은 표/카드는 만들지 않는다 → 조각 수 절반). */
-  var TABLE_ROW_CAP = 3500;                 // v74 — 처음 그리는 줄 수
-  var TABLE_ROW_MAX = 4500;                 // 화면에 한꺼번에 담는 최대 줄 수(DOM 한계 안전선)
-  var TABLE_ROW_STEP = 1500;                // v74 — 자동 이어보기 한 칸
-  var TABLE_AUTO_PX = 600;                  // v74 — 목록 바닥이 화면 아래 이만큼 안에 오면 자동으로 잇는다
-  var renderLimit = TABLE_ROW_CAP;          // 지금까지 펼친 끝 줄(필터가 바뀌면 3,500으로 돌아간다)
-  var renderStart = 0;                      // 화면에 담긴 첫 줄 (4,500줄을 넘으면 앞에서부터 걷어낸다)
+  /* v81 — 사장님: "전체를 누르면 뭐이리느려" → "시발 그럼 또 더보기 눌러야돼 ?"
+     · 원인은 서버가 아니라 **그리기**였다 — 10,097건에서 '전체 기간'을 누르면 v74의 3,500줄을
+       한 번에 innerHTML 로 만들어 2.5초 동안 화면이 멈췄다(한 줄에 50~60개 조각 × 3,500줄).
+     · 이제 **처음 200줄만** 즉시 그리고, 스크롤이 내려가면 **버튼 없이 200줄씩 알아서** 이어 붙인다
+       (목록 바닥이 화면 아래 400px 안으로 들어오는 순간 · 끊김 없이 계속).
+     · KPI · 직원별 실적 · 검색/필터 결과 건수는 예전처럼 **전체(1만+ 건) 기준** 그대로다.
+     · 화면 창은 2,000줄 — 넘으면 위에서 200줄씩 걷어내 메모리를 지키고, 스크롤 위치는 안 튄다.
+     · 인쇄 · 내보내기 · 한눈에 보기는 renderCtx.rows(전체)를 쓰므로 영향이 없다. */
+  var TABLE_ROW_CAP = 200;                  // v81 — 처음 그리는 줄 수
+  var TABLE_ROW_MAX = 2000;                 // 화면에 담는 최대 줄 수(DOM 한계 안전선)
+  var TABLE_ROW_STEP = 200;                 // v81 — 자동 이어보기 한 칸
+  var TABLE_AUTO_PX = 400;                  // v81 — 목록 바닥이 화면 아래 이만큼 안에 오면 바로 잇는다
+  var renderLimit = TABLE_ROW_CAP;          // 지금까지 펼친 끝 줄(필터가 바뀌면 처음 줄 수로 돌아간다)
+  var renderStart = 0;                      // 화면에 담긴 첫 줄 (창을 넘으면 앞에서부터 걷어낸다)
   var renderCtx = null;                     // 이어 붙이기에 필요한 직전 상태(줄 목록·날짜 묶음·건수)
   var lastFilterSig = '';
   /* v74 — 자동 이어보기 켜짐/꺼짐(기기마다 기억) · 스크롤 이벤트가 겹치지 않게 하는 잠금 */
@@ -13908,8 +13998,8 @@
     try { return localStorage.getItem(MORE_AUTO_KEY) !== '0'; } catch (e) { return true; }
   })();
   var moreAutoBusy = false;
-  /* v74 — 유형 패널을 열어 두고 탭하는 동안은 목록을 가볍게(1,500줄) 다시 그린다.
-     여러 개를 연달아 탭해도 3,500줄을 매번 다시 만들지 않게(폰 메모리 보호) · 닫을 때 3,500줄로 확정 */
+  /* v74 — 유형 패널을 열어 두고 탭하는 동안은 목록을 가볍게(한 칸만) 다시 그린다.
+     여러 개를 연달아 탭해도 처음 그리는 줄 수만큼을 매번 다시 만들지 않게(폰 메모리 보호) */
   var lightRender = false;
 
   function filterSignature() {
@@ -13963,18 +14053,21 @@
       '<span class="tf-name">' + esc(label) + '</span></button>';
   }
 
-  /* 결과 건수 칩 — 화면에 그린 줄 수(· 몇 번째 줄부터인지)와 조건에 맞는 전체 건수를 함께 적는다 */
+  /* 결과 건수 칩 — 화면에 그린 줄 수(· 몇 번째 줄부터인지)와 조건에 맞는 전체 건수를 함께 적는다
+     · v81 — shown 은 **목록 처음부터 센 끝 줄 번호**(renderStart + 그린 줄 수)로 통일한다.
+       예전에는 그리는 쪽과 이어 붙이는 쪽이 서로 다른 기준을 넘겨, 창을 넘긴 뒤
+       '8,317건 중 6,403~14,719건 표시' 처럼 끝 번호가 두 배가 되었다. */
   function paintResultCount(total, shown, scopeTag, searchAll, start) {
     if (!el.resultCount) return;
     var from = start || 0;
     var more = total > shown || from > 0;
     var rangeTxt = from > 0
-      ? (fmtNum(from + 1) + '~' + fmtNum(from + shown) + '건')
+      ? (fmtNum(from + 1) + '~' + fmtNum(Math.min(shown, total)) + '건')
       : (fmtNum(shown) + '건');
     el.resultCount.textContent = (scopeTag ? scopeTag + ' · ' : '') +
       (more ? fmtNum(total) + '건 중 ' + rangeTxt + ' 표시' : fmtNum(shown) + '건');
     el.resultCount.title = more
-      ? '조건에 맞는 ' + fmtNum(total) + '건 중 ' + rangeTxt + ' 을(를) 그렸습니다 — 아래로 내리면 자동으로 이어지고, [+' + fmtNum(TABLE_ROW_STEP) + '건 더 보기] 로 바로 넘길 수도 있습니다'
+      ? '조건에 맞는 ' + fmtNum(total) + '건 중 ' + rangeTxt + ' 을(를) 그렸습니다 — 스크롤을 내리면 자동으로 이어집니다'
       : '';
   }
 
@@ -13987,8 +14080,9 @@
   /* 지금 화면에 보이는 목록 종류 — 'cards'(폰 간단히 보기) 또는 'table'(표) */
   function listModeNow() { return mlistVisible() ? 'cards' : 'table'; }
 
-  /* v71 — 더 보기 막대의 글자·보임을 맞춘다 (PC 표 아래 · 폰 카드 목록 아래 중 보이는 쪽만)
-     v74 — 자동 이어보기 상태 칩 · [+1,500건 더 보기] 로 바뀌었다 */
+  /* v71 — 이어보기 막대의 글자·보임을 맞춘다 (PC 표 아래 · 폰 카드 목록 아래 중 보이는 쪽만)
+     v74 — 자동 이어보기 상태 칩 · v81 — 자동이 켜져 있으면 **더 보기 버튼을 감춘다**
+       (사장님: "시발 그럼 또 더보기 눌러야돼 ?" — 스크롤만으로 끝까지 이어진다) */
   function paintAutoChip(b) {
     if (!b) return;
     b.textContent = moreAuto ? '자동 이어보기 ON' : '자동 이어보기 OFF';
@@ -13996,7 +14090,7 @@
     b.setAttribute('aria-pressed', moreAuto ? 'true' : 'false');
     b.title = moreAuto
       ? '스크롤만 내리면 다음 ' + fmtNum(TABLE_ROW_STEP) + '건이 자동으로 이어집니다 — 눌러서 끕니다'
-      : '눌러서 자동 이어보기를 켜면 스크롤만으로 끝까지 이어집니다';
+      : '눌러서 자동 이어보기를 켜면 스크롤만으로 끝까지 이어집니다 (끈 동안만 [+더 보기] 버튼이 보입니다)';
   }
 
   function paintMore() {
@@ -14011,6 +14105,8 @@
     var counter = start > 0
       ? ('현재 ' + fmtNum(start + 1) + '~' + fmtNum(shown) + ' / ' + fmtNum(total) + '건 표시')
       : ('현재 ' + fmtNum(shown) + ' / ' + fmtNum(total) + '건 표시');
+    /* v81 — 자동이 켜져 있으면 '아래로 내리면 알아서 이어짐'만 알려 주고 버튼은 숨긴다 */
+    if (moreAuto) counter += ' · 스크롤을 내리면 자동으로 이어집니다';
     var label = '+' + fmtNum(TABLE_ROW_STEP) + '건 더 보기 (남은 ' + fmtNum(remain) + '건)';
     var pcCount = $('morePcCount'), mCount = $('moreMCount');
     if (pcCount) pcCount.textContent = counter;
@@ -14018,8 +14114,8 @@
     paintAutoChip($('morePcAuto'));
     paintAutoChip($('moreMAuto'));
     var pcBtn = $('morePcBtn'), mBtn = $('moreMBtn');
-    if (pcBtn) { pcBtn.textContent = label; pcBtn.setAttribute('aria-label', label); }
-    if (mBtn) { mBtn.textContent = label; mBtn.setAttribute('aria-label', label); }
+    if (pcBtn) { pcBtn.textContent = label; pcBtn.setAttribute('aria-label', label); pcBtn.hidden = !!moreAuto; }
+    if (mBtn) { mBtn.textContent = label; mBtn.setAttribute('aria-label', label); mBtn.hidden = !!moreAuto; }
     var onMobile = mlistVisible();
     if (pcBox) pcBox.hidden = !(show && !onMobile);
     if (mBox) mBox.hidden = !(show && onMobile);
@@ -14117,8 +14213,8 @@
     try { localStorage.setItem(MORE_AUTO_KEY, moreAuto ? '1' : '0'); } catch (e) {}
     paintMore();
     toast(moreAuto
-      ? '자동 이어보기 켬 — 스크롤만 내리면 ' + fmtNum(TABLE_ROW_STEP) + '건씩 계속 이어집니다'
-      : '자동 이어보기 끔 — [+' + fmtNum(TABLE_ROW_STEP) + '건 더 보기]로 직접 넘기세요');
+      ? '자동 이어보기 켬 — 스크롤만 내리면 ' + fmtNum(TABLE_ROW_STEP) + '건씩 알아서 이어집니다'
+      : '자동 이어보기 끔 — 목록 아래 [+' + fmtNum(TABLE_ROW_STEP) + '건 더 보기]로 직접 넘기세요');
     if (moreAuto) setTimeout(autoMoreMaybe, 60);
   }
 
@@ -14239,7 +14335,7 @@
     if (searchAll) scopeTag = scopeTag ? scopeTag + ' · 전체 기간 검색' : '전체 기간 검색';
     /* v72 — 같은 고객 이력이 접혀 있다는 것을 건수 자리에서도 알린다 */
     if (mergedAway > 0) scopeTag = scopeTag ? scopeTag + ' · 이력 묶음' : '이력 묶음';
-    paintResultCount(totalRows, rows.length, scopeTag, searchAll, renderStart);
+    paintResultCount(totalRows, renderStart + rows.length, scopeTag, searchAll, renderStart);
     el.resultCount.classList.toggle('is-allsearch', searchAll);
     // v51 — 기본 화면에서는 맨 위 KPI '총 건수' 와 겹치는 건수 칩을 숨긴다(필터 줄에 혼자 떨어지는 원인).
     //        검색·필터를 걸었을 때만 결과 건수를 보여 준다. (v52 — 스트립의 '이번 달 총 N건' 줄은 없앴다)
@@ -14322,7 +14418,7 @@
     var built = ledgerRowsHtml(rows, 0, rows.length, groupByDate, counts, groupStaff, null, listModeNow());
     el.tbody.innerHTML = built.html;
     if (el.mlist) el.mlist.innerHTML = built.mhtml;
-    if (rows.length <= 1200) syncTableOverflow();
+    if (rows.length <= 1200) setTimeout(syncTableOverflow, 60);   // v81 — 가로 넘침 재기는 화면을 먼저 그린 뒤에
     renderCtx = {
       rows: allRows, start: renderStart, rendered: renderStart + rows.length, total: totalRows,
       groupByDate: groupByDate,
@@ -14453,7 +14549,8 @@
     var aliasLabel = '';
     if (qHint && state.filters.qMode !== 'memo') {
       var qs0 = buildSearchQuery(qHint, false);
-      if (qs0.aliasNames.length && qs0.aliasNames.length <= 4) aliasLabel = qs0.aliasNames.join(' · ');
+      if (qs0.fam) aliasLabel = qs0.fam + ' 계열 전체(코드 포함)';
+      else if (qs0.aliasNames.length && qs0.aliasNames.length <= 4) aliasLabel = qs0.aliasNames.join(' · ');
     }
     el.searchScopeHint.hidden = !(scopeOn || aliasLabel);
     if (scopeOn || aliasLabel) {
