@@ -7714,6 +7714,10 @@
     var wait = Promise.all([firstJob, pullMonthIndex()]).then(function () {
       var gaps = coverageGaps() || [];
       if (!gaps.length) return 0;
+      /* v79 — 이 기기에 기록이 하나도 없는데(첫 실행·저장소 삭제) 빈 달이 많으면,
+         43개 달을 22번 나눠 받는 것보다 전체 목록(action=list) 한 번이 더 빠르고 가볍다.
+         (화면은 이미 이번 달·지난 달로 떠 있고, 그 뒤에 조용히 받는다 — v71 과 같은 동작) */
+      if ((o.coldFull || !state.records.length) && gaps.length > 8) return 'full';
       /* 이번 달 → 지난 달 → 최근 달 순서로 (화면에 먼저 보이는 달부터) */
       var rank = function (m) { return o.focus && m === o.focus ? -1 : (m === cur ? 0 : (m === prev ? 1 : 2)); };
       gaps.sort(function (a, b) {
@@ -7738,6 +7742,13 @@
       }
       return step();
     }).then(function (n) {
+      if (n === 'full') {
+        /* 첫 실행 — 전체 목록 한 번으로 모든 달을 채운다 (호출한 쪽이 pullList 로 처리) */
+        monthSyncing = false;
+        monthSyncWait = null;
+        renderSyncUi();
+        return 'full';
+      }
       bumpMonthSigs();
       sync.lastSync = Date.now();
       sync.lastError = '';
@@ -7773,7 +7784,14 @@
     if (!syncOn() || monthApiOk === false || blockedStored()) return Promise.resolve(false);
     if (monthsComplete()) return Promise.resolve(false);
     if (monthSyncing && monthSyncWait) return monthSyncWait;
-    return syncMonths({ quiet: true, quietFail: true }).then(function (ok) {
+    return syncMonths({ quiet: true, quietFail: true, coldFull: !state.records.length }).then(function (ok) {
+      if (ok === 'full') {
+        return fullPullAndApply({ quiet: true, quietFail: true }, null).then(function (r) {
+          if (r && viewNeedsAllMonths()) { renderLimit = TABLE_ROW_CAP; renderStart = 0; render(); }
+          if (mjpState.open) mjpRender();
+          return r;
+        });
+      }
       if (ok) {
         if (viewNeedsAllMonths()) { renderLimit = TABLE_ROW_CAP; renderStart = 0; render(); }
         if (mjpState.open) mjpRender();
@@ -8018,8 +8036,9 @@
         /* v79 — 달 단위 동기화: 달 목록(수십 KB)으로 바뀐 달만 받는다.
            서버가 아직 달 조회를 모르는 구버전이면(배포 전) 예전처럼 전체 목록을 받는다. */
         if (monthApiOk !== false) {
-          return syncMonths({ quiet: o.quiet, quietFail: o.quietFail, focus: o.focus, boot: o.boot })
+          return syncMonths({ quiet: o.quiet, quietFail: o.quietFail, focus: o.focus, boot: o.boot, coldFull: !state.records.length })
             .then(function (ok) {
+              if (ok === 'full') return fullPullAndApply(o, pushErr);   // 첫 실행 — 전체 한 번
               if (ok) {
                 syncing = false;
                 // v32 — 승인이 떨어졌으면 대기 화면을 내린다
