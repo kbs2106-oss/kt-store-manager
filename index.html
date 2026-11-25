@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v82">
+<meta name="app-version" content="v83">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -2256,14 +2256,22 @@
     .toolbar{gap:6px}
     .miss-filter{padding:0 9px}
     #resetFilters,#viewToggle{padding:0 9px}
-    .easy-scope{padding:1px;gap:0}
-    .easy-scope .es-nav{width:20px;height:26px;font-size:8px}
-    .easy-scope .es-btn{padding:0 7px;font-size:11px}
-    .easy-scope .es-n{font-size:10px;padding:2px 5px}
+    /* v83 — 기간 바는 여기서 줄이지 않는다(아래 @media 560px 의 v83 규칙이 크게 잡는다) */
     .easy-filter{padding:0 9px;font-size:12px}
     .easy-filter .ef-count{font-size:10.5px;padding:2px 5px}
   }
   @media (max-width:560px){
+    /* v83 — ★ 권매·쉬움 기간 바([◀][11월 30건 ▾][▶] | [전체 기간 30건])를 폰에서
+       카드 폭 끝에서 끝까지 한 줄 단독으로 넓게 쓰고(높이는 36px 그대로),
+       안의 버튼들이 그 가로 폭을 넉넉히 나눠 가진다. */
+    .easy-group{gap:6px}
+    .easy-group:has(.easy-scope:not([hidden])){flex:1 1 100%;width:100%}
+    .easy-scope{flex:1 1 100%;width:100%;height:36px;min-height:36px;padding:2px;gap:3px;flex-wrap:nowrap}
+    .easy-scope .es-nav{width:34px;height:28px;flex:0 0 34px;font-size:13px}
+    .easy-scope .es-btn{flex:1 1 auto;min-width:0;height:28px;padding:0 10px;font-size:13.5px;font-weight:800;gap:5px;justify-content:center}
+    .easy-scope .es-caret{font-size:11px}
+    .easy-scope .es-n{font-size:11.5px;padding:2px 7px;flex:none}
+    .easy-scope .es-div{height:20px;margin:0 1px}
     dialog#editDialog{width:100%}
     .fsec-body{grid-template-columns:1fr}
     .field input,.field select,.field textarea{font-size:16px;height:40px}
@@ -12413,7 +12421,7 @@
     }
     if (el.easyScopeMonthN) el.easyScopeMonthN.textContent = c.month + '건';
     if (el.easyScopeAllN) el.easyScopeAllN.textContent = c.all + '건';
-    if (el.easyScopeAllLabel) el.easyScopeAllLabel.textContent = (window.innerWidth || 999) <= 430 ? '전체' : '전체 기간';
+    if (el.easyScopeAllLabel) el.easyScopeAllLabel.textContent = (window.innerWidth || 999) <= 375 ? '전체' : '전체 기간';
     el.easyScopeMonth.classList.toggle('on', scope === 'month');
     el.easyScopeAll.classList.toggle('on', scope === 'all');
     el.easyScopeMonth.setAttribute('aria-pressed', scope === 'month' ? 'true' : 'false');
