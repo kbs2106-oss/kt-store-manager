@@ -7610,7 +7610,8 @@
   /* 달별 건수·체크섬(수십 KB) — 앱을 열 때·동기화할 때 이걸로 '바뀐 달'만 가려낸다 */
   function pullMonthIndex() {
     return monthGet({ action: 'list_months' }).then(function (d) {
-      if (!Array.isArray(d.months)) throw new Error('달 목록을 받지 못했습니다.');
+      if (String(d.action || '') !== 'list_months' || !Array.isArray(d.months))
+        throw new Error('지원하지 않는 요청입니다: list_months');
       var map = {}, i, m;
       for (i = 0; i < d.months.length; i++) {
         m = d.months[i];
@@ -7678,6 +7679,9 @@
     for (i = 0; i < months.length; i++) if (months[i] && need.indexOf(months[i]) < 0) need.push(months[i]);
     if (!need.length) return Promise.resolve(0);
     return monthGet({ action: 'list_month', months: need.join(',') }).then(function (d) {
+      /* 달 조회를 모르는 서버(또는 달 목록을 무시하고 전체를 주는 서버)면 예전 방식으로 돌아간다 */
+      if (String(d.action || '') !== 'list_month' || !d.checksums)
+        throw new Error('지원하지 않는 요청입니다: list_month');
       monthApiOk = true;
       var rows = Array.isArray(d.records) ? d.records : [];
       var cfg = null, keep = [];
@@ -15004,11 +15008,13 @@
     if (wiredGiftOn()) clearWiredGiftBad();   // v56 — 고르는 순간 빨간 테두리를 지운다
   }
 
-  /* ---------- v56 — 유선 신규(인티 신규 · 인터넷 신규 단품 · TV 단품)는 사은품 처리가 필수 ----------
-     · 유선 단독이든 무선 동판이든 유선 신규 유형이면 반드시 [상품권 고객 지급] · [단말할인쿠폰 결제] 중 하나를 고른다
-     · 약갱(인티 약갱 · 인터넷 약정갱신)은 예전처럼 선택 사항이다 */
+  /* ---------- v79 — 유선 개통(신규·약갱 **모두**)은 `유선 사은품 처리`가 필수 ----------
+     · 사장님: "유선 사은품 안찍고 넘겨도 개통장부에서 그냥 넘어가는데?"
+     · 유선 개통유형(인티 신규 · 인터넷 신규 단품 · TV 단품 · 인티 약갱 · 인터넷 약정갱신)이
+       하나라도 골라져 있으면 반드시 [상품권 고객 지급] · [단말할인쿠폰 결제] 중 하나를 고른다.
+       (v56 은 유선 신규만 필수였고 약갱은 선택이었다) */
   function wiredGiftRequired() {
-    return onestopTypeOn();
+    return !!typeSlots($('f_type') ? $('f_type').value : '').l;
   }
 
   function clearWiredGiftBad() {
@@ -15018,7 +15024,7 @@
     if (el.editDialog && !el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
   }
 
-  // 라벨 — 유선 신규면 '*' 와 '필수', 약갱이면 '선택'
+  // 라벨 — 유선 개통이면 '*' 와 '필수' (v79 — 약갱도 필수)
   function paintWiredGiftLabel() {
     var lb = $('f_wiredgiftLabel');
     if (!lb) return;
@@ -15035,7 +15041,7 @@
     wrap.hidden = !on;
     if (!on && clear !== false) setWiredGift('');
     paintWiredGiftLabel();
-    // 필수가 아니게 되면(유선 없음 · 약갱) 빨간 테두리를 지운다
+    // 필수가 아니게 되면(유선 개통유형이 없으면) 빨간 테두리를 지운다
     if (!(on && wiredGiftRequired())) clearWiredGiftBad();
   }
 
@@ -15469,7 +15475,7 @@
     if (!slots.w && !slots.l) need.push({ label: '개통유형', el: $('typeChips') });
     // v19 — 유선 개통유형을 골랐으면 유선 요금제 칸도 반드시 채운다
     if (slots.l && !planL) need.push({ label: '유선 요금제', el: $('f_plan_l') });
-    // v56 — 유선 신규(인티 신규 · 인터넷 신규 단품 · TV 단품)면 유선 사은품 처리를 반드시 고른다
+    // v79 — 유선 개통(신규·약갱 전부)이면 유선 사은품 처리를 반드시 고른다
     if (wiredGiftRequired() && !wiredGiftOn())
       need.push({ label: '유선 사은품 처리', el: $('wiredGiftChips') });
     // v27 · v31 — 번호이동·신규가입·중고신규·중고MNP 는 [결합 여부]를 반드시 고른다
