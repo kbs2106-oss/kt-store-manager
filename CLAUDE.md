@@ -973,6 +973,32 @@ kt-store-manager/
 - 차단(추방)된 기기에서는 `archiveCacheClear()` 로 지운다 — 새로고침으로 장부가 보이지 않게.
 - localStorage 키·구조는 **그대로**(하위 호환). `Code.gs`·시트 20컬럼 무수정.
 
+### 4-3. 달 단위 동기화 (v79 · `Code.gs` v9.0 `list_months` / `list_month`)
+
+- 왜: 전체 목록이 10,092건(약 5.3MB · 4~5초)이라 앱을 열 때마다 통째로 받았다.
+  이제 앱은 **달(YYYY-MM) 단위로만** 주고받는다.
+- 서버(`Code.gs` v9.0)가 더한 조회 두 가지 — 기존 `action=list`·`band_get`·`band_push` 는 **그대로**다.
+  | 요청 | 응답 | 크기·속도(실측 2026-11-25) |
+  |---|---|---|
+  | `?pin=5001&action=list_months` | `{ok, total, months:[{month, count, checksum, max}], meta:{count, checksum}, serverTime}` | 3.9KB · 약 3.8초(3열 읽기) |
+  | `?pin=5001&action=list_month&month=2026-11`<br>`?pin=5001&action=list_month&months=2026-11,2026-10` | `{ok, months, count, records:[…], counts:{달:건수}, checksums:{달:체크섬}, metaChecksum, serverTime}` | 98KB(1개월 128건) · 217KB(2개월 357건) · 약 2.6~3.0초 |
+  | `?pin=5001&action=list` (그대로) | 전체 10,092건 | 5.3MB · 약 4.0~4.3초 |
+- **체크섬**은 서버 `sigOfRows_()` 와 앱 `monthSigOfRecords`(`fnv1a`) 가 같은 식이다:
+  `FNV-1a 32bit( sort(['id|수정일시', …]).join('\n') )`, 빈 달은 `811c9dc5`.
+  → 앱은 이 기기 기록으로 같은 값을 계산해 **체크섬이 다른 달만** 다시 받는다. 알고리즘을 바꾸면 양쪽을 함께 바꾼다.
+- 개통일이 비었거나 달을 못 읽는 줄(직원명부 설정 줄)은 **어느 달 요청에도 함께** 실려 온다(`meta`).
+- 앱(v79)의 동기화 순서:
+  1. `restoreArchiveCache()` — IndexedDB 캐시로 화면을 **바로** 띄운다(네트워크 전).
+  2. `pullMonths([이번 달, 지난 달])` — `list_month` 1회(수백 건)로 그 달을 갈아 끼운다.
+  3. `pullMonthIndex()` — `list_months` 로 달 목록을 받아 `coverageGaps()`(체크섬이 다른 달·서버에 없는 달)만 남기고,
+     이번 달 → 지난 달 → 최근 달 순으로 **2개월씩** 받아 채운다.
+  4. 전체 기간·검색·임박(해지)·권매·쉬움 전체 기간처럼 **모든 달이 필요한 화면**은 `ensureAllMonths()`,
+     달 이동은 `ensureMonth(ym)` 이 빈 달을 받아 채운 뒤 다시 그린다 → 결과는 예전과 동일.
+- 서버가 아직 `list_month` 를 모르면(`지원하지 않는 요청입니다`) `monthApiOk = false` 로 두고 **예전 `action=list` 로 자동 복귀**한다.
+- 서버 성능: `SS_CACHE`·`TZ_CACHE` 로 실행 1회당 스프레드시트를 한 번만 연다(요청마다 2~3초씩 붙던 `openById` 제거).
+  `list_month` 는 개통일 열 하나만 읽어 줄을 고르고, 연속된 줄은 `runRanges_()` 로 한 번에 읽는다(60구간 넘으면 통째로 읽기).
+- 실측(모의 서버, 10,092건): 앱 첫 화면 1.1초 · 전체 기간 10,091건 · 두 번째 실행 캐시 0.7초 · 콘솔 오류 0.
+
 ### 4-1. localStorage (이 기기)
 
 - 데이터: **`kt_chilgeum_activations_v1`** (변경 금지 — 기존 사용자 데이터가 사라짐)

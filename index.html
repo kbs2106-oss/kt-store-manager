@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v78">
+<meta name="app-version" content="v79">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -6455,6 +6455,7 @@
 
   function persist() {
     invalidateMplus();
+    bumpMonthSigs();   // v79 — 기록이 바뀌면 달별 체크섬 캐시도 버린다
     try {
       /* v70 — 정산 이관([정산이관]) 기록은 이 기기에 저장하지 않는다.
          시트(공용 장부)에만 두고, 앱을 열 때 받아 화면에만 쓴다.
@@ -6611,6 +6612,7 @@
       var merged = mergeCacheWithLocal(c.records);
       if (merged.length < state.records.length) return false;   // 캐시가 더 오래된 것 같으면 그대로 둔다
       state.records = merged;
+      bumpMonthSigs();   // v79 — 캐시를 올렸으니 달별 체크섬을 다시 계산
       if (c.lastSync && c.lastSync > Number(sync.lastSync || 0)) {
         sync.lastSync = c.lastSync;
         saveSync();
@@ -7498,6 +7500,298 @@
     return job;
   }
 
+  /* =========================================================
+     v79 — 달 단위 조회 (Code.gs v9.0 · list_months / list_month)
+     ---------------------------------------------------------
+     · 왜: 공용 장부가 10,092건(5.3MB · 4~5초)이 되면서 앱을 열 때마다 전체를 받아야 했다.
+     · 이제는
+         ① 이 기기 IndexedDB 캐시(있으면 1만 건 그대로)로 화면을 **바로** 띄우고,
+         ② 이번 달 + 지난 달만 list_month 로 받아(수백 건 · 0.5~1초) 덮어쓰고,
+         ③ 뒤에서 list_months(달별 건수·체크섬 수십 KB)로 **바뀐 달만** 조용히 맞춘다.
+     · 전체 기간 · 검색 · 이력 연혁처럼 모든 달이 필요한 화면에서는
+       아직 없는 달을 마저 받아 채운다(ensureAllMonths) — 결과는 예전과 100% 같다.
+     · 체크섬은 서버(Code.gs sigOfRows_)와 **같은 식**으로 이 기기 기록에서 계산한다:
+         FNV-1a 32bit over sort(['id|수정일시', …]).join('\n')
+     · 서버가 아직 list_months 를 모르는 구버전이면(배포 전) 예전처럼 action=list 로 돌아간다.
+     ========================================================= */
+  var monthApiOk = null;         // 서버가 달 조회를 아는가 (null 확인 전 · true 지원 · false 미지원 구버전)
+  var monthSyncing = false;      // 달 목록·달 받기 진행 중
+  var monthSyncWait = null;      // 진행 중인 달 동기화(Promise) — 겹치면 같이 기다린다
+  var monthMeta = null;          // { 'YYYY-MM': {count, checksum} } 서버 기준 달 목록
+  var monthSigCache = null;      // 이 기기 기록의 달별 체크섬 (한 번 계산해 둔다)
+
+  function prevMonthKey(ym) {
+    var y = Number(String(ym || '').slice(0, 4)), m = Number(String(ym || '').slice(5, 7));
+    if (!y || !m) return '';
+    m -= 1;
+    if (m < 1) { m = 12; y -= 1; }
+    return y + '-' + pad2(m);
+  }
+
+  /* FNV-1a 32bit — Code.gs 의 fnv1a_ 와 같은 식 (바꾸면 서버도 같이 바꿔야 한다) */
+  function fnv1a(s) {
+    var h = 2166136261, i;
+    for (i = 0; i < s.length; i++) {
+      h ^= s.charCodeAt(i);
+      h = Math.imul(h, 16777619) >>> 0;
+    }
+    return ('00000000' + h.toString(16)).slice(-8);
+  }
+
+  function bumpMonthSigs() { monthSigCache = null; }
+
+  /* 이 기기 기록의 달별 체크섬 — 서버 checksums["YYYY-MM"] 와 같은 값이면 '그 달은 최신' */
+  function monthSigs() {
+    if (monthSigCache) return monthSigCache;
+    var acc = {}, i, r, m, k;
+    for (i = 0; i < state.records.length; i++) {
+      r = state.records[i];
+      m = monthOf(r.개통일);
+      if (!m) continue;
+      (acc[m] = acc[m] || []).push(String(r.id || '') + '|' + String(r.수정일시 || ''));
+    }
+    var out = {};
+    for (k in acc) if (acc.hasOwnProperty(k)) { acc[k].sort(); out[k] = fnv1a(acc[k].join('\n')); }
+    monthSigCache = out;
+    return out;
+  }
+
+  /* 서버 달 목록과 이 기기 기록을 견줘 '다시 받아야 할 달'을 고른다 (모르면 null) */
+  function coverageGaps() {
+    if (!monthMeta) return null;
+    var sigs = monthSigs(), gaps = [], m;
+    for (m in monthMeta) if (monthMeta.hasOwnProperty(m) && sigs[m] !== monthMeta[m].checksum) gaps.push(m);
+    for (m in sigs) if (sigs.hasOwnProperty(m) && !monthMeta.hasOwnProperty(m)) gaps.push(m);
+    gaps.sort();
+    return gaps;
+  }
+
+  function monthsComplete() {
+    var g = coverageGaps();
+    return !!g && g.length === 0;
+  }
+
+  /* 지금 화면이 모든 달을 필요로 하는가 (전체 기간 · 검색 · 임박 · 권매·쉬움 전체 기간) */
+  function viewNeedsAllMonths() {
+    var f = state.filters;
+    if (f.due) return true;
+    if (String(f.q || '').trim()) return true;
+    if (f.easy && easyScopeNow() === 'all') return true;
+    return !f.month;
+  }
+
+  function isMonthApiMissing(err) {
+    return /지원하지\s*않는\s*요청/.test(String((err && err.message) || err || ''));
+  }
+
+  /* 달 조회 공통 GET — 기기 정보·차단·승인 대기는 list 와 똑같이 지킨다 */
+  function monthGet(params, base, pin) {
+    var info = deviceInfo();
+    var p = {
+      pin: pin == null ? sync.pin : pin,
+      t: String(Date.now()),
+      deviceId: info.deviceId,
+      device: info.device,
+      name: info.name,
+      ua: info.ua
+    };
+    for (var k in params) if (params.hasOwnProperty(k)) p[k] = params[k];
+    var target = buildUrl(base || sync.url, p);
+    return fetchJson(target, { method: 'GET', cache: 'no-store', redirect: 'follow' })
+      .catch(function () { return jsonpGet(target); })
+      .then(function (data) {
+        if (data && data.blocked) { onBlocked(data); throw blockedError(); }
+        if (data && data.pending && data.error === 'device_pending') { onPending(data); throw pendingError(); }
+        if (!data || data.ok !== true) throw new Error((data && data.error) || '공용 장부 응답 오류');
+        return data;
+      });
+  }
+
+  /* 달별 건수·체크섬(수십 KB) — 앱을 열 때·동기화할 때 이걸로 '바뀐 달'만 가려낸다 */
+  function pullMonthIndex() {
+    return monthGet({ action: 'list_months' }).then(function (d) {
+      if (!Array.isArray(d.months)) throw new Error('달 목록을 받지 못했습니다.');
+      var map = {}, i, m;
+      for (i = 0; i < d.months.length; i++) {
+        m = d.months[i];
+        if (!m || !m.month) continue;
+        map[m.month] = { count: Number(m.count) || 0, checksum: String(m.checksum || '') };
+      }
+      monthMeta = map;
+      monthApiOk = true;
+      return map;
+    });
+  }
+
+  /* 서버에서 받은 달 기록을 화면 목록에 반영 — 그 달만 갈아 끼우고 나머지 달은 그대로 둔다 */
+  function applyServerMonths(recs, months, redraw) {
+    var mset = {}, i, id;
+    for (i = 0; i < months.length; i++) mset[months[i]] = true;
+    var map = {};
+    for (i = 0; i < state.records.length; i++) {
+      var r = state.records[i];
+      if (mset[monthOf(r.개통일)]) continue;          // 이번에 새로 받은 달은 서버 것으로 갈아 끼운다
+      map[r.id] = r;
+    }
+    var srv = {};
+    for (i = 0; i < recs.length; i++) { map[recs[i].id] = recs[i]; srv[recs[i].id] = recs[i]; }
+    /* 아직 못 올린 내 수정이 서버 값보다 새것이면 그대로 둔다 */
+    for (i = 0; i < sync.pending.length; i++) {
+      var it = sync.pending[i];
+      if (it.op !== 'upsert' || !it.rec) continue;
+      var local = normalizeRecord(it.rec);
+      var sv = srv[local.id];
+      if (sv) {
+        if (String(sv.수정일시 || '') < String(local.수정일시 || '')) map[local.id] = local;
+      } else if (!map[local.id]) {
+        map[local.id] = local;                          // 아직 시트에 없는 새 기록
+      }
+    }
+    for (i = 0; i < sync.pending.length; i++) {
+      var d = sync.pending[i];
+      if (d.op === 'delete' && d.id && srv[d.id] === undefined && map[d.id]) delete map[d.id];
+    }
+    /* 시트에 이미 들어간 대기 항목만 걷어 낸다 — 이번 응답에 없는 id 는 건드리지 않는다 */
+    sync.pending = sync.pending.filter(function (item) {
+      if (item.op === 'upsert' && item.rec) {
+        var s = srv[item.rec.id];
+        return !(s && String(s.수정일시 || '') >= String(item.rec.수정일시 || ''));
+      }
+      return true;                                      // 삭제 대기는 그대로 (다음 동기화에서 다시 확인)
+    });
+    var out = [];
+    for (id in map) if (map.hasOwnProperty(id)) out.push(map[id]);
+    state.records = out;
+    bumpMonthSigs();
+    persist();
+    if (redraw) {
+      renderLimit = TABLE_ROW_CAP;
+      renderStart = 0;
+      render();
+    }
+  }
+
+  /* 달 하나(·여러 달) 받기 — 직렬 큐로만 돌려 서버에 요청이 겹치지 않게 한다 */
+  var monthQueue = Promise.resolve();
+  function monthPullNow(months, redraw) {
+    var need = [], i;
+    for (i = 0; i < months.length; i++) if (months[i] && need.indexOf(months[i]) < 0) need.push(months[i]);
+    if (!need.length) return Promise.resolve(0);
+    return monthGet({ action: 'list_month', months: need.join(',') }).then(function (d) {
+      monthApiOk = true;
+      var rows = Array.isArray(d.records) ? d.records : [];
+      var cfg = null, keep = [];
+      for (var j = 0; j < rows.length; j++) {
+        var cr = parseRosterRow(rows[j]);
+        if (cr) { if (!cfg) cfg = cr; continue; }
+        keep.push(rows[j]);
+      }
+      if (cfg) adoptRoster(cfg);
+      applyServerMonths(keep.map(normalizeRecord), need, redraw !== false);
+      return keep.length;
+    });
+  }
+  function queueMonthPull(months, redraw) {
+    var job = monthQueue.then(function () { return monthPullNow(months, redraw); });
+    monthQueue = job.catch(function () {});
+    return job;
+  }
+
+  /*
+   * 달 동기화 — list_months 로 달 목록을 받고, 이 기기와 체크섬이 다른 달만 받는다.
+   *   boot : 이번 달 + 지난 달을 먼저 받아 화면을 빨리 채운다(첫 화면 0.5~1초)
+   *   focus: 그 달부터 받는다(사용자가 고른 달)
+   */
+  function syncMonths(opts) {
+    var o = opts || {};
+    if (monthSyncing && monthSyncWait) return monthSyncWait;
+    monthSyncing = true;
+    renderSyncUi();
+    var cur = currentMonth(), prev = prevMonthKey(cur);
+    var firstJob = o.boot
+      ? monthPullNow([cur, prev], true).catch(function () { return 0; })
+      : Promise.resolve(0);
+    var wait = Promise.all([firstJob, pullMonthIndex()]).then(function () {
+      var gaps = coverageGaps() || [];
+      if (!gaps.length) return 0;
+      /* 이번 달 → 지난 달 → 최근 달 순서로 (화면에 먼저 보이는 달부터) */
+      var rank = function (m) { return o.focus && m === o.focus ? -1 : (m === cur ? 0 : (m === prev ? 1 : 2)); };
+      gaps.sort(function (a, b) {
+        var ra = rank(a), rb = rank(b);
+        if (ra !== rb) return ra - rb;
+        return a < b ? 1 : (a > b ? -1 : 0);        // 최근 달 먼저
+      });
+      var BATCH = 2, at = 0, done = 0;
+      function step() {
+        if (at >= gaps.length) return Promise.resolve(done);
+        var batch = gaps.slice(at, at + BATCH);
+        at += BATCH;
+        var redraw = !o.quietRender && (viewNeedsAllMonths() || batch.indexOf(state.filters.month) >= 0);
+        return monthPullNow(batch, redraw).then(function (n) {
+          done += n;
+          return step();
+        }, function (err) {
+          if (err && (err.blocked || err.pending)) throw err;
+          /* 한 묶음이 실패해도 나머지 달은 계속 — 다음 동기화에서 다시 맞춘다 */
+          return step();
+        });
+      }
+      return step();
+    }).then(function (n) {
+      bumpMonthSigs();
+      sync.lastSync = Date.now();
+      sync.lastError = '';
+      saveSync();
+      archiveCacheWriteSoon();
+      monthSyncing = false;
+      monthSyncWait = null;
+      renderSyncUi();
+      return true;
+    }).catch(function (err) {
+      monthSyncing = false;
+      monthSyncWait = null;
+      if (isMonthApiMissing(err)) {
+        /* 아직 v9.0 배포 전 서버 — 예전처럼 전체 목록으로 간다 */
+        monthApiOk = false;
+        monthMeta = null;
+        renderSyncUi();
+        return false;
+      }
+      sync.lastError = errText(err);
+      saveSync();
+      renderSyncUi();
+      if (err && (err.blocked || err.pending)) throw err;
+      if (!o.quietFail) toast('동기화 실패 · ' + sync.lastError + ' · 이 기기에는 저장돼 있습니다', true);
+      return false;
+    });
+    monthSyncWait = wait;
+    return wait;
+  }
+
+  /* 모든 달이 필요한 화면(전체 기간·검색·임박·연혁)에 들어갔을 때 — 빈 달을 마저 채운다 */
+  function ensureAllMonths() {
+    if (!syncOn() || monthApiOk === false || blockedStored()) return Promise.resolve(false);
+    if (monthsComplete()) return Promise.resolve(false);
+    if (monthSyncing && monthSyncWait) return monthSyncWait;
+    return syncMonths({ quiet: true, quietFail: true }).then(function (ok) {
+      if (ok) {
+        if (viewNeedsAllMonths()) { renderLimit = TABLE_ROW_CAP; renderStart = 0; render(); }
+        if (mjpState.open) mjpRender();
+      }
+      return ok;
+    });
+  }
+
+  /* 그 달이 아직 이 기기에 없으면 받아 온다 (달 이동·연도·월 점프) */
+  function ensureMonth(ym) {
+    if (!ym || !syncOn() || monthApiOk === false || blockedStored()) return Promise.resolve(false);
+    if (!monthMeta) return syncMonths({ quiet: true, quietFail: true, focus: ym });
+    var gaps = coverageGaps() || [];
+    if (gaps.indexOf(ym) < 0) return Promise.resolve(false);
+    if (monthSyncing && monthSyncWait) return monthSyncWait;
+    return syncMonths({ quiet: true, quietFail: true, focus: ym });
+  }
+
   // 시트로 보낼 레코드 — 단말보험은 메모 표기로 옮겨 담는다 (Code.gs 20컴럼 그대로 씀)
   function sheetRecord(rec) {
     var out = {}, k;
@@ -7650,6 +7944,7 @@
     var out = [];
     for (id in map) if (map.hasOwnProperty(id)) out.push(map[id]);
     state.records = out;
+    monthMeta = null;    // v79 — 전체를 새로 받았으니 달 목록은 다음 동기화에서 다시 만든다
     renderLimit = TABLE_ROW_CAP;   // v71 — 목록이 통째로 바뀌면 500줄부터 (수천 줄 다시 그리기 방지)
     renderStart = 0;
     persist();
@@ -7661,6 +7956,29 @@
        트래픽과 체감 속도가 모두 나빠진다. 최근에 받은 목록이 있으면 **내 저장(upsert·delete)만 올리고**
        전체 목록은 건너뛴다. 60초가 지났거나, 사용자가 직접 누른 경우(force)에는 바로 받는다. */
   var SYNC_MIN_GAP = 60000;
+
+  /* v79 — 예전 방식 전체 목록 받기 (서버가 아직 달 조회를 모를 때·서버 기준 다시 불러오기) */
+  function fullPullAndApply(o, pushErr) {
+    return pullList()
+      .then(function (list) {
+        applyServerList(list);
+        sync.lastSync = Date.now();
+        sync.lastError = pushErr ? errText(pushErr) : '';
+        saveSync();
+        archiveCacheWriteSoon();   // v71 — 서버 응답 전에 뜨도록 이 기기에 통째로 담아 둔다
+        bumpMonthSigs();
+        syncing = false;
+        // v32 — 승인이 떨어졌으면 대기 화면을 내린다
+        if (pendingStored()) clearPending();
+        renderSyncUi();
+        if (sync.lastError) {
+          if (!o.quietFail) toast('동기화 실패 · ' + sync.lastError + ' · 서버 목록은 새로 받았습니다', true);
+        } else if (!o.quiet) {
+          toast('공용 장부와 동기화했습니다.');
+        }
+        return true;
+      });
+  }
 
   function runSync(opts) {
     var o = opts || {};
@@ -7696,6 +8014,29 @@
             toast('공용 장부에 저장했습니다.');
           }
           return true;
+        }
+        /* v79 — 달 단위 동기화: 달 목록(수십 KB)으로 바뀐 달만 받는다.
+           서버가 아직 달 조회를 모르는 구버전이면(배포 전) 예전처럼 전체 목록을 받는다. */
+        if (monthApiOk !== false) {
+          return syncMonths({ quiet: o.quiet, quietFail: o.quietFail, focus: o.focus, boot: o.boot })
+            .then(function (ok) {
+              if (ok) {
+                syncing = false;
+                // v32 — 승인이 떨어졌으면 대기 화면을 내린다
+                if (pendingStored()) clearPending();
+                sync.lastError = pushErr ? errText(pushErr) : '';
+                saveSync();
+                renderSyncUi();
+                if (sync.lastError) {
+                  if (!o.quietFail) toast('동기화 실패 · ' + sync.lastError + ' · 이 기기에는 저장돼 있습니다', true);
+                } else if (!o.quiet) {
+                  toast('공용 장부와 동기화했습니다.');
+                }
+                return true;
+              }
+              if (monthApiOk !== false) { syncing = false; renderSyncUi(); return false; }
+              return fullPullAndApply(o, pushErr);   // 달 조회 미지원 서버 → 전체 목록
+            });
         }
         return pullList()
           .then(function (list) {
@@ -7799,6 +8140,7 @@
     var cls = 'sync-pill', text = '공용 장부';
     if (on) {
       if (syncing) { cls += ' busy'; text = '공용 장부 연결 중…'; }
+      else if (monthSyncing) { cls += ' busy'; text = '과거 장부 불러오는 중…'; }
       else if (sync.lastError) { cls += ' err'; text = '공용 장부 · 연결 실패'; }
       else if (sync.pending.length) { cls += ' pending'; text = '공용 장부 · 저장 대기 ' + sync.pending.length + '건'; }
       else { text = '공용 장부 · ' + (sync.lastSync ? relTime(sync.lastSync) + ' 동기화' : '연결됨'); }
@@ -10454,13 +10796,28 @@
     if (!url || !pin) return syncFormError('연동 주소와 매장 PIN을 먼저 입력해 주세요.');
     el.syncStatus.className = 'sync-status';
     el.syncStatus.textContent = '연결 확인 중…';
-    pullList(url, pin).then(function (list) {
+    /* v79 — 전체 5MB 대신 달 목록(수십 KB)으로 확인한다(빠름) · 구버전 서버면 예전처럼 전체 */
+    monthGet({ action: 'list_months' }, url, pin).then(function (d) {
+      var n = 0, i;
+      var ms = Array.isArray(d.months) ? d.months : [];
+      for (i = 0; i < ms.length; i++) n += Number(ms[i].count) || 0;
       el.syncStatus.className = 'sync-status ok';
-      el.syncStatus.innerHTML = '연결 성공! 시트에 <b>' + list.length + '건</b>이 있습니다.';
+      el.syncStatus.innerHTML = '연결 성공! 시트에 <b>' + fmtNum(n + (d.meta ? Number(d.meta.count) || 0 : 0)) + '건</b>이 있습니다.<br>' +
+        '<span class="muted">' + ms.length + '개월 · 필요한 달만 받아 오는 새 방식(v9.0)으로 확인했습니다.</span>';
     }).catch(function (err) {
+      if (isMonthApiMissing(err)) {
+        pullList(url, pin).then(function (list) {
+          el.syncStatus.className = 'sync-status ok';
+          el.syncStatus.innerHTML = '연결 성공! 시트에 <b>' + fmtNum(list.length) + '건</b>이 있습니다.';
+        }).catch(function (err2) { syncProbeFail(err2); });
+        return;
+      }
+      syncProbeFail(err);
+    });
+    function syncProbeFail(err) {
       el.syncStatus.className = 'sync-status err';
       el.syncStatus.innerHTML = '연결 실패: <b>' + esc(String((err && err.message) || err)) + '</b><br>배포 설정(액세스: 모든 사용자)과 PIN을 확인해 주세요.';
-    });
+    }
   }
 
   function syncNowFromDialog() {
@@ -13741,6 +14098,8 @@
     state.filters.easyScope = ym ? 'month' : 'all';
     if (ym) state.filters.easyMonth = ym;
     render();
+    /* v79 — 그 달이 아직 이 기기에 없으면 받아 온다 (전체 기간이면 빈 달을 모두 채운다) */
+    if (ym) ensureMonth(ym); else ensureAllMonths();
     if (hadQ) {
       toast('검색어를 지우고 ' + (ym ? monthLabel(ym) : '전체 기간') + ' 보기로 이동했습니다.');
     }
@@ -13840,6 +14199,8 @@
   function mjpOpen(scope) {
     var pop = el.monthJumpPop;
     if (!pop) return;
+    /* v79 — 달별 건수를 정확히 세려면 이 기기에 그 달 기록이 있어야 한다 (없는 달은 뒤에서 채운다) */
+    if (!monthsComplete()) ensureAllMonths();
     mjpState.scope = scope === 'easy' ? 'easy' : 'top';
     mjpState.year = mjpSelectedMonth() ? Number(mjpSelectedMonth().slice(0, 4)) : new Date().getFullYear();
     mjpRender();
@@ -16014,6 +16375,8 @@
         state.filters.q = v;
         renderTable();
         updateSearchScopeHint();
+        /* v79 — 검색은 전체 기간을 훑는다 — 아직 안 받은 달이 있으면 마저 받아 결과를 맞춘다 */
+        if (String(v || '').trim()) ensureAllMonths();
       }, 120);
     });
     el.clearSearch.addEventListener('click', function () {
@@ -16155,6 +16518,8 @@
       state.filters.due = this.checked;
       state.filters.dueMode = 'all';
       render();
+      /* v79 — 임박·해지 알림은 달과 상관없이 전 기간을 본다 — 빈 달을 마저 받아 온다 */
+      if (this.checked) ensureAllMonths();
     });
     // v25 — ⭐ 권매·쉬움만 (1탭 토글) · v34 켤 때는 지금 기준 월 범위에서 시작
     if (el.easyFilter) el.easyFilter.addEventListener('click', function () {
@@ -16164,6 +16529,7 @@
         if (state.filters.month) state.filters.easyMonth = state.filters.month;
       }
       render();
+      if (state.filters.easy && easyScopeNow() === 'all') ensureAllMonths();
     });
     // v34 → v35 — ⭐ 옆 범위 바: [◀] [2026년 11월 N건] [▶] | [전체 기간 M건]
     if (el.easyScope) el.easyScope.addEventListener('click', function (e) {
@@ -16177,6 +16543,7 @@
         if (mjpState.open) mjpClose();
         state.filters.easyScope = 'all';
         render();
+        ensureAllMonths();
         return;
       }
       if (sc !== 'month') return;
@@ -17342,9 +17709,12 @@
       restoreArchiveCache();
     }
     if (syncOn() && !blockedStored()) {
-      /* v71 — 앱을 열 때는 한 번은 반드시 최신 목록을 받는다(화면은 이미 캐시로 떠 있다).
-         60초 제한은 같은 화면에서 수정·포커스 복귀가 겹칠 때만 적용된다. */
-      setTimeout(function () { runSync({ quiet: true, force: true }); }, 600);
+      /* v79 — 앱을 열면 달 단위로 받는다.
+         ① 이 기기 캐시(위 restoreArchiveCache)로 화면은 이미 떠 있고
+         ② 이번 달 + 지난 달만 list_month 로 받아(수백 건) 덮어쓴 뒤
+         ③ list_months 로 바뀐 달만 조용히 맞춘다 (전체 5.3MB 를 기다리지 않는다)
+         · 60초 제한은 같은 화면에서 수정·포커스 복귀가 겹칠 때만 적용된다. */
+      setTimeout(function () { runSync({ quiet: true, quietFail: true, force: true, boot: true }); }, 250);
     }
     // v71 — 폰·탭을 다시 열었을 때: 최근 60초 안에 받은 목록이 있으면 그대로 두고(트래픽 절약),
     //        오래됐으면 조용히 한 번만 맞춘다.
