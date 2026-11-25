@@ -169,5 +169,3 @@ self.addEventListener('message', function (event) {
   var data = event.data || {};
   if (data.type === 'SKIP_WAITING') self.skipWaiting();
 });
-
-/* selftest:update-check-s1 */
