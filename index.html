@@ -873,7 +873,15 @@
   .guardian-title .req{color:var(--red);font-weight:800}
   .guardian-note{font-size:11.5px;font-weight:700;color:#8A5200;opacity:.9}
   .guardian-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px 10px}
-  @media (max-width:560px){.guardian-grid{grid-template-columns:1fr 1fr}.guardian-grid .field:first-child{grid-column:1/-1}}
+  /* v77 — 법대 생년월일 옆 [남][여] 칩: 위 고객 생년월일 칸과 같은 모양·동작 (.gender-chip 스타일을 그대로 쓴다) */
+  .guardian-grid .field .birth-row{gap:4px}
+  .guardian-grid .field .birth-row #f_guard_birth{flex:0 1 104px;width:auto;min-width:76px;max-width:130px;padding:0 8px;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  @media (max-width:560px){
+    .guardian-grid{grid-template-columns:1fr 1fr}
+    .guardian-grid .field:first-child{grid-column:1/-1}
+    .guardian-grid .field .birth-row{gap:3px}
+    .guardian-grid .field .birth-row #f_guard_birth{flex:1 1 0;min-width:0;max-width:none;padding:0 6px;letter-spacing:0}
+  }
   .rrn-badge{
     display:inline-flex;align-items:center;height:24px;padding:0 8px;border-radius:999px;flex:0 0 auto;
     font-size:12px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;
@@ -3103,7 +3111,7 @@
           <div class="guardian-box" id="guardianBox">
             <div class="guardian-head">
               <span class="guardian-title">법정대리인 (법대) <span class="req">*</span></span>
-              <span class="guardian-note" id="guardianNote">만 18세 이하 고객 — 이름·생년월일·연락처를 모두 적어야 저장됩니다</span>
+              <span class="guardian-note" id="guardianNote">만 18세 이하 고객 — 이름·생년월일·성별·연락처를 모두 적어야 저장됩니다</span>
             </div>
             <div class="guardian-grid">
               <div class="field">
@@ -3113,7 +3121,15 @@
               </div>
               <div class="field">
                 <label for="f_guard_birth">법대 생년월일 <span class="req">*</span></label>
-                <input id="f_guard_birth" type="text" inputmode="numeric" autocomplete="off" placeholder="800101">
+                <input id="f_guard_gender" type="hidden" value="">
+                <!-- v77 — 법대 생년월일 옆 [남][여] (위 고객 생년월일 칸과 같은 모양·동작) -->
+                <div class="birth-row">
+                  <input id="f_guard_birth" type="text" inputmode="numeric" autocomplete="off" placeholder="800101" title="6자리(800101)·8자리 모두 저장됩니다. 성별을 골라야 저장됩니다.">
+                  <div class="ins-chips gender-inline" id="guardGenderChips" role="group" aria-label="법대 성별" tabindex="-1">
+                    <button type="button" class="ins-chip gender-chip" data-gender="남" aria-pressed="false" title="법정대리인 남성">남</button>
+                    <button type="button" class="ins-chip gender-chip" data-gender="여" aria-pressed="false" title="법정대리인 여성">여</button>
+                  </div>
+                </div>
                 <span class="hint hint-bad" id="guardBirthHint" hidden></span>
               </div>
               <div class="field">
@@ -5882,8 +5898,31 @@
 
   function guardianLine(r) {
     if (!r || !hasGuardianInfo(r)) return '';
-    return String(r.법대이름).trim() + ' · ' + String(r.법대생년월일).trim() +
-      ' · ' + (formatPhone(r.법대연락처) || String(r.법대연락처).trim());
+    var parts = [String(r.법대이름).trim(), String(r.법대생년월일).trim()];
+    var gg = normalizeGender(r.법대성별);
+    if (gg) parts.push(gg);                        // v77 — 이름 · 생년월일 · 성별 · 연락처
+    parts.push(formatPhone(r.법대연락처) || String(r.법대연락처).trim());
+    return parts.join(' · ');
+  }
+
+  /* v77 — 법대 성별 [남][여]: 위 고객 성별 칩과 같은 모양·동작 (같은 칩을 다시 누르면 해제) */
+  function guardGenderOn() {
+    return normalizeGender($('f_guard_gender') && $('f_guard_gender').value);
+  }
+
+  function setGuardGenderChips(g) {
+    var v = normalizeGender(g);
+    var input = $('f_guard_gender');
+    if (input) input.value = v;
+    var chips = document.querySelectorAll('#guardGenderChips button[data-gender]');
+    for (var i = 0; i < chips.length; i++) {
+      var on = chips[i].getAttribute('data-gender') === v;
+      chips[i].classList.toggle('on', on);
+      chips[i].setAttribute('aria-pressed', on ? 'true' : 'false');
+    }
+    var grp = $('guardGenderChips');
+    if (grp && v) grp.classList.remove('bad');
+    return v;
   }
 
   function paintGuardianHints(strict) {
@@ -5905,10 +5944,10 @@
       box.hidden = !msg;
       if (msg) anyMsg = true;
     }
-    // v76 — 3칸이 모두 채워지고 형식도 맞으면 저장 때 떴던 빨간 안내·테두리를 바로 내린다
+    // v76 · v77 — 3칸과 성별이 모두 채워지고 형식도 맞으면 저장 때 떴던 빨간 안내·테두리를 바로 내린다
     var allFilled = ['f_guard_name', 'f_guard_birth', 'f_guard_phone'].every(function (id) {
       return !!String($(id).value || '').trim();
-    });
+    }) && !!guardGenderOn();
     if (allFilled && !anyMsg) {
       ['f_guard_name', 'f_guard_birth', 'f_guard_phone'].forEach(function (id) { $(id).classList.remove('bad'); });
       if ($('guardianBox')) $('guardianBox').classList.remove('bad');
@@ -5929,6 +5968,7 @@
       b.textContent = '';
       b.hidden = true;
     });
+    setGuardGenderChips('');                       // v77 — 다음 고객에게 법대 성별이 따라가지 않게
     if ($('guardianBox')) $('guardianBox').classList.remove('bad');
   }
 
@@ -5943,7 +5983,7 @@
     var note = $('guardianNote');
     if (on && note) {
       var age = ageAt($('f_birth').value, $('f_date') ? $('f_date').value : '');
-      note.textContent = '만 ' + age + '세 고객 — 이름·생년월일·연락처를 모두 적어야 저장됩니다';
+      note.textContent = '만 ' + age + '세 고객 — 이름·생년월일·성별·연락처를 모두 적어야 저장됩니다';
     }
   }
 
@@ -6030,7 +6070,7 @@
       setForeignChip(true);
       filled.push('외국인');
     }
-    // v76 — 같은 번호의 지난 기록에 법정대리인이 있으면 그 3칸도 비어 있을 때만 채운다
+    // v76 · v77 — 같은 번호의 지난 기록에 법정대리인이 있으면 그 칸도 비어 있을 때만 채운다 (성별 포함)
     if ($('f_guard_name')) {
       syncGuardianField(true);
       if (guardianNeeded() && hasGuardianInfo(prev)) {
@@ -6042,6 +6082,10 @@
             gInp.classList.remove('bad');
             filled.push(gPairs[gi][2]);
           }
+        }
+        if (!guardGenderOn() && normalizeGender(prev.법대성별)) {
+          setGuardGenderChips(prev.법대성별);
+          filled.push('법대 성별');
         }
         if ($('guardianBox')) $('guardianBox').classList.remove('bad');
       }
@@ -6093,15 +6137,25 @@
         return ' ';
       });
     }
-    // v76 — 법정대리인 [법대:이름 / 생년월일 / 연락처] (이름에 '/'가 들어가도 세 칸으로 나뉘지 않게 끝 두 칸만 뒤에서 센다)
+    // v76 · v77 — 법정대리인 [법대:이름 / 생년월일 / 성별 / 연락처]
+    //   · v77 부터 성별이 붙어 4칸이다. 예전 3칸 표기([법대:이름 / 생년월일 / 연락처])도 그대로 읽는다.
+    //   · 이름에 '/'가 들어가도 칸이 밀리지 않게 뒤에서부터 세고, 빈 칸 표시 '-' 는 빈 값으로 본다.
     var reGuard = /\[법대:\s*([^\]]*)\]/g;
     s = s.replace(reGuard, function (all, v) {
       hit = true;
-      var parts = String(v || '').split(/[\/|]/).map(function (x) { return String(x).trim(); });
-      if (parts.length >= 3) {
+      var parts = String(v || '').split(/[\/|]/).map(function (x) {
+        var t = String(x).trim();
+        return t === '-' ? '' : t;
+      });
+      if (parts.length >= 4) {
         out.guardPhone = parts[parts.length - 1];
-        out.guardBirth = parts[parts.length - 2];
-        out.guardName = parts.slice(0, parts.length - 2).join(' ').trim();
+        out.guardGender = normalizeGender(parts[parts.length - 2]);
+        out.guardBirth = parts[parts.length - 3];
+        out.guardName = parts.slice(0, parts.length - 3).join(' ').trim();
+      } else if (parts.length === 3) {
+        out.guardPhone = parts[2];
+        out.guardBirth = parts[1];
+        out.guardName = parts[0];
       } else if (parts.length === 2) {
         out.guardName = parts[0];
         out.guardBirth = parts[1];
@@ -6195,12 +6249,15 @@
     if (gender) head.push(GENDER_TAG + gender + ']');
     if (normalizeDone(rec.요금제변경완료) === '완료') head.push(PLAN_DONE_MARK);
     if (normalizeDone(rec.부가서비스해지완료) === '완료') head.push(ADDON_DONE_MARK);
-    // v76 — 법정대리인(법대) [법대:이름 / 생년월일 / 연락처] — 만 18세 이하 건을 시트에서도 알 수 있게
+    // v76 · v77 — 법정대리인(법대) [법대:이름 / 생년월일 / 성별 / 연락처] — 만 18세 이하 건을 시트에서도 알 수 있게
+    //   · 성별이 비어 있는 옛 건은 v76 그대로 3칸으로 쓴다(옛 클라이언트도 읽을 수 있게).
     var gName = String(rec.법대이름 || t.guardName || '').replace(/[\[\]\/|]/g, ' ').replace(/\s+/g, ' ').trim();
     var gBirth = String(rec.법대생년월일 || t.guardBirth || '').replace(/[\[\]\/|]/g, ' ').trim();
+    var gGender = normalizeGender(rec.법대성별 || t.guardGender);
     var gPhone = String(rec.법대연락처 || t.guardPhone || '').replace(/[\[\]\/|]/g, ' ').trim();
-    if (gName || gBirth || gPhone) {
-      head.push('[법대:' + (gName || '-') + ' / ' + (gBirth || '-') + ' / ' + (gPhone || '-') + ']');
+    if (gName || gBirth || gPhone || gGender) {
+      head.push('[법대:' + (gName || '-') + ' / ' + (gBirth || '-') + ' / '
+        + (gGender ? gGender + ' / ' : '') + (gPhone || '-') + ']');
     }
     var disc = normalizeDiscount(rec.할인유형);
     if (disc) head.push(DISCOUNT_MARK[disc]);
@@ -6304,9 +6361,10 @@
     // v30 — 결제 칸 [미기입] 확인 표기 → 상태로 복원
     o.미기입 = tags.payNone || String((r && r.미기입) || '').replace(/\s/g, '');
     o.성별 = tags.gender || normalizeGender(r && r.성별) || (tags.rrn ? (tags.rrn % 2 ? '남' : '여') : '');
-    // v76 — 법정대리인 3칸: 메모 표기 [법대:…] → 값으로 복원
+    // v76 · v77 — 법정대리인 4칸: 메모 표기 [법대:…] → 값으로 복원 (성별 없는 옛 표기는 성별만 빈 값)
     o.법대이름 = String(tags.guardName || (r && r.법대이름) || '').trim();
     o.법대생년월일 = String(tags.guardBirth || (r && r.법대생년월일) || '').trim();
+    o.법대성별 = normalizeGender(tags.guardGender || (r && r.법대성별));
     o.법대연락처 = formatPhone(tags.guardPhone || (r && r.법대연락처) || '');
     o.제휴카드 = tags.card ? normalizeCard(tags.card) : normalizeCard(r && r.제휴카드);
     o.유선혜택 = normalizeWiredGift(tags.wiredGift || (r && r.유선혜택));
@@ -7536,9 +7594,10 @@
     // v54 — 줄별 할부 구분도 담는다 (빠뜨리면 서버 왕복 뒤 [카드줄할부:…] 표기가 풀린다)
     snap.카드줄할부 = String(rec.카드줄할부 || '').replace(/\s/g, '');
     snap.작성일 = normWriteStamp(rec.작성일);
-    // v76 — 법정대리인 3칸도 담는다 (빠뜨리면 서버 왕복 뒤 [법대:…] 표기가 풀린다)
+    // v76 · v77 — 법정대리인 4칸도 담는다 (빠뜨리면 서버 왕복 뒤 [법대:…] 표기가 풀린다)
     snap.법대이름 = String(rec.법대이름 || '').trim();
     snap.법대생년월일 = String(rec.법대생년월일 || '').trim();
+    snap.법대성별 = normalizeGender(rec.법대성별);
     snap.법대연락처 = String(rec.법대연락처 || '').trim();
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
@@ -14829,11 +14888,12 @@
     // v27 · v31 — 결합 여부 칸: 번호이동·신규가입·중고 2종이면 보이고, 아니면 숨긴다(수정 시 예전 값은 지우지 않는다)
     syncUsedComboField(false);
     paintUsedComboChips();
-    // v76 — 법정대리인 3칸: 저장값을 먼저 채우고, 만 18세 이하 무선 건일 때만 연다
+    // v76 · v77 — 법정대리인 4칸: 저장값을 먼저 채우고, 만 18세 이하 무선 건일 때만 연다
     if ($('f_guard_name')) {
       $('f_guard_name').value = r.법대이름 || '';
       $('f_guard_birth').value = r.법대생년월일 || '';
       $('f_guard_phone').value = r.법대연락처 || '';
+      setGuardGenderChips(r.법대성별 || '');
       ['f_guard_name', 'f_guard_birth', 'f_guard_phone'].forEach(function (gid) {
         if ($(gid)) $(gid).classList.remove('bad');
       });
@@ -14997,15 +15057,17 @@
     if (nameIssue) issues.push({ label: '고객명', el: $('f_name'), msg: nameIssue, hint: 'nameHint' });
     if (birthIssue) issues.push({ label: '생년월일', el: $('f_birth'), msg: birthIssue, hint: 'birthHint' });
     if (phoneIssue) issues.push({ label: '연락처', el: $('f_phone'), msg: phoneIssue, hint: 'phoneHint' });
-    /* v76 — 만 18세 이하(개통일 기준) 무선 개통: 법정대리인 이름·생년월일·연락처 모두 필수
+    /* v76 · v77 — 만 18세 이하(개통일 기준) 무선 개통: 법정대리인 이름·생년월일·성별·연락처 모두 필수
        하나라도 비면 저장을 막고, 형식이 틀리면 '입력 확인 필요'로 따로 알린다. */
     var guardOn = guardianNeeded();
     var gName = guardOn ? $('f_guard_name').value.trim() : '';
     var gBirth = guardOn ? $('f_guard_birth').value.trim() : '';
+    var gGender = guardOn ? guardGenderOn() : '';
     var gPhone = guardOn ? $('f_guard_phone').value.trim() : '';
     if (guardOn) {
       if (!gName) need.push({ label: '법대 이름', el: $('f_guard_name') });
       if (!gBirth) need.push({ label: '법대 생년월일', el: $('f_guard_birth') });
+      if (!gGender) need.push({ label: '법대 성별', el: $('guardGenderChips') });
       if (!gPhone) need.push({ label: '법대 연락처', el: $('f_guard_phone') });
       var gNameIssue = gName ? nameIssueText(gName) : '';
       var gBirthIssue = gBirth ? birthIssueText(gBirth) : '';
@@ -15013,7 +15075,7 @@
       if (gNameIssue) issues.push({ label: '법대 이름', el: $('f_guard_name'), msg: gNameIssue, hint: 'guardNameHint' });
       if (gBirthIssue) issues.push({ label: '법대 생년월일', el: $('f_guard_birth'), msg: gBirthIssue, hint: 'guardBirthHint' });
       if (gPhoneIssue) issues.push({ label: '법대 연락처', el: $('f_guard_phone'), msg: gPhoneIssue, hint: 'guardPhoneHint' });
-      if (!gName || !gBirth || !gPhone) {
+      if (!gName || !gBirth || !gGender || !gPhone) {
         if ($('guardianBox')) $('guardianBox').classList.add('bad');
       }
     }
@@ -15218,9 +15280,10 @@
       고객명: name,
       연락처: formatPhone(phone),
       생년월일: birth,
-      // v76 — 법정대리인(만 18세 이하 무선 개통만 저장 · 시트 메모 [법대:…] 로 왕복)
+      // v76 · v77 — 법정대리인(만 18세 이하 무선 개통만 저장 · 시트 메모 [법대:…] 로 왕복)
       법대이름: gName,
       법대생년월일: gBirth,
+      법대성별: gGender,
       법대연락처: gPhone ? formatPhone(gPhone) : '',
       개통유형: $('f_type').value,
       기종: (wiredOnly || usedTypeOn()) ? '' : $('f_model').value.trim(),   // v58 — 중고 2종은 기종 없이 저장
@@ -17186,6 +17249,19 @@
       if (!b) return;
       var g = b.getAttribute('data-gender');
       setGenderChips(genderOn() === g ? '' : g);   // 같은 칩을 다시 누르면 해제
+    });
+    // v77 — 법대 성별 칩: 위 고객 성별 칩과 같은 동작 (다시 누르면 해제 · 고르면 빨간 표시가 바로 내려간다)
+    var guardGenderBox = $('guardGenderChips');
+    if (guardGenderBox) guardGenderBox.addEventListener('click', function (e) {
+      var b = e.target && e.target.closest ? e.target.closest('button[data-gender]') : null;
+      if (!b) return;
+      var g = b.getAttribute('data-gender');
+      setGuardGenderChips(guardGenderOn() === g ? '' : g);
+      if (guardGenderOn()) {
+        guardGenderBox.classList.remove('bad');
+        if ($('guardianBox')) $('guardianBox').classList.remove('bad');
+        if (el.formError && !el.editForm.querySelector('.bad')) el.formError.classList.remove('show');
+      }
     });
     var cardBox = $('cardChips');
     if (cardBox) cardBox.addEventListener('click', function (e) {
