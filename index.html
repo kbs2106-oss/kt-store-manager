@@ -8465,7 +8465,9 @@
     return pullMonthIndex().then(function () {
       var gaps = coverageGaps() || [];
       if (!gaps.length) return 0;
-      var redraw = viewNeedsAllMonths() || gaps.indexOf(state.filters.month) >= 0;
+      /* 알림 확인은 조용해야 한다 — 지금 보고 있는 달이 바뀌었을 때만 다시 그린다.
+         '전체 기간'·검색 창을 보고 있을 때 다시 그리면 스크크롤이 맨 위로 튀어 오른다. */
+      var redraw = !viewNeedsAllMonths() && gaps.indexOf(state.filters.month) >= 0;
       return queueMonthPull(gaps, redraw);
     }).then(function (n) {
       notifyBusy = false;
