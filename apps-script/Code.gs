@@ -38,6 +38,19 @@ var OWNER_MARK   = 'Y';                  // owner 칸 표시
 var BLOCK_SHEET  = '_차단';              // 추방(차단) 목록 (숨김 탭 — 앱의 기기 관리 창에서만 바꾼다)
 var BLOCK_HEAD   = ['종류', '값', '표시이름', '차단시각', '차단한사람'];
 
+/* ===== v8.9 밴드앱(칠금점 가망고객) 전 직원 실시간 공유 =====
+   · 숨김 탭 '_밴드공유' 에 밴드앱의 고객 상태·메모·예약·댓글·글을 한 줄(항목)씩 저장한다.
+   · band_push : 직원 폰이 바꾼 칸만 올린다 → 항목(고객·글) 안에서 칸 단위로 합치고,
+                 댓글은 id 로 합집합(같은 댓글은 더 새것) → 서로 덮어쓰지 않는다.
+   · band_get  : since(마지막으로 받은 서버 ms) 이후 바뀐 항목만 돌려준다. 기기 승인제와 무관(deviceId 없이 조회). */
+var BAND_SHEET   = '_밴드공유';
+var BAND_HEAD    = ['key', '종류', 'id', 'updatedAt', '변경자', 'data'];
+var BAND_MAX     = 38000;        // 구글 시트 한 칸 50,000자 제한 — 여유 있게
+var BAND_CM_MAX  = 60;           // 항목 하나에 보관하는 최근 댓글 수
+var BAND_RV_MAX  = 100;          // 사전예약 예약자 수
+var BAND_TEXT_MAX = 2000;        // 댓글 한 건 길이
+var BAND_BODY_MAX = 12000;       // 글 본문 길이
+
 /* ===== 컬럼 (순서 고정) ===== */
 var COLS = ['id', '개통일', '고객명', '연락처', '생년월일', '개통유형', '기종', '요금제',
             '변경요금제', '요금제변경일자',
@@ -89,6 +102,9 @@ function doGet(e) {
           var sh = getDataSheet_();
           out = { ok: true, action: 'ping', sheet: SHEET_NAME,
                   count: Math.max(0, sh.getLastRow() - 1), serverTime: nowIso_() };
+        } else if (action === 'band_get') {
+          // v8.9 밴드앱 실시간 공유 — since 이후 바뀐 항목만 (JSONP callback= 도 jsonOut_ 이 처리)
+          out = bandGet_(p);
         } else {
           throw new Error('지원하지 않는 요청입니다: ' + action);
         }
@@ -152,6 +168,9 @@ function doPost(e) {
         } else if (action === 'list') {
           touchDevice_(dev);
           out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
+        } else if (action === 'band_push') {
+          // v8.9 밴드앱 실시간 공유 — 바뀐 칸만 받아 항목·칸 단위로 합친다
+          out = bandPush_(req);
         } else {
           throw new Error('지원하지 않는 요청입니다: ' + action);
         }
@@ -1060,4 +1079,254 @@ function whoami() {
   return { sheet: SHEET_NAME, pinLength: String(STORE_PIN).length, adminPinLength: String(ADMIN_PIN).length,
            staff: STAFF_NAMES, deviceSheet: DEVICE_SHEET, blockSheet: BLOCK_SHEET,
            deviceHead: DEVICE_HEAD.slice(), ownerNames: OWNER_NAMES.slice(), approval: true };
+}
+
+/* =========================================================
+   v8.9 — 밴드앱(칠금점 가망고객) 전 직원 실시간 공유
+   ---------------------------------------------------------
+   숨김 탭 '_밴드공유' 한 줄 = 항목 하나(고객 1명 또는 글 1건).
+     A: key        'c:<고객id>' | 'p:<글id>'
+     B: 종류        cust | post
+     C: id
+     D: updatedAt  이 항목을 마지막으로 바꾼 서버 시각(ms) — 이 값 이후만 받아간다
+     E: 변경자      마지막으로 바꾼 직원 이름
+     F: data       {"t","id","u","st","f":{칸:값},"cm":[댓글],"rv":[예약자]}
+
+   · 직원 폰은 '바꾼 칸'만 보낸다. 서버는 항목 안에서 칸 단위로 덮어쓰고,
+     댓글·답글은 id 로 합집합(같은 id 는 더 새로운 u) — 서로 다른 고객·다른 칸은 절대 덮이지 않는다.
+   · 한 칸 50,000자 제한을 넘지 않도록 본문·댓글 길이를 자르고 오래된 댓글부터 버린다(BAND_MAX).
+   ========================================================= */
+
+/** 숨김 탭 '_밴드공유' (없으면 만들고 숨긴다) */
+function bandSheet_() {
+  var sh = sheetByName_(BAND_SHEET, BAND_HEAD);
+  try { sh.getRange('D:D').setNumberFormat('0'); } catch (err) {}
+  try { sh.setColumnWidth(1, 150); sh.setColumnWidth(6, 420); } catch (err) {}
+  return sh;
+}
+
+/** 조회 : {URL}?pin=5001&action=band_get&since=1690000000000 */
+function bandGet_(p) {
+  var sh = bandSheet_();
+  var since = Math.max(0, parseInt((p && p.since) || 0, 10) || 0);
+  var now = Date.now();
+  var last = sh.getLastRow();
+  var items = [];
+  if (last >= 2) {
+    var vals = sh.getRange(2, 1, last - 1, BAND_HEAD.length).getValues();
+    for (var i = 0; i < vals.length; i++) {
+      var key = String(vals[i][0] || '').trim();
+      if (!key) continue;
+      var u = 0;
+      var raw4 = vals[i][3];
+      if (raw4 instanceof Date) u = raw4.getTime();
+      else u = Number(raw4) || 0;
+      if (since && u <= since) continue;
+      var raw = String(vals[i][5] || '');
+      if (!raw) continue;
+      var d = null;
+      try { d = JSON.parse(raw); } catch (err) { d = null; }
+      if (!d) continue;
+      if (!d.u) d.u = u;
+      d.st = String(vals[i][4] || '') || d.st || '';
+      items.push(d);
+    }
+  }
+  return { ok: true, action: 'band_get', now: now, since: since, count: items.length, items: items };
+}
+
+/** 저장 : POST {pin, action:'band_push', staff, items:[{t,id,f,cm,rv,u}]} */
+function bandPush_(req) {
+  var items = (req && req.items) || [];
+  var staff = String((req && (req.staff || req['담당자'])) || '').slice(0, 20);
+  var now0 = Date.now();
+  if (!items.length) return { ok: true, action: 'band_push', count: 0, now: now0 };
+  if (items.length > 60) throw new Error('한 번에 60건까지만 보낼 수 있습니다.');
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) throw new Error('다른 저장이 진행 중입니다. 잠시 뒤 다시 시도해 주세요.');
+  try {
+    var sh = bandSheet_();
+    var now = Date.now();
+    var last = sh.getLastRow();
+    var rows = {};
+    if (last >= 2) {
+      var keys = sh.getRange(2, 1, last - 1, 1).getValues();
+      for (var i = 0; i < keys.length; i++) {
+        var k = String(keys[i][0] || '').trim();
+        if (k) rows[k] = i + 2;
+      }
+    }
+    var n = 0;
+    for (var j = 0; j < items.length; j++) {
+      var it = items[j] || {};
+      var tt = String(it.t || '');
+      var t = (tt === 'cust' || tt === 'c') ? 'cust' : 'post';   // 앱은 c/p 로 보낸다
+      var id = String(it.id || '').trim();
+      if (!id) continue;
+      var key = (t === 'cust' ? 'c:' : 'p:') + id;
+      var row = rows[key] || 0;
+      var old = null;
+      if (row) {
+        try { old = bandParse_(sh.getRange(row, 1, 1, BAND_HEAD.length).getValues()[0]); } catch (err) { old = null; }
+      }
+      var rec = bandMerge_(old, it, t, id, now, staff);
+      var json = JSON.stringify(rec);
+      if (json.length > BAND_MAX) {
+        rec = bandShrink_(rec);
+        json = JSON.stringify(rec);
+      }
+      if (json.length > BAND_MAX) continue;   // 그래도 넘치면 이 건은 건너뛴다(다음 저장 때 다시)
+      var out = [key, rec.t, rec.id, now, rec.st, json];
+      if (!row) {
+        row = Math.max(sh.getLastRow() + 1, 2);
+        rows[key] = row;
+      }
+      sh.getRange(row, 1, 1, BAND_HEAD.length).setValues([out]);
+      n++;
+    }
+    SpreadsheetApp.flush();
+    return { ok: true, action: 'band_push', count: n, now: now };
+  } finally {
+    try { lock.releaseLock(); } catch (err2) {}
+  }
+}
+
+/** 저장된 한 줄 → 객체 (깨진 줄은 null) */
+function bandParse_(row) {
+  var raw = String((row && row[5]) || '');
+  if (!raw) return null;
+  try {
+    var d = JSON.parse(raw);
+    if (!d || !d.id) return null;
+    if (!d.f) d.f = {};
+    if (!d.cm) d.cm = [];
+    return d;
+  } catch (err) { return null; }
+}
+
+/** 칸 값 다듬기 — 문자열 길이 제한(셀 50,000자 보호) */
+function bandVal_(k, v) {
+  if (v === null || v === undefined) return '';
+  if (typeof v === 'boolean' || typeof v === 'number') return v;
+  var s = (typeof v === 'string') ? v : JSON.stringify(v);
+  if (k === 'body') return s.slice(0, BAND_BODY_MAX);
+  if (k === 'title') return s.slice(0, 1000);
+  if (k === 'memo') return s.slice(0, 1000);
+  return String(s).slice(0, 500);
+}
+
+/** 댓글 한 건 다듬기 (사진은 주소(http)만 — 폰에만 있는 큰 이미지는 보내지 않는다) */
+function bandCmt_(c, now) {
+  if (!c || !c.id) return null;
+  var o = {};
+  o.id = String(c.id).slice(0, 60);
+  o.author = String(c.author || '').slice(0, 20);
+  o.at = String(c.at || '').slice(0, 20);
+  o.text = String(c.text || '').slice(0, BAND_TEXT_MAX);
+  o.st = String(c.st || '').slice(0, 10);
+  o.stBy = String(c.stBy || '').slice(0, 20);
+  o.stAt = String(c.stAt || '').slice(0, 20);
+  o.resDate = String(c.resDate || '').slice(0, 10);
+  o.resTime = String(c.resTime || '').slice(0, 5);
+  o.memo = String(c.memo || '').slice(0, 200);
+  o.sys = !!c.sys;
+  var cu = +c.u || 0;
+  o.u = (cu && Math.abs(now - cu) < 86400000) ? cu : now;   // 기기 시계가 크게 틀어지면 서버 시각
+  if (c.photos && c.photos.length) {
+    o.photos = [];
+    for (var i = 0; i < c.photos.length && i < 6; i++) {
+      var ph = c.photos[i] || {};
+      var src = String(ph.src || '');
+      if (/^https?:\/\//.test(src) && src.length < 600) o.photos.push({ src: src, name: String(ph.name || '').slice(0, 40) });
+    }
+  }
+  if (c.replies && c.replies.length) {
+    o.replies = [];
+    for (var j = 0; j < c.replies.length && j < 20; j++) {
+      var r = c.replies[j] || {};
+      o.replies.push({
+        id: String(r.id || '').slice(0, 60), author: String(r.author || '').slice(0, 20),
+        at: String(r.at || '').slice(0, 20), text: String(r.text || '').slice(0, 1000),
+        st: String(r.st || '').slice(0, 10), photos: []
+      });
+    }
+  }
+  return o;
+}
+
+/** 예약자 한 줄 다듬기 */
+function bandResv_(r) {
+  if (!r) return null;
+  return {
+    id: String(r.id || '').slice(0, 60), name: String(r.name || '').slice(0, 30),
+    phone: String(r.phone || '').slice(0, 20), model: String(r.model || '').slice(0, 60),
+    owner: String(r.owner || '').slice(0, 20), memo: String(r.memo || '').slice(0, 300),
+    at: String(r.at || '').slice(0, 20), done: !!r.done
+  };
+}
+
+/** 예전 기록 + 이번에 올라온 변경 → 합친 기록 (칸 단위 + 댓글 합집합) */
+function bandMerge_(old, it, t, id, now, staff) {
+  var o = old || { t: t, id: id, u: 0, st: '', f: {}, cm: [], rv: [] };
+  var f = o.f || {};
+  var nf = it.f || {};
+  for (var k in nf) {
+    if (!nf.hasOwnProperty(k)) continue;
+    var v = bandVal_(k, nf[k]);
+    if (v === undefined) continue;
+    f[k] = v;
+  }
+  var byId = {}, list = [], c, prev;
+  for (var i = 0; i < (o.cm || []).length; i++) {
+    c = o.cm[i];
+    if (c && c.id) byId[c.id] = c;
+  }
+  var inc = it.cm || [];
+  for (var j = 0; j < inc.length; j++) {
+    c = bandCmt_(inc[j], now);
+    if (!c) continue;
+    prev = byId[c.id];
+    if (prev && (+prev.u || 0) > (+c.u || 0)) continue;   // 이미 더 새 댓글이 있다
+    byId[c.id] = c;
+  }
+  for (var kk in byId) { if (byId.hasOwnProperty(kk)) list.push(byId[kk]); }
+  list.sort(function (a, b) { return (+a.u || 0) - (+b.u || 0); });
+  if (list.length > BAND_CM_MAX) list = list.slice(list.length - BAND_CM_MAX);
+
+  var rv = it.rv;
+  if (rv === undefined || rv === null) rv = o.rv || [];
+  var rvOut = [];
+  for (var q = 0; q < rv.length && q < BAND_RV_MAX; q++) {
+    var rr = bandResv_(rv[q]);
+    if (rr) rvOut.push(rr);
+  }
+  return {
+    t: t, id: id, u: now, st: String(it.st || staff || ''),
+    f: f, cm: list, rv: rvOut
+  };
+}
+
+/** 한 칸(BAND_MAX)을 넘으면 본문을 줄이고 오래된 댓글부터 버린다 */
+function bandShrink_(rec) {
+  var out = { t: rec.t, id: rec.id, u: rec.u, st: rec.st, f: {}, cm: [], rv: rec.rv || [] };
+  for (var k in (rec.f || {})) {
+    if (!rec.f.hasOwnProperty(k)) continue;
+    out.f[k] = rec.f[k];
+  }
+  if (String(out.f.body || '').length > 4000) out.f.body = String(out.f.body).slice(0, 4000);
+  if (String(out.f.memo || '').length > 600) out.f.memo = String(out.f.memo).slice(0, 600);
+  var cm = (rec.cm || []).slice();
+  while (cm.length) {
+    out.cm = cm;
+    if (JSON.stringify(out).length <= BAND_MAX) return out;
+    cm.shift();
+  }
+  out.cm = [];
+  return out;
+}
+
+/** (관리자용) 밴드 공유 기록 몇 건인지 — 에디터에서 확인 */
+function bandShareInfo() {
+  var sh = bandSheet_();
+  return { sheet: BAND_SHEET, rows: Math.max(0, sh.getLastRow() - 1), hidden: sh.isSheetHidden() };
 }
