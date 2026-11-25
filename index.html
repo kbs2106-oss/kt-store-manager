@@ -7708,10 +7708,13 @@
     monthSyncing = true;
     renderSyncUi();
     var cur = currentMonth(), prev = prevMonthKey(cur);
+    /* v79 — 앱을 열 때는 **이번 달 + 지난 달 → 달 목록** 순서로 한가씩 보낸다.
+       둘을 동시에 보내면 Apps Script 가 각각 시트를 읽고 기기 줄을 쓰느라(락 대기)
+       첫 달 응답이 4초를 넘겼다. 한가씩 보내면 첫 화면이 먼저 뜨고 그 뒤에 맞춘다. */
     var firstJob = o.boot
       ? monthPullNow([cur, prev], true).catch(function () { return 0; })
       : Promise.resolve(0);
-    var wait = Promise.all([firstJob, pullMonthIndex()]).then(function () {
+    var wait = firstJob.then(function () { return pullMonthIndex(); }).then(function () {
       var gaps = coverageGaps() || [];
       if (!gaps.length) return 0;
       /* v79 — 이 기기에 기록이 하나도 없는데(첫 실행·저장소 삭제) 빈 달이 많으면,
