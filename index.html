@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v79">
+<meta name="app-version" content="v80">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -3977,6 +3977,320 @@
     '아이폰 18 프로', '아이폰 18 프로 맥스', '아이폰 듀오',
     '아이폰 17', '아이폰 17 에어', '아이폰 17 프로', '아이폰 17 프로 맥스'
   ];
+
+  /* =========================================================
+     v80 — 기종 모델코드 ↔ 이름 통합 검색
+     ---------------------------------------------------------
+     · 장부에는 기종이 **모델코드**로 적힌 옛 기록(SM-S931NK · M446K)과
+       **이름**으로 적힌 기록(갤럭시 S25 · 점프 3)이 섞여 있다.
+     · 아래 표(라이브 시트 2026-11-25 · 10,097건의 `기종` 값에서 뽑았다)로 둘을 이어,
+       'S25' 로 찾으면 SM-S931NK 행도, 'S931' · 'M446' 으로 찾으면
+       갤럭시 S25 · 갤럭시 점프3 행도 함께 나오게 한다 (띄어쓰기 · 하이픈 무시).
+     · 코드(c)는 **앞부분만** 적는다 — 뒤의 K/N/S/L · 용량(512) · -00 · TAC 표기를 지우고
+       비교하므로 SM-S931NK512 · SM-S931N-00 도 'S931' 하나로 잡힌다.
+     · a = 별칭(사람이 부르는 다른 이름), n = 정식 이름
+     ========================================================= */
+  var MODEL_ALIASES = [
+    { n: '갤럭시 S26', c: ['S942'], a: ['S26'] },
+    { n: '갤럭시 S26+', c: ['S947'], a: ['S26+', 'S26 플러스', 'S26플러스'] },
+    { n: '갤럭시 S26 울트라', c: ['S948'], a: ['S26 울트라', 'S26U'] },
+    { n: '갤럭시 S25', c: ['S931'], a: ['S25'] },
+    { n: '갤럭시 S25+', c: ['S936'], a: ['S25+', 'S25 플러스', 'S25플러스'] },
+    { n: '갤럭시 S25 울트라', c: ['S938'], a: ['S25 울트라', 'S25U'] },
+    { n: '갤럭시 S25 엣지', c: ['S937'], a: ['S25 엣지', 'S25E'] },
+    { n: '갤럭시 S25 FE', c: ['S731'], a: ['S25 FE', 'S25FE'] },
+    { n: '갤럭시 S24', c: ['S921'], a: ['S24'] },
+    { n: '갤럭시 S24+', c: ['S926'], a: ['S24+', 'S24 플러스', 'S24플러스'] },
+    { n: '갤럭시 S24 울트라', c: ['S928'], a: ['S24 울트라', 'S24U'] },
+    { n: '갤럭시 S24 FE', c: ['S721'], a: ['S24 FE', 'S24FE'] },
+    { n: '갤럭시 S23', c: ['S911'], a: ['S23'] },
+    { n: '갤럭시 S23+', c: ['S916'], a: ['S23+', 'S23 플러스'] },
+    { n: '갤럭시 S23 울트라', c: ['S918'], a: ['S23 울트라', 'S23U'] },
+    { n: '갤럭시 S23 FE', c: ['S711'], a: ['S23 FE', 'S23FE'] },
+    { n: '갤럭시 S22', c: ['S901'], a: ['S22'] },
+    { n: '갤럭시 S22+', c: ['S906'], a: ['S22+', 'S22 플러스'] },
+    { n: '갤럭시 S22 울트라', c: ['S908'], a: ['S22 울트라'] },
+    { n: '갤럭시 S21', c: ['G991'], a: ['S21'] },
+    { n: '갤럭시 S21+', c: ['G996'], a: ['S21+', 'S21 플러스'] },
+    { n: '갤럭시 S21 울트라', c: ['G998'], a: ['S21 울트라'] },
+    { n: '갤럭시 S20', c: ['G981'], a: ['S20'] },
+    { n: '갤럭시 S20+', c: ['G986'], a: ['S20+', 'S20 플러스'] },
+    { n: '갤럭시 S20 울트라', c: ['G988'], a: ['S20 울트라'] },
+    { n: '갤럭시 S20 FE', c: ['G781'], a: ['S20 FE'] },
+    { n: '갤럭시 S10e', c: ['G970'], a: ['S10e'] },
+    { n: '갤럭시 S10', c: ['G973'], a: ['S10'] },
+    { n: '갤럭시 S10+', c: ['G975'], a: ['S10+'] },
+    { n: '갤럭시 S10 5G', c: ['G977'], a: ['S10 5G'] },
+    { n: '갤럭시 S9', c: ['G960'], a: ['S9'] },
+    { n: '갤럭시 S9+', c: ['G965'], a: ['S9+'] },
+    { n: '갤럭시 S8', c: ['G950'], a: ['S8'] },
+    { n: '갤럭시 S8+', c: ['G955'], a: ['S8+'] },
+    { n: '갤럭시 S7', c: ['G930'], a: ['S7'] },
+    { n: '갤럭시 S6', c: ['G920'], a: ['S6'] },
+    { n: '갤럭시 Z 폴드8 울트라', c: ['F976'], a: ['폴드8 울트라', 'Z폴드8 울트라', '폴드8U'] },
+    { n: '갤럭시 Z 폴드8', c: ['F971'], a: ['폴드8', 'Z폴드8'] },
+    { n: '갤럭시 Z 폴드7', c: ['F966'], a: ['폴드7', 'Z폴드7'] },
+    { n: '갤럭시 Z 폴드6', c: ['F956'], a: ['폴드6', 'Z폴드6'] },
+    { n: '갤럭시 Z 폴드5', c: ['F946'], a: ['폴드5', 'Z폴드5'] },
+    { n: '갤럭시 Z 폴드4', c: ['F936'], a: ['폴드4', 'Z폴드4'] },
+    { n: '갤럭시 Z 폴드3', c: ['F926'], a: ['폴드3', 'Z폴드3'] },
+    { n: '갤럭시 Z 플립8', c: ['F776'], a: ['플립8', 'Z플립8'] },
+    { n: '갤럭시 Z 플립7', c: ['F766'], a: ['플립7', 'Z플립7'] },
+    { n: '갤럭시 Z 플립7 FE', c: ['F761'], a: ['플립7 FE', '플립7FE', '플립FE'] },
+    { n: '갤럭시 Z 플립6', c: ['F741'], a: ['플립6', 'Z플립6'] },
+    { n: '갤럭시 Z 플립5', c: ['F731'], a: ['플립5', 'Z플립5'] },
+    { n: '갤럭시 Z 플립4', c: ['F721'], a: ['플립4', 'Z플립4'] },
+    { n: '갤럭시 Z 플립3', c: ['F711'], a: ['플립3', 'Z플립3'] },
+    { n: '갤럭시 점프2', c: ['M336'], a: ['점프2', 'JUMP2', 'JUMP 2'] },
+    { n: '갤럭시 점프3', c: ['M446'], a: ['점프3', '점프 3', 'JUMP3', 'JUMP 3'] },
+    { n: '갤럭시 점프4', c: ['M366'], a: ['점프4', '점프 4', 'JUMP4', 'JUMP 4'] },
+    { n: '갤럭시 점프5', c: ['A276'], a: ['점프5', '점프 5', 'JUMP5', 'JUMP 5'] },
+    { n: '갤럭시 와이드7', c: ['M156'], a: ['와이드7', '와이드 7'] },
+    { n: '갤럭시 와이드8', c: ['M166'], a: ['와이드8', '와이드 8'] },
+    { n: '갤럭시 와이드9', c: ['M176'], a: ['와이드9', '와이드 9'] },
+    { n: '갤럭시 M23', c: ['M236'], a: ['M23'] },
+    { n: '갤럭시 M53', c: ['M536'], a: ['M53'] },
+    { n: '갤럭시 A10e', c: ['A102'], a: ['A10e'] },
+    { n: '갤럭시 A12', c: ['A125'], a: ['A12'] },
+    { n: '갤럭시 A13', c: ['A135'], a: ['A13'] },
+    { n: '갤럭시 A15 LTE', c: ['A155'], a: ['A15', 'A15 LTE'] },
+    { n: '갤럭시 A15 5G', c: ['A156'], a: ['A15 5G'] },
+    { n: '갤럭시 A16 LTE', c: ['A165'], a: ['A16', 'A16 LTE'] },
+    { n: '갤럭시 A16 5G', c: ['A166'], a: ['A16 5G'] },
+    { n: '갤럭시 A17', c: ['A175'], a: ['A17'] },
+    { n: '갤럭시 A20', c: ['A205'], a: ['A20'] },
+    { n: '갤럭시 A21s', c: ['A217'], a: ['A21s', 'A21'] },
+    { n: '갤럭시 A23', c: ['A235'], a: ['A23'] },
+    { n: '갤럭시 A24', c: ['A245'], a: ['A24'] },
+    { n: '갤럭시 A25', c: ['A256'], a: ['A25'] },
+    { n: '갤럭시 A31', c: ['A315'], a: ['A31'] },
+    { n: '갤럭시 A32', c: ['A325'], a: ['A32'] },
+    { n: '갤럭시 A32 5G', c: ['A326'], a: ['A32 5G'] },
+    { n: '갤럭시 A33', c: ['A336'], a: ['A33'] },
+    { n: '갤럭시 A34', c: ['A346'], a: ['A34'] },
+    { n: '갤럭시 A35', c: ['A356'], a: ['A35'] },
+    { n: '갤럭시 A36', c: ['A366'], a: ['A36'] },
+    { n: '갤럭시 A37', c: ['A376'], a: ['A37'] },
+    { n: '갤럭시 A80', c: ['G887'], a: ['A80'] },
+    { n: '갤럭시 A42 5G', c: ['A426'], a: ['A42', 'A42 5G'] },
+    { n: '갤럭시 A51', c: ['A516'], a: ['A51'] },
+    { n: '갤럭시 A52s', c: ['A528'], a: ['A52s', 'A52'] },
+    { n: '갤럭시 A53', c: ['A536'], a: ['A53'] },
+    { n: '갤럭시 A54', c: ['A546'], a: ['A54'] },
+    { n: '갤럭시 A71 5G', c: ['A716'], a: ['A71', 'A71 5G'] },
+    { n: '갤럭시 A82 5G', c: ['A826'], a: ['A82', 'A82 5G'] },
+    { n: '갤럭시 A90 5G', c: ['A908'], a: ['A90', 'A90 5G'] },
+    { n: '갤럭시 A5 (2017)', c: ['A520'], a: ['A5 2017'] },
+    { n: '갤럭시 A8 (2018)', c: ['A530'], a: ['A8 2018'] },
+    { n: '갤럭시 A9 (2018)', c: ['A920'], a: ['A9 2018'] },
+    { n: '갤럭시 노트5', c: ['N920'] },
+    { n: '갤럭시 노트 FE', c: ['N935'], a: ['노트FE'] },
+    { n: '갤럭시 노트8', c: ['N950'] },
+    { n: '갤럭시 노트9', c: ['N960'] },
+    { n: '갤럭시 노트10 5G', c: ['N971'], a: ['노트10', '노트10 5G'] },
+    { n: '갤럭시 노트10+ 5G', c: ['N976'], a: ['노트10+', '노트10 플러스'] },
+    { n: '갤럭시 노트20', c: ['N981'] },
+    { n: '갤럭시 노트20 울트라', c: ['N986'], a: ['노트20 울트라'] },
+    { n: '갤럭시 폴더2', c: ['G160'], a: ['폴더2'] },
+    { n: '갤럭시 XCover5', c: ['G525'], a: ['XCover5', '엑스커버5'] },
+    { n: '갤럭시 J7', c: ['J710', 'J737'], a: ['J7'] },
+    { n: '갤럭시 탭 A7 라이트', c: ['T225'], a: ['탭 A7 라이트'] },
+    { n: '갤럭시 탭 A8', c: ['X205'], a: ['탭 A8'] },
+    { n: '갤럭시 탭 A9+', c: ['X216'], a: ['탭 A9+', '탭 A9 플러스'] },
+    { n: '갤럭시 탭 A11+', c: ['X236'], a: ['탭 A11+', '탭 A11 플러스'] },
+    { n: '갤럭시 탭 S6 라이트', c: ['P615'], a: ['탭 S6 라이트'] },
+    { n: '갤럭시 탭 S9 울트라', c: ['X916'], a: ['탭 S9 울트라'] },
+    { n: '갤럭시 워치4', c: ['R865', 'R875'], a: ['워치4'] },
+    { n: '갤럭시 워치4 클래식', c: ['R895'], a: ['워치4 클래식'] },
+    { n: '갤럭시 워치5', c: ['R905', 'R915', 'R925'], a: ['워치5'] },
+    { n: '갤럭시 워치6', c: ['R935', 'R945'], a: ['워치6'] },
+    { n: '갤럭시 워치6 클래식', c: ['R955', 'R965'], a: ['워치6 클래식'] },
+    { n: '갤럭시 워치7', c: ['L305', 'L315'], a: ['워치7'] },
+    { n: '갤럭시 워치8', c: ['L325', 'L335'], a: ['워치8'] },
+    { n: '갤럭시 워치8 클래식', c: ['L505'], a: ['워치8 클래식'] },
+    { n: '갤럭시 워치9', c: ['L345', 'L355'], a: ['워치9'] },
+    { n: '갤럭시 워치 울트라', c: ['L705', 'L715'], a: ['워치 울트라', '워치울트라'] },
+    { n: '클래식 폴더', c: ['Z2339'], a: ['ZTE 클래식 폴더'] },
+    { n: '기가지니 LTE 2', c: ['GLM-200'], a: ['기가지니LTE2', '기가지니 LTE2'] },
+    { n: '스타일 폴더', c: ['AT-M120', 'AT-M120B', 'AT-M130', 'AT-M140'], a: ['ALT 스타일 폴더', '스타일폴더'] },
+    { n: '모토로라 엣지70', c: ['XT2601', 'XT2363', 'XT2529', 'XT2621'], a: ['엣지70', 'moto 엣지'] },
+    { n: '샤오미 레드미 14C', c: ['MI-RM14C'], a: ['Redmi 14C', '레드미14C'] },
+    { n: '샤오미 레드미 노트12', c: ['MI-RMN12'], a: ['Redmi Note 12', '레드미 노트12'] },
+    { n: '샤오미 레드미 노트13 프로', c: ['MI-RMN13P5G'], a: ['Redmi Note 13 Pro', '레드미 노트13'] },
+    { n: 'LG 벨벳', c: ['LM-G900'], a: ['벨벳'] },
+    { n: 'LG G6', c: ['LM-G600', 'LGM-G600'], a: ['G6'] },
+    { n: 'LG V30', c: ['LM-V300', 'LGM-V300'], a: ['V30'] },
+    { n: 'LG G8 씽큐', c: ['LM-G820'], a: ['G8'] },
+    { n: 'LG V40 씽큐', c: ['LM-V409'], a: ['V40'] },
+    { n: 'LG Q52', c: ['LM-Q520'], a: ['Q52'] },
+    { n: 'LG X6', c: ['LM-X625'], a: ['X6'] },
+    { n: 'LG X4', c: ['LM-X415'], a: ['X4'] },
+    { n: 'LG X2', c: ['LM-X220'], a: ['X2'] },
+    { n: 'LG U+ 와이드', c: ['LM-Y110', 'LM-Y120', 'LM-Y125'] },
+    { n: '애플워치 7', c: ['AW7C', 'AW7CN'], a: ['워치7 애플', 'Apple Watch 7'] },
+    { n: '애플워치 SE2', c: ['AWNSE2C'], a: ['Apple Watch SE2'] },
+    { n: '애플워치 SE3', c: ['AWSE3C'], a: ['Apple Watch SE3'] },
+    { n: '아이폰 18 프로 맥스', c: ['AIP18PM'], a: ['아이폰18 프로맥스'] },
+    { n: '아이폰 18 프로', c: ['AIP18P'] },
+    { n: '아이폰 17 프로 맥스', c: ['AIP17PM'], a: ['아이폰17 프로맥스'] },
+    { n: '아이폰 17 프로', c: ['AIP17P', 'UIP17P', 'UIP17PR'] },
+    { n: '아이폰 17 에어', c: ['AIPA'], a: ['아이폰 에어', 'iPhone Air'] },
+    { n: '아이폰 17', c: ['AIP17', 'IP17'] },
+    { n: '아이폰 17e', c: ['AIP17E'], a: ['아이폰 17 E'] },
+    { n: '아이폰 듀오', c: ['AIPD'], a: ['iPhone Duo'] },
+    { n: '아이폰 16 프로 맥스', c: ['AIP16PM', 'UIP16PM', 'IP16PM'], a: ['아이폰16 프로맥스'] },
+    { n: '아이폰 16 프로', c: ['AIP16P', 'UIP16P', 'UIP16PR', 'IP16P'] },
+    { n: '아이폰 16 플러스', c: ['AIP16PS'], a: ['아이폰 16+'] },
+    { n: '아이폰 16', c: ['AIP16'] },
+    { n: '아이폰 16e', c: ['AIP16E'] },
+    { n: '아이폰 15 프로 맥스', c: ['AIP15PM', 'IP15PM', 'A3106'], a: ['아이폰15 프로맥스'] },
+    { n: '아이폰 15 프로', c: ['AIP15P', 'IP15P'] },
+    { n: '아이폰 15 플러스', c: ['AIP15PS'], a: ['아이폰 15+'] },
+    { n: '아이폰 15', c: ['AIP15', 'IP15'] },
+    { n: '아이폰 14 프로 맥스', c: ['AIP14PM', 'IPPM14', 'IPHONE_14_PRO_MAX'], a: ['아이폰14 프로맥스'] },
+    { n: '아이폰 14 프로', c: ['AIP14P', 'IPP14', 'IPHONE_14_PRO'] },
+    { n: '아이폰 14 플러스', c: ['AIP14PS', 'IPPL14'], a: ['아이폰 14+'] },
+    { n: '아이폰 14', c: ['AIP14', 'IP14', 'IPHONE_14'] },
+    { n: '아이폰 13 프로 맥스', c: ['AIP13PM', 'IPHONE_13_PRO_MAX'], a: ['아이폰13 프로맥스'] },
+    { n: '아이폰 13 프로', c: ['AIP13P', 'IPHONE_13_PRO'] },
+    { n: '아이폰 13 미니', c: ['AIP13M', 'IPHONE_13_MINI'] },
+    { n: '아이폰 13', c: ['AIP13', 'IPHONE_13', 'A2633', 'A2628', 'A2638', 'A2882'] },
+    { n: '아이폰 12 프로 맥스', c: ['AIP12PM'] },
+    { n: '아이폰 12 프로', c: ['AIP12P', 'IPHONE_12_PRO'] },
+    { n: '아이폰 12 미니', c: ['AIP12M', 'IPHONE_12_MINI'] },
+    { n: '아이폰 12', c: ['AIP12', 'IPHONE_12', 'A2407', 'A2403', 'A2399', 'A2215'] },
+    { n: '아이폰 11 프로 맥스', c: ['AIP11PM', 'IPHONE_11_PRO_MAX'], a: ['아이폰11 프로맥스'] },
+    { n: '아이폰 11 프로', c: ['AIP11P'] },
+    { n: '아이폰 11', c: ['AIP11', 'IPHONE_11'] },
+    { n: '아이폰 XS 맥스', c: ['AIPXSM'] },
+    { n: '아이폰 8 플러스', c: ['AIP8P', 'IPHONE_8_PLUS'], a: ['아이폰 8+'] },
+    { n: '아이폰 8', c: ['AIP8', 'IPHONE_8'] },
+    { n: '아이폰 6s', c: ['AIP6S'] },
+    { n: '아이폰 SE3', c: ['AIPSE3'], a: ['아이폰 SE 3'] },
+    { n: '아이폰 SE2', c: ['AIPSE2'], a: ['아이폰 SE 2'] },
+    { n: '아이폰 7', c: ['IPHONE7', 'IPHONE_7'] },
+    { n: '아이폰 X', c: ['IPHONE_X'] },
+    { n: '아이패드 프로 M4 11', c: ['IPADP-M4-11'], a: ['iPad Pro M4'] },
+    { n: '아이패드 미니6', c: ['IPADM6'], a: ['iPad mini 6'] }
+  ];
+
+  /* 검색용 글자 맞추기 — 소문자로 만들고 띄어쓰기 · 밑줄 · 괄호를 지운다
+     · '점프 3' = '점프3' · 'SM-S931NK512' = 'sm-s931nk512' → 'S931' 로도 잡힌다
+     · **하이픈은 남긴다** — 지우면 'AIP15PS-256'(아이폰 15 플러스 256GB) 이 'PS256' 안의 'S25' 로
+       'S25' 검색에 걸리는 것 같은 엉뚱한 결과가 생긴다 */
+  function searchNorm(s) {
+    return String(s == null ? '' : s).toLowerCase().replace(/[\s_./()\[\]]/g, '');
+  }
+
+  // 표를 검색하기 좋게 한 번만 펼쳐 둔다 (이름 · 별칭 · 코드를 모두 소문자로)
+  var MODEL_ALIAS_INDEX = (function () {
+    var out = [], i, j;
+    for (i = 0; i < MODEL_ALIASES.length; i++) {
+      var g = MODEL_ALIASES[i];
+      var src = [g.n].concat(g.a || [], g.c || []);
+      var toks = [];
+      for (j = 0; j < src.length; j++) {
+        var t = searchNorm(src[j]);
+        if (t && toks.indexOf(t) < 0) toks.push(t);
+      }
+      out.push({ name: g.n, nameN: searchNorm(g.n), toks: toks, codes: g.c || [] });
+    }
+    return out;
+  })();
+
+  /* 검색어가 가리키는 모델 찾기
+     · 정확히 같은 말이 있으면 그 모델만 (예: 'S931' → 갤럭시 S25)
+     · 그 말이 이름 안에 든 같은 계열까지 넓힌다 (예: 'S25' → S25+ · S25 울트라 · S25 엣지 · S25 FE)
+     · 정확히 같은 말이 없으면(예: 'SM-S931N' · '갤럭시S25울트라') 글자가 겹치는 모델을 찾는다.
+       너무 짧은 코드('S8')로 온 장부를 잡지 않게 3글자 이상만 본다(한글 이름은 2글자부터). */
+  function modelAliasHits(qNorm) {
+    var qn = qNorm || '', exact = [], near = [], i, j, g, t;
+    if (!qn) return exact;
+    for (i = 0; i < MODEL_ALIAS_INDEX.length; i++) {
+      g = MODEL_ALIAS_INDEX[i];
+      for (j = 0; j < g.toks.length; j++) {
+        if (g.toks[j] === qn) { exact.push(i); break; }
+      }
+    }
+    if (exact.length) {
+      for (i = 0; i < MODEL_ALIAS_INDEX.length; i++) {
+        if (exact.indexOf(i) >= 0) continue;
+        if (MODEL_ALIAS_INDEX[i].nameN.indexOf(qn) >= 0) exact.push(i);
+      }
+      return exact;
+    }
+    for (i = 0; i < MODEL_ALIAS_INDEX.length; i++) {
+      g = MODEL_ALIAS_INDEX[i];
+      for (j = 0; j < g.toks.length; j++) {
+        t = g.toks[j];
+        var long = t.length >= 3 || (/[가-힣]/.test(t) && t.length >= 2);
+        if (!long) continue;
+        if (t.indexOf(qn) >= 0 || qn.indexOf(t) >= 0) { near.push(i); break; }
+      }
+    }
+    return near;
+  }
+
+  // 검색어 하나 → 같이 찾을 말들(코드 + 이름). 기종이 코드로 적혔든 이름으로 적혔든 이어 준다
+  function buildSearchQuery(q, memoMode) {
+    var qs = { q: String(q || '').trim().toLowerCase(), qN: '', re: null, aliasNames: [] };
+    qs.qN = searchNorm(qs.q);
+    if (memoMode || !qs.qN) return qs;
+    var hits = modelAliasHits(qs.qN), i, j, g, words = [];
+    for (i = 0; i < hits.length; i++) {
+      g = MODEL_ALIAS_INDEX[hits[i]];
+      if (qs.aliasNames.indexOf(g.name) < 0) qs.aliasNames.push(g.name);
+      for (j = 0; j < g.toks.length; j++) if (words.indexOf(g.toks[j]) < 0) words.push(g.toks[j]);
+    }
+    /* 말이 너무 많으면(예: '갤럭시') 한 줄씩 훑기엔 무거우니 넓히기를 접고 그 글자만 찾는다 */
+    if (words.length > 60) { qs.aliasNames = []; return qs; }
+    if (words.length > 1) {
+      var alt = [];
+      for (i = 0; i < words.length; i++) {
+        if (words[i] === qs.qN) continue;
+        alt.push(words[i].replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      }
+      if (alt.length) {
+        try { qs.re = new RegExp(alt.join('|')); } catch (e) { qs.re = null; }
+      }
+    }
+    return qs;
+  }
+
+  // 한 줄이 검색어에 걸리는가 — 띄어쓰기 무시 + 모델코드/이름 바꿔 찾기 포함
+  function searchHit(hay, qs) {
+    if (hay.indexOf(qs.q) >= 0) return true;
+    var hayN = searchNorm(hay);
+    if (hayN.indexOf(qs.qN) >= 0) return true;
+    if (qs.re && qs.re.test(hayN)) return true;
+    return false;
+  }
+
+  /* 기종 후보 전체 — 칩 22종 + 장부에 있던 지난 모델(갤럭시 S25 · 점프3 등)
+     · 자동완성 목록과 '정확한 기종명' 검사가 이 목록을 함께 본다 */
+  var MODEL_CATALOG_CACHE = null;
+  function modelCatalog() {
+    if (MODEL_CATALOG_CACHE) return MODEL_CATALOG_CACHE;
+    var out = KT_DEVICES.slice(), seen = {}, i;
+    for (i = 0; i < out.length; i++) seen[modelKey(out[i])] = 1;
+    for (i = 0; i < MODEL_ALIAS_INDEX.length; i++) {
+      var g = MODEL_ALIAS_INDEX[i], k = modelKey(g.name);
+      if (seen[k]) continue;
+      seen[k] = 1;
+      out.push(g.name);
+    }
+    MODEL_CATALOG_CACHE = out;
+    return out;
+  }
+
+  // 목록에 있는 기종명인가 (띄어쓰기·+ 차이 무시)
+  function isModelName(v) {
+    var want = modelKey(v);
+    if (!want) return false;
+    var cat = modelCatalog();
+    for (var i = 0; i < cat.length; i++) if (modelKey(cat[i]) === want) return true;
+    return false;
+  }
 
   // 이 기기를 구분하는 고유 ID — 관리자가 기기를 추방(차단)할 때 쓴다
   var DEVICE_KEY = 'kt_chilgeum_device_v1';
@@ -8334,7 +8648,7 @@
     var has = parts.indexOf(name) >= 0;
     for (i = 0; i < parts.length; i++) {
       if (parts[i] === name) continue;
-      if (KT_DEVICES.indexOf(parts[i]) >= 0) continue;   // 예전에 이어 붙은 다른 기종은 버린다
+      if (isModelName(parts[i])) continue;   // 예전에 이어 붙은 다른 기종은 버린다
       others.push(parts[i]);
     }
     input.value = (has ? others : [name].concat(others)).join(' + ');
@@ -8372,12 +8686,21 @@
      · 칸이 비었거나 이미 기종명이 들어 있으면 22종 전체, 타이핑 중이면 그 글자에 맞는 것만. */
   var modelSug = { list: [], active: 0, open: false };
 
+  /* v80 — 칸에 친 글자에 맞는 후보
+     · 이름 안에 그 글자가 든 기종(지난 모델 포함 — 갤럭시 S25 …)
+     · 모델코드·별칭으로도 찾는다 ('S931' → 갤럭시 S25 · 'M446' → 갤럭시 점프3) */
   function modelQueryList(q) {
-    var needle = String(q == null ? '' : q).replace(/\s/g, '').toLowerCase();
-    var out = [];
+    var needle = searchNorm(q);
+    var out = [], i;
     if (!needle) return KT_DEVICES.slice();
-    for (var i = 0; i < KT_DEVICES.length; i++) {
-      if (KT_DEVICES[i].replace(/\s/g, '').toLowerCase().indexOf(needle) >= 0) out.push(KT_DEVICES[i]);
+    var cat = modelCatalog();
+    for (i = 0; i < cat.length; i++) {
+      if (searchNorm(cat[i]).indexOf(needle) >= 0 && out.indexOf(cat[i]) < 0) out.push(cat[i]);
+    }
+    var hits = modelAliasHits(needle);
+    for (i = 0; i < hits.length; i++) {
+      var nm = MODEL_ALIAS_INDEX[hits[i]].name;
+      if (out.indexOf(nm) < 0) out.push(nm);
     }
     return out;
   }
@@ -8385,7 +8708,7 @@
   // 칸에 이미 기종명이 들어 있는가 (예: '갤럭시 S26' · '갤럭시 S26 + 인터넷 에센스')
   function modelValueHasDevice(v) {
     var parts = modelParts(v);
-    for (var i = 0; i < parts.length; i++) if (KT_DEVICES.indexOf(parts[i]) >= 0) return true;
+    for (var i = 0; i < parts.length; i++) if (isModelName(parts[i])) return true;
     return false;
   }
 
@@ -8477,7 +8800,7 @@
     if (!input || !name) return;
     var parts = modelParts(input.value);
     var at = -1;
-    for (var i = 0; i < parts.length; i++) if (KT_DEVICES.indexOf(parts[i]) >= 0) { at = i; break; }
+    for (var i = 0; i < parts.length; i++) if (isModelName(parts[i])) { at = i; break; }
     if (at >= 0) parts[at] = name;
     else parts = [name];
     input.value = parts.join(' + ');
@@ -10002,6 +10325,12 @@
     // 요금제 목록(선택창 · 검색 후보)도 바로 따라간다
     if (typeof renderPlanPickerBody === 'function') renderPlanPickerBody();
     if (planSug && planSug.input) showPlanSuggest(planSug.input);
+    // v80 — 영문 이름 안내로 칠해 둔 빨간 테두리·배너를 바로 지운다
+    if (on) {
+      var fbox = $('foreignChips');
+      if (fbox) fbox.classList.remove('bad');
+      if (el && el.editDialog && el.formError && !el.editDialog.querySelector('.bad')) el.formError.classList.remove('show');
+    }
     // 외국인이면 뒷자리 첫 번호가 5·6 / 7·8 로 바뀐다
     renderRrnDigit();
   }
@@ -10257,12 +10586,13 @@
 
   function modelExact(text) {
     var parts = modelParts(text), i, j, want, hit;
+    var cat = modelCatalog();   // v80 — 칩 22종 + 장부에 있던 지난 모델(갤럭시 S25 · 점프3 …)
     for (i = 0; i < parts.length; i++) {
       want = modelKey(parts[i]);
       if (!want) continue;
       hit = false;
-      for (j = 0; j < KT_DEVICES.length; j++) {
-        if (modelKey(KT_DEVICES[j]) === want) { hit = true; break; }
+      for (j = 0; j < cat.length; j++) {
+        if (modelKey(cat[j]) === want) { hit = true; break; }
       }
       if (hit) return true;
     }
@@ -11131,6 +11461,8 @@
     else if (forceMonth !== undefined) month = forceMonth || '';
     else if (easyAll) month = '';
     else month = f.month;
+    // v80 — 기종은 코드(SM-S931NK)와 이름(갤럭시 S25)이 섞여 있어, 검색어를 모델 표로 한 번 넓혀 둔다
+    var qs = q ? buildSearchQuery(q, f.qMode === 'memo') : null;
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
       // v74 — 유형은 여러 개를 함께 고를 수 있다 (하나라도 들어 있으면 보인다)
@@ -11175,7 +11507,8 @@
           if (r.개통유형) hay += ' ' + typeParts(r.개통유형).map(wiredTypeCanon).join(' ').toLowerCase();
           if (normalizeIns(r.단말보험) === '가입') hay += ' 단말보험 보험가입 가입';
           if (isEasy(r.권매쉬움)) hay += ' 권매쉬움 권매 쉬움';
-          if (hay.indexOf(q) < 0) return false;
+          /* v80 — 띄어쓰기 무시 + 모델코드/이름 바꿔 찾기 ('S931' ↔ 갤럭시 S25 · '점프3' ↔ 점프 3) */
+          if (!searchHit(hay, qs)) return false;
         }
       }
       return true;
@@ -14115,10 +14448,20 @@
     if (!el.searchScopeHint) return;
     var qHint = String(state.filters.q || '').trim();
     var scopeOn = !!qHint && !state.filters.due && !!state.filters.month;
-    el.searchScopeHint.hidden = !scopeOn;
-    if (scopeOn) {
-      el.searchScopeHint.innerHTML = '<b>전체 기간에서 찾는 중</b> — 검색어를 지우면 ' +
-        esc(monthLabel(state.filters.month)) + ' 목록으로 돌아갑니다.';
+    /* v80 — 모델코드와 이름을 바꿔 찾고 있으면 어느 기종으로 찾는지 알려 준다
+       ('S931' 로 찾았는데 갤럭시 S25 가 나오는 이유를 바로 알 수 있게) */
+    var aliasLabel = '';
+    if (qHint && state.filters.qMode !== 'memo') {
+      var qs0 = buildSearchQuery(qHint, false);
+      if (qs0.aliasNames.length && qs0.aliasNames.length <= 4) aliasLabel = qs0.aliasNames.join(' · ');
+    }
+    el.searchScopeHint.hidden = !(scopeOn || aliasLabel);
+    if (scopeOn || aliasLabel) {
+      var parts = [];
+      if (aliasLabel) parts.push('<b>모델코드·이름 함께 찾는 중</b> — ' + esc(aliasLabel));
+      if (scopeOn) parts.push('<b>전체 기간에서 찾는 중</b> — 검색어를 지우면 ' +
+        esc(monthLabel(state.filters.month)) + ' 목록으로 돌아갑니다.');
+      el.searchScopeHint.innerHTML = parts.join('<br>');
     }
   }
 
@@ -15604,6 +15947,18 @@
         need = need.filter(function (n) { return !!ARC_KEEP[n.label]; });
         planBad = [];
       }
+    }
+
+    /* v80 — 고객명에 영문이 있는데 '외국인'을 안 골랐으면 저장을 막는다
+       (사장님: "영어이름 쓰면 외국인 체크 안하면 안넘어가게")
+       · 외국인 요금제(웰컴5·웰컴3·웰컴1)를 쓰는 고객이라 '외국인' 표시가 꼭 남아야 한다
+       · 정산 이관([정산이관]) 건은 원본 정산 파일의 이름을 그대로 두는 기록이라 빼 준다 */
+    if (name && /[A-Za-z]/.test(name) && !foreignOn() && !isArchiveRec(arcEditing)) {
+      issues.push({
+        label: '외국인',
+        el: $('foreignChips'),
+        msg: '영문 이름은 \'외국인\'을 선택해 주세요 (고객명 ‘' + name + '’).'
+      });
     }
 
     if (need.length || issues.length || planBad.length) {
