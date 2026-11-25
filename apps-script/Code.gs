@@ -241,12 +241,20 @@ function nowIso_() {
   return Utilities.formatDate(new Date(), tz_(), "yyyy-MM-dd'T'HH:mm:ssXXX");
 }
 
+/* v9.0 — 실행 한 번 안에서 스프레드시트를 여러 번 열지 않는다
+   · tz_() · getDataSheet_() · nowIso_() 마다 openById 를 부르면
+     0.2~0.5초짜리 호출이 요청당 서너 번씩 붙어 응답이 2~3초 느려졌다. */
+var SS_CACHE = null;
+var TZ_CACHE = '';
+
 function tz_() {
+  if (TZ_CACHE) return TZ_CACHE;
   try {
     var tz = getSpreadsheet_().getSpreadsheetTimeZone();
-    if (tz) return tz;
+    if (tz) { TZ_CACHE = tz; return tz; }
   } catch (err) {}
-  return Session.getScriptTimeZone() || 'Asia/Seoul';
+  TZ_CACHE = Session.getScriptTimeZone() || 'Asia/Seoul';
+  return TZ_CACHE;
 }
 
 function pad2_(n) { return (n < 10 ? '0' : '') + n; }
@@ -289,10 +297,12 @@ function dateToText_(v, tz) {
    ========================================================= */
 
 function getSpreadsheet_() {
+  if (SS_CACHE) return SS_CACHE;
   var ss = null;
   try { ss = SpreadsheetApp.getActiveSpreadsheet(); } catch (err) { ss = null; }
   if (!ss && SPREADSHEET_ID) ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   if (!ss) throw new Error('스프레드시트를 열 수 없습니다. SPREADSHEET_ID 를 확인해 주세요.');
+  SS_CACHE = ss;
   return ss;
 }
 
@@ -595,17 +605,17 @@ function listMonthOut_(p) {
   var sh = getDataSheet_();
   var idx = ensureHeader_(sh);
   var tz = tz_();
-  var rows = scanRows_(sh, idx);
-  var allow = {}, counts = {}, checksums = {};
-  var i, it;
+  /* 개통일 열 **하나만** 읽어 그 달 줄을 가린다 (list_month 는 10,000행에서도 0.2~0.4초) */
+  var last = sh.getLastRow();
+  var allow = {}, counts = {}, i, r;
   for (i = 0; i < want.length; i++) counts[want[i]] = 0;
-  for (i = 0; i < rows.length; i++) {
-    it = rows[i];
-    if (it.empty) continue;
-    // meta(달 없음) 줄은 어느 요청에나 함께 — 직원명부 설정 줄이 여기 있다
-    if (!it.month) { allow[it.row] = true; continue; }
-    if (want.indexOf(it.month) < 0) continue;
-    allow[it.row] = true;
+  if (last >= 2) {
+    var dates = sh.getRange(2, idx.map['개통일'] + 1, last - 1, 1).getValues();
+    for (r = 0; r < dates.length; r++) {
+      var m = monthOfText_(dateToText_(dates[r][0], tz));
+      if (!m) { allow[r + 2] = true; continue; }      // 달 없는 줄(명부 설정 줄)은 어느 요청에나
+      if (want.indexOf(m) >= 0) allow[r + 2] = true;
+    }
   }
   var rowsToRead = [];
   for (var k in allow) if (allow.hasOwnProperty(k)) rowsToRead.push(Number(k));
@@ -614,7 +624,7 @@ function listMonthOut_(p) {
   var runs = runRanges_(rowsToRead);
   if (runs.length > MONTH_RUN_MAX) {
     // 행이 지천으로 흩어졌으면 통째로 한 번 읽고 거른다(낱개 읽기 폭발 방지)
-    runs = [{ start: 2, end: sh.getLastRow() }];
+    runs = [{ start: 2, end: last }];
   }
   var recs = [];
   for (i = 0; i < runs.length; i++) {
@@ -622,26 +632,25 @@ function listMonthOut_(p) {
     if (b < 2) continue;
     if (a < 2) a = 2;
     var values = sh.getRange(a, 1, b - a + 1, idx.width).getValues();
-    for (var r = 0; r < values.length; r++) {
+    for (r = 0; r < values.length; r++) {
       var rowNum = a + r;
       if (!allow[rowNum]) continue;
       var rec = recordFromRow_(values[r], idx, tz, rowNum);
-      if (rec) recs.push({ row: rowNum, rec: rec });
+      if (rec) recs.push(rec);
     }
   }
-  // 달별 건수·체크섬 — 응답에 담은 줄 그대로 (앱이 이 기기 기록으로 계산하는 값과 같아야 한다)
+  /* 달별 건수·체크섬 — 방금 담은 줄 그대로 (앱이 이 기기 기록으로 계산하는 값과 같아야 한다) */
   var byMonth = {}, metaRows = [], out = [];
   for (i = 0; i < recs.length; i++) {
-    var rc = recs[i].rec;
-    var m = monthOfText_(rc.개통일);
-    if (!m) { metaRows.push({ id: rc.id, mod: String(rc.수정일시 || '') }); out.push(rc); continue; }
-    (byMonth[m] = byMonth[m] || []).push({ id: rc.id, mod: String(rc.수정일시 || '') });
-    counts[m] = (counts[m] || 0) + 1;
+    var rc = recs[i];
+    var mm = monthOfText_(rc.개통일);
+    if (!mm) { metaRows.push({ id: rc.id, mod: String(rc.수정일시 || '') }); out.push(rc); continue; }
+    (byMonth[mm] = byMonth[mm] || []).push({ id: rc.id, mod: String(rc.수정일시 || '') });
+    counts[mm] = (counts[mm] || 0) + 1;
     out.push(rc);
   }
-  for (i = 0; i < want.length; i++) {
-    checksums[want[i]] = sigOfRows_(byMonth[want[i]] || []);
-  }
+  var checksums = {};
+  for (i = 0; i < want.length; i++) checksums[want[i]] = sigOfRows_(byMonth[want[i]] || []);
   return { ok: true, action: 'list_month', sheet: SHEET_NAME, months: want.slice(),
            count: out.length, records: out, counts: counts, checksums: checksums,
            metaChecksum: sigOfRows_(metaRows),
