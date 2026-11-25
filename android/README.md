@@ -8,7 +8,7 @@
 | --- | --- |
 | 앱 이름 | `KT 칠금점 개통장부` |
 | 패키지 | `com.ktchilgeum.ledger` |
-| 버전 | 2.0.0 (versionCode 2) |
+| 버전 | 2.1.0 (versionCode 3) |
 | 최소 안드로이드 | 7.0 (API 24) |
 | 로드 주소 | `https://kbs2106-oss.github.io/kt-store-manager/` |
 | User-Agent 식별자 | `... KTChilgeumLedgerApp/2.0` |
@@ -78,3 +78,22 @@ WebView 로컬 데이터가 초기화됩니다). 기본 경로는 `android/.keys
 - 웹 쪽 파일(`index.html`, `sw.js`, `CLAUDE.md`)은 이 앱 작업에서 건드리지 않습니다.
   단 v61 에서는 웹이 `KtSecure` 를 부르도록 `index.html` 에 한 줄(`syncCaptureAllowed()`)이 들어갔습니다.
 - APK 는 실시간 사이트를 불러오므로 웹만 고칠 때는 재빌드가 필요 없습니다.
+
+## 관리자 새 개통 알림 (v2.1)
+
+웹 장부(v82)가 관리자 PIN(0525)을 통과한 기기에서만 켠다. 0525 를 한 번도 넣지 않은 직원 폰은
+`enabled=false` 라 앱이 아무 알림도 띄우지 않는다.
+
+| 웹 → 앱 (`window.KTStoreBridge` · 기존 `window.KTChilgeumApp` 도 같은 함수) | 하는 일 |
+| --- | --- |
+| `notify(title, body)` | 네이티브 상단 알림(채널 `store_alerts` · `IMPORTANCE_HIGH`) |
+| `setAdminNotify(on, url, pin, deviceId, name)` | 켜짐 여부 + 공용 장부 접속 정보를 SharedPreferences 에 저장하고 15분 주기 확인(JobScheduler)을 걸거나 취소 |
+| `setNotifySeen(json)` / `getNotifySeen()` | 웹과 앱이 같은 기준선(`{seeded, seen:{id:수정일시}}`)을 쓴다 — 같은 건이 두 번 울리지 않게 |
+| `markNotified(id, stamp)` | 웹이 이미 띄운 건을 앱 기준선에도 반영 |
+
+- **앱을 닫아 둔 동안**: `NotifyJobService` 가 15분마다(JobScheduler 최소 주기) `list_months` → 바뀐 달만
+  `list_month` 로 받아 새 건·수정 건을 가려 알린다. 절전(Doze) 상태에서는 몇 분 늦을 수 있다.
+- **알림 문구**(웹과 동일): 제목 `📋 새 개통 등록 · {담당자}` / `✏️ 개통 수정 · {담당자}`,
+  본문 `{고객명} · {기종 또는 유선 요금제} · {개통유형}`. 한 번에 3건 + 나머지는 `📋 개통 알림 N건` 요약.
+- **권한**: `POST_NOTIFICATIONS`(안드로이드 13+ 런타임 요청) · `RECEIVE_BOOT_COMPLETED`(재부팅 뒤 주기 확인 유지).
+- 앱이 뒤로 가면 최근 앱 미리보기는 v2 와 같이 다시 가린다(캡처 차단은 알림과 별개).

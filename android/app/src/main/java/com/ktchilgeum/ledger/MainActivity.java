@@ -58,9 +58,12 @@ public class MainActivity extends Activity {
     private static final String BRIDGE_NAME = "KTChilgeumApp";
     /** v2 — 웹 장부가 관리자 모드에서만 캡처를 허용하도록 부르는 다리 */
     private static final String SECURE_BRIDGE_NAME = "KtSecure";
+    /** v2.1 — 관리자 새 개통 알림 다리(웹 v82). 기존 KTChilgeumApp 에도 같은 함수가 있다. */
+    private static final String STORE_BRIDGE_NAME = "KTStoreBridge";
     private static final String SAVE_FOLDER = "KT칠금점개통장부";
     private static final int REQ_FILE_CHOOSER = 1001;
     private static final int REQ_WRITE_STORAGE = 1002;
+    private static final int REQ_NOTIFICATIONS = 1003;
     private static final long BACK_PRESS_WINDOW_MS = 2000L;
 
     private WebView webView;
@@ -69,6 +72,7 @@ public class MainActivity extends Activity {
     private boolean captureAllowed = false;
     private ValueCallback<Uri[]> pendingFileCallback;
     private long lastBackPressedAt = 0L;
+    private boolean askedNotifications = false;
 
     private String pendingSaveName;
     private String pendingSaveMime;
@@ -85,6 +89,12 @@ public class MainActivity extends Activity {
 
         getWindow().setStatusBarColor(Color.parseColor("#0F4C81"));
         getWindow().setNavigationBarColor(Color.WHITE);
+
+        /* v2.1 — 새 개통 알림 채널(store_alerts)을 만들어 두고, 켜져 있던 기기면 주기 확인을 다시 건다 */
+        NotifyStore.createChannel(this);
+        if (NotifyStore.enabled(this)) {
+            NotifyStore.schedule(this);
+        }
         int uiFlags = getWindow().getDecorView().getSystemUiVisibility();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             uiFlags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
@@ -147,6 +157,7 @@ public class MainActivity extends Activity {
 
         webView.addJavascriptInterface(new AppBridge(), BRIDGE_NAME);
         webView.addJavascriptInterface(new SecureBridge(), SECURE_BRIDGE_NAME);
+        webView.addJavascriptInterface(new StoreBridge(), STORE_BRIDGE_NAME);
         webView.setWebViewClient(new AppWebViewClient());
         webView.setWebChromeClient(new AppChromeClient());
         webView.setDownloadListener(new AppDownloadListener());
@@ -377,7 +388,88 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String appVersion() {
-            return "2.0.0";
+            return "2.1.0";
+        }
+
+        /* ── v2.1 — 관리자 새 개통 알림 (웹 v82) ───────────────────────── */
+
+        /** 웹이 관리자 알림을 띄울 때 — 네이티브 상단 알림(채널 store_alerts) */
+        @JavascriptInterface
+        public void notify(String title, String body) {
+            NotifyStore.notifyNow(MainActivity.this, title, body);
+        }
+
+        /**
+         * 관리자 알림 켜짐/꺼짐 + 공용 장부 접속 정보(주소·매장 PIN·기기).
+         * 앱을 닫아 둔 동안의 백그라운드 확인(JobScheduler)은 이 값으로만 동작한다.
+         */
+        @JavascriptInterface
+        public void setAdminNotify(boolean on, String url, String pin, String deviceId, String name) {
+            NotifyStore.setConfig(MainActivity.this, on, url, pin, deviceId, name);
+            if (on) {
+                runOnUiThread(MainActivity.this::requestNotificationPermissionIfNeeded);
+            }
+        }
+
+        @JavascriptInterface
+        public boolean isAdminNotify() {
+            return NotifyStore.enabled(MainActivity.this);
+        }
+
+        /** 웹과 앱이 같은 기준선을 쓴다 — {seeded, seen:{id:수정일시}} */
+        @JavascriptInterface
+        public void setNotifySeen(String json) {
+            NotifyStore.setSeenJson(MainActivity.this, json);
+        }
+
+        /** 앱이 닫혀 있는 동안 백그라인드 확인이 이미 알린 건 — 웹이 다시 울리지 않게 받아 간다 */
+        @JavascriptInterface
+        public String getNotifySeen() {
+            return NotifyStore.seenJson(MainActivity.this);
+        }
+
+        /** 웹이 이미 띄운 건 — 다음 백그라운드 확인에서 또 울리지 않게 */
+        @JavascriptInterface
+        public void markNotified(String id, String stamp) {
+            NotifyStore.markNotified(MainActivity.this, id, stamp);
+        }
+    }
+
+    /** v2.1 — 웹 v82 가 쓰는 이름(window.KTStoreBridge). 하는 일은 AppBridge 와 같다. */
+    public class StoreBridge {
+
+        /** 앱이 닫혀 있는 동안 백그라인드 확인이 이미 알린 건 — 웹이 다시 울리지 않게 받아 간다 */
+        @JavascriptInterface
+        public String getNotifySeen() {
+            return NotifyStore.seenJson(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public void notify(String title, String body) {
+            NotifyStore.notifyNow(MainActivity.this, title, body);
+        }
+
+        @JavascriptInterface
+        public void setAdminNotify(boolean on, String url, String pin, String deviceId, String name) {
+            NotifyStore.setConfig(MainActivity.this, on, url, pin, deviceId, name);
+            if (on) {
+                runOnUiThread(MainActivity.this::requestNotificationPermissionIfNeeded);
+            }
+        }
+
+        @JavascriptInterface
+        public boolean isAdminNotify() {
+            return NotifyStore.enabled(MainActivity.this);
+        }
+
+        @JavascriptInterface
+        public void setNotifySeen(String json) {
+            NotifyStore.setSeenJson(MainActivity.this, json);
+        }
+
+        @JavascriptInterface
+        public void markNotified(String id, String stamp) {
+            NotifyStore.markNotified(MainActivity.this, id, stamp);
         }
     }
 
@@ -692,8 +784,28 @@ public class MainActivity extends Activity {
     protected void onResume() {
         super.onResume();
         applyCaptureFlag(captureAllowed);
+        /* v2.1 — 안드로이드 13+ 알림 권한은 한 번만 묻는다 */
+        if (!askedNotifications) {
+            askedNotifications = true;
+            requestNotificationPermissionIfNeeded();
+        }
+        if (NotifyStore.enabled(this)) {
+            NotifyStore.schedule(this);
+        }
         if (webView != null) {
             webView.onResume();
+        }
+    }
+
+    /** 안드로이드 13(API 33)+ POST_NOTIFICATIONS 런타임 권한 */
+    @SuppressWarnings("deprecation")
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT < 33) {
+            return;
+        }
+        if (checkSelfPermission("android.permission.POST_NOTIFICATIONS")
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, REQ_NOTIFICATIONS);
         }
     }
 
@@ -710,6 +822,7 @@ public class MainActivity extends Activity {
         if (webView != null) {
             webView.removeJavascriptInterface(BRIDGE_NAME);
             webView.removeJavascriptInterface(SECURE_BRIDGE_NAME);
+            webView.removeJavascriptInterface(STORE_BRIDGE_NAME);
             webView.destroy();
             webView = null;
         }

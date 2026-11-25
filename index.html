@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v81">
+<meta name="app-version" content="v82">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -2716,6 +2716,7 @@
           <button class="menu-item" id="syncOpenBtn" role="menuitem">공용 장부 연동 (Google 시트)</button>
           <button class="menu-item" id="adminLockBtn" role="menuitem">🔓 관리자 모드 잠금 해제</button>
           <button class="menu-item admin-only" id="devicesBtn" role="menuitem">🛡️ 직원 · 기기 관리 (추방)</button>
+          <button class="menu-item admin-only" id="notifyToggleBtn" role="menuitem">🔔 새 개통 알림 켜기 (이 기기)</button>
           <button class="menu-item admin-only" id="priceBtn" role="menuitem">📋 정책 계산표 · 정산</button>
           <button class="menu-item" id="paySlipBtn" role="menuitem">🖨️ 입금 지급 확인서</button>
           <button class="menu-item" id="syncNowBtn" role="menuitem" hidden>지금 동기화</button>
@@ -8062,7 +8063,10 @@
         keep.push(rows[j]);
       }
       if (cfg) adoptRoster(cfg);
-      applyServerMonths(keep.map(normalizeRecord), need, redraw !== false);
+      /* v82 — 덮어쓰기 전에 새 건·수정 건을 가려 알린다 (관리자 알림이 켜진 기기에서만) */
+      var incoming = keep.map(normalizeRecord);
+      notifyCollectServerChanges(incoming, need);
+      applyServerMonths(incoming, need, redraw !== false);
       return keep.length;
     });
   }
@@ -8156,6 +8160,403 @@
     monthSyncWait = wait;
     return wait;
   }
+
+  /* =========================================================
+     v82 — 관리자 알림 (새 개통 · 개통 수정)
+     ---------------------------------------------------------
+     · 사장님: "개통장부도 일보 쓰면 알람 울리게 되나" → "다울리게해줘 관리자모드 들어갈때만"
+              → 다시 "계속울리게"
+     · 규칙
+         ① 관리자 PIN(0525)을 **한 번이라도** 통과한 기기는 이 기기 알림 플래그를 남긴다
+            (`localStorage kt_store_admin_notify_v1` = '1' · 영구)
+            → 10분 자동 잠금으로 직원 화면이 된 뒤에도 새 개통 · 수정 알림이 계속 울린다.
+         ② 0525 를 한 번도 넣지 않은 직원 폰은 플래그가 없어 **절대 울리지 않는다**.
+         ③ 이 기기에서 방금 직접 저장 · 수정한 건은 스스로에게 울리지 않는다.
+         ④ 알림은 전용 앱(APK) 브리지 → 네이티브 상단 알림(채널 store_alerts),
+            브라우저(PWA)면 Notification API. 둘 다 없으면 화면 토스트로 알린다.
+     · 감지: 알림이 켜진 기기에서만 45초마다 `list_months`(수십 KB)로 달 체크섬을 견주고,
+       바뀐 달만 `list_month` 로 조용히 받아 새 건 · 수정 건을 가려낸다(전체 5MB 를 받지 않는다).
+     · 앱을 닫아 둔 동안은 APK 쪽 JobScheduler(15분 간격)가 같은 기준선으로 확인한다.
+     ========================================================= */
+  var NOTIFY_FLAG_KEY = 'kt_store_admin_notify_v1';
+  var NOTIFY_SEEN_KEY = 'kt_store_notify_seen_v1';
+  var NOTIFY_POLL_MS = 45000;        // 앱을 보고 있는 동안 확인 주기
+  var NOTIFY_SELF_MS = 900000;       // 15분 — 이 기기에서 방금 저장한 건은 알리지 않는다
+  var NOTIFY_FRESH_MS = 1800000;     // 30분 — 이 기기에 없던 달이라도 방금 만들어진 건은 알린다
+  var notifySeen = null;             // { id: '수정일시' } — 마지막으로 본 상태
+  var notifySeeded = false;          // 기준선을 만들었는가(처음엔 울리지 않고 채우기만)
+  var notifySelf = {};               // id -> 이 기기에서 저장한 시각
+  var notifyTimer = null;
+  var notifyBusy = false;
+  var notifySeenPushTimer = null;
+
+  function notifyLogList() {
+    if (!window.__ktNotifyLog) window.__ktNotifyLog = [];
+    return window.__ktNotifyLog;
+  }
+
+  /* '1' 켜짐 · '0' 사장님이 직접 끔 · 없음 0525 를 한 번도 안 넣은 기기 */
+  function notifyFlag() {
+    try { return localStorage.getItem(NOTIFY_FLAG_KEY); } catch (e) { return null; }
+  }
+  function notifyOn() { return notifyFlag() === '1'; }
+
+  /* APK 브리지 — 기존 앱은 window.KTChilgeumApp, v82 부터 KTStoreBridge 도 같은 일을 한다 */
+  function notifyBridge() {
+    try {
+      var b = window.KTStoreBridge;
+      if (b && typeof b.notify === 'function') return b;
+      b = window.KTChilgeumApp;
+      if (b && typeof b.notify === 'function') return b;
+    } catch (e) {}
+    return null;
+  }
+
+  /* 알림 한 건 — 제목/본문을 APK 네이티브(또는 브라우저)로 보낸다 */
+  function notifySend(title, body, key) {
+    var entry = { title: String(title || ''), body: String(body || ''), key: String(key || ''), at: Date.now(), via: '' };
+    var sent = false;
+    try {
+      var b = notifyBridge();
+      if (b) { b.notify(entry.title, entry.body); entry.via = 'apk'; sent = true; }
+    } catch (e) {}
+    if (!sent) {
+      try {
+        if (window.Notification && Notification.permission === 'granted') {
+          new Notification(entry.title, { body: entry.body, tag: entry.key || ('kt-' + Date.now()) });
+          entry.via = 'browser';
+          sent = true;
+        }
+      } catch (e) {}
+    }
+    if (!sent && !document.hidden) {
+      try { toast(entry.title + ' — ' + entry.body); entry.via = 'toast'; } catch (e) {}
+    }
+    notifyLogList().push(entry);
+    return sent;
+  }
+
+  /* 브라우저 알림 권한 — 관리자 PIN 을 넣는 그 클릭 안에서 부른다(권한 창이 뜨려면 제스처가 필요) */
+  function notifyAskPermission() {
+    try {
+      if (!window.Notification || !Notification.requestPermission) return;
+      if (Notification.permission === 'default') {
+        var p = Notification.requestPermission();
+        if (p && p.catch) p.catch(function () {});
+      }
+    } catch (e) {}
+  }
+
+  function notifyLoadSeen() {
+    if (notifySeen) return;
+    notifySeen = {};
+    notifySeeded = false;
+    try {
+      var raw = localStorage.getItem(NOTIFY_SEEN_KEY);
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      if (d && d.seen && typeof d.seen === 'object') {
+        notifySeen = d.seen;
+        notifySeeded = !!d.seeded;
+      }
+    } catch (e) {}
+  }
+
+  function notifySaveSeen() {
+    try {
+      localStorage.setItem(NOTIFY_SEEN_KEY, JSON.stringify({ seeded: !!notifySeeded, seen: notifySeen || {} }));
+    } catch (e) {}
+  }
+
+  /*
+   * 앱이 닫혀 있는 동안 APK 백그라운드 확인이 먼저 알린 건은 앱(SharedPreferences) 쪽 기준선에만 있다.
+   * 앱을 다시 열 때 그 기준선을 받아 합쳐, 같은 건이 두 번 울리지 않게 한다.
+   */
+  function notifyMergeFromApp() {
+    try {
+      var b = window.KTStoreBridge || window.KTChilgeumApp;
+      if (!b || typeof b.getNotifySeen !== 'function') return;
+      var raw = b.getNotifySeen();
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      if (!d || !d.seen || typeof d.seen !== 'object') return;
+      notifyLoadSeen();
+      var k, n = 0;
+      for (k in d.seen) {
+        if (!d.seen.hasOwnProperty(k)) continue;
+        var sv = String(d.seen[k] == null ? '' : d.seen[k]);
+        if (!notifySeen.hasOwnProperty(k) || sv > String(notifySeen[k] || '')) {
+          notifySeen[k] = sv;
+          n++;
+        }
+      }
+      if (d.seeded) notifySeeded = true;
+      if (n) notifySaveSeen();
+    } catch (e) {}
+  }
+
+  /* 지금 이 기기에 있는 기록으로 기준선을 만든다 — 만들 때는 울리지 않는다 */
+  function notifySeed() {
+    notifyLoadSeen();
+    var m = {}, i, r;
+    for (i = 0; i < state.records.length; i++) {
+      r = state.records[i];
+      if (!r || !r.id) continue;
+      m[String(r.id)] = String(r.수정일시 || '');
+    }
+    notifySeen = m;
+    notifySeeded = true;
+    notifySaveSeen();
+    notifyPushSeenSoon();
+  }
+
+  /* APK 백그라운드 확인용 기준선을 앱에 넘긴다 (id·수정일시만 — 고객 정보는 넘기지 않는다) */
+  function notifyPushSeen() {
+    try {
+      var b = window.KTStoreBridge || window.KTChilgeumApp;
+      if (!b || typeof b.setNotifySeen !== 'function') return;
+      notifyLoadSeen();
+      b.setNotifySeen(JSON.stringify({ seeded: !!notifySeeded, seen: notifySeen || {} }));
+    } catch (e) {}
+  }
+  function notifyPushSeenSoon() {
+    if (notifySeenPushTimer) return;
+    notifySeenPushTimer = setTimeout(function () {
+      notifySeenPushTimer = null;
+      notifyPushSeen();
+    }, 2000);
+  }
+
+  /* 알림 설정(켜짐·주소·매장 PIN·기기)을 앱에 넘긴다 — 앱을 닫아도 확인하려면 앱이 알아야 한다 */
+  function notifyPushConfig() {
+    try {
+      var b = window.KTStoreBridge || window.KTChilgeumApp;
+      if (!b || typeof b.setAdminNotify !== 'function') return;
+      var info = deviceInfo();
+      b.setAdminNotify(!!notifyOn(), String(sync.url || ''), String(sync.pin || ''),
+        String(info.deviceId || ''), String(info.name || ''));
+    } catch (e) {}
+  }
+
+  /* 알림을 띄운 건을 앱 쪽 기준선에도 알려 준다 — 앱이 닫혔다 열려도 같은 건이 두 번 울리지 않게 */
+  function notifyMarkAppNotified(id, stamp) {
+    try {
+      var b = window.KTStoreBridge || window.KTChilgeumApp;
+      if (b && typeof b.markNotified === 'function') b.markNotified(String(id || ''), String(stamp || ''));
+    } catch (e) {}
+  }
+
+  /* 이 기기에서 직접 저장한 건 — 자기 알림이 울리지 않게 표시 */
+  function notifyMarkSelf(rec) {
+    if (!rec || !rec.id) return;
+    var id = String(rec.id);
+    notifySelf[id] = Date.now();
+    notifyLoadSeen();
+    if (notifySeeded) {
+      notifySeen[id] = String(rec.수정일시 || '');
+      notifySaveSeen();
+      if (notifyOn()) notifyPushSeenSoon();
+    }
+    var n = 0, k;
+    for (k in notifySelf) if (notifySelf.hasOwnProperty(k)) n++;
+    if (n > 400) {
+      var cut = Date.now() - NOTIFY_SELF_MS;
+      for (k in notifySelf) if (notifySelf.hasOwnProperty(k) && notifySelf[k] < cut) delete notifySelf[k];
+    }
+  }
+  function notifyMarkGone(id) {
+    if (!id) return;
+    notifySelf[String(id)] = Date.now();
+    notifyLoadSeen();
+    if (notifySeen && notifySeen.hasOwnProperty(String(id))) {
+      delete notifySeen[String(id)];
+      notifySaveSeen();
+      if (notifyOn()) notifyPushSeenSoon();
+    }
+  }
+  function notifySelfRecent(id) {
+    var t = notifySelf[String(id)];
+    return !!t && (Date.now() - t) < NOTIFY_SELF_MS;
+  }
+
+  /* 알림 본문 — {고객명} · {기종 또는 유선 요금제} · {개통유형} */
+  function notifyBodyText(rec) {
+    rec = rec || {};
+    var cust = String(rec.고객명 || '').trim() || '(고객명 없음)';
+    var model = String(rec.기종 || '').trim();
+    if (!model) model = String(rec.요금제 || '').trim();      // 유선 단독은 유선 요금제가 요금제 칸에 들어온다
+    var type = String(rec.개통유형 || '').trim();
+    var parts = [cust];
+    if (model) parts.push(model);
+    if (type) parts.push(type);
+    return parts.join(' · ');
+  }
+
+  /* 새 건 · 수정 건을 실제로 울린다 — 한 번에 너무 많이 울리지 않게 3건 + 나머지 요약 */
+  function notifyFire(found) {
+    if (!found || !found.length) return 0;
+    found.sort(function (a, b) { return String(b.stamp || '').localeCompare(String(a.stamp || '')); });
+    var MAX = 3, i, n = Math.min(MAX, found.length);
+    for (i = 0; i < n; i++) {
+      var f = found[i];
+      if (!f || !f.rec) continue;
+      var who = String(f.rec.담당자 || '').trim() || '담당자 미지정';
+      notifySend((f.kind === 'new' ? '📋 새 개통 등록 · ' : '✏️ 개통 수정 · ') + who,
+        notifyBodyText(f.rec), String(f.rec.id) + '|' + String(f.stamp || ''));
+      notifyMarkAppNotified(f.rec.id, f.stamp);
+    }
+    if (found.length > MAX) {
+      notifySend('📋 개통 알림 ' + found.length + '건',
+        '새 개통·수정 ' + found.length + '건이 있습니다. 앱에서 확인해 주세요.', 'kt-bulk-' + Date.now());
+    }
+    return n;
+  }
+
+  /*
+   * 서버에서 받은 기록과 이 기기의 마지막 상태를 견줘 새 건·수정 건을 찾는다.
+   *   months : 이번에 받은 달 목록(없으면 전체 목록을 받은 것)
+   *   · 이 기기에 이미 있던 달(체크섬이 있던 달)에서만 '새 건'을 인정한다
+   *     → 처음 열어 보는 옛 달의 수백 건이 알림으로 쏟아지지 않는다
+   *   · 그 달이 이 기기에 없어도 30분 안에 만들어진 건이면 알린다(새 달의 첫 건)
+   */
+  function notifyCollectServerChanges(recs, months) {
+    if (!notifyOn() || !recs || !recs.length) return [];
+    notifyLoadSeen();
+    if (!notifySeeded) { notifySeed(); return []; }      // 기준선이 없으면 채우기만
+    var sigs = monthSigs(), covered = {}, m, i;
+    if (months && months.length) {
+      for (i = 0; i < months.length; i++) if (sigs[months[i]] !== undefined) covered[months[i]] = true;
+    } else {
+      for (m in sigs) if (sigs.hasOwnProperty(m)) covered[m] = true;
+    }
+    var found = [], changed = false;
+    for (i = 0; i < recs.length; i++) {
+      var r = recs[i];
+      if (!r || !r.id) continue;
+      var id = String(r.id), stamp = String(r.수정일시 || '');
+      var prev = notifySeen.hasOwnProperty(id) ? notifySeen[id] : undefined;
+      if (prev === stamp) continue;                       // 그대로
+      if (prev !== undefined && !(stamp && prev && stamp > prev)) {
+        if (stamp) { notifySeen[id] = stamp; changed = true; }   // 서버가 더 오래된 값(되돌림)
+        continue;
+      }
+      if (notifySelfRecent(id)) { notifySeen[id] = stamp; changed = true; continue; }
+      var isNew = (prev === undefined);
+      if (isNew) {
+        var fresh = false;
+        try { fresh = !!stamp && (Date.now() - Date.parse(stamp)) < NOTIFY_FRESH_MS; } catch (e) {}
+        if (!covered[monthOf(r.개통일)] && !fresh) { notifySeen[id] = stamp; changed = true; continue; }
+      }
+      found.push({ kind: isNew ? 'new' : 'edit', rec: r, stamp: stamp });
+      notifySeen[id] = stamp;
+      changed = true;
+    }
+    if (changed) notifySaveSeen();
+    if (found.length) notifyFire(found);
+    return found;
+  }
+
+  /* 조용한 확인 한 번 — list_months 로 바뀐 달만 받는다 */
+  function notifyPollOnce() {
+    if (!notifyOn() || !syncOn() || blockedStored()) return Promise.resolve(false);
+    if (notifyBusy || syncing || monthSyncing) return Promise.resolve(false);
+    if (monthApiOk === false) return Promise.resolve(false);
+    notifyBusy = true;
+    return pullMonthIndex().then(function () {
+      var gaps = coverageGaps() || [];
+      if (!gaps.length) return 0;
+      var redraw = viewNeedsAllMonths() || gaps.indexOf(state.filters.month) >= 0;
+      return queueMonthPull(gaps, redraw);
+    }).then(function (n) {
+      notifyBusy = false;
+      if (n) {
+        sync.lastSync = Date.now();
+        sync.lastError = '';
+        saveSync();
+        renderSyncUi();
+      }
+      return true;
+    }).catch(function (err) {
+      notifyBusy = false;
+      return !(err && (err.blocked || err.pending));
+    });
+  }
+
+  function notifyStartPoll() {
+    notifyStopPoll();
+    if (!notifyOn()) return;
+    notifyTimer = setInterval(function () {
+      if (document.hidden) return;      // 화면이 꺼져 있으면 앱(APK)의 백그라운드 확인이 맡는다
+      notifyPollOnce();
+    }, NOTIFY_POLL_MS);
+  }
+  function notifyStopPoll() {
+    if (notifyTimer) { clearInterval(notifyTimer); notifyTimer = null; }
+  }
+
+  /* 이 기기 알림 켜기/끄기 — 관리자 메뉴에서만 바꾼다 */
+  function notifySetDeviceOn(on, opts) {
+    on = !!on;
+    try { localStorage.setItem(NOTIFY_FLAG_KEY, on ? '1' : '0'); } catch (e) {}
+    if (on) {
+      notifyLoadSeen();
+      if (!notifySeeded) notifySeed();
+      notifyAskPermission();
+      notifyPushConfig();
+      notifyPushSeen();
+      notifyStartPoll();
+      setTimeout(function () { notifyPollOnce(); }, 2500);
+    } else {
+      notifyStopPoll();
+      notifyPushConfig();
+    }
+    notifyPaintMenu();
+    if (!(opts && opts.silent)) {
+      toast(on ? '이 기기에서 새 개통 알림을 켰습니다.' : '이 기기에서 개통 알림을 껐습니다.');
+    }
+  }
+
+  function notifyPaintMenu() {
+    var btn = el.notifyToggleBtn || $('notifyToggleBtn');
+    if (!btn) return;
+    var on = notifyOn();
+    btn.textContent = on ? '🔕 새 개통 알림 끄기 (이 기기)' : '🔔 새 개통 알림 켜기 (이 기기)';
+    btn.title = on
+      ? '이 기기는 새 개통·수정이 생기면 10분 잠금 뒤에도 계속 알림이 울립니다. 눌러서 끕니다.'
+      : '관리자 PIN(0525)을 넣은 기기에서만 울립니다. 눌러서 켭니다.';
+  }
+
+  /* 앱을 열 때 한 번 — 설정을 앱에 넘기고, 켜져 있으면 조용한 확인을 시작한다 */
+  function notifyBoot() {
+    notifyLoadSeen();
+    notifyMergeFromApp();       // 앱이 닫힌 동안 APK 가 먼저 알린 건을 기준선에 합친다
+    notifyPaintMenu();
+    notifyPushConfig();
+    if (notifySeeded) notifyPushSeenSoon();
+    if (notifyOn()) {
+      notifyStartPoll();
+      setTimeout(function () { notifyPollOnce(); }, 8000);
+    }
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { notifyStopPoll(); return; }
+      if (!notifyOn()) return;
+      notifyStartPoll();
+      notifyPollOnce();
+    });
+    window.addEventListener('online', function () { if (notifyOn()) notifyPollOnce(); });
+  }
+
+  /* 검증용 손잡이 — 라이브 점검에서 알림 호출을 그대로 세어 본다 */
+  window.__ktNotify = {
+    on: notifyOn,
+    flag: notifyFlag,
+    poll: notifyPollOnce,
+    seed: notifySeed,
+    set: notifySetDeviceOn,
+    collect: notifyCollectServerChanges,
+    log: notifyLogList,
+    seen: function () { notifyLoadSeen(); return notifySeen; }
+  };
 
   /* 모든 달이 필요한 화면(전체 기간·검색·임박·연혁)에 들어갔을 때 — 빈 달을 마저 채운다 */
   function ensureAllMonths() {
@@ -8291,11 +8692,13 @@
     snap.법대성별 = normalizeGender(rec.법대성별);
     snap.법대연락처 = String(rec.법대연락처 || '').trim();
     for (var p = 0; p < PAY_FIELDS.length; p++) snap[PAY_FIELDS[p]] = parseNumber(rec[PAY_FIELDS[p]]);
+    notifyMarkSelf(snap);   // v82 — 이 기기에서 저장한 건은 내 알림을 울리지 않는다
     queueOp({ op: 'upsert', rec: snap, at: Date.now() });
   }
 
   function queueDelete(id) {
     if (!syncOn() || !id) return;
+    notifyMarkGone(id);   // v82 — 이 기기에서 지운 건은 내 알림을 울리지 않는다
     queueOp({ op: 'delete', id: id, at: Date.now() });
   }
 
@@ -8312,6 +8715,8 @@
 
   // 서버(시트) 목록을 화면에 반영. 아직 못 올린 내 기록은 지우지 않는다.
   function applyServerList(list) {
+    /* v82 — 전체 목록을 받아도 덮어쓰기 전에 새 건·수정 건을 가려 알린다 (알림이 켜진 기기에서만) */
+    notifyCollectServerChanges(Array.isArray(list) ? list : [], null);
     var raw = {}, map = {}, id, i;
     for (i = 0; i < list.length; i++) { raw[list[i].id] = list[i]; map[list[i].id] = list[i]; }
 
@@ -14975,7 +15380,14 @@
     saveRole();
     el.adminDialog.close();
     applyRole();
-    toast('관리자 모드로 열었습니다. 10분 동안 아무 것도 안 하면 다시 잠깁니다.');
+    /* v82 — 0525 를 넣은 기기는 새 개통 알림을 켠다(한 번 켜면 10분 잠금 뒤에도 계속).
+       사장님이 메뉴에서 직접 끈 기기('0')는 다시 켜지 않는다. */
+    var flag = notifyFlag();
+    if (flag === null) notifySetDeviceOn(true, { silent: true });
+    else { notifyPushConfig(); notifyPaintMenu(); }
+    toast(notifyOn()
+      ? '관리자 모드로 열었습니다. 10분 뒤 잠겨도 이 기기는 새 개통 알림이 계속 울립니다.'
+      : '관리자 모드로 열었습니다. 10분 동안 아무 것도 안 하면 다시 잠깁니다.');
   }
 
   function lockAdmin(silent) {
@@ -17094,6 +17506,11 @@
     if (el.syncPill) el.syncPill.addEventListener('click', function () { openSyncDialog(); });
     if (el.adminLockBtn) el.adminLockBtn.addEventListener('click', function () { closeMenu(); onAdminLockClick(); });
     if (el.devicesBtn) el.devicesBtn.addEventListener('click', function () { closeMenu(); openDevicesDialog(); });
+    /* v82 — 이 기기 새 개통 알림 켜기/끄기 */
+    if (el.notifyToggleBtn) el.notifyToggleBtn.addEventListener('click', function () {
+      closeMenu();
+      notifySetDeviceOn(!notifyOn());
+    });
     if (el.priceBtn) el.priceBtn.addEventListener('click', function () { closeMenu(); openPriceDialog(); });
     if (el.priceDialog) {
       if (el.pdClose) el.pdClose.addEventListener('click', function () { el.priceDialog.close(); });
@@ -18036,6 +18453,7 @@
       planExpect: $('planExpect'),
       addonExpect: $('addonExpect'),
       devicesBtn: $('devicesBtn'),
+      notifyToggleBtn: $('notifyToggleBtn'),
       devicesDialog: $('devicesDialog'),
       dvStatus: $('dvStatus'),
       dvDevices: $('dvDevices'),
@@ -18223,6 +18641,8 @@
         runSync({ quiet: true, quietFail: true });
       }
     });
+    /* v82 — 관리자 알림 시동 (앱 브리지 설정 넘기기 · 45초 조용한 확인 시작) */
+    notifyBoot();
   }
 
   if (document.readyState === 'loading') {
