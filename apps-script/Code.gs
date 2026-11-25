@@ -1,6 +1,6 @@
 /*************************************************************
  * 충주 KT대리점 칠금점 · 개통장부 공용 저장소
- * Google Apps Script 웹앱 (doGet / doPost)
+ * Google Apps Script 웹앱 (doGet / doPost)  — Code.gs v9.0
  *
  *  · 메인 시트(SHEET_NAME = '전체_통합') 한 곳에 모든 직원 기록이 쌓입니다.
  *  · '담당자' 열로 직원을 구분하고, 직원별 보기 탭은 FILTER 로 자동 생성됩니다.
@@ -57,6 +57,18 @@ var COLS = ['id', '개통일', '고객명', '연락처', '생년월일', '개통
             '부가서비스', '부가서비스유지', '부가서비스해지일자',
             '중고폰', '중고폰금액', '무선리베이트', '유선리베이트', '메모', '담당자', '수정일시'];
 
+/* ===== v9.0 달 단위 조회 (list_months · list_month) =====
+   · 전체_통합 10,000여 건을 한 번에(약 5.3MB · 4~5초) 내려받지 않도록
+       list_months : 시트에 있는 달(YYYY-MM)별 건수 · 체크섬 · 마지막 수정시각
+       list_month  : 그 달(·여러 달)의 행만 (수백 건 · 100~300KB)
+     을 새로 더한다. 기존 action=list(전체) · band_get · band_push 는 손대지 않는다.
+   · 체크섬은 앱(kt-store-manager v79)이 이 기기 기록으로 똑같이 계산해
+     '이 달은 이미 최신'인지 가리는 데 쓴다 — 알고리즘을 바꾸면 앱도 같이 바꿔야 한다.
+       FNV-1a 32bit over  sort( ['id|수정일시', …] ).join('\n')   (빈 달 = fnv(''))
+   · 행 → 기록 변환은 전체 조회(readAll_)와 같은 규칙(recordFromRow_)을 쓴다. */
+var MONTH_RUN_MAX = 60;   // 달별 행이 흩어져 있을 때 낱개 읽기 상한 (넘으면 통째로 읽는다)
+var MONTH_MAX_REQ = 12;   // 한 번에 달 최대 12개
+
 /* 금액(숫자)으로 저장하는 열 */
 var MONEY_COLS = ['중고폰금액', '무선리베이트', '유선리베이트'];
 
@@ -97,6 +109,14 @@ function doGet(e) {
         } else if (action === 'list') {
           touchDevice_(dev);
           out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
+        } else if (action === 'list_months') {
+          // v9.0 — 달별 건수·체크섬만 (수 KB). 앱이 '바뀐 달'만 골라 받는 데 쓴다
+          touchDevice_(dev);
+          out = listMonthsOut_();
+        } else if (action === 'list_month') {
+          // v9.0 — 그 달(month=YYYY-MM 또는 months=2026-11,2026-10)의 행만
+          touchDevice_(dev);
+          out = listMonthOut_(p);
         } else if (action === 'ping') {
           touchDevice_(dev);
           var sh = getDataSheet_();
@@ -168,6 +188,12 @@ function doPost(e) {
         } else if (action === 'list') {
           touchDevice_(dev);
           out = { ok: true, action: 'list', sheet: SHEET_NAME, records: readAll_(), serverTime: nowIso_() };
+        } else if (action === 'list_months') {
+          touchDevice_(dev);
+          out = listMonthsOut_();
+        } else if (action === 'list_month') {
+          touchDevice_(dev);
+          out = listMonthOut_(req);
         } else if (action === 'band_push') {
           // v8.9 밴드앱 실시간 공유 — 바뀐 칸만 받아 항목·칸 단위로 합친다
           out = bandPush_(req);
@@ -410,6 +436,22 @@ function colLetter_(n) { // 1부터 시작
   return s;
 }
 
+/** 시트 한 줄 → 기록 객체 (전체 조회·달 조회가 같은 규칙을 쓴다). 빈 줄이면 null */
+function recordFromRow_(row, idx, tz, rowNum) {
+  var rec = {}, any = false;
+  for (var c = 0; c < COLS.length; c++) {
+    var name = COLS[c];
+    var v = row[idx.map[name]];
+    var s = dateToText_(v, tz).trim();
+    if (MONEY_COLS.indexOf(name) >= 0) rec[name] = num_(v);
+    else rec[name] = s;
+    if (s) any = true;
+  }
+  if (!any) return null;
+  if (!rec.id) rec.id = 'row' + rowNum;
+  return rec;
+}
+
 /** 전체 기록 읽기 */
 function readAll_() {
   var sh = getDataSheet_();
@@ -420,21 +462,190 @@ function readAll_() {
   var values = sh.getRange(2, 1, last - 1, idx.width).getValues();
   var out = [];
   for (var r = 0; r < values.length; r++) {
-    var row = values[r];
-    var rec = {}, any = false;
-    for (var c = 0; c < COLS.length; c++) {
-      var name = COLS[c];
-      var v = row[idx.map[name]];
-      var s = dateToText_(v, tz).trim();
-      if (MONEY_COLS.indexOf(name) >= 0) rec[name] = num_(v);
-      else rec[name] = s;
-      if (s) any = true;
-    }
-    if (!any) continue;
-    if (!rec.id) rec.id = 'row' + (r + 2);
-    out.push(rec);
+    var rec = recordFromRow_(values[r], idx, tz, r + 2);
+    if (rec) out.push(rec);
   }
   return out;
+}
+
+/* =========================================================
+   v9.0 — 달 단위 조회
+   ---------------------------------------------------------
+   list_months : { ok, months:[{month, count, checksum, max}], meta:{count, checksum}, total }
+   list_month  : { ok, months:[…], count, records:[…], checksums:{달:체크섬}, counts:{달:건수} }
+                 · 개통일이 비었거나 달을 못 읽는 줄(직원명부 설정 줄 등)은
+                   어느 달 요청에도 늘 함께 들어간다('meta' 줄).
+   ========================================================= */
+
+/** '2026-11-25…' → '2026-11' (달을 못 읽으면 '') */
+function monthOfText_(v) {
+  var s = String(v == null ? '' : v).trim();
+  if (!/^\d{4}-\d{2}/.test(s)) return '';
+  return s.slice(0, 7);
+}
+
+/** FNV-1a 32bit → 8자리 16진수 (앱 monthSigOfRecords 와 같은 알고리즘) */
+function fnv1a_(s) {
+  var h = 2166136261;
+  for (var i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  return ('00000000' + h.toString(16)).slice(-8);
+}
+
+/** 행 목록([{id, mod}]) → 달 체크섬 (id 사전순으로 이어 붙여 해시) */
+function sigOfRows_(rows) {
+  var a = [];
+  for (var i = 0; i < rows.length; i++) a.push(String(rows[i].id || '') + '|' + String(rows[i].mod || ''));
+  a.sort();
+  return fnv1a_(a.join('\n'));
+}
+
+/**
+ * 개통일 · id · 수정일시 세 열만 읽어 줄마다 {row, month, id, mod, empty} 를 만든다.
+ *  · 10,000행에서도 0.2~0.4초 — 20열을 다 읽지 않는다.
+ *  · id 가 빈 줄은 readAll_ 과 같이 'row{행번호}' 로 본다(앱이 받는 값과 같아야 체크섬이 맞는다).
+ *  · id · 수정일시 · 개통일이 모두 빈 줄은 장부 빈 줄이라 어느 체크섬에도 넣지 않는다.
+ */
+function scanRows_(sh, idx) {
+  var last = sh.getLastRow();
+  var out = [];
+  if (last < 2) return out;
+  var tz = tz_();
+  var n = last - 1;
+  var dates = sh.getRange(2, idx.map['개통일'] + 1, n, 1).getValues();
+  var ids = sh.getRange(2, idx.map['id'] + 1, n, 1).getValues();
+  var mods = sh.getRange(2, idx.map['수정일시'] + 1, n, 1).getValues();
+  for (var r = 0; r < n; r++) {
+    var dateTxt = dateToText_(dates[r][0], tz).trim();
+    var rawId = String(ids[r][0] == null ? '' : ids[r][0]).trim();
+    var mod = dateToText_(mods[r][0], tz).trim();
+    var rowNum = r + 2;
+    out.push({
+      row: rowNum,
+      month: monthOfText_(dateTxt),
+      id: rawId || ('row' + rowNum),
+      mod: mod,
+      empty: !rawId && !mod && !dateTxt
+    });
+  }
+  return out;
+}
+
+/** 달별 행 모으기 — list_months 응답 본문 (달 목록·건수·체크섬·마지막 수정시각) */
+function listMonthsOut_() {
+  var sh = getDataSheet_();
+  var idx = ensureHeader_(sh);
+  var rows = scanRows_(sh, idx);
+  var byMonth = {}, order = [], meta = [], total = 0;
+  var i, it;
+  for (i = 0; i < rows.length; i++) {
+    it = rows[i];
+    if (it.empty) continue;
+    if (!it.month) { meta.push(it); continue; }
+    if (!byMonth[it.month]) { byMonth[it.month] = { month: it.month, count: 0, rows: [] }; order.push(it.month); }
+    byMonth[it.month].count++;
+    byMonth[it.month].rows.push(it);
+    total++;
+  }
+  order.sort();
+  var months = [];
+  for (i = 0; i < order.length; i++) {
+    var b = byMonth[order[i]];
+    var max = '';
+    for (var j = 0; j < b.rows.length; j++) if (String(b.rows[j].mod) > max) max = String(b.rows[j].mod);
+    months.push({ month: b.month, count: b.count, checksum: sigOfRows_(b.rows), max: max });
+  }
+  return { ok: true, action: 'list_months', sheet: SHEET_NAME, total: total,
+           months: months,
+           meta: { count: meta.length, checksum: sigOfRows_(meta) },
+           serverTime: nowIso_() };
+}
+
+/** months=2026-11,2026-10 → ['2026-11','2026-10'] (형식이 틀린 값은 버린다) */
+function parseMonths_(spec) {
+  var raw = String(spec == null ? '' : spec).split(',');
+  var out = [];
+  for (var i = 0; i < raw.length; i++) {
+    var m = String(raw[i]).trim();
+    if (!/^\d{4}-\d{2}$/.test(m)) continue;
+    if (out.indexOf(m) < 0) out.push(m);
+    if (out.length >= MONTH_MAX_REQ) break;
+  }
+  return out;
+}
+
+/** 행 번호 목록(오름차순) → 연속 구간 [{start, end}] (읽기 호출을 줄인다) */
+function runRanges_(rows) {
+  var out = [], cur = null;
+  for (var i = 0; i < rows.length; i++) {
+    var r = rows[i];
+    if (cur && r === cur.end + 1) { cur.end = r; continue; }
+    cur = { start: r, end: r };
+    out.push(cur);
+  }
+  return out;
+}
+
+/** 달(·여러 달) 행만 내려주기 — 앱 첫 화면(이번 달 + 지난 달)이 0.5~1초에 뜬다 */
+function listMonthOut_(p) {
+  var want = parseMonths_(p.months || p.month);
+  if (!want.length) throw new Error('기간(month=YYYY-MM · months=YYYY-MM,YYYY-MM)을 지정해 주세요.');
+  var sh = getDataSheet_();
+  var idx = ensureHeader_(sh);
+  var tz = tz_();
+  var rows = scanRows_(sh, idx);
+  var allow = {}, counts = {}, checksums = {};
+  var i, it;
+  for (i = 0; i < want.length; i++) counts[want[i]] = 0;
+  for (i = 0; i < rows.length; i++) {
+    it = rows[i];
+    if (it.empty) continue;
+    // meta(달 없음) 줄은 어느 요청에나 함께 — 직원명부 설정 줄이 여기 있다
+    if (!it.month) { allow[it.row] = true; continue; }
+    if (want.indexOf(it.month) < 0) continue;
+    allow[it.row] = true;
+  }
+  var rowsToRead = [];
+  for (var k in allow) if (allow.hasOwnProperty(k)) rowsToRead.push(Number(k));
+  rowsToRead.sort(function (a, b) { return a - b; });
+
+  var runs = runRanges_(rowsToRead);
+  if (runs.length > MONTH_RUN_MAX) {
+    // 행이 지천으로 흩어졌으면 통째로 한 번 읽고 거른다(낱개 읽기 폭발 방지)
+    runs = [{ start: 2, end: sh.getLastRow() }];
+  }
+  var recs = [];
+  for (i = 0; i < runs.length; i++) {
+    var a = runs[i].start, b = runs[i].end;
+    if (b < 2) continue;
+    if (a < 2) a = 2;
+    var values = sh.getRange(a, 1, b - a + 1, idx.width).getValues();
+    for (var r = 0; r < values.length; r++) {
+      var rowNum = a + r;
+      if (!allow[rowNum]) continue;
+      var rec = recordFromRow_(values[r], idx, tz, rowNum);
+      if (rec) recs.push({ row: rowNum, rec: rec });
+    }
+  }
+  // 달별 건수·체크섬 — 응답에 담은 줄 그대로 (앱이 이 기기 기록으로 계산하는 값과 같아야 한다)
+  var byMonth = {}, metaRows = [], out = [];
+  for (i = 0; i < recs.length; i++) {
+    var rc = recs[i].rec;
+    var m = monthOfText_(rc.개통일);
+    if (!m) { metaRows.push({ id: rc.id, mod: String(rc.수정일시 || '') }); out.push(rc); continue; }
+    (byMonth[m] = byMonth[m] || []).push({ id: rc.id, mod: String(rc.수정일시 || '') });
+    counts[m] = (counts[m] || 0) + 1;
+    out.push(rc);
+  }
+  for (i = 0; i < want.length; i++) {
+    checksums[want[i]] = sigOfRows_(byMonth[want[i]] || []);
+  }
+  return { ok: true, action: 'list_month', sheet: SHEET_NAME, months: want.slice(),
+           count: out.length, records: out, counts: counts, checksums: checksums,
+           metaChecksum: sigOfRows_(metaRows),
+           serverTime: nowIso_() };
 }
 
 /** id 가 있는 행 번호(1부터). 없으면 0 */
