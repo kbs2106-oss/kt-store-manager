@@ -810,6 +810,13 @@ GitHub Pages 같은 정적 호스팅에 올리면 **휴대폰·PC 홈 화면에 
     `v39_pay_slip` 은 **71/75**(H4·H5·H6·H6c — v54 카드형 영수증 개편 때 바뀐 기대값, v54 이후 기준선과 동일) · `app_test` **54/63** · `sheet_roundtrip_v19`·`second_device`·`payback_required` 는 실행 오류 — **v56 HEAD 기준선(stash 후 실행)에서도 똑같은 결과**로 이번 변경과 무관한 오래된 테스트다.
     참고: v57 을 유선 ‘1단계 칩(접힘 제거)’으로 잠깐 잡았을 때 고쳐 두었던 기존 테스트 14개는 접힘 유지 방식에 맞춰 원래대로 되돌리고 `CACHE_VERSION` 기대값만 v57 로 올렸다.
     스크린샷 `downloads/개통장부-v57-유선모양통일-pc.png` · `downloads/개통장부-v57-유선모양통일-모바일.png`(라이브 390).
+- **v79 — 요금제 자동완성은 칸마다 그 종류만 / 고객 성별 필수**:
+  - `planSearch(q, onlyTab)` · `showPlanSuggest(input)`: `f_plan`·`f_newplan` → `onlyTab='mobile'`, `f_plan_l` → `onlyTab='wired'`.
+    전에는 `f_plan` 에 `80` 을 쳐도 유선(인터넷·TV) 요금제가 같이 떴다(사장님: "무선 요금제 시트에 유선 요금제가 왜떠").
+  - `collectForm()` 의 `need` 에 `{ label: '성별', el: $('genderChips') }` 를 추가 — 고객 `남·여`를 고르지 않으면 저장이 막힌다(`.ins-chips.bad` 빨간 테두리).
+    `setGenderChips()` 는 값이 생기면 `.bad` 와 안내 배너를 바로 지운다. 유선 단독·무선 모두 해당.
+  - 테스트 `qa-kt/v79_plan_gender_test.py`(10/10) · `qa-kt/live_check_v79_gift.py`(38/38 라이브).
+
 - **v79 — 유선 개통(신규 + 약갱 전부)은 ‘유선 사은품 처리’ 필수** (사장님: "유선 사은품 안찍고 넘겨도 개통장부에서 그냥 넘어가는데?"):
   - **대상**: `wiredGiftRequired()` 가 `!!typeSlots($('f_type').value).l` — **유선 개통유형이 하나라도 골라져 있으면 전부**(`인티 신규`·`인터넷 신규 단품`·`TV 단품` + **`인티 약갱`·`인터넷 약정갱신`**) 필수. 유선 단독·무선 동판 모두. 유선이 없으면 칸 자체가 숨겨진다(그대로).
   - v56 은 신규만 필수였고 약갱은 선택이었다. v79 에서 약갱도 막는다 — 라벨도 약갱에서 `* 필수` 로 보인다.
