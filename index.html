@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v84">
+<meta name="app-version" content="v85">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -535,11 +535,16 @@
   .search:focus-within{background:#fff;box-shadow:inset 0 0 0 1px #9DBDF0, 0 0 0 3px rgba(11,87,208,.15)}
   .search-mode{
     flex:0 0 auto;align-self:stretch;padding:0 20px 0 9px;border:0;border-right:1px solid var(--line-strong);
+    /* v85 — 항목을 바꿀 때마다 칸 폭이 들썩이지 않게 가장 긴 이름(고객명·번호)에 맞춘 최소 폭 */
+    min-width:96px;
     background:transparent url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 12 12'><path d='M2 4l4 4 4-4' fill='none' stroke='%2364748B' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 7px center;
     -webkit-appearance:none;appearance:none;font-size:12.5px;font-weight:800;color:var(--slate-600);cursor:pointer;
   }
   .search-mode:focus{outline:none}
-  .search-mode.memo{color:var(--blue-700);background-color:#EAF1FD}
+  /* v85 — 검색 대상이 「전체」가 아닐 때(고객명·번호 / 기종 / 요금제 / 부가서비스 / 담당자 / 메모) 푸른 바탕으로 표시 */
+  .search-mode.memo,.search-mode.scoped{color:var(--blue-700);background-color:#EAF1FD}
+  /* v85 — 검색 결과 0건일 때 “지금은 ○○에서만 찾는 중” 안내 */
+  .empty-scope{margin-top:7px !important;font-size:12.5px !important;font-weight:700;color:var(--blue-700)}
   .search-field{position:relative;flex:1 1 auto;min-width:0;display:flex;align-items:center;height:36px}
   .search svg{position:absolute;left:9px;width:15px;height:15px;color:var(--slate-400);pointer-events:none}
   .search input{
@@ -3034,10 +3039,15 @@
 
   <section class="card toolbar">
     <div class="search">
-      <!-- v61 — 검색 창 하나에 검색 대상 고르기: 전체(메모 제외) / 메모만 -->
+      <!-- v61 검색 대상 고르기 → v85 각 항목별: 고객명·번호(기본) / 전체 / 기종 / 요금제 / 부가서비스 / 메모 / 담당자 -->
       <select id="searchScopeMode" class="search-mode" aria-label="검색 대상">
+        <option value="name">고객명·번호</option>
         <option value="all">전체</option>
-        <option value="memo">메모만</option>
+        <option value="device">기종</option>
+        <option value="plan">요금제</option>
+        <option value="addon">부가서비스</option>
+        <option value="memo">메모</option>
+        <option value="staff">담당자</option>
       </select>
       <div class="search-field">
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13.2 13.2 17 17"/></svg>
@@ -5867,7 +5877,7 @@
   var state = {
     records: [],
     // v34 — easyScope: 권매·쉬움만의 기간 범위('month' 이 달만 | 'all' 전체 기간) · easyMonth: 마지막으로 보던 달
-    filters: { q: '', qMode: 'all', month: '', type: '', types: [], staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: '', missing: false },
+    filters: { q: '', qMode: 'name', month: '', type: '', types: [], staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: '', missing: false },
     sort: { key: '개통일', dir: 'desc' },
     view: 'compact',
     role: 'staff',
@@ -12809,6 +12819,14 @@
   }
 
   /* ---------------- filtering / sorting ---------------- */
+  /* v85 — 검색 대상(검색창 앞 드롭다운) 7가지 · 기본값 name(고객명·번호)
+     · name 고객명·번호(기본) · all 전체 · device 기종 · plan 요금제 · addon 부가서비스 · memo 메모 · staff 담당자
+     · 예전 저장값('memo'/'all')과 모르는 값은 'all' 로 안전하게 되돌린다 */
+  var SEARCH_MODES = ['name', 'all', 'device', 'plan', 'addon', 'memo', 'staff'];
+  function searchMode() {
+    var m = state.filters.qMode;
+    return SEARCH_MODES.indexOf(m) >= 0 ? m : 'all';
+  }
   function visibleRecords(ignoreEasy, ignoreMissing, forceMonth) {
     var f = state.filters;
     var q = f.q.trim().toLowerCase();
@@ -12824,7 +12842,9 @@
     else if (easyAll) month = '';
     else month = f.month;
     // v80 — 기종은 코드(SM-S931NK)와 이름(갤럭시 S25)이 섞여 있어, 검색어를 모델 표로 한 번 넓혀 둔다
-    var qs = q ? buildSearchQuery(q, f.qMode === 'memo') : null;
+    // v85 — 이름·번호와 메모는 기종 표를 넓히지 않는다(엉뚱한 모델 이름으로 걸리지 않게)
+    var mode = searchMode();
+    var qs = q ? buildSearchQuery(q, mode === 'memo' || mode === 'name') : null;
     var list = state.records.filter(function (r) {
       if (month && monthOf(r.개통일) !== month) return false;
       // v74 — 유형은 여러 개를 함께 고를 수 있다 (하나라도 들어 있으면 보인다)
@@ -12857,13 +12877,27 @@
       // v30 → v33 — ⚠️ 미기재 확인 : 리베이트·중고폰 금액이 비어 있는 건만 (관리자 전용 · 추지·페이백 제외)
       if (!ignoreMissing && f.missing && !missingIssues(r).length) return false;
       if (q) {
-        if (f.qMode === 'memo') {
-          // v61 — [메모만] : 직원이 적은 메모 본문에서만 찾는다.
+        if (mode === 'memo') {
+          // v61 → v85 [메모] : 직원이 적은 메모 본문에서만 찾는다.
           //        [단말보험]·[카드상세:…]·[유선혜택:…] 같은 앱 전용 표기는 떼고 본다.
           if (splitMemoTags(r.메모).memo.toLowerCase().indexOf(q) < 0) return false;
+        } else if (mode === 'name' || mode === 'device' || mode === 'plan' || mode === 'addon' || mode === 'staff') {
+          /* v85 — 각 항목별 검색: 고른 칸에서만 찾는다 (이름은 띄어쓰기 무시 · 연락처는 하이픈 무시) */
+          var scopeHay;
+          if (mode === 'name') scopeHay = [r.고객명, r.연락처, r.생년월일];
+          else if (mode === 'device') scopeHay = [r.기종];
+          else if (mode === 'plan') scopeHay = [r.요금제, r.변경요금제];
+          else if (mode === 'addon') scopeHay = [r.부가서비스];
+          else scopeHay = [r.담당자];
+          var scopeLine = scopeHay.join(' ').toLowerCase();
+          if (!searchHit(scopeLine, qs)) {
+            /* v85 — 번호는 하이픈을 빼고 쳐도 찾는다 ('01044443333' ↔ '010-4444-3333') */
+            var noHyphen = { q: qs.q.replace(/-/g, ''), qN: qs.qN.replace(/-/g, ''), re: null };
+            if (mode !== 'name' || !searchHit(scopeLine.replace(/-/g, ''), noHyphen)) return false;
+          }
         } else {
           // v61 — [전체] : 고객명·연락처·생년월일·기종·요금제·개통유형·담당자 등에서 찾고
-          //        **메모(r.메모)는 검색 대상에서 빠진다** (메모로 찾으려면 [메모만])
+          //        **메모(r.메모)는 검색 대상에서 빠진다** (메모로 찾으려면 [메모])
           var hay = [r.고객명, r.연락처, r.생년월일, r.기종, r.요금제, r.변경요금제, r.부가서비스, r.중고폰, r.개통유형, r.담당자].join(' ').toLowerCase();
           // v28 — 예전 표기('인터넷+TV 신규가입')로 저장된 건도 '인티 신규' 로 찾힌다
           if (r.개통유형) hay += ' ' + typeParts(r.개통유형).map(wiredTypeCanon).join(' ').toLowerCase();
@@ -15664,7 +15698,12 @@
           ? '“' + esc(qNow) + '” 검색 결과가 없습니다'
           : '조건에 맞는 개통이 없습니다';
         var emptyBody = qNow && !state.filters.due
-          ? '<p>기준 달과 상관없이 <b>전체 기간</b>에서 찾았지만 없습니다.<br>이름·번호 일부만 넣어 보세요.</p>'
+          ? '<p>기준 달과 상관없이 <b>전체 기간</b>에서 찾았지만 없습니다.<br>이름·번호 일부만 넣어 보세요.</p>' +
+            /* v85 — 지금은 고른 항목에서만 찾는 중임을 알려 준다 (기본값이 「고객명·번호」라 기종으로 찾으면 0건이 될 수 있다) */
+            (searchMode() !== 'all'
+              ? '<p class="empty-scope">지금은 <b>「' + esc((SEARCH_SCOPE_UI[searchMode()] || {}).label || '') +
+                '」</b>에서만 찾고 있습니다.<br>검색창 왼쪽을 <b>「전체」</b>로 바꾸면 이름·번호·기종·요금제 모두에서 찾습니다.</p>'
+              : '')
           : '<p>검색어나 필터를 바꿔보세요.</p>';
         el.emptyState.innerHTML =
           '<div class="empty-illust"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M15.8 15.8 20 20"/></svg></div>' +
@@ -15786,7 +15825,7 @@
     renderStaffFilter();
     el.dueOnly.checked = state.filters.due;
     el.searchInput.value = state.filters.q;
-    paintSearchScope();   // v61 — 검색 대상(전체/메모만) + 검색창 안내문
+    paintSearchScope();   // v85 — 검색 대상(고객명·번호/전체/기종/요금제/부가서비스/메모/담당자) + 검색창 안내문
     el.clearSearch.classList.toggle('show', !!state.filters.q);
     el.thisMonthBtn.classList.toggle('on', state.filters.month === currentMonth());
     el.allMonthBtn.classList.toggle('on', !state.filters.month);
@@ -15803,22 +15842,28 @@
   // v35 — scope: 'top' = 상단 기준 월 버튼에서 연 팝업 · 'easy' = 권매·쉬움 범위 바의 월 버튼에서 연 팝업
   var mjpState = { open: false, year: 0, scope: 'top' };
 
-  /* v61 — 검색 대상 고르기 (전체 / 메모만)
-     · 한 검색창 앞의 select 값과 검색창 안내문을 지금 상태에 맞춰 칠한다
-     · [전체] 는 고객명·연락처·기종·요금제 등에서 찾고 **메모는 빼고**,
-       [메모만] 은 직원이 적은 **메모 본문에서만** 찾는다 (visibleRecords) */
+  /* v61 → v85 — 검색 대상 고르기 (전체 / 고객명·번호 / 기종 / 요금제 / 부가서비스 / 담당자 / 메모)
+     · 한 검색창 앞의 select 값·바탕색과 검색창 안내문을 지금 상태에 맞춰 칠한다
+     · 고른 칸에서만 찾는다 (visibleRecords) — [전체] 는 메모를 빼고 모두 */
+  var SEARCH_SCOPE_UI = {
+    all:    { label: '전체', ph: '고객명 · 연락처 · 기종 · 요금제 검색', tip: '고객명 · 연락처 · 기종 · 요금제 등에서 찾습니다 (메모는 빠짐)' },
+    name:   { label: '고객명·번호', ph: '고객명 · 번호 · 생년월일 검색', tip: '고객명 · 연락처 · 생년월일에서만 찾습니다' },
+    device: { label: '기종', ph: '기종 검색 (모델코드 함께)', tip: '기종에서만 찾습니다 — 모델코드(S931)와 이름(갤럭시 S25)을 함께 찾습니다' },
+    plan:   { label: '요금제', ph: '요금제 검색', tip: '요금제 · 변경요금제에서만 찾습니다' },
+    addon:  { label: '부가서비스', ph: '부가서비스 검색', tip: '부가서비스에서만 찾습니다' },
+    staff:  { label: '담당자', ph: '담당자 검색', tip: '담당자 이름에서만 찾습니다' },
+    memo:   { label: '메모', ph: '메모 내용 검색', tip: '직원이 적은 메모 본문에서만 찾습니다' }
+  };
   function paintSearchScope() {
-    var memo = state.filters.qMode === 'memo';
+    var mode = searchMode();
+    var ui = SEARCH_SCOPE_UI[mode] || SEARCH_SCOPE_UI.all;
     if (el.searchScopeMode) {
-      el.searchScopeMode.value = memo ? 'memo' : 'all';
-      el.searchScopeMode.classList.toggle('memo', memo);
-      el.searchScopeMode.title = memo
-        ? '메모 본문에서만 찾습니다'
-        : '고객명 · 연락처 · 기종 · 요금제에서 찾습니다 (메모는 빠짐)';
+      el.searchScopeMode.value = mode;
+      el.searchScopeMode.classList.toggle('memo', mode === 'memo');
+      el.searchScopeMode.classList.toggle('scoped', mode !== 'all');
+      el.searchScopeMode.title = ui.tip;
     }
-    if (el.searchInput) {
-      el.searchInput.placeholder = memo ? '메모 내용 검색' : '고객명 · 연락처 · 기종 · 요금제 검색';
-    }
+    if (el.searchInput) el.searchInput.placeholder = ui.ph;
   }
 
   // 검색어가 기준 월을 넘어 전체 기간을 찾고 있음을 알리는 작은 안내 줄
@@ -15829,7 +15874,8 @@
     /* v80 — 모델코드와 이름을 바꿔 찾고 있으면 어느 기종으로 찾는지 알려 준다
        ('S931' 로 찾았는데 갤럭시 S25 가 나오는 이유를 바로 알 수 있게) */
     var aliasLabel = '';
-    if (qHint && state.filters.qMode !== 'memo') {
+    var m0 = searchMode();
+    if (qHint && m0 !== 'memo' && m0 !== 'name') {
       var qs0 = buildSearchQuery(qHint, false);
       if (qs0.fam) aliasLabel = qs0.fam + ' 계열 전체(코드 포함)';
       else if (qs0.aliasNames.length && qs0.aliasNames.length <= 4) aliasLabel = qs0.aliasNames.join(' · ');
@@ -18177,12 +18223,12 @@
       render();
       el.searchInput.focus();
     });
-    // v61 — 검색 대상(전체 / 메모만)을 바꾸면 그 자리에서 바로 다시 찾는다
+    // v61 → v85 — 검색 대상(전체 / 고객명·번호 / 기종 / 요금제 / 부가서비스 / 담당자 / 메모)을 바꾸면 그 자리에서 바로 다시 찾는다
     if (el.searchScopeMode) el.searchScopeMode.addEventListener('change', function () {
       // 입력하고 120ms 안에 카테고리를 바꿔도 방금 친 글자가 지워지지 않게 먼저 확정한다
       if (searchTimer) { clearTimeout(searchTimer); searchTimer = null; }
       if (el.searchInput) state.filters.q = el.searchInput.value;
-      state.filters.qMode = this.value === 'memo' ? 'memo' : 'all';
+      state.filters.qMode = SEARCH_MODES.indexOf(this.value) >= 0 ? this.value : 'all';
       paintSearchScope();
       render();
     });
@@ -18362,7 +18408,8 @@
       }
     });
     el.resetFilters.addEventListener('click', function () {
-      state.filters = { q: '', month: currentMonth(), type: '', types: [], staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: currentMonth(), missing: false };
+      // v85 — 초기화도 기본 검색 대상인 「고객명·번호」로 돌아간다
+      state.filters = { q: '', qMode: 'name', month: currentMonth(), type: '', types: [], staff: '', due: false, dueMode: 'all', easy: false, easyScope: 'month', easyMonth: currentMonth(), missing: false };
       el.searchInput.value = '';
       el.clearSearch.classList.remove('show');
       render();
