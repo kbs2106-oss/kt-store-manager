@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v83">
+<meta name="app-version" content="v84">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -1785,7 +1785,11 @@
     .brand-mark{width:31px;height:31px;font-size:11px;border-radius:9px}
     .brand-text h1{font-size:13.5px}
     .brand-text p{display:none}
-    .btn-add{height:36px;padding:0 10px;font-size:12.5px;gap:5px}
+    /* v84 — 종(🔔) 자리를 내주고도 상호가 최대한 보이게 간격을 줄인다 */
+    .topbar-inner{gap:8px}
+    .topbar-actions{gap:5px}
+    #moreMenu>summary{padding:0 8px;gap:4px}
+    .btn-add{height:36px;padding:0 9px;font-size:12.5px;gap:4px}
   }
   @media (max-width:900px){
     .app{padding:14px 12px 44px}
@@ -2676,6 +2680,93 @@
     #editDialog .paybank-acct input,
     #editDialog .field textarea{font-size:16px}
   }
+
+  /* =========================================================
+     v84 — 관리자 통합 알람함 (🔔)
+     · 헤더 종 버튼 + 미확인 빨간 배지 (관리자 모드에서만 보임)
+     · 알람 패널: 소리·진동 / 폰 상단 알림 토글 · 전체/D-DAY/직원활동 탭 · 목록
+     · 폰 390px 에서도 넘치지 않게 한 줄 말줄임 + 넉넉한 터치 영역(≥34px)
+     ========================================================= */
+  .alarm-bin{position:relative;height:38px;width:42px;padding:0;flex:none;font-size:17px;line-height:1}
+  .alarm-bin.has-unread{border-color:#F3C9C2;background:#FFF8F7}
+  .alarm-bin .alarm-badge{
+    position:absolute;top:-6px;right:-7px;min-width:17px;height:17px;padding:0 4px;
+    border-radius:999px;background:#D92D20;color:#fff;font-size:10px;font-weight:800;
+    display:flex;align-items:center;justify-content:center;line-height:1;pointer-events:none;
+    box-shadow:0 0 0 2px #fff;font-variant-numeric:tabular-nums;
+  }
+  .alarm-bin .alarm-badge[hidden]{display:none !important}
+  @media (max-width:900px){ .alarm-bin{height:38px;width:38px} }
+  @media (max-width:420px){
+    .alarm-bin{height:36px;width:34px;font-size:16px}
+    .alarm-bin .alarm-badge{top:-5px;right:-6px;min-width:16px;height:16px;font-size:9.5px;padding:0 3px}
+  }
+
+  dialog#alarmDialog{width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 40px);overflow:hidden}
+  dialog#alarmDialog[open]{display:flex;flex-direction:column}
+  .alarm-head{display:flex;align-items:center;gap:9px;padding:15px 16px 11px;border-bottom:1px solid var(--line);flex:none}
+  .alarm-head h2{font-size:17px;font-weight:800;letter-spacing:-.02em;display:flex;align-items:center;gap:7px;min-width:0}
+  .alarm-count{font-size:11.5px;font-weight:800;color:#B42318;background:var(--red-bg);border-radius:999px;padding:2px 9px;white-space:nowrap}
+  .alarm-count.zero{color:var(--slate-500);background:#F1F5F9}
+  .alarm-x{margin-left:auto;width:34px;height:34px;border-radius:9px;border:0;background:#F4F7FB;color:var(--slate-500);font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center;flex:none}
+  .alarm-x:hover{background:#E9EEF6;color:var(--ink)}
+  .alarm-toggles{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 16px;background:#F8FAFD;border-bottom:1px solid var(--line);flex:none}
+  .alarm-sw{display:inline-flex;align-items:center;gap:6px;height:33px;padding:0 11px;border:1px solid var(--line-strong);border-radius:999px;background:#fff;font-size:12.5px;font-weight:700;color:var(--slate-700);cursor:pointer;white-space:nowrap}
+  .alarm-sw input{width:15px;height:15px;accent-color:var(--blue-600);margin:0;flex:none}
+  .alarm-sw.on{border-color:#B9D3F7;background:var(--blue-50);color:var(--blue-700)}
+  .alarm-sw.disabled{opacity:.5;cursor:not-allowed}
+  .alarm-note{flex-basis:100%;font-size:11px;color:var(--slate-500);line-height:1.45;margin:1px 0 0}
+  .alarm-note b{color:#B45309}
+  .alarm-tabs{display:flex;gap:6px;padding:9px 14px 0;flex:none}
+  .alarm-tabs button{flex:1 1 0;min-width:0;height:36px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:12.5px;font-weight:700;color:var(--slate-600);white-space:nowrap}
+  .alarm-tabs button b{font-weight:800;color:var(--slate-400);margin-left:3px;font-variant-numeric:tabular-nums}
+  .alarm-tabs button.on{background:var(--blue-600);border-color:var(--blue-600);color:#fff}
+  .alarm-tabs button.on b{color:#fff}
+  .alarm-list{flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:9px 12px 4px;min-height:140px;max-height:calc(100vh - 330px)}
+  .alarm-empty{padding:28px 12px;text-align:center;color:var(--slate-500);font-size:13px;line-height:1.65}
+  .alarm-empty b{color:var(--slate-700)}
+  .alarm-item{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;overflow:hidden}
+  .alarm-item.unread{border-color:#F3C9C2;background:#FFFCFC}
+  .alarm-item.open{box-shadow:0 0 0 2px rgba(11,87,208,.16)}
+  .alarm-item-btn{display:block;width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;font:inherit;color:inherit}
+  .ai-top{display:flex;align-items:center;gap:6px;min-width:0}
+  .ai-cat{flex:none;font-size:10.5px;font-weight:800;border-radius:6px;padding:2px 6px;letter-spacing:-.01em}
+  .ai-cat.dday{background:var(--amber-bg);color:#8A5200}
+  .ai-cat.new{background:var(--blue-50);color:var(--blue-700)}
+  .ai-cat.edit{background:var(--violet-bg);color:var(--violet)}
+  .ai-cat.done{background:var(--green-bg);color:var(--green)}
+  .ai-title{flex:1 1 auto;min-width:0;font-size:13.5px;font-weight:800;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ai-dot{flex:none;width:8px;height:8px;border-radius:50%;background:#D92D20;box-shadow:0 0 0 3px #FDE8E6}
+  .ai-readtag{flex:none;font-size:10px;font-weight:800;color:var(--green);background:var(--green-bg);border-radius:999px;padding:2px 6px}
+  .ai-meta{display:block;margin-top:3px;font-size:11.5px;color:var(--slate-500);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ai-line{display:block;margin-top:3px;font-size:12.5px;color:var(--slate-700);font-weight:600;line-height:1.45;word-break:keep-all;overflow-wrap:anywhere}
+  .alarm-item.read .ai-title{font-weight:700;color:var(--slate-700)}
+  .alarm-item.read .ai-dot{display:none}
+  .alarm-detail{border-top:1px dashed var(--line);padding:9px 12px 10px;background:#FCFDFF}
+  .ad-row{display:flex;gap:8px;padding:2.5px 0;font-size:12.5px;line-height:1.5}
+  .ad-k{flex:none;width:76px;color:var(--slate-500);font-weight:700}
+  .ad-v{flex:1 1 auto;min-width:0;color:#1E293B;font-weight:600;word-break:keep-all;overflow-wrap:anywhere}
+  .alarm-acts{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+  .alarm-acts .btn{height:35px;padding:0 12px;font-size:12.5px}
+  .alarm-foot{display:flex;align-items:center;gap:8px;padding:10px 14px calc(11px + env(safe-area-inset-bottom));border-top:1px solid var(--line);flex:none;flex-wrap:wrap}
+  .alarm-foot .btn{height:36px;font-size:12.5px}
+  .alarm-foot .grow{flex:1}
+  .alarm-target{background:#FFF4F2 !important;box-shadow:inset 0 0 0 3px rgba(217,45,32,.4) !important;transition:background .3s,box-shadow .3s}
+  @media (max-width:600px){
+    dialog#alarmDialog{max-height:92dvh}
+    .alarm-list{max-height:calc(92dvh - 280px)}
+    .alarm-head{padding:14px 15px 10px}
+    .alarm-toggles{padding:8px 14px}
+    .alarm-tabs{padding:8px 12px 0}
+    .alarm-tabs button{height:38px}
+    /* 폰에서는 제목이 두 줄까지 보이게 — 고객명이 잘리지 않게 */
+    .ai-title{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.32}
+  }
+  @media (max-width:380px){
+    .alarm-bin{width:34px}
+    .alarm-sw{height:32px;padding:0 9px;font-size:12px}
+    .ad-k{width:68px}
+  }
 </style>
 </head>
 <body>
@@ -2706,7 +2797,6 @@
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="8" height="15" rx="1.8"/><path d="M9 15h2"/><path d="M10 5v4.5M8 8l2 2 2-2"/></svg>
         앱 설치
       </button>
-      <span class="role-badge" id="roleBadge" title="관리자 모드에서만 엑셀·백업·삭제가 보입니다">👤 직원 모드</span>
       <button type="button" class="sync-pill" id="syncPill" hidden><span class="sdot"></span><span id="syncPillText">공용 장부</span></button>
       <div class="save-state"><span class="dot"></span><span id="saveState">저장됨</span></div>
       <button class="btn btn-primary btn-add" id="addBtn">
@@ -2739,6 +2829,13 @@
           <button class="menu-item admin-only" id="sampleBtn" role="menuitem">샘플 데이터 넣기</button>
         </div>
       </details>
+      <!-- v84 — 알람(🔔)은 우측 상단 프로필(직원/관리자 표시) 바로 왼쪽 -->
+      <button type="button" class="btn btn-ghost alarm-bin" id="alarmBtn"
+              title="알람함" aria-label="알람함" aria-haspopup="dialog">
+        <span aria-hidden="true">🔔</span>
+        <span class="alarm-badge" id="alarmBadge" hidden>0</span>
+      </button>
+      <span class="role-badge" id="roleBadge" title="관리자 모드에서만 엑셀·백업·삭제가 보입니다">👤 직원 모드</span>
     </div>
   </div>
 </header>
@@ -3838,6 +3935,34 @@
     <div class="slip-list" id="slipList"></div>
     <div class="slip-pv-head" id="slipPvHead"><span>A4 미리보기</span><span id="slipPvNote">—</span></div>
     <div class="slip-preview" id="slipPreview"><div class="slip-pv-inner" id="slipPvInner"></div></div>
+  </div>
+</dialog>
+
+<!-- ===================== v84 — 관리자 통합 알람함 (🔔) ===================== -->
+<dialog id="alarmDialog" aria-labelledby="alarmTitle">
+  <div class="alarm-head">
+    <h2 id="alarmTitle">🔔 알람함 <span class="alarm-count zero" id="alarmCount">미확인 0</span></h2>
+    <button type="button" class="alarm-x" id="alarmClose" aria-label="닫기">×</button>
+  </div>
+  <div class="alarm-toggles">
+    <label class="alarm-sw" id="alarmSoundWrap" title="새 알람이 오면 비프음과 진동으로 알립니다">
+      <input type="checkbox" id="alarmSoundToggle"> <span>소리 · 진동</span>
+    </label>
+    <label class="alarm-sw" id="alarmPushWrap" title="폰 상단 알림(Notification)으로도 알립니다">
+      <input type="checkbox" id="alarmPushToggle"> <span>폰 상단 알림</span>
+    </label>
+    <p class="alarm-note" id="alarmNote">이 기기에 <b>200건까지</b> 보관 · 누르기 전엔 <b>미확인</b>, 눌러 확인해도 <b>지우기 전까지</b> 목록에 남습니다.</p>
+  </div>
+  <div class="alarm-tabs" id="alarmTabs" role="tablist" aria-label="알람 종류">
+    <button type="button" data-alarm-tab="all" class="on" role="tab" aria-selected="true">전체 <b>0</b></button>
+    <button type="button" data-alarm-tab="dday" role="tab" aria-selected="false">D-DAY <b>0</b></button>
+    <button type="button" data-alarm-tab="staff" role="tab" aria-selected="false">직원활동 <b>0</b></button>
+  </div>
+  <div class="alarm-list" id="alarmList"></div>
+  <div class="alarm-foot">
+    <button type="button" class="btn btn-ghost" id="alarmReadAll">✓ 모두 읽음</button>
+    <span class="grow"></span>
+    <button type="button" class="btn btn-danger" id="alarmClearRead">확인됨 비우기</button>
   </div>
 </dialog>
 <!-- 인쇄 전용 루트 — 화면에서는 숨기고 window.print() 직전에만 채운다 -->
@@ -8231,9 +8356,25 @@
     if (!sent) {
       try {
         if (window.Notification && Notification.permission === 'granted') {
-          new Notification(entry.title, { body: entry.body, tag: entry.key || ('kt-' + Date.now()) });
           entry.via = 'browser';
           sent = true;
+          try {
+            new Notification(entry.title, { body: entry.body, tag: entry.key || ('kt-' + Date.now()) });
+          } catch (err) {
+            /* 안드로이드 크롬은 new Notification 을 막는다 → 서비스워커 알림으로 */
+            try {
+              if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+                navigator.serviceWorker.ready.then(function (reg) {
+                  try {
+                    reg.showNotification(entry.title, {
+                      body: entry.body, tag: entry.key || ('kt-' + Date.now()),
+                      icon: './icons/icon-192.png', badge: './icons/icon-192.png', data: { url: './' }
+                    });
+                  } catch (e2) {}
+                });
+              }
+            } catch (e3) {}
+          }
         }
       } catch (e) {}
     }
@@ -8428,9 +8569,28 @@
    *   · 그 달이 이 기기에 없어도 30분 안에 만들어진 건이면 알린다(새 달의 첫 건)
    */
   function notifyCollectServerChanges(recs, months) {
-    if (!notifyOn() || !recs || !recs.length) return [];
+    /* v84 — v84b: 알람함은 관리자·직원 모두의 기기에 모은다(폰 알림을 꺼 두어도 기록은 계속 쌓인다) */
+    if (!recs || !recs.length) return [];
     notifyLoadSeen();
-    if (!notifySeeded) { notifySeed(); return []; }      // 기준선이 없으면 채우기만
+    if (!notifySeeded) {
+      /* 기준선이 없으면 채우기만 한다. 이 기기에 아직 기록이 없을 때(첫 실행)는 이번에 받은
+         기록까지 기준선에 넣어, 첫 달 전체가 '새 개통' 알람으로 쏟아지지 않게 한다. */
+      notifySeed();
+      var si, sn = 0;
+      for (si = 0; si < recs.length; si++) {
+        if (!recs[si] || !recs[si].id) continue;
+        notifySeen[String(recs[si].id)] = String(recs[si].수정일시 || '');
+        sn++;
+      }
+      if (sn) notifySaveSeen();
+      alarmSyncDueSoon();
+      return [];
+    }
+    /* v84 — 수정 내역(변경 전 → 후)을 만들려면 덮어쓰기 전의 기록이 필요하다 */
+    var alarmOldMap = {}, ai;
+    for (ai = 0; ai < state.records.length; ai++) {
+      if (state.records[ai] && state.records[ai].id) alarmOldMap[String(state.records[ai].id)] = state.records[ai];
+    }
     var sigs = monthSigs(), covered = {}, m, i;
     if (months && months.length) {
       for (i = 0; i < months.length; i++) if (sigs[months[i]] !== undefined) covered[months[i]] = true;
@@ -8460,18 +8620,29 @@
       changed = true;
     }
     if (changed) notifySaveSeen();
-    if (found.length) notifyFire(found);
+    if (found.length) {
+      var items = alarmIngestStaff(found, alarmOldMap);
+      if (alarmPushOn()) notifyFire(found);
+      alarmAnnounce(items, { push: false });
+    }
+    alarmSyncDueSoon();                                   // 새 건·수정에 따른 오늘 D-DAY 도 함께 맞춘다
     return found;
   }
 
   /* 조용한 확인 한 번 — list_months 로 바뀐 달만 받는다 */
   function notifyPollOnce() {
-    if (!notifyOn() || !syncOn() || blockedStored()) return Promise.resolve(false);
+    alarmSyncDueSoon();          // v84 — 서버에 바뀐 달이 없어도 오늘 D-DAY 는 맞춰 둔다
+    if (!syncOn() || blockedStored()) return Promise.resolve(false);
     if (notifyBusy || syncing || monthSyncing) return Promise.resolve(false);
     if (monthApiOk === false) return Promise.resolve(false);
     notifyBusy = true;
     return pullMonthIndex().then(function () {
       var gaps = coverageGaps() || [];
+      if (!gaps.length) return 0;
+      /* v84b — 모든 기기가 45초마다 확인하므로, 이 기기에 없는 달을 한꺼번에 다 받지 않는다
+         (처음 쓰는 기기에서 5MB 를 45초마다 받는 일 방지). 이번 달·지난 달과 이미 가진 달만 맞춘다. */
+      var sigs = monthSigs(), curM = currentMonth(), prevM = prevMonthKey(curM);
+      gaps = gaps.filter(function (m) { return sigs[m] !== undefined || m === curM || m === prevM; });
       if (!gaps.length) return 0;
       /* 알림 확인은 조용해야 한다 — 지금 보고 있는 달이 바뀌었을 때만 다시 그린다.
          '전체 기간'·검색 창을 보고 있을 때 다시 그리면 스크크롤이 맨 위로 튀어 오른다. */
@@ -8494,7 +8665,7 @@
 
   function notifyStartPoll() {
     notifyStopPoll();
-    if (!notifyOn()) return;
+    /* v84b — 알람함은 전 직원 기기에서 실시간으로 모은다 */
     notifyTimer = setInterval(function () {
       if (document.hidden) return;      // 화면이 꺼져 있으면 앱(APK)의 백그라운드 확인이 맡는다
       notifyPollOnce();
@@ -8521,6 +8692,7 @@
       notifyPushConfig();
     }
     notifyPaintMenu();
+    alarmPaintToggles();
     if (!(opts && opts.silent)) {
       toast(on ? '이 기기에서 새 개통 알림을 켰습니다.' : '이 기기에서 개통 알림을 껐습니다.');
     }
@@ -8543,17 +8715,14 @@
     notifyPaintMenu();
     notifyPushConfig();
     if (notifySeeded) notifyPushSeenSoon();
-    if (notifyOn()) {
-      notifyStartPoll();
-      setTimeout(function () { notifyPollOnce(); }, 8000);
-    }
+    notifyStartPoll();
+    setTimeout(function () { notifyPollOnce(); }, 8000);
     document.addEventListener('visibilitychange', function () {
       if (document.hidden) { notifyStopPoll(); return; }
-      if (!notifyOn()) return;
       notifyStartPoll();
       notifyPollOnce();
     });
-    window.addEventListener('online', function () { if (notifyOn()) notifyPollOnce(); });
+    window.addEventListener('online', function () { notifyPollOnce(); });
   }
 
   /* 검증용 손잡이 — 라이브 점검에서 알림 호출을 그대로 세어 본다 */
@@ -8566,6 +8735,704 @@
     collect: notifyCollectServerChanges,
     log: notifyLogList,
     seen: function () { notifyLoadSeen(); return notifySeen; }
+  };
+
+  /* =========================================================
+     v84 — 통합 알람함 (🔔)
+     ---------------------------------------------------------
+     사장님: "두어플 관리자모드에 알람만 따로 만들어줘" → "알람은 전부 모아줘"
+              → "무슨 알람인지 눌러서 확인 안되면 사라지잖아"
+              → "그냥 앱알림은 다 뜨게 해주고 직원들도 알람 모음 볼수있는 알람탭을 상단에 정갈하게"
+     · 규칙
+         ① 종(🔔)은 **관리자·직원 모두** 헤더에서 바로 본다(미확인 빨간 배지).
+         ② 알람은 localStorage 에 **200건까지 영구 보관**한다. 화면 토스트·폰 알림이 닫혀도
+            알람함 기록은 사라지지 않는다(앱을 껐다 켜도 그대로).
+         ③ 항목을 **직접 눌러 상세를 열기 전까지** 미확인(빨간 배지)으로 남는다.
+            눌러 확인한 뒤에도 목록에서 지우지 않고 `확인됨` 표시만 붙어 이력으로 남는다.
+            지우는 것은 본인이 `확인됨 비우기`를 눌렀을 때뿐이다.
+         ④ 세 가지를 한 곳에 모은다
+              · 오늘(D-DAY)·기한 지난 미완료 요금제 변경 / 부가서비스 해지
+              · 직원의 새 개통 · 수정 · 완료([요금완료]/[부가완료]) · 페이백 등 변경 활동
+              · 소리·진동 / 폰 상단 알림(Notification) 설정
+         ⑤ 45초 조용한 확인(폴링)은 **모든 기기**에서 돌아, 다른 직원이 입력·수정한 내역이
+            각자 기기 알람함에 실시간으로 쌓인다. 이 기기에서 직접 저장한 건은 스스로 알리지 않는다.
+     ========================================================= */
+  var ALARM_KEY = 'kt_store_alarm_inbox_v1';
+  var ALARM_SND_KEY = 'kt_store_alarm_sound_v1';
+  var ALARM_PUSH_KEY = 'kt_store_alarm_push_v1';
+  var ALARM_DEV_KEY = 'kt_store_alarm_device_v1';
+  var ALARM_MAX = 200;               // 보관 건수 (넘치면 오래된 '확인됨'부터 정리 · 미확인은 최대한 남긴다)
+  var ALARM_DUE_GAP = 120000;        // D-DAY 다시 훑는 간격 (2분)
+  var alarmCache = null;
+  var alarmCleared = {};            // '확인됨 비우기'로 지운 key — 같은 D-DAY 가 곧바로 다시 쌓이지 않게
+  var alarmTab = 'all';
+  var alarmOpenId = '';
+  var alarmDueAt = 0;
+  var alarmDueTimer = null;
+  var alarmAudio = null;
+
+  function alarmTwo(n) { return (n < 10 ? '0' : '') + n; }
+
+  /* ---------------- 저장 ---------------- */
+  function alarmLoad() {
+    if (alarmCache) return alarmCache;
+    alarmCache = { v: 1, items: [] };
+    try {
+      var raw = localStorage.getItem(ALARM_KEY);
+      if (!raw) return alarmCache;
+      var d = JSON.parse(raw);
+      if (d && Array.isArray(d.items)) {
+        alarmCache.items = d.items.filter(function (it) {
+          return it && it.id && it.key && Number(it.at) > 0;
+        });
+      }
+      if (d && d.cleared && typeof d.cleared === 'object') alarmCleared = d.cleared;
+    } catch (e) {}
+    return alarmCache;
+  }
+
+  /* 200건 넘으면 '확인됨' 중 오래된 것부터 정리한다 — 미확인은 가능한 한 그대로 둔다 */
+  function alarmTrim(list) {
+    var out = list.slice();
+    while (out.length > ALARM_MAX) {
+      var idx = -1, i;
+      for (i = out.length - 1; i >= 0; i--) { if (out[i].read) { idx = i; break; } }
+      if (idx < 0) {
+        var oldest = 0;
+        for (i = 1; i < out.length; i++) if (Number(out[i].at) < Number(out[oldest].at)) oldest = i;
+        idx = oldest;
+      }
+      out.splice(idx, 1);
+    }
+    return out;
+  }
+
+  function alarmSave() {
+    var l = alarmLoad();
+    l.items.sort(function (a, b) { return Number(b.at) - Number(a.at); });
+    if (l.items.length > ALARM_MAX) l.items = alarmTrim(l.items);
+    try { localStorage.setItem(ALARM_KEY, JSON.stringify({ v: 1, items: l.items, cleared: alarmCleared })); } catch (e) {}
+    alarmPaintBadge();
+  }
+
+  function alarmNewId() {
+    return 'al_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function alarmFind(id) {
+    var l = alarmLoad(), i;
+    for (i = 0; i < l.items.length; i++) if (l.items[i].id === id) return l.items[i];
+    return null;
+  }
+
+  /* ---------------- 이 기기 표시 (이전 버전 호환) ----------------
+     0525 를 넣은 기기에 남겨 두는 표시. v84b 부터 알람함은 모든 기기에서 모으므로
+     이 값으로 알람을 막지 않는다(예전 저장값이 있어도 그대로 동작). */
+  function alarmDeviceOn() {
+    try { return localStorage.getItem(ALARM_DEV_KEY) === '1'; } catch (e) { return false; }
+  }
+  function alarmSetDevice(on) {
+    try { if (on) localStorage.setItem(ALARM_DEV_KEY, '1'); } catch (e) {}
+  }
+
+  function alarmSoundOn() {
+    try { return localStorage.getItem(ALARM_SND_KEY) !== '0'; } catch (e) { return true; }
+  }
+  function alarmSetSound(on) {
+    try { localStorage.setItem(ALARM_SND_KEY, on ? '1' : '0'); } catch (e) {}
+    alarmPaintToggles();
+  }
+
+  /* v84b — 폰 상단 알림도 전 직원 기기 기본 켜짐 (이 기기에서만 끌 수 있다) */
+  function alarmPushOn() {
+    try { return localStorage.getItem(ALARM_PUSH_KEY) !== '0'; } catch (e) { return true; }
+  }
+  function alarmSetPush(on) {
+    try { localStorage.setItem(ALARM_PUSH_KEY, on ? '1' : '0'); } catch (e) {}
+    alarmPaintToggles();
+  }
+
+  function alarmItems() { return alarmLoad().items; }
+  function alarmUnreadCount() {
+    var l = alarmItems(), n = 0, i;
+    for (i = 0; i < l.length; i++) if (!l[i].read) n++;
+    return n;
+  }
+  function alarmIsOpen() {
+    var d = $('alarmDialog');
+    return !!(d && d.open);
+  }
+
+  /* ---------------- 알람 추가 ---------------- */
+  function alarmAddMany(list) {
+    if (!list || !list.length) return [];
+    var l = alarmLoad(), have = {}, out = [], i, it;
+    for (i = 0; i < l.items.length; i++) have[l.items[i].key] = true;
+    for (i = 0; i < list.length; i++) {
+      it = list[i];
+      if (!it || !it.key || have[it.key] || alarmCleared[it.key]) continue;
+      it.id = it.id || alarmNewId();
+      it.at = Number(it.at) || Date.now();
+      it.read = false;
+      it.readAt = 0;
+      have[it.key] = true;
+      l.items.push(it);
+      out.push(it);
+    }
+    if (!out.length) return [];
+    alarmSave();
+    if (alarmIsOpen()) alarmRender();
+    return out;
+  }
+  function alarmAdd(it) { var r = alarmAddMany([it]); return r.length ? r[0] : null; }
+
+  /* ---------------- 읽음 ---------------- */
+  function alarmMarkRead(id) {
+    var it = alarmFind(id);
+    if (!it || it.read) return false;
+    it.read = true;
+    it.readAt = Date.now();
+    alarmSave();
+    if (alarmIsOpen()) alarmRender();
+    return true;
+  }
+
+  function alarmMarkAllRead() {
+    var l = alarmItems(), n = 0, i;
+    for (i = 0; i < l.length; i++) {
+      if (!l[i].read) { l[i].read = true; l[i].readAt = Date.now(); n++; }
+    }
+    if (n) { alarmSave(); if (alarmIsOpen()) alarmRender(); }
+    toast(n ? '알람 ' + fmtNum(n) + '건을 확인했습니다. 목록에는 그대로 남습니다.' : '새 알람이 없습니다.');
+    return n;
+  }
+
+  function alarmClearRead() {
+    var l = alarmItems();
+    var readN = l.filter(function (it) { return it.read; }).length;
+    if (!readN) { toast('비울 확인된 알람이 없습니다.'); return 0; }
+    return askConfirm('확인된 알람 비우기',
+      '확인(읽음)한 알람 <b>' + fmtNum(readN) + '건</b>을 목록에서 지웁니다.<br>' +
+      '아직 확인하지 않은 알람은 그대로 남습니다.', '비우기', true).then(function (ok) {
+      if (!ok) return 0;
+      var l2 = alarmLoad();
+      var before = l2.items.length;
+      /* 지운 key 를 기억해 둔다 — 오늘 D-DAY 처럼 다시 계산되는 알람이 곧바로 되살아나지 않게 */
+      l2.items.forEach(function (it) { if (it.read) alarmCleared[it.key] = Date.now(); });
+      var ck = Object.keys(alarmCleared);
+      if (ck.length > 400) {
+        ck.sort(function (a, b) { return alarmCleared[a] - alarmCleared[b]; });
+        for (var ci = 0; ci < ck.length - 400; ci++) delete alarmCleared[ck[ci]];
+      }
+      l2.items = l2.items.filter(function (it) { return !it.read; });
+      alarmSave();
+      if (alarmIsOpen()) alarmRender();
+      var n = before - l2.items.length;
+      toast(n ? '확인된 알람 ' + fmtNum(n) + '건을 비웠습니다.' : '비울 알람이 없습니다.');
+      return n;
+    });
+  }
+
+  /* ---------------- 시각 표기 ---------------- */
+  function alarmStamp(ms) {
+    var d = new Date(Number(ms) || Date.now());
+    return d.getFullYear() + '-' + alarmTwo(d.getMonth() + 1) + '-' + alarmTwo(d.getDate()) +
+      ' ' + alarmTwo(d.getHours()) + ':' + alarmTwo(d.getMinutes());
+  }
+  function alarmShortStamp(ms) {
+    var d = new Date(Number(ms) || Date.now()), n = new Date();
+    var hm = alarmTwo(d.getHours()) + ':' + alarmTwo(d.getMinutes());
+    if (d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate()) return '오늘 ' + hm;
+    var y = new Date(n.getTime() - 86400000);
+    if (d.getFullYear() === y.getFullYear() && d.getMonth() === y.getMonth() && d.getDate() === y.getDate()) return '어제 ' + hm;
+    return alarmTwo(d.getMonth() + 1) + '-' + alarmTwo(d.getDate()) + ' ' + hm;
+  }
+
+  /* ---------------- ① D-DAY 알람 (오늘 · 기한 지난 미완료) ---------------- */
+  function alarmDueItem(r, kind, d, today) {
+    var isPlan = kind === 'plan';
+    var date = isPlan ? normalizeDate(r.요금제변경일자) : normalizeDate(r.부가서비스해지일자);
+    var cust = String(r.고객명 || '').trim() || '(고객명 없음)';
+    var phone = String(r.연락처 || '').trim();
+    var who = String(r.담당자 || '').trim() || '—';
+    var what = isPlan ? String(r.변경요금제 || '').trim() : String(r.부가서비스 || '').trim();
+    var late = d < 0;
+    var when = late ? Math.abs(d) + '일 지남' : '오늘(D-DAY)';
+    var lines = [{ k: '할 일', v: (isPlan ? '요금제 변경' : '부가서비스 해지') + ' · ' + when }];
+    if (isPlan) {
+      lines.push({ k: '현재 요금제', v: String(r.요금제 || '').trim() || '—' });
+      lines.push({ k: '변경 요금제', v: what || '—' });
+    } else {
+      lines.push({ k: '부가서비스', v: what || '—' });
+    }
+    lines.push({ k: '기한', v: (date || '—') + ' · ' + when });
+    lines.push({ k: '고객', v: cust + (phone ? ' · ' + phone : '') });
+    lines.push({ k: '담당자', v: who });
+    lines.push({ k: '알람 시각', v: alarmStamp(Date.now()) });
+    return {
+      key: 'dday|' + kind + '|' + String(r.id) + '|' + date + '|' + today,
+      cat: 'dday',
+      kind: isPlan ? 'dday-plan' : 'dday-addon',
+      title: '⏰ ' + (isPlan ? '요금제 변경 ' : '부가서비스 해지 ') + (late ? when : 'D-DAY') + ' · ' + cust,
+      summary: (isPlan ? '변경 ' + (what || '요금제') : '해지 ' + (what || '부가서비스')) + ' · ' + when,
+      customer: cust, phone: phone, who: who,
+      lines: lines, at: Date.now(), recId: String(r.id), month: monthOf(r.개통일), dueDate: date
+    };
+  }
+
+  function alarmSyncDue(force, opts) {
+    var o = opts || {};
+    if (!state || !state.records || !state.records.length) return [];
+    var now = Date.now();
+    if (!force && now - alarmDueAt < ALARM_DUE_GAP) return [];
+    alarmDueAt = now;
+    var today = todayISO(), list = [], i, r, dp, da;
+    for (i = 0; i < state.records.length; i++) {
+      r = state.records[i];
+      if (!r || !r.id) continue;
+      dp = planPending(r);
+      if (dp !== null && dp <= 0) list.push(alarmDueItem(r, 'plan', dp, today));
+      da = addonPending(r);
+      if (da !== null && da <= 0) list.push(alarmDueItem(r, 'addon', da, today));
+    }
+    var added = alarmAddMany(list);
+    if (added.length && !o.quiet) alarmAnnounce(added, { push: true });
+    return added;
+  }
+
+  /* 화면·동기화가 여러 번 겹쳐도 D-DAY 훑기는 한 번으로 모은다 */
+  function alarmSyncDueSoon(force) {
+    if (force) { alarmSyncDue(true, { quiet: true }); return; }
+    if (alarmDueTimer) return;
+    alarmDueTimer = setTimeout(function () {
+      alarmDueTimer = null;
+      /* 이때 처음 생긴 D-DAY 만 소리·진동·폰 알림으로 알린다(앱을 열 때 이미 있던 건은 조용히 쌓인다) */
+      alarmSyncDue(false, {});
+    }, 2500);
+  }
+
+  /* ---------------- ② 직원 활동 알람 (새 개통 · 수정 · 완료) ---------------- */
+  var ALARM_DIFF_FIELDS = [
+    { k: '고객명', l: '고객명' }, { k: '연락처', l: '연락처' }, { k: '생년월일', l: '생년월일' },
+    { k: '개통일', l: '개통일' }, { k: '개통유형', l: '개통유형' }, { k: '기종', l: '기종' },
+    { k: '요금제', l: '요금제' }, { k: '변경요금제', l: '변경 요금제' }, { k: '요금제변경일자', l: '요금제 변경일' },
+    { k: '부가서비스', l: '부가서비스' }, { k: '부가서비스해지일자', l: '부가서비스 해지일' },
+    { k: '중고폰', l: '중고폰' }, { k: '중고폰금액', l: '중고폰 금액' },
+    { k: '추가지원금', l: '추가지원금' }, { k: '페이백카드', l: '페이백(카드)' }, { k: '페이백입금', l: '페이백(입금)' },
+    { k: '단말보험', l: '단말보험' }, { k: '제휴카드', l: '제휴카드' }, { k: '담당자', l: '담당자' }, { k: '메모', l: '메모' }
+  ];
+  var ALARM_MONEY_FIELDS = { '중고폰금액': 1, '추가지원금': 1, '페이백카드': 1, '페이백입금': 1, '무선리베이트': 1, '유선리베이트': 1 };
+
+  function alarmValText(r, k) {
+    var v = r ? r[k] : '';
+    if (ALARM_MONEY_FIELDS[k]) return v ? fmtNum(Number(v) || 0) + '원' : '0원';
+    if (k === '메모') return String(v || '').replace(/\s+/g, ' ').trim() || '(없음)';
+    return String(v == null ? '' : v).trim() || '(없음)';
+  }
+
+  function alarmStaffItem(f, old) {
+    var r = f && f.rec;
+    if (!r || !r.id) return null;
+    var id = String(r.id);
+    var stamp = String(f.stamp || '');
+    var cust = String(r.고객명 || '').trim() || '(고객명 없음)';
+    var phone = String(r.연락처 || '').trim();
+    var who = String(r.담당자 || '').trim() || '담당자 미지정';
+    var at = Date.parse(stamp);
+    if (!(at > 0)) at = Date.now();
+    var donePlan = old ? (!doneOf(old, 'plan') && doneOf(r, 'plan')) : false;
+    var doneAddon = old ? (!doneOf(old, 'addon') && doneOf(r, 'addon')) : false;
+    var undoPlan = old ? (doneOf(old, 'plan') && !doneOf(r, 'plan')) : false;
+    var undoAddon = old ? (doneOf(old, 'addon') && !doneOf(r, 'addon')) : false;
+    var changed = [], i, fld, a, b;
+    if (old) {
+      for (i = 0; i < ALARM_DIFF_FIELDS.length; i++) {
+        fld = ALARM_DIFF_FIELDS[i];
+        a = alarmValText(old, fld.k);
+        b = alarmValText(r, fld.k);
+        if (a === b) continue;
+        changed.push({ k: fld.l, v: a + ' → ' + b });
+      }
+    } else {
+      if (String(r.기종 || '').trim()) changed.push({ k: '기종', v: String(r.기종).trim() });
+      if (String(r.요금제 || '').trim()) changed.push({ k: '요금제', v: String(r.요금제).trim() });
+      if (String(r.개통유형 || '').trim()) changed.push({ k: '개통유형', v: String(r.개통유형).trim() });
+    }
+    if (donePlan) changed.unshift({ k: '완료', v: '요금제 변경 완료 처리 ([요금완료]) · ' + (String(r.변경요금제 || '').trim() || '변경 요금제 없음') });
+    if (doneAddon) changed.unshift({ k: '완료', v: '부가서비스 해지 완료 처리 ([부가완료]) · ' + (String(r.부가서비스 || '').trim() || '부가서비스 없음') });
+    if (undoPlan) changed.unshift({ k: '완료 취소', v: '요금제 변경 완료를 되돌렸습니다' });
+    if (undoAddon) changed.unshift({ k: '완료 취소', v: '부가서비스 해지 완료를 되돌렸습니다' });
+
+    var title, kind;
+    if (donePlan || doneAddon) {
+      var doneWhat = [];
+      if (donePlan) doneWhat.push('요금제 변경');
+      if (doneAddon) doneWhat.push('부가서비스 해지');
+      title = '✅ ' + doneWhat.join(' · ') + ' 완료 · ' + cust;
+      kind = 'done';
+    } else if (undoPlan || undoAddon) {
+      title = '↩️ 완료 취소 · ' + cust;
+      kind = 'done';
+    } else if (f.kind === 'new') {
+      title = '📋 새 개통 등록 · ' + cust;
+      kind = 'new';
+    } else {
+      title = '✏️ 개통 수정 · ' + cust;
+      kind = 'edit';
+    }
+
+    var lines = [{ k: '고객', v: cust + (phone ? ' · ' + phone : '') }];
+    lines = lines.concat(changed.length ? changed : [{ k: '변경', v: f.kind === 'new' ? '새 개통이 등록되었습니다' : '내용이 수정되었습니다' }]);
+    if (String(r.개통일 || '').trim()) lines.push({ k: '개통일', v: String(r.개통일) });
+    lines.push({ k: '담당자', v: who });
+    lines.push({ k: '변경 시각', v: alarmStamp(at) });
+
+    var summary;
+    if (changed.length) {
+      summary = changed[0].k + ': ' + changed[0].v;
+      if (changed.length > 1) summary += ' 외 ' + (changed.length - 1) + '건';
+    } else {
+      summary = f.kind === 'new' ? '새 개통이 등록되었습니다' : '내용이 수정되었습니다';
+    }
+    return {
+      key: 'staff|' + (f.kind || 'edit') + '|' + id + '|' + stamp + '|' + (donePlan ? 'p' : '') + (doneAddon ? 'a' : ''),
+      cat: 'staff', kind: kind,
+      title: title, summary: summary,
+      customer: cust, phone: phone, who: String(r.담당자 || '').trim(),
+      lines: lines, at: at, recId: id, month: monthOf(r.개통일)
+    };
+  }
+
+  function alarmIngestStaff(found, oldMap) {
+    if (!found || !found.length) return [];
+    var list = [], i, it;
+    for (i = 0; i < found.length; i++) {
+      it = alarmStaffItem(found[i], oldMap ? oldMap[String(found[i] && found[i].rec && found[i].rec.id)] : null);
+      if (it) list.push(it);
+    }
+    return alarmAddMany(list);
+  }
+
+  /* ---------------- 토스트 · 소리 · 진동 · 폰 알림 ---------------- */
+  function alarmAudioCtx() {
+    try {
+      var C = window.AudioContext || window.webkitAudioContext;
+      if (!C) return null;
+      if (!alarmAudio) alarmAudio = new C();
+      if (alarmAudio.state === 'suspended' && alarmAudio.resume) alarmAudio.resume();
+      return alarmAudio;
+    } catch (e) { return null; }
+  }
+
+  /* 짧은 두 번 비프음 — 폰이 무음이면 Web Audio 는 조용히 지나간다(오류 없음) */
+  function alarmBeep() {
+    var ctx = alarmAudioCtx();
+    if (!ctx) return false;
+    try {
+      var t0 = ctx.currentTime;
+      for (var i = 0; i < 2; i++) {
+        var off = i * 0.17;
+        var osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = i ? 880 : 660;
+        g.gain.setValueAtTime(0.0001, t0 + off);
+        g.gain.exponentialRampToValueAtTime(0.18, t0 + off + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + off + 0.13);
+        osc.connect(g);
+        g.connect(ctx.destination);
+        osc.start(t0 + off);
+        osc.stop(t0 + off + 0.15);
+      }
+      return true;
+    } catch (e) { return false; }
+  }
+
+  function alarmVibrate() {
+    try { if (navigator.vibrate) { navigator.vibrate([180, 70, 180]); return true; } } catch (e) {}
+    return false;
+  }
+
+  /* 폰 상단 알림이 가능한 환경인가 — 전용 앱(APK) 브리지 또는 브라우저 Notification */
+  function alarmNotifySupported() {
+    try { if (notifyBridge()) return true; } catch (e) {}
+    try { if (window.Notification && typeof window.Notification === 'function') return true; } catch (e) {}
+    return false;
+  }
+
+  function alarmAnnounce(items, opts) {
+    if (!items || !items.length) return;
+    var o = opts || {};
+    if (alarmSoundOn()) { alarmBeep(); alarmVibrate(); }
+    var pushed = false;
+    if (o.push && alarmPushOn()) {
+      var first = items[0];
+      var title = items.length === 1 ? first.title : '🔔 오늘 처리할 알람 ' + items.length + '건';
+      var body = items.length === 1 ? (first.summary || first.title)
+        : items.slice(0, 3).map(function (x) { return x.customer || x.title; }).filter(Boolean).join(' · ');
+      try { pushed = !!notifySend(title, body, 'alarm-' + first.id); } catch (e) {}
+    }
+    if (alarmIsOpen()) return;
+    if (o.push) { if (!pushed) toast(items.length === 1 ? items[0].title : '🔔 새 알람 ' + items.length + '건 — 알람함에서 확인하세요'); }
+    else if (!alarmPushOn()) toast(items.length === 1 ? items[0].title : '🔔 새 알람 ' + items.length + '건 — 알람함에서 확인하세요');
+  }
+
+  /* ---------------- 화면 ---------------- */
+  function alarmPaintBadge() {
+    var n = alarmUnreadCount();
+    var b = $('alarmBadge'), btn = $('alarmBtn'), c = $('alarmCount');
+    if (b) { b.hidden = n <= 0; b.textContent = n > 99 ? '99+' : String(n); }
+    if (btn) {
+      btn.classList.toggle('has-unread', n > 0);
+      btn.setAttribute('aria-label', n > 0 ? '알람함 · 미확인 ' + n + '건' : '알람함');
+      btn.title = n > 0 ? '미확인 알람 ' + n + '건 — 눌러서 확인' : '알람함';
+    }
+    if (c) { c.textContent = '미확인 ' + (n > 0 ? fmtNum(n) : '0'); c.classList.toggle('zero', n <= 0); }
+    var tabs = $('alarmTabs');
+    if (tabs) {
+      var l = alarmItems(), cnt = { all: l.length, dday: 0, staff: 0 }, i;
+      for (i = 0; i < l.length; i++) { if (l[i].cat === 'dday') cnt.dday++; else cnt.staff++; }
+      var btns = tabs.querySelectorAll('button[data-alarm-tab]');
+      for (i = 0; i < btns.length; i++) {
+        var key = btns[i].getAttribute('data-alarm-tab');
+        var bb = btns[i].querySelector('b');
+        if (bb) bb.textContent = String(cnt[key] || 0);
+      }
+    }
+  }
+
+  function alarmPaintToggles() {
+    var s = $('alarmSoundToggle'), sw = $('alarmSoundWrap');
+    if (s) { s.checked = alarmSoundOn(); if (sw) sw.classList.toggle('on', s.checked); }
+    var p = $('alarmPushToggle'), pw = $('alarmPushWrap'), note = $('alarmNote');
+    var supported = alarmNotifySupported();
+    if (p) {
+      p.checked = alarmPushOn();
+      p.disabled = !supported;
+      if (pw) { pw.classList.toggle('on', p.checked); pw.classList.toggle('disabled', !supported); }
+    }
+    if (note) {
+      var perm = '';
+      try { perm = (window.Notification && Notification.permission) || ''; } catch (e) {}
+      note.innerHTML = '이 기기에 <b>200건까지</b> 보관 · 누르기 전엔 <b>미확인</b>, 눌러 확인해도 <b>지우기 전까지</b> 목록에 남습니다.' +
+        (supported ? '' : '<br>이 브라우저는 폰 상단 알림을 지원하지 않습니다 — 소리·진동으로 알립니다.') +
+        (perm === 'denied' ? '<br>브라우저에서 알림이 차단되어 있습니다. 주소창 자물쇠 → 알림 → 허용으로 바꾸면 다시 뜹니다.' : '');
+    }
+  }
+
+  function alarmItemHtml(it) {
+    var cat = it.cat === 'dday' ? 'dday' : (it.kind === 'done' ? 'done' : (it.kind === 'new' ? 'new' : 'edit'));
+    var catLabel = it.cat === 'dday' ? 'D-DAY' : (it.kind === 'done' ? '완료' : (it.kind === 'new' ? '새 개통' : '수정'));
+    var open = it.id === alarmOpenId;
+    var meta = [it.customer, it.phone, it.who, alarmShortStamp(it.at)].filter(Boolean).join(' · ');
+    var html = '<div class="alarm-item ' + (it.read ? 'read' : 'unread') + (open ? ' open' : '') + '" data-alarm-id="' + esc(it.id) + '">' +
+      '<button type="button" class="alarm-item-btn" data-alarm-open="' + esc(it.id) + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
+        '<span class="ai-top"><span class="ai-cat ' + cat + '">' + catLabel + '</span>' +
+          '<span class="ai-title">' + esc(it.title || '') + '</span>' +
+          (it.read ? '<span class="ai-readtag">확인됨</span>' : '<span class="ai-dot" title="미확인"></span>') +
+        '</span>' +
+        (meta ? '<span class="ai-meta">' + esc(meta) + '</span>' : '') +
+        (it.summary ? '<span class="ai-line">' + esc(it.summary) + '</span>' : '') +
+      '</button>';
+    if (open) {
+      var rows = '', i, lines = it.lines || [];
+      for (i = 0; i < lines.length; i++) {
+        rows += '<div class="ad-row"><span class="ad-k">' + esc(lines[i].k) + '</span><span class="ad-v">' + esc(lines[i].v) + '</span></div>';
+      }
+      var acts = '';
+      if (it.recId) acts += '<button type="button" class="btn btn-primary" data-alarm-go="' + esc(it.id) + '">해당 건 열기</button>';
+      if (it.phone) acts += '<a class="btn" href="' + esc(telHref(it.phone)) + '" onclick="event.stopPropagation()">📞 전화</a>';
+      acts += '<button type="button" class="btn btn-ghost" data-alarm-fold="' + esc(it.id) + '">접기</button>';
+      html += '<div class="alarm-detail">' + rows + '<div class="alarm-acts">' + acts + '</div></div>';
+    }
+    return html + '</div>';
+  }
+
+  function alarmRender() {
+    var box = $('alarmList');
+    if (!box) return;
+    alarmPaintToggles();
+    var l = alarmItems(), i, list = [];
+    for (i = 0; i < l.length; i++) {
+      if (alarmTab === 'dday' && l[i].cat !== 'dday') continue;
+      if (alarmTab === 'staff' && l[i].cat !== 'staff') continue;
+      list.push(l[i]);
+    }
+    if (!list.length) {
+      box.innerHTML = '<p class="alarm-empty">' + (alarmTab === 'dday'
+        ? '오늘 처리할 <b>요금제 변경 · 부가서비스 해지</b> 알람이 없습니다.<br>기한이 지난 미완료 건이 생기면 여기에 쌓입니다.'
+        : (alarmTab === 'staff'
+          ? '아직 <b>직원 활동</b> 알람이 없습니다.<br>직원이 새 개통을 넣거나 수정하면 여기에 쌓입니다.'
+          : '아직 알람이 없습니다.<br>오늘 D-DAY · 직원의 새 개통·수정·완료가 모두 여기에 모입니다.')) + '</p>';
+    } else {
+      var html = '';
+      for (i = 0; i < list.length; i++) html += alarmItemHtml(list[i]);
+      box.innerHTML = html;
+    }
+    var tabs = $('alarmTabs');
+    if (tabs) {
+      var btns = tabs.querySelectorAll('button[data-alarm-tab]');
+      for (i = 0; i < btns.length; i++) {
+        var on = btns[i].getAttribute('data-alarm-tab') === alarmTab;
+        btns[i].classList.toggle('on', on);
+        btns[i].setAttribute('aria-selected', on ? 'true' : 'false');
+      }
+    }
+    alarmPaintBadge();
+  }
+
+  function alarmToggleItem(id) {
+    var it = alarmFind(id);
+    if (!it) return;
+    if (alarmOpenId === id) { alarmOpenId = ''; alarmRender(); return; }
+    alarmOpenId = id;
+    if (!it.read) {
+      it.read = true;
+      it.readAt = Date.now();
+      alarmSave();
+    }
+    alarmRender();
+  }
+
+  /* 해당 고객 건으로 이동 — 그 달로 바꾸고 그 줄을 잠깐 강조한다(수정 창은 열지 않는다) */
+  function alarmGoTo(it) {
+    var rec = null, i;
+    if (it && it.recId) {
+      for (i = 0; i < state.records.length; i++) {
+        if (String(state.records[i].id) === String(it.recId)) { rec = state.records[i]; break; }
+      }
+    }
+    alarmClose();
+    if (!rec) { toast('그 건이 이 기기에 아직 없습니다. 잠시 뒤 동기화한 뒤 다시 열어 보세요.', true); return; }
+    var m = monthOf(rec.개통일);
+    state.filters.q = '';
+    state.filters.due = false;
+    state.filters.easy = false;
+    if (el.searchInput) el.searchInput.value = '';
+    if (m) {
+      state.filters.month = m;
+      state.filters.easyScope = 'month';
+      state.filters.easyMonth = m;
+    }
+    render();
+    if (m) ensureMonth(m);
+    setTimeout(function () {
+      var nodes = document.querySelectorAll('#tbody tr[data-id], .mcard[data-id]'), hit = null;
+      for (var k = 0; k < nodes.length; k++) {
+        if (nodes[k].getAttribute('data-id') === String(rec.id)) { hit = nodes[k]; if (nodes[k].offsetParent !== null) break; }
+      }
+      if (!hit) return;
+      try { hit.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) { hit.scrollIntoView(); }
+      hit.classList.add('alarm-target');
+      setTimeout(function () { hit.classList.remove('alarm-target'); }, 2600);
+    }, 260);
+    toast((rec.고객명 || '해당 건') + ' — ' + (m ? monthLabel(m) : '전체 기간') + ' 목록에서 찾았습니다.');
+  }
+
+  function alarmOpen() {
+    alarmAudioCtx();                    // 이 탭(사용자 제스처)에서 오디오를 깨워 두면 뒤에 오는 비프음이 운다
+    if (alarmPushOn()) notifyAskPermission();   // 처음 여는 탭(사용자 제스처)에서만 권한 창이 뜬다
+    alarmSyncDue(true, { quiet: true });
+    alarmPaintToggles();
+    alarmRender();
+    var d = $('alarmDialog');
+    if (d && !d.open) d.showModal();
+  }
+  function alarmClose() {
+    var d = $('alarmDialog');
+    if (d && d.open) d.close();
+  }
+
+  /* 0525 통과 직후 — 이 기기를 관리자 알람 기기로 등록하고 오늘 D-DAY 를 조용히 채운다 */
+  function alarmOnAdmin() {
+    alarmSetDevice(true);
+    try { alarmAudioCtx(); } catch (e) {}
+    alarmLoad();
+    alarmPaintBadge();
+    alarmPaintToggles();
+    if (state && state.records && state.records.length) alarmSyncDue(true, { quiet: true });
+  }
+
+  function alarmBoot() {
+    alarmLoad();
+    alarmPaintBadge();
+    alarmPaintToggles();
+    alarmSyncDueSoon();
+  }
+
+  function alarmBind() {
+    var btn = $('alarmBtn');
+    if (btn) btn.addEventListener('click', function () { alarmOpen(); });
+    var d = $('alarmDialog');
+    if (d) {
+      d.addEventListener('close', function () { alarmOpenId = ''; });
+      d.addEventListener('click', function (e) { if (e.target === d) d.close(); });
+    }
+    var close = $('alarmClose');
+    if (close) close.addEventListener('click', function () { alarmClose(); });
+    var tabs = $('alarmTabs');
+    if (tabs) tabs.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-alarm-tab]') : null;
+      if (!b) return;
+      alarmTab = b.getAttribute('data-alarm-tab') || 'all';
+      alarmRender();
+    });
+    var list = $('alarmList');
+    if (list) list.addEventListener('click', function (e) {
+      var t = e.target;
+      var go = t.closest ? t.closest('[data-alarm-go]') : null;
+      if (go) { var it = alarmFind(go.getAttribute('data-alarm-go')); if (it) alarmGoTo(it); return; }
+      var fold = t.closest ? t.closest('[data-alarm-fold]') : null;
+      if (fold) { alarmOpenId = ''; alarmRender(); return; }
+      var op = t.closest ? t.closest('[data-alarm-open]') : null;
+      if (op) { alarmToggleItem(op.getAttribute('data-alarm-open')); return; }
+    });
+    var sound = $('alarmSoundToggle');
+    if (sound) sound.addEventListener('change', function () {
+      alarmSetSound(!!this.checked);
+      if (this.checked) { alarmAudioCtx(); alarmBeep(); alarmVibrate(); }
+      toast(this.checked ? '알람 소리 · 진동을 켰습니다.' : '알람 소리 · 진동을 껐습니다. 알람함 기록은 그대로 쌓입니다.');
+    });
+    var push = $('alarmPushToggle');
+    if (push) push.addEventListener('change', function () {
+      var on = !!this.checked;
+      if (on && !alarmNotifySupported()) {
+        this.checked = false;
+        toast('이 브라우저에서는 폰 상단 알림을 지원하지 않습니다.', true);
+        alarmPaintToggles();
+        return;
+      }
+      alarmSetPush(on);
+      if (on) {
+        notifyAskPermission();          // 사용자 제스처 안에서 권한을 묻는다
+        toast('폰 상단 알림을 켰습니다. 처음 한 번은 브라우저가 알림 허용을 물어봅니다.');
+      } else {
+        toast('폰 상단 알림을 껐습니다. 알람함 기록은 그대로 쌓입니다.');
+      }
+      alarmPaintToggles();
+    });
+    var readAll = $('alarmReadAll');
+    if (readAll) readAll.addEventListener('click', function () { alarmMarkAllRead(); });
+    var clear = $('alarmClearRead');
+    if (clear) clear.addEventListener('click', function () { alarmClearRead(); });
+  }
+
+  /* 검증용 손잡이 */
+  window.__ktAlarm = {
+    items: function () { return alarmItems().map(function (it) { return { id: it.id, key: it.key, cat: it.cat, kind: it.kind, title: it.title, summary: it.summary, read: !!it.read, at: it.at, lines: it.lines || [] }; }); },
+    unread: alarmUnreadCount,
+    device: alarmDeviceOn,
+    sound: alarmSoundOn,
+    add: alarmAddMany,
+    ingest: alarmIngestStaff,
+    due: function (force) { return alarmSyncDue(force !== false, { quiet: true }).map(function (x) { return x.key; }); },
+    read: alarmMarkRead,
+    readAll: alarmMarkAllRead,
+    clearRead: alarmClearRead,
+    open: alarmOpen,
+    toggle: alarmToggleItem,
+    go: function (id) { var it = alarmFind(id); if (it) alarmGoTo(it); },
+    tab: function (t) { alarmTab = t || 'all'; alarmRender(); },
+    paint: function () { alarmRender(); alarmPaintBadge(); }
   };
 
   /* 모든 달이 필요한 화면(전체 기간·검색·임박·연혁)에 들어갔을 때 — 빈 달을 마저 채운다 */
@@ -15278,6 +16145,9 @@
         : '👤 <span class="rb-t">직원 모드</span>';
       el.roleBadge.title = admin ? '관리자 모드입니다. 브라우저를 닫으면 자동으로 잠깁니다.' : '엑셀·백업·삭제는 관리자 모드에서만 보입니다.';
     }
+    /* v84b — 알람 종(🔔)·알람함은 직원 모드에서도 그대로 쓴다(역할이 바뀌어도 닫지 않는다) */
+    alarmPaintBadge();
+    alarmSyncDueSoon();
     // 직원 모드로 돌아가면 관리자 전용 창(단가표)은 닫는다
     if (!admin && el.priceDialog && el.priceDialog.open) el.priceDialog.close();
     // v40 — 미기재 확인은 직원도 쓴다 (직원에게는 중고폰 금액만) → 직원 모드로 돌아가도 필터를 끄지 않는다
@@ -15395,6 +16265,8 @@
     var flag = notifyFlag();
     if (flag === null) notifySetDeviceOn(true, { silent: true });
     else { notifyPushConfig(); notifyPaintMenu(); }
+    /* v84 — 이 기기를 관리자 알람 기기로 등록하고 오늘 D-DAY 를 알람함에 채운다 */
+    alarmOnAdmin();
     toast(notifyOn()
       ? '관리자 모드로 열었습니다. 10분 뒤 잠겨도 이 기기는 새 개통 알림이 계속 울립니다.'
       : '관리자 모드로 열었습니다. 10분 동안 아무 것도 안 하면 다시 잠깁니다.');
@@ -18653,6 +19525,9 @@
     });
     /* v82 — 관리자 알림 시동 (앱 브리지 설정 넘기기 · 45초 조용한 확인 시작) */
     notifyBoot();
+    /* v84 — 관리자 통합 알람함 (헤더 종 · 알람 패널 · 소리/폰알림 설정) */
+    alarmBind();
+    alarmBoot();
   }
 
   if (document.readyState === 'loading') {

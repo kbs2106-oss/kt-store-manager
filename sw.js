@@ -13,7 +13,7 @@
    배포 후 파일을 수정했다면 아래 CACHE_VERSION 을 올려 주세요.
    ============================================================ */
 
-var CACHE_VERSION = 'v83';
+var CACHE_VERSION = 'v84';
 var CACHE_PREFIX = 'kt-ledger-';
 var CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 var SHEETJS_CACHE = CACHE_PREFIX + 'sheetjs';
@@ -168,4 +168,21 @@ async function cacheFirst(req, cacheName) {
 self.addEventListener('message', function (event) {
   var data = event.data || {};
   if (data.type === 'SKIP_WAITING') self.skipWaiting();
+});
+
+/* ---------------- v84 — 알람함 상단 알림을 누르면 앱으로 ---------------- */
+self.addEventListener('notificationclick', function (event) {
+  event.notification.close();
+  event.waitUntil(
+    (async function () {
+      var list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (var i = 0; i < list.length; i++) {
+        var c = list[i];
+        if (c.url && c.url.indexOf(self.location.origin) === 0) {
+          try { await c.focus(); return; } catch (e) {}
+        }
+      }
+      if (self.clients.openWindow) await self.clients.openWindow('./');
+    })()
+  );
 });
