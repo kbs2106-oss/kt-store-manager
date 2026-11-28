@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v93">
+<meta name="app-version" content="v94">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -224,6 +224,7 @@
   .mjp-act{flex:1;height:31px;border-radius:9px;border:1px solid var(--line-strong);background:#fff;
     font-size:12px;font-weight:800;color:var(--slate-600)}
   .mjp-act:hover{background:#F4F7FB;border-color:#C3D1E3}
+  .mjp-act.mjp-x{flex:0 0 auto;padding:0 12px;color:#475569;font-weight:700}
   @media (max-width:420px){ .mjp{width:calc(100vw - 20px)} }
 
   /* v26 — 검색어가 있으면 기준 월과 무관하게 전체 기간에서 찾는다 */
@@ -1393,15 +1394,22 @@
   .dv-btn{height:28px;padding:0 10px;border-radius:8px;border:1px solid #F3C9C2;background:#FFF7F5;
     color:var(--red);font-size:11.5px;font-weight:800;white-space:nowrap;justify-self:end}
   .dv-btn.bad{border-color:#C7DBF4;background:#F5F9FF;color:var(--blue-700)}
+  .dv-btn.hide{border-color:var(--line-strong);background:#fff;color:var(--slate-600)}
+  .dv-hidden-note{font-size:11.5px;color:var(--slate-400);margin-top:7px;line-height:1.6}
+  .dv-hidden-note b{color:var(--slate-600)}
+  .dv-link{border:0;background:none;padding:0 2px;color:var(--blue-700);font:inherit;font-weight:800;
+    font-size:11.5px;text-decoration:underline;cursor:pointer}
   .dv-empty{font-size:12px;color:var(--slate-400);padding:12px;line-height:1.6}
   @media (max-width:520px){
-    .dv-row{grid-template-columns:minmax(0,1fr) auto;row-gap:1px}
+    .dv-row{grid-template-columns:minmax(0,1fr) minmax(78px,auto);row-gap:1px}
     .dv-row.head{display:none}
     .dv-row .st{display:none}
     .dv-row .who{grid-column:1/2}
     .dv-row .dev{grid-column:1/2;font-size:11.5px}
     .dv-row .seen{grid-column:1/2;font-size:11px}
     .dv-row .dv-btn{grid-row:1/4;grid-column:2/3;align-self:center}
+    .dv-row .dv-acts{grid-row:1/4;grid-column:2/3;align-self:center;flex-direction:column;align-items:flex-end}
+    .dv-row .dv-acts .dv-btn{height:25px;padding:0 8px;font-size:11px}
   }
   .field-pick{
     flex:none;height:24px;padding:0 10px;border-radius:999px;border:1px solid #C9D8EC;
@@ -3812,6 +3820,7 @@
     <div class="dv-sec">
       <h3>접속한 기기 <span class="cnt" id="dvDevCount">0</span></h3>
       <div class="dv-list" id="dvDevices"></div>
+      <p class="dv-hidden-note" id="dvHiddenNote" hidden></p>
     </div>
     <div class="dv-sec">
       <h3>직원 이름 <span class="cnt" id="dvStaffCount">0</span></h3>
@@ -4072,6 +4081,7 @@
   <div class="mjp-foot">
     <button type="button" class="mjp-act" id="mjpThis">이번 달</button>
     <button type="button" class="mjp-act" id="mjpAll">전체 기간</button>
+    <button type="button" class="mjp-act mjp-x" id="mjpClose" aria-label="닫기">닫기</button>
   </div>
 </div>
 
@@ -13121,8 +13131,11 @@
       };
       renderDevices();
       el.dvStatus.className = 'sync-status ok';
-      var pendN = dvState.devices.filter(function (d) { return d.status === 'pending'; }).length;
-      el.dvStatus.innerHTML = '서버(구글 시트)와 연결됨 · 기기 <b>' + dvState.devices.length + '대</b>' +
+      /* v94 — 목록에서 지운 기기는 숫자에서도 뺍니다 */
+      var hid = hiddenDeviceSet();
+      var vis = dvState.devices.filter(function (d) { return !hid[d.deviceId]; });
+      var pendN = vis.filter(function (d) { return d.status === 'pending'; }).length;
+      el.dvStatus.innerHTML = '서버(구글 시트)와 연결됨 · 기기 <b>' + vis.length + '대</b>' +
         (pendN ? ' · 승인 대기 <b>' + pendN + '대</b>' : '') + ' · 차단 <b>' +
         (dvState.blocks.device.length + dvState.blocks.staff.length) + '건</b>';
       return true;
@@ -13133,16 +13146,59 @@
     });
   }
 
+  /* =========================================================
+     v94 — 오래된 기기 · 승인 대기 정리(“목록에서 지우기”)
+     · 서버(Code.gs)에 _접속기기 행을 지우는 API 가 없어서 **이 앱의 기기 관리 목록에서만** 숨긴다.
+       접근 차단은 기존 [추방(차단)] 그대로이고, 지우기는 차단이 아니다.
+     · 숨김 목록은 이 기기의 localStorage 에만 남고 [모두 다시 보기]로 언제든 되돌린다.
+     · 사장님이 확인해 주신 오래된 3대는 처음 한 번 기본으로 숨긴다(2026-11-28).
+     ========================================================= */
+  var HIDDEN_DEV_KEY = 'kt_chilgeum_hidden_devices_v1';
+  var HIDDEN_DEV_DEFAULT = ['dmwzwbt26uzuzl3', 'dmwpu564vzwq7mk', 'dmwpuep3eh2p3hk'];
+
+  function hiddenDeviceList() {
+    var arr = null;
+    try { arr = JSON.parse(localStorage.getItem(HIDDEN_DEV_KEY) || 'null'); } catch (e) { arr = null; }
+    if (!Array.isArray(arr)) {                       // 처음 한 번만 기본값(오래된 3대)을 넣고 저장한다
+      arr = HIDDEN_DEV_DEFAULT.slice();
+      try { localStorage.setItem(HIDDEN_DEV_KEY, JSON.stringify(arr)); } catch (e) {}
+    }
+    var out = [];
+    for (var i = 0; i < arr.length; i++) if (arr[i]) out.push(String(arr[i]));
+    return out;
+  }
+  function hiddenDeviceSet() {
+    var l = hiddenDeviceList(), m = {};
+    for (var i = 0; i < l.length; i++) m[l[i]] = true;
+    return m;
+  }
+  function hideDevice(id, label) {
+    if (!id) return;
+    var l = hiddenDeviceList();
+    if (l.indexOf(String(id)) < 0) l.push(String(id));
+    try { localStorage.setItem(HIDDEN_DEV_KEY, JSON.stringify(l)); } catch (e) {}
+    renderDevices();
+    toast('“' + (label || id) + '” 기기를 목록에서 지웠습니다. (차단 아님 · 모두 다시 보기로 복구)');
+  }
+  function unhideAllDevices() {
+    try { localStorage.setItem(HIDDEN_DEV_KEY, '[]'); } catch (e) {}
+    renderDevices();
+    toast('숨겼던 기기를 모두 다시 보이게 했습니다.');
+  }
+
   function renderDevices() {
     var bd = blockMap(dvState.blocks.device), bs = blockMap(dvState.blocks.staff);
     var mine = deviceInfo().deviceId;
+    var hidden = hiddenDeviceSet();
     var i, html = '';
 
-    /* v32 — 승인 대기 기기 (사장님이 [승인]해야 장부가 보인다) */
-    var pend = [], devs = [];
+    /* v32 — 승인 대기 기기 (사장님이 [승인]해야 장부가 보인다) · v94 — 지운 기기는 뺀다 */
+    var pend = [], devs = [], hidPend = 0, hidDev = 0;
     for (i = 0; i < dvState.devices.length; i++) {
-      if (dvState.devices[i].status === 'pending') pend.push(dvState.devices[i]);
-      else devs.push(dvState.devices[i]);
+      var dvRow = dvState.devices[i];
+      var isPend = dvRow.status === 'pending';
+      if (hidden[dvRow.deviceId]) { if (isPend) hidPend++; else hidDev++; continue; }
+      if (isPend) pend.push(dvRow); else devs.push(dvRow);
     }
     var sec = $('dvPendingSec'), pbox = $('dvPending'), pcnt = $('dvPendingCount');
     if (pcnt) pcnt.textContent = String(pend.length);
@@ -13165,6 +13221,9 @@
                 '" data-dv-label="' + esc(p.label || '') + '">승인</button>' +
               '<button type="button" class="dv-btn bad" data-dv-act="reject" data-dv-type="device" data-dv-value="' + esc(p.deviceId) +
                 '" data-dv-label="' + esc(p.label || '') + '">차단</button>' +
+              (p.deviceId === mine ? '' :
+              '<button type="button" class="dv-btn hide" data-dv-act="hide" data-dv-type="device" data-dv-value="' + esc(p.deviceId) +
+                '" data-dv-label="' + esc(p.label || '') + '" title="이 목록에서만 숨깁니다(차단 아님)">지우기</button>') +
             '</span>' +
             '</div>';
         }
@@ -13186,17 +13245,38 @@
           ? '<span class="dv-badge off">차단됨</span>'
           : (owner ? '<span class="dv-badge owner">👑 사장님 기기 (추방 불가)</span>' : '<span class="dv-badge on">사용 중</span>')) + '</span>' +
         (owner
-          ? '<span class="dv-owner-note" title="사장님이 쓰는 기기는 앱에서 추방(차단)할 수 없습니다"></span>'
-          : '<button type="button" class="dv-btn' + (blocked ? ' bad' : '') + '" data-dv-act="' +
-            (blocked ? 'unblock' : 'block') + '" data-dv-type="device" data-dv-value="' + esc(d.deviceId) +
-            '" data-dv-label="' + esc(d.label || '') + '">' +
-            (blocked ? '차단 해제' : '추방(차단)') + '</button>') +
+          ? '<span class="dv-acts"><span class="dv-owner-note" title="사장님이 쓰는 기기는 앱에서 추방(차단)할 수 없습니다"></span>' +
+              (d.deviceId === mine ? '' :
+              '<button type="button" class="dv-btn hide" data-dv-act="hide" data-dv-type="device" data-dv-value="' + esc(d.deviceId) +
+                '" data-dv-label="' + esc(d.label || '') + '" title="이 목록에서만 숨깁니다(차단 아님)">지우기</button>') +
+            '</span>'
+          : '<span class="dv-acts">' +
+            '<button type="button" class="dv-btn' + (blocked ? ' bad' : '') + '" data-dv-act="' +
+              (blocked ? 'unblock' : 'block') + '" data-dv-type="device" data-dv-value="' + esc(d.deviceId) +
+              '" data-dv-label="' + esc(d.label || '') + '">' +
+              (blocked ? '차단 해제' : '추방(차단)') + '</button>' +
+            (d.deviceId === mine ? '' :
+            '<button type="button" class="dv-btn hide" data-dv-act="hide" data-dv-type="device" data-dv-value="' + esc(d.deviceId) +
+              '" data-dv-label="' + esc(d.label || '') + '" title="이 목록에서만 숨깁니다(차단 아님)">지우기</button>') +
+            '</span>') +
         '</div>';
     }
     el.dvDevices.innerHTML = devs.length
       ? html
       : '<p class="dv-empty">아직 기록된 기기가 없습니다. 직원이 앱을 한 번 열면 자동으로 표시됩니다.</p>';
     el.dvDevCount.textContent = String(devs.length);
+
+    /* v94 — 목록에서 지운 기기 안내 + [모두 다시 보기] */
+    var hn = $('dvHiddenNote');
+    if (hn) {
+      var hidN = hidPend + hidDev;
+      hn.hidden = !hidN;
+      hn.innerHTML = hidN
+        ? '지워서 가린 기기 <b>' + hidN + '대</b>' + (hidPend ? ' (승인 대기 ' + hidPend + ')' : '') +
+          ' — 지우기는 이 목록에서만 숨깁니다(차단 아님). ' +
+          '<button type="button" class="dv-link" id="dvUnhideAll">모두 다시 보기</button>'
+        : '';
+    }
 
     // v49 — 등록 직원 명부가 기준. 지운 직원은 기기·차단 기록에 남아 있을 때만 보인다
     var names = staffNames();
@@ -16514,6 +16594,7 @@
     if (el.easyScopeMonth && mjpState.scope === 'easy') el.easyScopeMonth.setAttribute('aria-expanded', 'true');
     pop.setAttribute('aria-label', mjpState.scope === 'easy' ? '권매·쉬움 연도·월 바로 가기' : '연도·월 바로 가기');
     mjpPosition();
+    ktLayerOpen('monthJumpPop', function () { mjpClose(); });
   }
 
   function mjpClose(focusBack) {
@@ -16528,6 +16609,7 @@
       var back = wasScope === 'easy' ? el.easyScopeMonth : el.monthShow;
       if (back) { try { back.focus(); } catch (e) {} }
     }
+    ktLayerClosed('monthJumpPop');
   }
 
   // 유형 필터 — 무선 / 유선(인터넷·TV) / (예전 유형) 으로 묶고 **여러 개를 함께 탭**한다
@@ -16600,6 +16682,8 @@
     } else if (wasOpen) {
       flushTypeRender();      // 여러 개 탭한 것을 닫을 때 한 번에 반영
     }
+    if (open) ktLayerOpen('typeFilterPanel', function () { typePanelOpen(false); });
+    else ktLayerClosed('typeFilterPanel');
   }
 
   function renderStaffFilter() {
@@ -18796,6 +18880,7 @@
           if (idx >= 0 && idx < ys.length) { mjpState.year = ys[idx]; mjpRender(); }
           return;
         }
+        if (b.id === 'mjpClose') { mjpClose(true); return; }
         if (b.id === 'mjpThis') { mjpClose(); setMonthFilter(currentMonth()); return; }
         if (b.id === 'mjpAll') { mjpClose(); setMonthFilter(''); return; }
       });
@@ -19029,8 +19114,10 @@
           else if (act === 'unblock') unblockTarget(type, value);
           else if (act === 'approve') approveTarget(type, value, label);
           else if (act === 'reject') blockTarget(type, value, label);
+          else if (act === 'hide') hideDevice(value, label);   // v94 — 목록에서 지우기(차단 아님)
           return;
         }
+        if (e.target.closest && e.target.closest('#dvUnhideAll')) { unhideAllDevices(); return; }
         if (e.target === el.devicesDialog) el.devicesDialog.close();
       });
       el.devicesDialog.addEventListener('cancel', function () { /* ESC 로 닫힘 */ });
@@ -19724,6 +19811,128 @@
     state.filters.month = '';
   }
 
+  /* =========================================================
+     v94 — 안드로이드 · 브라우저 뒤로가기로 창 닫기
+     · 창(모달 · 팝업 · 드로어 · 더보기 메뉴)이 열릴 때 history 1칸을 쌓아 두고,
+       뒤로가기를 누르면 앱이 꺼지지 않고 **가장 위에 열린 창부터 하나씩** 닫는다.
+     · 화면의 × · 취소 · 닫기 · 저장 으로 닫았을 때는 그 1칸을 스스로 되돌려,
+       창을 여러 개 열고 닫아도 history 가 엉키지 않는다.
+     ========================================================= */
+  var ktLayers = [];          // 지금 열려 있는 창 (앞 = 먼저 열린 창, 뒤 = 가장 위)
+  var ktTrap = false;         // 우리가 쌓아 둔 history 1칸이 살아 있는가
+  var ktSelfBack = 0;         // 우리가 정리하려고 누른 history.back() 횟수 (그 popstate 는 무시)
+  var ktSelfTimer = null;
+  var ktPendingPush = false;  // 정리 back 이 끝난 뒤에 쌓아야 하는 칸
+  var ktBackClosing = false;  // 지금 뒤로가기 때문에 닫히는 중인가
+
+  function ktLayerIndex(id) {
+    for (var i = ktLayers.length - 1; i >= 0; i--) if (ktLayers[i].id === id) return i;
+    return -1;
+  }
+  function ktPushTrap(id) {
+    try { history.pushState({ ktModal: id || 'kt' }, ''); ktTrap = true; }
+    catch (e) { ktTrap = false; }
+  }
+  function ktLayerOpen(id, closeFn) {
+    if (!id) return;
+    var at = ktLayerIndex(id);
+    if (at >= 0) { if (closeFn) ktLayers[at].close = closeFn; return; }
+    ktLayers.push({ id: id, close: closeFn || function () {} });
+    if (ktTrap) return;
+    if (ktSelfBack > 0) { ktPendingPush = true; return; }   // 정리 back 이 날아가는 중 → 그 popstate 뒤에 쌓는다
+    ktPushTrap(id);
+  }
+  function ktLayerClosed(id) {
+    var at = ktLayerIndex(id);
+    if (at < 0) return;
+    ktLayers.splice(at, 1);
+    ktTidy();
+  }
+  /* 열린 창이 하나도 안 남았으면 쌓아 둔 history 1칸을 우리가 되돌려 놓는다 */
+  function ktTidy() {
+    if (ktLayers.length || !ktTrap) return;
+    ktTrap = false;
+    ktSelfBack++;
+    if (ktSelfTimer) clearTimeout(ktSelfTimer);
+    ktSelfTimer = setTimeout(function () {
+      ktSelfBack = 0;
+      if (ktPendingPush && ktLayers.length && !ktTrap) {
+        ktPendingPush = false;
+        ktPushTrap(ktLayers[ktLayers.length - 1].id);
+      }
+    }, 1200);
+    try { history.back(); } catch (e) { ktSelfBack = Math.max(0, ktSelfBack - 1); }
+  }
+  /* 뒤로가기 1번 = 가장 위 창 하나 닫기 (저장하지 않고 안전하게 취소) */
+  function ktLayerBack() {
+    if (!ktLayers.length) return false;
+    var top = ktLayers.pop();
+    ktBackClosing = true;
+    try { if (typeof top.close === 'function') top.close(); }
+    catch (e) { console.warn('[v94] 창 닫기 실패:', e && e.message ? e.message : e); }
+    finally { ktBackClosing = false; }
+    if (ktLayers.length) ktPushTrap(ktLayers[ktLayers.length - 1].id);   // 아직 창이 남았으면 다음 뒤로가기를 받을 1칸
+    return true;
+  }
+  /* 창별로 다르게 닫아야 하는 것들 (확인 창은 '취소'로 답을 돌려주고, 요금제 창은 자기 닫기 함수를 쓴다) */
+  function ktDialogClose(id) {
+    var map = {
+      confirmDialog: function () { closeConfirm(false); },
+      planPicker: function () { closePlanPicker(); },
+      importDialog: function () { el.importDialog.close(); state.pendingRows = null; },
+      editDialog: function () {
+        var dirty = false, wasEdit = false;
+        try { dirty = !!($('f_name').value || $('f_phone').value); } catch (e) { dirty = false; }
+        try { wasEdit = !!state.editingId; } catch (e) { wasEdit = false; }
+        if (el.editDialog.open) el.editDialog.close();
+        if (ktBackClosing && (dirty || wasEdit)) toast('입력 창을 닫았습니다 — 저장하지 않았습니다.');
+      }
+    };
+    if (map[id]) { map[id](); return; }
+    var d = $(id);
+    if (d) { try { d.close(); } catch (e) {} }
+  }
+  function ktBindLayers() {
+    /* ① <dialog> — showModal 로 열리면 자동 등록, 닫히면(ESC · × · 취소 · 저장 무엇이든) 자동 해제 */
+    if (window.HTMLDialogElement && HTMLDialogElement.prototype && HTMLDialogElement.prototype.showModal) {
+      var nativeShowModal = HTMLDialogElement.prototype.showModal;
+      HTMLDialogElement.prototype.showModal = function () {
+        var self = this;
+        /* v94 — 창을 열면 더보기 메뉴는 접는다(창 밑에 메뉴가 살아 있어 뒤로가기가 겹치는 일을 막는다) */
+        var menu = $('moreMenu');
+        if (menu && menu.open) menu.open = false;
+        var r = nativeShowModal.apply(this, arguments);
+        if (self.id) ktLayerOpen(self.id, function () { ktDialogClose(self.id); });
+        return r;
+      };
+    }
+    document.addEventListener('close', function (e) {
+      var t = e.target;
+      if (t && t.tagName === 'DIALOG' && t.id) ktLayerClosed(t.id);
+    }, true);
+    /* ② 더보기 메뉴(<details>) — 펼치면 등록, 접으면 해제 */
+    var menu = $('moreMenu');
+    if (menu) menu.addEventListener('toggle', function () {
+      if (menu.open) ktLayerOpen('moreMenu', function () { menu.open = false; });
+      else ktLayerClosed('moreMenu');
+    });
+    /* ③ 뒤로가기 */
+    window.addEventListener('popstate', function () {
+      if (ktSelfBack > 0) {                       // 우리가 정리하려고 누른 back — 창은 그대로 둔다
+        ktSelfBack--;
+        if (ktSelfBack === 0 && ktPendingPush && ktLayers.length && !ktTrap) {
+          ktPendingPush = false;
+          ktPushTrap(ktLayers[ktLayers.length - 1].id);
+        }
+        return;
+      }
+      ktTrap = false;                             // 쌓아 둔 1칸이 이번 뒤로가기로 소모됐다
+      ktLayerBack();
+    });
+    /* 새로고침으로 남은 예전 표시가 있으면 지운다 */
+    try { if (history.state && history.state.ktModal) history.replaceState(null, ''); } catch (e) {}
+  }
+
   /* ---------------- init ---------------- */
   function init() {
     el = {
@@ -20074,6 +20283,8 @@
     /* v84 — 관리자 통합 알람함 (헤더 종 · 알람 패널 · 소리/폰알림 설정) */
     alarmBind();
     alarmBoot();
+    /* v94 — 뒤로가기로 창 닫기 (모달 · 팝업 · 더보기 메뉴 등록 + popstate 연결) */
+    ktBindLayers();
   }
 
   if (document.readyState === 'loading') {
