@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v88">
+<meta name="app-version" content="v89">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -1142,9 +1142,20 @@
   /* v67 — 2줄째부터의 `[미기입]` 자리표시: 1줄째 칩과 똑같은 폭을 차지하되 보이지도 눌리지도 않는다
      (그래서 모든 줄의 금액칸 왼쪽·오른쪽 좌표가 1px까지 같다) */
   .paycard-line .pc-none-spacer{visibility:hidden;pointer-events:none}
-  .paycard-line.none-on{opacity:.55}
+  /* v89 — [미기입] 칩 색을 다른 칸(추지·입금·중고폰)과 똑같이 맞춘다.
+     예전엔 `미기입` 이 켜지면 줄 전체에 opacity:.55 를 걸어 **칩만 회색으로 바래 보였다**
+     (다른 칸은 칩은 검정 그대로, 금액칸만 흐려진다) → 금액칸·종류칩·완료칩만 흐리게 한다 */
+  .paycard-line.none-on .pc-top input.money{background:#F7F9FC;color:#94A3B8}
+  .paycard-line.none-on .pc-chips-row,
+  .paycard-line.none-on .pc-inst-row{opacity:.55}
   .paycard-line .pc-no{font-size:11px;font-weight:800;color:var(--slate-400);min-width:0}
   .paycard-field .pc-total{font-weight:800;color:var(--blue-700)}
+  /* v89 — `페이백 (카드결제)` 라벨 옆에 저장된 총액을 함께 보여 준다 (여러 줄일 때)
+     · 수정으로 열었을 때 금액칸에는 1줄째 금액만 보여, “내가 적은 금액이 맞나”가 바로 확인되지 않았다 */
+  .pc-head-total{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:999px;
+    font-size:11px;font-weight:800;color:var(--blue-700);background:var(--blue-50);border:1px solid #C7D8F5;
+    vertical-align:2px}
+  .pc-head-total[hidden]{display:none !important}
   /* v47 — 폰 390 에서도 4칩 + [+ 추가] 가 2줄째 한 줄에 (아주 좀은 화면만 자연 줄바꿈) */
   @media (max-width:560px){
     .paycard-line .pc-chips-row{gap:4px}
@@ -1272,6 +1283,8 @@
 
   /* ---------- 관리자/직원 모드 ---------- */
   body.role-staff .admin-only{display:none !important}
+  /* v89 — 직원에게만 보이는 칸(추지·페이백 금액 열) — 관리자 화면은 v88 그대로 둔다 */
+  body.role-admin .staff-only{display:none !important}
   .is-hidden{display:none !important}
   .role-badge{
     display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 10px;border-radius:999px;
@@ -3134,6 +3147,8 @@
             <th class="money admin-only" data-sort="무선리베이트">무선 리베이트<span class="arrow">▼</span></th>
             <th class="money admin-only" data-sort="유선리베이트">유선 리베이트<span class="arrow">▼</span></th>
             <th class="money admin-only">순마진</th>
+            <!-- v89 — 직원 모드 전용: 리베이트 대신 고객에게 지급할 추지·페이백·입금 -->
+            <th class="money staff-only">추지·페이백</th>
             <th>메모</th>
             <th>담당자</th>
             <th class="actions-col">관리</th>
@@ -3511,7 +3526,7 @@
               </div>
             </div>
             <div class="field paycard-field">
-              <label for="f_paycard">페이백 (카드결제) <span class="req">*</span></label>
+              <label for="f_paycard">페이백 (카드결제) <span class="req">*</span><span class="pc-head-total" id="paycardHeadTotal" hidden></span></label>
               <div class="paycard-lines" id="paycardLines">
                 <div class="paycard-line" id="paycardRow" data-pc-row="1">
                   <!-- 1단 — 금액 · [미기입](1줄째만) -->
@@ -5189,6 +5204,17 @@
       if (dd.kind || dd.when) chip = true;
     }
     var box = $('paycardTotal');
+    var head = $('paycardHeadTotal');
+    if (head) {
+      /* v89 — 여러 줄이면 라벨 옆에 총액을 항상 보여 준다 (수정으로 열었을 때 바로 확인) */
+      if (n >= 2) {
+        head.textContent = '총 ' + fmtNum(total) + '원 · ' + n + '줄';
+        head.hidden = false;
+      } else {
+        head.textContent = '';
+        head.hidden = true;
+      }
+    }
     if (box) {
       if (n >= 2) {
         box.innerHTML = '총 카드결제: <b class="pc-total">' + fmtNum(total) + '원</b> (' + n + '건)';
@@ -5267,8 +5293,7 @@
   /* 상세 문자열·합계로 줄을 다시 그린다 (수정 모달 복원·다음 고객 초기화) */
   function pcSetRows(detailText, total, states, insts) {
     var box = $('paycardLines');
-    if (!box) return;
-    // v46 — 다시 그릴 때 이전 줄의 빨간 표시는 들고 오지 않는다
+    if (!box) return;    // v46 — 다시 그릴 때 이전 줄의 빨간 표시는 들고 오지 않는다
     var lsOld = pcLines();
     for (var ob = 0; ob < lsOld.length; ob++) {
       var tgOld = lsOld[ob].querySelector('.pc-tags');
@@ -5281,7 +5306,9 @@
     var list = pcDetailParse(detailText);
     var sum = 0;
     for (var k = 0; k < list.length; k++) sum += Number(list[k].amt) || 0;
-    if (!list.length && (Number(total) || 0) > 0) list = [{ kind: '', when: '', amt: Number(total) || 0 }];
+    /* v89 — 상세가 깨졌거나 금액이 모두 0인 예전 기록이라도, 저장된 총액(페이백카드)이 있으면
+       금액칸을 비우지 않고 그 총액을 첫 줄에 보여 준다 (수정 창에서 값이 사라져 보이던 자리) */
+    if (!(sum > 0) && (Number(total) || 0) > 0) list = [{ kind: '', when: '', amt: Number(total) || 0 }];
     if (!list.length) list = [{ kind: '', when: '', amt: 0 }];
     var first = pcLines()[0];
     if (!first) return;
@@ -13759,10 +13786,10 @@
       (full ? '✓ 카드결제 완료' : '✓ 카드결제 ' + inf.done + '/' + inf.total + ' 완료') + '</span>';
   }
 
-  /* v39 — 목록·카드의 입금 완료 배지 (페이백(입금) 금액이 있는 건 · 관리자만)
-     v44 · v45 — 카드결제 완료 배지도 함께 · 둘 다 노란 형광펜 톤 */
+  /* v39 — 목록·카드의 입금 완료 배지 (페이백(입금) 금액이 있는 건)
+     v44 · v45 — 카드결제 완료 배지도 함께 · 둘 다 노란 형광펜 톤
+     v89 — 직원 모드에서도 보인다 (사장님: 추지·페이백·입금은 직원도 봐야 한다 · 리베이트만 숨김) */
   function payDoneBadgeHtml(r) {
-    if (!isAdmin()) return '';
     var out = '';
     var amt = Number(r && r.페이백입금) || 0;
     if (amt > 0 && normalizeDone(r.입금완료) === '완료') {
@@ -15340,6 +15367,19 @@
     return html + '</span>';
   }
 
+  /* v89 — 직원 모드 표의 `추지·페이백` 칸 — 순마진·리베이트 없이
+     고객에게 지급할 돈(추지 + 카드결제 + 입금)만 보여 준다 */
+  function payCellHtml(r) {
+    var n = netMargin(r);
+    if (!n.payback) return '<span class="muted">—</span>';
+    var parts = [];
+    if (n.extra) parts.push('추지 ' + fmtNum(n.extra));
+    if (n.card) parts.push('카드 ' + fmtNum(n.card));
+    if (n.bank) parts.push('입금 ' + fmtNum(n.bank));
+    return '<span class="net-cell"><span class="net-v">' + fmtNum(n.payback) + '</span>' +
+      '<span class="net-sub">' + parts.join(' · ') + '</span></span>';
+  }
+
   // 장부 표·폰 카드의 무선 리베이트 칸 — 관리자 모드에서는 비어 있어도 정책 자동 계산값을 보여 준다
   function wirelessRebateView(r) {
     var manual = Number(r.무선리베이트) || 0;
@@ -15519,7 +15559,8 @@
           cardMobileBadgeHtml(r.제휴카드) +
           policyBadgesHtml(r) +
           '<span class="m-figs">' +
-            '<span class="m-money">' + rebateText(r) + '</span>' +
+            /* v89 — 직원 모드: 리베이트(정책 자동값) 대신 추지·페이백·입금 금액을 보여 준다 */
+            '<span class="m-money">' + (isAdmin() ? rebateText(r) : payText(r)) + '</span>' +
             (isAdmin() ? '<span class="m-net' + (netMargin(r).total < 0 ? ' neg' : '') + '">순 ' + netText(r) + '</span>' : '') +
             (r.담당자 ? '<span class="m-staff">' + esc(r.담당자) + '</span>' : '') +
           '</span>' +
@@ -15555,12 +15596,14 @@
         (onestopOf(r) ? (isAdmin()
           ? mRow('원스톱', '<span class="pbadge onestop-badge">체크</span> <span class="muted">유선 +10만원 · +1.0P</span>')
           : mRow('원스톱', '<span class="pbadge onestop-badge">체크</span>')) : '') +
-        (isAdmin() ? mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') : '') +
-        (isAdmin() ? mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세, cardLineInsts(r)) +
-          (cardDoneBadgeHtml(r) ? ' ' + cardDoneBadgeHtml(r) : '') : '') : '') +
-        (isAdmin() ? mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' +
-          (String(r.입금1일 || '') === '1일' ? ' <span class="muted">1일 입금</span>' : '') : '') : '') +
-        (isAdmin() && (payBankLine(r) || Number(r.페이백입금) > 0)
+        /* v89 — 추지·페이백(카드결제·입금)·입금 계좌는 직원 모드에서도 보인다
+           (사장님: “추비 페이백 관련 금액은 보여줘도 돼 입금이랑” · 리베이트만 숨간다) */
+        mRowOpt('추가지원금', r.추가지원금 ? '−' + fmtNum(r.추가지원금) + '원' : '') +
+        mRowOpt('페이백(카드결제)', r.페이백카드 ? '−' + fmtNum(r.페이백카드) + '원' + pcDetailBadge(r.페이백카드상세, cardLineInsts(r)) +
+          (cardDoneBadgeHtml(r) ? ' ' + cardDoneBadgeHtml(r) : '') : '') +
+        mRowOpt('페이백(입금)', r.페이백입금 ? '−' + fmtNum(r.페이백입금) + '원' +
+          (String(r.입금1일 || '') === '1일' ? ' <span class="muted">1일 입금</span>' : '') : '') +
+        ((payBankLine(r) || Number(r.페이백입금) > 0)
           ? mRow('입금 계좌', (payBankLine(r) ? esc(payBankLine(r)) : '<span class="muted">계좌 미입력</span>') +
               (String(r.입금예금주 || '').trim() ? ' <span class="muted">· 예금주 ' + esc(r.입금예금주) + '</span>' : '') +
               (Number(r.페이백입금) > 0
@@ -16109,6 +16152,7 @@
         '<td data-label="무선 리베이트" class="money admin-only">' + wirelessRebateCell(r) + '</td>' +
         '<td data-label="유선 리베이트" class="money admin-only">' + (r.유선리베이트 ? fmtNum(r.유선리베이트) : '<span class="muted">—</span>') + '</td>' +
         '<td data-label="순마진" class="money admin-only">' + netCellHtml(r) + '</td>' +
+        '<td data-label="추지·페이백" class="money staff-only">' + payCellHtml(r) + '</td>' +
         '<td data-label="메모"><span class="memo-cell"><span class="ellip" title="' + esc(r.메모) + '">' + (r.메모 ? esc(r.메모) : '<span class="muted">—</span>') + '</span>' + riskBadgesHtml(r) + memoMetaHtml(r) + '</span></td>' +
         '<td data-label="담당자" class="nowrap">' + (r.담당자 ? esc(r.담당자) : '<span class="muted">—</span>') + '</td>' +
         '<td class="actions">' + rowActionButtons(r) + '</td>' +
@@ -17440,15 +17484,21 @@
     //   없는 예전 기록은 '중고폰 + 중고폰금액' 1줄로 안전하게 열린다.
     ulSetRows(usedRowsFromRecord(r));
     paintUsedPriceHint(true);
-    $('f_rebate_w').value = r.무선리베이트 ? fmtNum(r.무선리베이트) : '';
+    $('f_rebate_w').value = parseNumber(r.무선리베이트) ? fmtNum(parseNumber(r.무선리베이트)) : '';
     wiredAutoLast = null;
     $('f_rebate_l').removeAttribute('data-auto');
-    $('f_rebate_l').value = r.유선리베이트 ? fmtNum(r.유선리베이트) : '';
-    $('f_extra').value = r.추가지원금 ? fmtNum(r.추가지원금) : '';
+    $('f_rebate_l').value = parseNumber(r.유선리베이트) ? fmtNum(parseNumber(r.유선리베이트)) : '';
+    $('f_extra').value = parseNumber(r.추가지원금) ? fmtNum(parseNumber(r.추가지원금)) : '';
     // v32 · v45 — 페이백(카드결제)을 여러 줄(4칩)로 복원하고, 줄별 완료 상태까지 되살린다
     // v54 — 줄별 [새 기기]/[전 단말] 도 함께
-    pcSetRows(r.페이백카드상세 || '', Number(r.페이백카드) || 0, cardLineStates(r), cardLineInsts(r));
-    $('f_paybank').value = r.페이백입금 ? fmtNum(r.페이백입금) : '';
+    /* v89 — 금액은 parseNumber 로 먼저 숫자로 만든 뒤 넣는다.
+       콤마·원 등이 섞인 문자열이 그대로 오면 Number() 가 NaN 이 되어 금액칸이 비고 [미기입] 이 켜졌다 */
+    var pcTotalSaved = parseNumber(r.페이백카드);
+    pcSetRows(r.페이백카드상세 || '', pcTotalSaved, cardLineStates(r), cardLineInsts(r));
+    if (pcTotalSaved > 0 && !(pcTotal() > 0)) {
+      pcSetRows('', pcTotalSaved, cardLineStates(r), cardLineInsts(r));
+    }
+    $('f_paybank').value = parseNumber(r.페이백입금) ? fmtNum(parseNumber(r.페이백입금)) : '';
     // v39 — 페이백(입금) 계좌 3칸 + 입금 완료 상태 복원
     $('f_paybank_bank').value = r.입금은행 || '';
     $('f_paybank_holder').value = r.입금예금주 || '';
@@ -17460,10 +17510,10 @@
     setWiredGift(r.유선혜택 || '');
     syncWiredGiftField(false);   // 수정할 때 저장값은 유선 유형이 없어도 지우지 않는다
     // v19 — 새 등록은 미선택, 기존 기록 수정은 0·빈칸이면 [미기입]/[미반납]을 켠 채로 열어 수정 흐름을 깨지 않는다
-    setPayNone('extra', !!rec && !(Number(r.추가지원금) > 0));
-    setPayNone('paycard', !!rec && !(Number(r.페이백카드) > 0));
-    setPayNone('paybank', !!rec && !(Number(r.페이백입금) > 0));
-    setPayNone('used', !!rec && !(String(r.중고폰 || '').trim() || Number(r.중고폰금액) > 0));
+    setPayNone('extra', !!rec && !(parseNumber(r.추가지원금) > 0));
+    setPayNone('paycard', !!rec && !(parseNumber(r.페이백카드) > 0));
+    setPayNone('paybank', !!rec && !(parseNumber(r.페이백입금) > 0));
+    setPayNone('used', !!rec && !(String(r.중고폰 || '').trim() || parseNumber(r.중고폰금액) > 0));
     paintPayNone();
     $('f_memo').value = r.메모 || '';
     // v49 — 인증한 직원은 담당자가 그 이름으로 자동 선택된다 (수정할 때는 저장값 그대로)
