@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v90">
+<meta name="app-version" content="v91">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -10585,6 +10585,17 @@
         rows: [
           gRow('5G/LTE 일반모델 (010 결합)', [''], { '69K': [150], '37K': [100] })
         ] },
+      /* ===== v91 — 11월 정책표 MBA-08 프리미엄 모델 판매 활성화 (사진) =====
+         · 소매 기본정책 · 24개월 약정 · 단말할인·요금할인 무관 · 110K 이상 · MNP·기변만 (010 미지급)
+         · 256G/512G 금액이 같아 **용량 제한(cap) 없이** 모델별 3행으로 둔다 — 실장부는 용량 없이 적는다 */
+      { id: 'MBA08', name: 'MBA-08 프리미엄 모델 판매 활성화', period: '11/1~',
+        shape: 'segRow', seg: '110K', types: POL_TYPES,
+        note: '단말할인·요금할인 공통 · 110K 이상 · MNP·기변만(010 미지급) · 256G/512G 금액 동일 · 유지기간(181일·121일)·직전개통 180일 이내 기변은 정산 판정',
+        rows: [
+          sRow('갤럭시 Z 폴드8 울트라', M.fold8u, '110K', [0, 100, 100]),
+          sRow('갤럭시 Z 폴드8', M.fold8, '110K', [0, 50, 50]),
+          sRow('갤럭시 Z 플립8', M.flip8, '110K', [0, 100, 100])
+        ] },
       /* ===== v86 — 2026-11-27 정책표 (사진) ===== */
       { id: 'MBA09', name: 'MBA-09 키즈 생애첫폰 활성화 정책 (도소매)', period: '11/27~',
         shape: 'need', seg: '키즈28·38', types: ['010'],
@@ -11387,6 +11398,20 @@
         var p5 = polById('MBA05');
         var seg5 = segFor(plan, p5.segs);
         if (seg5) push(p5, p5.rows[0], seg5, '010', 'MBA-05 010 결합 활성화', seg5 + ' 이상 · 010 · 결합');
+      }
+      /* v91 — MBA-08 프리미엄 모델 판매 활성화 (11/1~)
+         · 110K 이상 + MNP·기변만 (010 신규가입 미지급) · 단말할인·요금할인 무관
+         · 기존지급(기본) 정책이라 다른 정책에 더한다 — 중고·자급제(usedKey)·2ND 는 위에서 이미 빠진다 */
+      var p8 = polById('MBA08');
+      var r8 = polFindRow(p8, rec.기종, conds);
+      if (r8) {
+        if (plan < segValue(p8.seg)) {
+          res.notes.push('MBA-08(프리미엄 모델)은 110K 이상 요금제에만 인정됩니다 (지금 ' + fmtNum(plan) + '원 요금제).');
+        } else if (wtype === '신규가입') {
+          res.notes.push('MBA-08(프리미엄 모델)은 MNP·기변만 지급됩니다 (010 신규가입 미지급).');
+        } else {
+          push(p8, r8, p8.seg, typeKey, 'MBA-08 프리미엄 모델', p8.seg + ' 이상 · ' + typeKey + ' · ' + r8.name);
+        }
       }
       /* v86 — MBA-13 키즈폰 신모델 초기 활성화 (11/27~) : 산리오캐릭터즈 키즈폰 · 37K 이상 · 010 */
       var p13 = polById('MBA13');
