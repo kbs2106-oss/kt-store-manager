@@ -1,6 +1,12 @@
 /*************************************************************
  * 충주 KT대리점 칠금점 · 개통장부 공용 저장소
- * Google Apps Script 웹앱 (doGet / doPost)  — Code.gs v10.1
+ * Google Apps Script 웹앱 (doGet / doPost)  — Code.gs v10.2
+ *
+ *  · v10.2 (앱 v8.52): 밴드앱 댓글의 '메모 쓴 시각·쓴 사람'(memoAt·memoBy)과 삭제 표시(del·delAt·delBy)를
+ *     서버가 버리지 않고 그대로 보관·반환한다. 예전에는 bandCmt_ 가 이 칸들을 걸러 내서, 다른 직원 폰으로는
+ *     메모 일시·작성자가 사라지고(다시 올릴 때마다 값이 어긋나 되풀이 전송) 답글 삭제 표시도 전달되지 않았다.
+ *     · 댓글·답글 모두 del=true 면 delAt·delBy 를 함께 남기고, 한 번 지운 댓글은 뒤늦게 온 옛 댓글로 되살아나지 않는다.
+ *     · 응답 형식(action·기존 필드)·시트 구조는 v10.1 과 똑같고, 새 칸만 더 붙는다(구버전 앱은 무시).
  *
  *  · v10.1 (앱 v92): 속도 개선 — 요청당 시트 읽기를 한 번씩으로 모으고(기기 줄 3→1 · 헤더 2→1),
  *     기기 줄 쓰기는 최근 접속 60초 안이면 건너뛰며(스크립트 락 제거), 달 색인(list_months)은
@@ -1541,7 +1547,9 @@ function bandSheet_() {
   return sh;
 }
 
-/** 조회 : {URL}?pin=5001&action=band_get&since=1690000000000 */
+/** 조회 : {URL}?pin=5001&action=band_get&since=1690000000000
+ *  v10.2 — 저장된 항목(data)을 그대로 돌려주므로 댓글의 memoAt·memoBy·del(·답글 del)도 함께 나간다.
+ *          since 이후 바뀐 항목만(항목 시각 D열 기준) — 구조·ph:1 은 v10.0 과 같다. */
 function bandGet_(p) {
   var sh = bandSheet_();
   var since = Math.max(0, parseInt((p && p.since) || 0, 10) || 0);
@@ -1763,6 +1771,15 @@ function bandCmt_(c, now) {
   o.resDate = String(c.resDate || '').slice(0, 10);
   o.resTime = String(c.resTime || '').slice(0, 5);
   o.memo = String(c.memo || '').slice(0, 200);
+  /* v10.2 — 메모 쓴 시각·쓴 사람 (예전에는 여기서 걸러져 다른 폰에 안 넘어갔다) */
+  o.memoAt = String(c.memoAt || '').slice(0, 20);
+  o.memoBy = String(c.memoBy || '').slice(0, 20);
+  /* v10.2 — 삭제 표시(지운 댓글)도 함께 보관한다 */
+  if (c.del === true) {
+    o.del = true;
+    o.delAt = String(c.delAt || '').slice(0, 20);
+    o.delBy = String(c.delBy || '').slice(0, 20);
+  }
   o.sys = !!c.sys;
   var cu = +c.u || 0;
   o.u = (cu && Math.abs(now - cu) < 86400000) ? cu : now;   // 기기 시계가 크게 틀어지면 서버 시각
@@ -1773,11 +1790,18 @@ function bandCmt_(c, now) {
     o.replies = [];
     for (var j = 0; j < c.replies.length && j < 20; j++) {
       var r = c.replies[j] || {};
-      o.replies.push({
+      var ro = {
         id: String(r.id || '').slice(0, 60), author: String(r.author || '').slice(0, 20),
         at: String(r.at || '').slice(0, 20), text: String(r.text || '').slice(0, 1000),
         st: String(r.st || '').slice(0, 10), photos: bandPhotoRefs_(r.photos)
-      });
+      };
+      /* v10.2 — 답글 삭제 표시도 함께 (예전에는 답글 del 이 버려져 다른 폰에서 되살아났다) */
+      if (r.del === true) {
+        ro.del = true;
+        ro.delAt = String(r.delAt || '').slice(0, 20);
+        ro.delBy = String(r.delBy || '').slice(0, 20);
+      }
+      o.replies.push(ro);
     }
   }
   return o;
@@ -1818,13 +1842,29 @@ function bandMerge_(old, it, t, id, now, staff) {
     if (prev && (+prev.u || 0) > (+c.u || 0)) continue;   // 이미 더 새 댓글이 있다
     /* v10.0: 구버전 앱이 사진 없이 같은 댓글을 다시 올려도 사진 이름표는 지우지 않는다 */
     if (prev) {
+      /* v10.2 — 한 번 지운 댓글은 뒤늦게 온 옛 댓글(구버전 앱·재전송)로 되살아나지 않게 삭제 표시를 지킨다 */
+      if (prev.del === true && c.del !== true) {
+        c.del = true;
+        if (!c.delAt) c.delAt = prev.delAt || '';
+        if (!c.delBy) c.delBy = prev.delBy || '';
+      }
+      /* v10.2 — 메모가 비어 온 재전송이 이미 저장된 메모 일시·작성자를 지우지 않게 */
+      if (!c.memoAt && c.memo && prev.memoAt) c.memoAt = prev.memoAt;
+      if (!c.memoBy && c.memo && prev.memoBy) c.memoBy = prev.memoBy;
       if ((!c.photos || !c.photos.length) && prev.photos && prev.photos.length) c.photos = prev.photos;
       if (prev.replies && prev.replies.length && c.replies && c.replies.length) {
         var pm = {};
         for (var pi = 0; pi < prev.replies.length; pi++) { if (prev.replies[pi] && prev.replies[pi].id) pm[prev.replies[pi].id] = prev.replies[pi]; }
         for (var ri = 0; ri < c.replies.length; ri++) {
           var rq = pm[c.replies[ri].id];
-          if (rq && (!c.replies[ri].photos || !c.replies[ri].photos.length) && rq.photos && rq.photos.length) c.replies[ri].photos = rq.photos;
+          if (!rq) continue;
+          if ((!c.replies[ri].photos || !c.replies[ri].photos.length) && rq.photos && rq.photos.length) c.replies[ri].photos = rq.photos;
+          /* v10.2 — 지운 답글도 되살아나지 않게 */
+          if (rq.del === true && c.replies[ri].del !== true) {
+            c.replies[ri].del = true;
+            if (!c.replies[ri].delAt) c.replies[ri].delAt = rq.delAt || '';
+            if (!c.replies[ri].delBy) c.replies[ri].delBy = rq.delBy || '';
+          }
         }
       }
     }
