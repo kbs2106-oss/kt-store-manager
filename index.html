@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v92">
+<meta name="app-version" content="v93">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -15585,6 +15585,8 @@
     return (n.total < 0 ? '−' : '') + fmtNum(Math.abs(n.total));
   }
 
+  /* v89 — 직원 모드 접힌 카드 요약(추지·페이백·입금).
+     v93 부터는 메인 목록에 쓰지 않는다(카드를 펼쳤을 때만 보이게) — 다른 곳에서 쓸 수 있게 남겨 둔다. */
   function payText(r) {
     var n = netMargin(r);
     var parts = [];
@@ -15694,9 +15696,11 @@
           cardMobileBadgeHtml(r.제휴카드) +
           policyBadgesHtml(r) +
           '<span class="m-figs">' +
-            /* v89 — 직원 모드: 리베이트(정책 자동값) 대신 추지·페이백·입금 금액을 보여 준다 */
-            '<span class="m-money">' + (isAdmin() ? rebateText(r) : payText(r)) + '</span>' +
-            (isAdmin() ? '<span class="m-net' + (netMargin(r).total < 0 ? ' neg' : '') + '">순 ' + netText(r) + '</span>' : '') +
+            /* v93 — 직원 모드 메인 목록(접힌 카드)에는 추지·페이백·입금 금액을 띄우지 않는다.
+               카드를 눌러 펼쳤을 때(상세 영역)와 수정 창에서만 보인다.
+               (v89 는 여기에 payText 를 띄웠는데 사장님: “직원용 개통장부 눌렀을때만 페이백 확인되게” · “그냥 메인창에서 추지 이런거”) */
+            (isAdmin() ? '<span class="m-money">' + rebateText(r) + '</span>' +
+              '<span class="m-net' + (netMargin(r).total < 0 ? ' neg' : '') + '">순 ' + netText(r) + '</span>' : '') +
             (r.담당자 ? '<span class="m-staff">' + esc(r.담당자) + '</span>' : '') +
           '</span>' +
         '</div>' +

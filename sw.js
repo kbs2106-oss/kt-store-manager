@@ -9,12 +9,13 @@
      GitHub Pages 가 index.html 을 10분(max-age=600) 캐시해, 예전에는 한참 전 화면이 떠서
      "수정이 바로 반영되지 않는다"고 느껴졌다. 오프라인일 때만 캐시로 넘어간다.
    · v92: 앱을 열 때 month_sync(달 색인 + 달 행 한 번에)로 2왕복 → 1왕복, 저장 직후 재동기화 제거.
+   · v93: 직원 모드 메인 목록(접힌 카드)에서 추지·페이백 금액 제거 — 카드를 펼쳤을 때만 보인다.
    · 데이터는 localStorage 에 있으므로 캐시를 지워도 장부는 그대로입니다.
 
    배포 후 파일을 수정했다면 아래 CACHE_VERSION 을 올려 주세요.
    ============================================================ */
 
-var CACHE_VERSION = 'v92';
+var CACHE_VERSION = 'v93';
 var CACHE_PREFIX = 'kt-ledger-';
 var CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
 var SHEETJS_CACHE = CACHE_PREFIX + 'sheetjs';
