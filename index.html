@@ -13599,7 +13599,8 @@
     if (isAdmin()) {
       var slots = typeSlots(r.개통유형 || '');
       // 1) 리베이트 — 무선은 정책 자동 산정값도 '산정됨'으로 본다 (2ND 는 정책 대상이 아니라 뺀다)
-      if (slots.w && slots.w !== '2ND') {
+      //    v87 — 12월 미운영(적색 표기) 모델은 정책이 0원인 것이 정상이라 '미기재'로 잡지 않는다
+      if (slots.w && slots.w !== '2ND' && !policyOffName(r)) {
         var v = wirelessRebateView(r);
         if (!v.manual && !v.auto) out.push({ key: 'rebateW', label: '무선 리베이트 미기재' });
       }
