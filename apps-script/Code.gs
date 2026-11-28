@@ -1,6 +1,8 @@
 /*************************************************************
  * 충주 KT대리점 칠금점 · 개통장부 공용 저장소
- * Google Apps Script 웹앱 (doGet / doPost)  — Code.gs v9.0
+ * Google Apps Script 웹앱 (doGet / doPost)  — Code.gs v10.0
+ *
+ *  · v10.0 (앱 v8.34): 밴드앱 댓글·답글 사진 공유 — 숨김 탭 '_밴드사진' + band_ph
  *
  *  · 메인 시트(SHEET_NAME = '전체_통합') 한 곳에 모든 직원 기록이 쌓입니다.
  *  · '담당자' 열로 직원을 구분하고, 직원별 보기 탭은 FILTER 로 자동 생성됩니다.
@@ -50,6 +52,19 @@ var BAND_CM_MAX  = 60;           // 항목 하나에 보관하는 최근 댓글 
 var BAND_RV_MAX  = 100;          // 사전예약 예약자 수
 var BAND_TEXT_MAX = 2000;        // 댓글 한 건 길이
 var BAND_BODY_MAX = 12000;       // 글 본문 길이
+
+/* ===== v10.0 (앱 v8.34) 댓글·답글 사진 공유 =====
+   · 사진은 '_밴드공유' 에 넣지 않는다 — 댓글에는 사진 이름표(ref)만 남기고,
+     사진 자체는 숨김 탭 '_밴드사진' 에 사진 1장 = 1행으로 따로 보관한다.
+     (댓글 한 줄에 사진을 넣으면 50,000자 한 칸 제한에 걸리고, 6.5초마다 받는 목록이 무거워진다)
+   · band_push : {t:'ph', id:ref, p:부모 id, c:댓글 id, r:답글 id, n:이름, d:'data:image/jpeg;base64,…'}
+   · band_ph   : ?action=band_ph&ids=ref1,ref2 (한 번에 6장까지) → 그 사진만 돌려준다.
+   · 오래된 사진은 BAND_PH_MAX 장을 넘으면 지운다(시트 용량 보호). */
+var BAND_PH_SHEET = '_밴드사진';
+var BAND_PH_HEAD  = ['id', '부모', '댓글', '답글', '이름', '가로', '세로', '시각', 'data'];
+var BAND_PH_MAX   = 400;          // 보관 장수 — 넘으면 오래된 것부터 지운다
+var BAND_PH_LEN   = 60000;        // 사진 한 장 data URL 최대 길이(셀 50,000자 제한 여유)
+var BAND_PH_BATCH = 6;            // band_ph 한 번에 돌려주는 장수
 
 /* ===== 컬럼 (순서 고정) ===== */
 var COLS = ['id', '개통일', '고객명', '연락처', '생년월일', '개통유형', '기종', '요금제',
@@ -125,6 +140,9 @@ function doGet(e) {
         } else if (action === 'band_get') {
           // v8.9 밴드앱 실시간 공유 — since 이후 바뀐 항목만 (JSONP callback= 도 jsonOut_ 이 처리)
           out = bandGet_(p);
+        } else if (action === 'band_ph') {
+          // v10.0 댓글·답글 사진 한 장씩 받아가기
+          out = bandPhGet_(p);
         } else {
           throw new Error('지원하지 않는 요청입니다: ' + action);
         }
@@ -197,6 +215,9 @@ function doPost(e) {
         } else if (action === 'band_push') {
           // v8.9 밴드앱 실시간 공유 — 바뀐 칸만 받아 항목·칸 단위로 합친다
           out = bandPush_(req);
+        } else if (action === 'band_ph') {
+          // v10.0 사진 조회(POST 도 허용)
+          out = bandPhGet_(req);
         } else {
           throw new Error('지원하지 않는 요청입니다: ' + action);
         }
@@ -1352,7 +1373,86 @@ function bandGet_(p) {
       items.push(d);
     }
   }
-  return { ok: true, action: 'band_get', now: now, since: since, count: items.length, items: items };
+  return { ok: true, action: 'band_get', now: now, since: since, count: items.length, items: items, ph: 1 };
+}
+
+/* ---------- v10.0 댓글·답글 사진 (숨김 탭 '_밴드사진') ---------- */
+
+/** '_밴드사진' (없으면 만들고 숨긴다) */
+function bandPhotoSheet_() {
+  var sh = sheetByName_(BAND_PH_SHEET, BAND_PH_HEAD);
+  try { sh.getRange('H:H').setNumberFormat('0'); } catch (err) {}
+  try { sh.setColumnWidth(1, 220); sh.setColumnWidth(9, 420); } catch (err) {}
+  return sh;
+}
+
+/** 사진 id 로 그 줄을 찾는다 — id → 행 번호 */
+function bandPhotoRows_(sh) {
+  var map = {};
+  var last = sh.getLastRow();
+  if (last < 2) return map;
+  var ids = sh.getRange(2, 1, last - 1, 2).getValues();
+  for (var i = 0; i < ids.length; i++) {
+    var id = String(ids[i][0] || '').trim();
+    if (id) map[id] = i + 2;
+  }
+  return map;
+}
+
+/** 사진 저장 — items 중 t:'ph' 만 받는다 */
+function bandPhotoPush_(list, now) {
+  if (!list.length) return 0;
+  var sh = bandPhotoSheet_();
+  var rows = bandPhotoRows_(sh);
+  var n = 0;
+  for (var i = 0; i < list.length; i++) {
+    var it = list[i] || {};
+    var id = String(it.id || '').trim().slice(0, 80);
+    var d = String(it.d || '');
+    if (!id) continue;
+    if (!/^data:image\/(jpeg|jpg|png|webp);base64,/i.test(d)) continue;   // 사진 형식만
+    if (d.length > BAND_PH_LEN) d = d.slice(0, BAND_PH_LEN);
+    var row = rows[id] || 0;
+    var out = [id, String(it.p || '').slice(0, 80), String(it.c || '').slice(0, 80), String(it.r || '').slice(0, 80),
+               String(it.n || '').slice(0, 40), +it.w || 0, +it.h || 0, now, d];
+    if (!row) {
+      row = Math.max(sh.getLastRow() + 1, 2);
+      rows[id] = row;
+    }
+    sh.getRange(row, 1, 1, BAND_PH_HEAD.length).setValues([out]);
+    n++;
+  }
+  /* 보관 장수를 넘으면 오래된 줄(위쪽)부터 지운다 */
+  var over = sh.getLastRow() - 1 - BAND_PH_MAX;
+  if (over > 0) {
+    try { sh.deleteRows(2, over); } catch (err) {}
+  }
+  return n;
+}
+
+/** 사진 조회 : {URL}?pin=5001&action=band_ph&ids=ref1,ref2 */
+function bandPhGet_(p) {
+  var raw = p && p.ids;
+  var ids = [];
+  if (Object.prototype.toString.call(raw) === '[object Array]') ids = raw;
+  else String(raw || '').split(',').forEach(function (v) { if (v) ids.push(v); });
+  ids = ids.map(function (v) { return String(v).trim().slice(0, 80); }).filter(Boolean);
+  if (ids.length > BAND_PH_BATCH) ids = ids.slice(0, BAND_PH_BATCH);
+  var items = [];
+  if (ids.length) {
+    var sh = bandPhotoSheet_();
+    var rows = bandPhotoRows_(sh);
+    for (var i = 0; i < ids.length; i++) {
+      var row = rows[ids[i]];
+      if (!row) continue;
+      var v = sh.getRange(row, 1, 1, BAND_PH_HEAD.length).getValues()[0];
+      var d = String(v[8] || '');
+      if (!d) continue;
+      items.push({ id: String(v[0] || ''), p: String(v[1] || ''), c: String(v[2] || ''), r: String(v[3] || ''),
+                   n: String(v[4] || ''), w: +v[5] || 0, h: +v[6] || 0, u: +v[7] || 0, d: d });
+    }
+  }
+  return { ok: true, action: 'band_ph', count: items.length, items: items };
 }
 
 /** 저장 : POST {pin, action:'band_push', staff, items:[{t,id,f,cm,rv,u}]} */
@@ -1377,9 +1477,12 @@ function bandPush_(req) {
       }
     }
     var n = 0;
+    var photos = [];
     for (var j = 0; j < items.length; j++) {
       var it = items[j] || {};
       var tt = String(it.t || '');
+      /* v10.0: 사진은 '_밴드사진' 으로 따로 — 여기서는 모아 두었다가 따로 저장한다 */
+      if (tt === 'ph' || tt === 'photo') { photos.push(it); continue; }
       var t = (tt === 'cust' || tt === 'c') ? 'cust' : 'post';   // 앱은 c/p 로 보낸다
       var id = String(it.id || '').trim();
       if (!id) continue;
@@ -1405,7 +1508,8 @@ function bandPush_(req) {
       n++;
     }
     SpreadsheetApp.flush();
-    return { ok: true, action: 'band_push', count: n, now: now };
+    if (photos.length) n += bandPhotoPush_(photos, now);
+    return { ok: true, action: 'band_push', count: n, now: now, ph: 1 };
   } finally {
     try { lock.releaseLock(); } catch (err2) {}
   }
@@ -1435,7 +1539,22 @@ function bandVal_(k, v) {
   return String(s).slice(0, 500);
 }
 
-/** 댓글 한 건 다듬기 (사진은 주소(http)만 — 폰에만 있는 큰 이미지는 보내지 않는다) */
+/** 댓글·답글 사진 한 줄 — 사진 자체는 '_밴드사진' 에 있고, 여기는 이름표(ref)만 남긴다 */
+function bandPhotoRefs_(list) {
+  var out = [];
+  if (!list || !list.length) return out;
+  for (var i = 0; i < list.length && i < 6; i++) {
+    var ph = list[i] || {};
+    var src = String(ph.src || '');
+    var name = String(ph.name || '').slice(0, 40);
+    if (/^https?:\/\//.test(src) && src.length < 600) { out.push({ src: src, name: name }); continue; }
+    var ref = String(ph.ref || '').slice(0, 80);
+    if (ref) out.push({ ref: ref, name: name, w: +ph.w || 0, h: +ph.h || 0 });
+  }
+  return out;
+}
+
+/** 댓글 한 건 다듬기 (사진은 이름표만, 원본은 '_밴드사진') */
 function bandCmt_(c, now) {
   if (!c || !c.id) return null;
   var o = {};
@@ -1453,12 +1572,7 @@ function bandCmt_(c, now) {
   var cu = +c.u || 0;
   o.u = (cu && Math.abs(now - cu) < 86400000) ? cu : now;   // 기기 시계가 크게 틀어지면 서버 시각
   if (c.photos && c.photos.length) {
-    o.photos = [];
-    for (var i = 0; i < c.photos.length && i < 6; i++) {
-      var ph = c.photos[i] || {};
-      var src = String(ph.src || '');
-      if (/^https?:\/\//.test(src) && src.length < 600) o.photos.push({ src: src, name: String(ph.name || '').slice(0, 40) });
-    }
+    o.photos = bandPhotoRefs_(c.photos);
   }
   if (c.replies && c.replies.length) {
     o.replies = [];
@@ -1467,7 +1581,7 @@ function bandCmt_(c, now) {
       o.replies.push({
         id: String(r.id || '').slice(0, 60), author: String(r.author || '').slice(0, 20),
         at: String(r.at || '').slice(0, 20), text: String(r.text || '').slice(0, 1000),
-        st: String(r.st || '').slice(0, 10), photos: []
+        st: String(r.st || '').slice(0, 10), photos: bandPhotoRefs_(r.photos)
       });
     }
   }
@@ -1507,6 +1621,18 @@ function bandMerge_(old, it, t, id, now, staff) {
     if (!c) continue;
     prev = byId[c.id];
     if (prev && (+prev.u || 0) > (+c.u || 0)) continue;   // 이미 더 새 댓글이 있다
+    /* v10.0: 구버전 앱이 사진 없이 같은 댓글을 다시 올려도 사진 이름표는 지우지 않는다 */
+    if (prev) {
+      if ((!c.photos || !c.photos.length) && prev.photos && prev.photos.length) c.photos = prev.photos;
+      if (prev.replies && prev.replies.length && c.replies && c.replies.length) {
+        var pm = {};
+        for (var pi = 0; pi < prev.replies.length; pi++) { if (prev.replies[pi] && prev.replies[pi].id) pm[prev.replies[pi].id] = prev.replies[pi]; }
+        for (var ri = 0; ri < c.replies.length; ri++) {
+          var rq = pm[c.replies[ri].id];
+          if (rq && (!c.replies[ri].photos || !c.replies[ri].photos.length) && rq.photos && rq.photos.length) c.replies[ri].photos = rq.photos;
+        }
+      }
+    }
     byId[c.id] = c;
   }
   for (var kk in byId) { if (byId.hasOwnProperty(kk)) list.push(byId[kk]); }
