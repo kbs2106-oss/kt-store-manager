@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v85">
+<meta name="app-version" content="v86">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -1973,6 +1973,9 @@
   .pol-sec-note{font-size:11px;color:#64748B;font-weight:700}
   .pol-table-wrap{overflow:auto;max-height:40vh;border:1px solid var(--line);border-radius:10px;background:#fff}
   table.pol-table{border-collapse:separate;border-spacing:0;width:100%;min-width:540px;font-size:11.5px}
+  /* v86 — MBA-09 처럼 칸이 세 개뿐인 표는 폰 폭에 그대로 들어오게 */
+  table.pol-table.pol-need{min-width:0}
+  table.pol-table.pol-need td.pd-dev,table.pol-table.pol-need th{min-width:0}
   table.pol-table th,table.pol-table td{border-bottom:1px solid var(--line);padding:3px 4px;text-align:center;white-space:nowrap}
   table.pol-table thead th{position:sticky;top:0;z-index:2;background:#F1F7FE;color:#0B4AA2;font-weight:900;font-size:11px}
   table.pol-table thead tr.h2 th{top:26px;background:#F7FAFE;color:#475569}
@@ -3804,7 +3807,7 @@
   <div class="dlg-head">
     <div>
       <h2>정책 계산표 · 정산<span class="pd-admin">관리자 전용</span></h2>
-      <p>11월 KT 정책(MRA·MBA) · MRA 포인트 · 이번 달 순마진 정산을 한 자리에서 보고 고칩니다. 직원 모드에서는 보이지 않습니다.</p>
+      <p>11월 KT 정책(11/27 개통~ MRA·MBA) · MRA 포인트 · 이번 달 순마진 정산을 한 자리에서 보고 고칩니다. 직원 모드에서는 보이지 않습니다.</p>
     </div>
     <button type="button" class="dlg-close" id="pdClose" aria-label="닫기">×</button>
   </div>
@@ -3841,7 +3844,7 @@
 
     <!-- ---------- MRA 포인트 ---------- -->
     <div class="pv-panel" data-pv-panel="points" id="pvPanelPoints" hidden>
-      <div class="pv-warn">포인트는 원 환산 없이 <b>N.NP</b>로만 계산합니다. 기준: MRA-00-01 무선·유선 Point (11·19~ 최신본) · 도도매 차감 없음</div>
+      <div class="pv-warn">포인트는 원 환산 없이 <b>N.NP</b>로만 계산합니다. 기준: MRA-00-01 무선·유선 Point (11·27~ 최신본) · 도도매 차감 없음</div>
       <div id="polPoints"></div>
     </div>
 
@@ -4113,13 +4116,19 @@
 
   // 기종 빠른 선택 — 최근 2년 이내 KT 주력 단말기만 유지한다
   // (신모델 출시 시 추가, 2년 지난 구형·KT 요금제 변동은 이 목록만 고친다)
+  /* v86 — 11/27 정책표(MRA-01)에 있는 모델을 빠짐없이 넣었다.
+     · 이 목록에 없으면 장부에 저장도 안 됐다(정확한 기종명 검사) — 산리오 키즈폰·모토로라 g77·
+       G56·레드미 노트 14 5G 처럼 정책에는 있는데 목록에 없던 모델을 채웠다 */
   var KT_DEVICES = [
     '갤럭시 S26', '갤럭시 S26+', '갤럭시 S26 울트라', '갤럭시 S26 FE',
+    '갤럭시 S25', '갤럭시 S25 엣지', '갤럭시 S25 FE',
     '갤럭시 Z 폴드8', '갤럭시 Z 폴드8 울트라', '갤럭시 Z 플립8',
-    '갤럭시 점프5', '갤럭시 A37', '갤럭시 A18 LTE', '갤럭시 A17',
-    '폼폼푸린 키즈폰', '시나모롤 키즈폰', '클래식 폴더', '모토로라 엣지70',
+    '갤럭시 Z 폴드7', '갤럭시 Z 플립7',
+    '갤럭시 점프5', '갤럭시 점프4', '갤럭시 A37', '갤럭시 A36', '갤럭시 A18 LTE', '갤럭시 A17',
+    '산리오캐릭터즈 키즈폰', '폼폼푸린 키즈폰', '시나모롤 키즈폰', '클래식 폴더',
+    '모토로라 엣지70', '모토로라 g77', '모토로라 G56 5G', '레드미 노트 14 5G', '레드미 14C',
     '아이폰 18 프로', '아이폰 18 프로 맥스', '아이폰 듀오',
-    '아이폰 17', '아이폰 17 에어', '아이폰 17 프로', '아이폰 17 프로 맥스'
+    '아이폰 17', '아이폰 17 에어', '아이폰 17 프로', '아이폰 17 프로 맥스', '아이폰 17e'
   ];
 
   /* =========================================================
@@ -4257,7 +4266,13 @@
     { n: '클래식 폴더', c: ['Z2339'], a: ['ZTE 클래식 폴더'] },
     { n: '기가지니 LTE 2', c: ['GLM-200'], a: ['기가지니LTE2', '기가지니 LTE2'] },
     { n: '스타일 폴더', c: ['AT-M120', 'AT-M120B', 'AT-M130', 'AT-M140'], a: ['ALT 스타일 폴더', '스타일폴더'] },
-    { n: '모토로라 엣지70', c: ['XT2601', 'XT2363', 'XT2529', 'XT2621'], a: ['엣지70', 'moto 엣지'] },
+    /* v86 — 11/27 정책표 모델코드대로 나눈다 (XT2601 엣지70 · XT2621 g77 · XT2529 G56 5G) */
+    { n: '모토로라 엣지70', c: ['XT2601'], a: ['엣지70', 'moto 엣지'] },
+    { n: '모토로라 g77', c: ['XT2621'], a: ['g77', '모토 G77', '모토로라 G77'] },
+    { n: '모토로라 G56 5G', c: ['XT2529'], a: ['G56', '모토 G56', '모토로라 G56'] },
+    { n: '샤오미 레드미 노트 14 5G', c: ['MI-RMN14'], a: ['Redmi Note 14', '레드미 노트14', '레드미노트14'] },
+    { n: '갤럭시 A18 LTE', c: ['A185'], a: ['갤럭시 A18', 'A18'] },
+    { n: '산리오캐릭터즈 키즈폰', c: ['A185NK-KP'], a: ['산리오 키즈폰', '산리오캐릭터즈'] },
     { n: '샤오미 레드미 14C', c: ['MI-RM14C'], a: ['Redmi 14C', '레드미14C'] },
     { n: '샤오미 레드미 노트12', c: ['MI-RMN12'], a: ['Redmi Note 12', '레드미 노트12'] },
     { n: '샤오미 레드미 노트13 프로', c: ['MI-RMN13P5G'], a: ['Redmi Note 13 Pro', '레드미 노트13'] },
@@ -10249,8 +10264,16 @@
   var POL_TYPES = ['010', 'MNP', '기변'];
   var POL_TYPE_LABEL = { '010': '010(신규)', 'MNP': 'MNP(번호이동)', '기변': '기변' };
 
-  function gRow(name, match, v) {
-    return { name: name, match: match, v: v };
+  function gRow(name, match, v, extra) {
+    var o = { name: name, match: match, v: v };
+    if (extra) for (var k in extra) if (Object.prototype.hasOwnProperty.call(extra, k)) o[k] = extra[k];
+    return o;
+  }
+  /* v86 — MBA-09 처럼 모델마다 '추가지원금 몇 원 이상' 조건이 붙는 표 */
+  function nRow(name, match, need, v, extra) {
+    var o = sRow(name, match, '키즈28·38', v, extra);
+    o.need = need;
+    return o;
   }
   function sRow(name, match, seg, v, extra) {
     var o = { name: name, match: match, seg: seg, v: v };
@@ -10285,28 +10308,32 @@
     moto70: ['모토로라엣지70', '엣지70'],
     g77: ['모토로라g77', 'g77'],
     g56: ['모토로라g565g', '모토로라g56', 'g565g'],
-    a18: ['갤럭시a18', '갤럭시a18lte', 'a18lte'],
+    a18: ['갤럭시a18', '갤럭시a18lte', 'a18lte', 'sma185nk', 'a185nk'],
     pom: ['폼폼푸린키즈폰', '폼폼푸린'],
     a17: ['갤럭시a17'],
     sino: ['시나모롤키즈폰', '시나모롤'],
     redmi14c: ['레드미14c', 'redmi14c'],
-    clasic: ['클래식폴더', 'zte클래식폴더']
+    clasic: ['클래식폴더', 'zte클래식폴더'],
+    /* v86 — 11/27 정책표 신모델. A18(SM-A185NK)과 산리오 키즈폰(SM-A185NK-KP)은 코드가 갈린다 */
+    sanrio: ['산리오캐릭터즈키즈폰', '산리오키즈폰', '산리오', 'sma185nk-kp', 'a185nk-kp']
   };
 
   var POLICY_DEFAULT = {
-    title: '2026년 11월 KT 무선 정책 (MRA·MBA)',
+    title: '2026년 11월 KT 무선 정책 (11/27 개통~)',
     unit: 1000,
     rebate: [
-      { id: 'MRA01', name: 'MRA-01 소매 기본 정책', period: '11/1~ (최신본)', shape: 'grid',
-        note: '단말할인·요금할인 공통 · 요금제 구간 × 가입유형',
+      { id: 'MRA01', name: 'MRA-01 소매 기본 정책', period: '11/27~ (11/26 이전은 이전 금액)', shape: 'grid',
+        note: '단말할인·요금할인 공통 · 요금제 구간 × 가입유형 · 12개월 약정·180일 이내 기변·37K 미만은 30K',
         segs: ['110K', '90K', '61K', '37K'], types: POL_TYPES,
         rows: [
           gRow('아이폰 듀오', M.duo, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
-          gRow('아이폰 18 프로·프로 맥스', M.ip18, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
-          gRow('갤럭시 Z 폴드8 울트라', M.fold8u, { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
-          gRow('갤럭시 Z 폴드8', M.fold8, { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
-          gRow('갤럭시 Z 플립8', M.flip8, { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
-          gRow('갤럭시 S26·S26+·S26 울트라(NEW)', M.s26.concat(M.s26p, M.s26u), { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
+          gRow('아이폰 18 프로·프로 맥스', M.ip18, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }, { flag: true }),
+          gRow('갤럭시 Z 폴드8 울트라', M.fold8u, { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] }, { flag: true }),
+          gRow('갤럭시 Z 폴드8', M.fold8, { '110K': [150, 100, 100], '90K': [100, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] },
+            { flag: true, altUntil: '2026-11-26',
+              altV: { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] } }),
+          gRow('갤럭시 Z 플립8', M.flip8, { '110K': [150, 100, 100], '90K': [100, 100, 100], '61K': [50, 50, 50], '37K': [50, 50, 50] }, { flag: true }),
+          gRow('갤럭시 S26·S26+·S26 울트라(NEW)', M.s26.concat(M.s26p, M.s26u), { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }, { flag: true }),
           gRow('아이폰 17·17 프로·17 프로 맥스', M.ip17, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
           gRow('아이폰 Air', M.air, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
           gRow('갤럭시 Z 폴드7', M.fold7, { '110K': [100, 100, 100], '90K': [70, 70, 70], '61K': [50, 50, 50], '37K': [50, 50, 50] }),
@@ -10325,6 +10352,7 @@
           gRow('모토로라 g77', M.g77, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
           gRow('모토로라 G56 5G', M.g56, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
           gRow('갤럭시 A18', M.a18, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
+          gRow('산리오캐릭터즈 키즈폰', M.sanrio, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
           gRow('폼폼푸린 키즈폰', M.pom, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
           gRow('갤럭시 A17', M.a17, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
           gRow('시나모롤 키즈폰', M.sino, { '110K': [100, 50, 50], '90K': [100, 50, 50], '61K': [100, 50, 50], '37K': [100, 50, 50] }),
@@ -10365,8 +10393,8 @@
           sRow('아이폰 17e', M.ip17e, '90K', [150, 150, 50]),
           sRow('갤럭시 S25 FE', M.s25fe, '90K', [150, 150, 50])
         ] },
-      { id: 'MRA03', name: 'MRA-03 소매 활력 정책', period: '11/1~',
-        shape: 'segRow', types: POL_TYPES, note: '단말할인·요금할인 공통 · 모델별 요금제 구간',
+      { id: 'MRA03', name: 'MRA-03 소매 활력 정책', period: '11/27~',
+        shape: 'segRow', types: POL_TYPES, note: '단말할인·요금할인 공통 · 모델별 요금제 구간 · 180일 이내 기변 미지급 · S25 FE 90K는 정책표 "+30" 표기라 30으로 계산 · MBA-09 지급 회선은 미지급',
         rows: [
           sRow('아이폰 듀오', M.duo, '110K', [0, 50, 20]),
           sRow('아이폰 18 프로·프로 맥스', M.ip18, '110K', [150, 80, 50]),
@@ -10390,6 +10418,7 @@
           sRow('모토로라 엣지70', M.moto70, '37K', [200, 100, 70]),
           sRow('모토로라 g77', M.g77, '37K', [200, 100, 70]),
           sRow('모토로라 G56 5G', M.g56, '37K', [200, 100, 70]),
+          sRow('산리오캐릭터즈 키즈폰', M.sanrio, '37K', [50, 100, 30]),
           sRow('갤럭시 A18', M.a18, '37K', [200, 70, 30]),
           sRow('폼폼푸린 키즈폰', M.pom, '37K', [240, 110, 70]),
           sRow('갤럭시 A17', M.a17, '37K', [200, 70, 30]),
@@ -10454,6 +10483,26 @@
         note: '신규가입(010) + 결합 적용 시 (단말할인·요금할인 모두 · 270일 유지)',
         rows: [
           gRow('5G/LTE 일반모델 (010 결합)', [''], { '69K': [150], '37K': [100] })
+        ] },
+      /* ===== v86 — 2026-11-27 정책표 (사진) ===== */
+      { id: 'MBA09', name: 'MBA-09 키즈 생애첫폰 활성화 정책 (도소매)', period: '11/27~',
+        shape: 'need', seg: '키즈28·38', types: ['010'],
+        note: '키즈28·38 요금제 only · 010 신규가입 · 요금할인(선약) · 표의 추가지원금 금액 이상 입력 시 지급 · 이 회선은 MRA-03·MWA-05-01 미지급',
+        rows: [
+          nRow('갤럭시 A37 5G', M.a37, 250000, [250]),
+          nRow('갤럭시 A36 5G', M.a36, 300000, [300]),
+          nRow('갤럭시 Jump 5', M.jump5, 250000, [250]),
+          nRow('갤럭시 Jump 4', M.jump4, 300000, [300]),
+          nRow('산리오캐릭터즈 키즈폰', M.sanrio, 250000, [250]),
+          nRow('갤럭시 A18', M.a18, 300000, [300]),
+          nRow('폼폼푸린 키즈폰', M.pom, 340000, [340]),
+          nRow('갤럭시 A17', M.a17, 300000, [300])
+        ] },
+      { id: 'MBA13', name: 'MBA-13 키즈폰 신모델 초기 활성화 정책', period: '11/27~',
+        shape: 'segRow', seg: '37K', types: ['010'],
+        note: '산리오캐릭터즈 키즈폰 신모델 · 37K 이상 · 010 신규가입 · 단말할인·요금할인 공통',
+        rows: [
+          sRow('산리오캐릭터즈 키즈폰', M.sanrio, '37K', [30])
         ] }
     ],
     points: {
@@ -10462,6 +10511,7 @@
       bonus: {
         school: 1.0, flag010: 1.0, flagMove: 1.0, airMnp: 2.0, airMove: 2.0, mnp: 1.0,
         ip17pmMove: 0.5, feMove: 1.0, kid010: 1.5, kidMnp: 0.5, kidMove: 1.5,
+        sanrio010: 0.5, sanrioMnp: 0.5, sanrioMove: 0.5,
         budget010: 1.0, budgetMove: 1.0
       },
       wired: {
@@ -10790,6 +10840,17 @@
     return mplusPairs()[r.id] || null;
   }
 
+  // 기종 글자가 별칭 목록 중 하나와 '정확히' 같은가 — 정책표 한 행에 여러 모델이 묶여 있을 때
+  function modelIs(modelText, aliases) {
+    var models = modelParts(modelText), i, j, a;
+    for (i = 0; i < models.length; i++) {
+      a = mkey(models[i]);
+      if (!a) continue;
+      for (j = 0; j < aliases.length; j++) if (a === mkey(aliases[j])) return true;
+    }
+    return false;
+  }
+
   // 무선 포인트 (관리자 전용 표시)
   function calcPoints(rec, opts) {
     var o = opts || {};
@@ -10816,7 +10877,8 @@
       var isAir = !!polFindRow(polById('MRA01'), rec.기종, []);
       var airRow = polFindRow(polById('MRA01'), rec.기종, []);
       isAir = !!(airRow && (airRow.match || []).indexOf('아이폰에어') >= 0);
-      var flagRow = polFindRow(polById('MRA06'), rec.기종, []);
+      /* v86 — MRA-01 에 맞은 행 하나를 미리 찾아 둔다 (플래그십·키즈·가점을 모두 이 행으로 가린다) */
+      var r17 = polFindRow(polById('MRA01'), rec.기종, []);
       var age = ageAt(rec.생년월일, iso);
       var yDum = o.yDum || (age >= 0 && age <= 34);
       // 스쿨덤 · Y덤 가점 (11/19~)
@@ -10830,13 +10892,16 @@
       } else if (wtype === '번호이동') {
         add('MNP 가점', polPoint('bonus|mnp', P.bonus.mnp), '37K 이상 · iPhone Air 제외');
       }
-      // 플래그십 가점 (11/5~)
-      if (flagRow && plan >= 110000 && iso >= '2026-11-05') {
+      // 플래그십 가점 (11/5~) — v86: 11/27 표에 적힌 AIP18P·PM / 폴더블8류 / S26 행만
+      if (r17 && r17.flag && plan >= 110000 && iso >= '2026-11-05') {
         if (wtype === '신규가입') add('플래그십 가점', polPoint('bonus|flag010', P.bonus.flag010), '110K 이상 · 010');
         else if (wtype === '기기변경') add('플래그십 가점', polPoint('bonus|flagMove', P.bonus.flagMove), '110K 이상 · 기변');
       }
-      var r17 = polFindRow(polById('MRA01'), rec.기종, []);
-      var is17pm = !!(r17 && (r17.match || []).indexOf('아이폰17프로') >= 0);
+      /* v86 — 포인트표의 'iPhone 17P·17PM'은 프로·프로맥스만 (기본 아이폰 17 은 해당 없음)
+         · 기종이 코드(AIP17P·AIP17PM)로 적혔거나 용량이 붙어도 놓치지 않게 행으로 먼저 보고,
+           기본 17 이면 뺀다 */
+      var is17pm = !!(r17 && (r17.match || []).indexOf('아이폰17프로') >= 0) &&
+        !modelIs(rec.기종, ['아이폰17', 'aip17', 'ip17']);
       if (is17pm && plan >= 90000 && wtype === '기기변경') {
         add('iPhone 17P·17PM 가점', polPoint('bonus|ip17pmMove', P.bonus.ip17pmMove), '90K 이상 · 기변');
       }
@@ -10849,6 +10914,13 @@
         if (wtype === '신규가입') add('시나모롤 키즈폰', polPoint('bonus|kid010', P.bonus.kid010), '37K 이상 · 010');
         else if (wtype === '번호이동') add('시나모롤 키즈폰', polPoint('bonus|kidMnp', P.bonus.kidMnp), '37K 이상 · MNP');
         else if (wtype === '기기변경') add('시나모롤 키즈폰', polPoint('bonus|kidMove', P.bonus.kidMove), '37K 이상 · 기변');
+      }
+      /* v86 — 산리오캐릭터즈 키즈폰 (SM-A185NK-KP) 가점 : 37K↑ · 010/MNP/기변 각 0.5P */
+      var isSanrio = !!(r17 && (r17.match || []).indexOf('산리오캐릭터즈키즈폰') >= 0);
+      if (isSanrio && plan >= 37000) {
+        if (wtype === '신규가입') add('산리오 키즈폰', polPoint('bonus|sanrio010', P.bonus.sanrio010), '37K 이상 · 010');
+        else if (wtype === '번호이동') add('산리오 키즈폰', polPoint('bonus|sanrioMnp', P.bonus.sanrioMnp), '37K 이상 · MNP');
+        else if (wtype === '기기변경') add('산리오 키즈폰', polPoint('bonus|sanrioMove', P.bonus.sanrioMove), '37K 이상 · 기변');
       }
       var isBudget = !!(r17 && ((r17.match || []).indexOf('레드미노트14') >= 0 || (r17.match || []).indexOf('모토로라엣지70') >= 0 ||
         (r17.match || []).indexOf('g77') >= 0 || (r17.match || []).indexOf('모토로라g565g') >= 0));
@@ -10996,6 +11068,28 @@
       var r1 = polFindRow(p1, rec.기종, conds);
       var s1 = segFor(plan, p1.segs);
       if (r1 && s1) push(p1, r1, s1, typeKey, 'MRA-01 소매 기본', s1 + ' 이상 · ' + typeKey + ' · ' + r1.name);
+      /* v86 — MBA-09 키즈 생애첫폰 활성화 (11/27~)
+         · 키즈28·38 요금제 + 010 신규가입 + 요금할인(선약) + 표의 추가지원금 금액 이상을 입력해야 지급
+         · 이 회선은 MRA-03(소매 활력)·MWA-05-01(모뎀 시장대응) 미지급 */
+      var extraAmt = Number(rec.추가지원금) || 0;
+      var mba9paid = false;
+      var p9 = polById('MBA09');
+      var r9 = polFindRow(p9, rec.기종, conds);
+      if (r9) {
+        if (!/키즈\s*(28|38)/.test(String(rec.요금제 || ''))) {
+          res.notes.push('MBA-09(키즈 생애첫폰)는 키즈28·키즈38 요금제에만 인정됩니다.');
+        } else if (wtype !== '신규가입') {
+          res.notes.push('MBA-09(키즈 생애첫폰)는 010 신규가입만 인정됩니다.');
+        } else if (disc !== '요금할인') {
+          res.notes.push('MBA-09(키즈 생애첫폰)는 요금할인(선약) 개통에만 인정됩니다.');
+        } else if (extraAmt < (Number(r9.need) || 0)) {
+          res.notes.push('MBA-09(키즈 생애첫폰)는 추가지원금 ' + fmtNum(r9.need) + '원 이상 입력해야 인정됩니다 (지금 ' + fmtNum(extraAmt) + '원).');
+        } else {
+          push(p9, r9, p9.seg, '010', 'MBA-09 키즈 생애첫폰',
+            '키즈28·38 · 010 · 추가지원금 ' + fmtNum(extraAmt) + '원 · ' + r9.name);
+          mba9paid = true;
+        }
+      }
       // MRA-02 돈버는 모델 (37K↑)
       var p2 = polById('MRA02');
       var r2 = polFindRow(p2, rec.기종, conds);
@@ -11009,7 +11103,9 @@
       // MRA-03 소매 활력 (모델 + 구간)
       var p3 = polById('MRA03');
       var s3 = segFor(plan, ['110K', '90K', '61K', '37K']);
-      if (s3) {
+      if (mba9paid) {
+        res.notes.push('MBA-09 지급 회선이라 MRA-03(소매 활력)·MWA-05-01(모뎀 시장대응)은 지급되지 않습니다.');
+      } else if (s3) {
         for (var i3 = 0; i3 < p3.rows.length; i3++) {
           var r3 = p3.rows[i3];
           if (r3.seg !== s3) continue;
@@ -11035,7 +11131,6 @@
       /* v59 — MBA-04-01 추가지원금 전산 등록 활성화 (소매)
          · 신규가입(010)·번호이동·기기변경 + 37K 이상 + 요금할인(선약) 전용
          · 입력한 추가지원금 8만↑ → +30,000 / 3만↑ → +10,000 */
-      var extraAmt = Number(rec.추가지원금) || 0;
       if (extraAmt >= 30000) {
         var p4a = polById('MBA0401');
         if (disc === '요금할인') {
@@ -11052,6 +11147,16 @@
         var p5 = polById('MBA05');
         var seg5 = segFor(plan, p5.segs);
         if (seg5) push(p5, p5.rows[0], seg5, '010', 'MBA-05 010 결합 활성화', seg5 + ' 이상 · 010 · 결합');
+      }
+      /* v86 — MBA-13 키즈폰 신모델 초기 활성화 (11/27~) : 산리오캐릭터즈 키즈폰 · 37K 이상 · 010 */
+      var p13 = polById('MBA13');
+      var r13 = polFindRow(p13, rec.기종, conds);
+      if (r13 && plan >= segValue(p13.seg)) {
+        if (wtype === '신규가입') {
+          push(p13, r13, p13.seg, '010', 'MBA-13 키즈폰 초기 활성화', p13.seg + ' 이상 · 010 · ' + r13.name);
+        } else {
+          res.notes.push('MBA-13(키즈폰 초기 활성화)은 010 신규가입만 인정됩니다.');
+        }
       }
     }
     res.sum = Math.round(res.sum);
@@ -11133,7 +11238,7 @@
       polRowIndex(pol);
       html += '<div class="pol-sec-head"><span class="pol-sec-title">' + esc(pol.name) + '</span>' +
         '<span class="pol-sec-note">' + esc(pol.period) + ' · ' + esc(pol.note) + ' · 단위 천원</span></div>';
-      html += '<div class="pol-table-wrap"><table class="pol-table" data-pol-table="' + esc(pol.id) + '">';
+      html += '<div class="pol-table-wrap"><table class="pol-table' + (pol.shape === 'need' || pol.types.length === 1 ? ' pol-need' : '') + '" data-pol-table="' + esc(pol.id) + '">';
       if (pol.shape === 'grid') {
         html += '<thead><tr><th rowspan="2" style="min-width:112px">기종</th>';
         for (j = 0; j < pol.segs.length; j++) {
@@ -11154,6 +11259,17 @@
           }
           html += '</tr>';
         }
+      } else if (pol.shape === 'need') {
+        /* v86 — MBA-09 : 모델마다 '추가지원금 몇 원 이상'이 다르다 */
+        html += '<thead><tr><th style="min-width:132px">기종</th><th>추가지원금</th>';
+        for (k = 0; k < pol.types.length; k++) html += '<th>' + esc(POL_TYPE_LABEL[pol.types[k]] || pol.types[k]) + '</th>';
+        html += '</tr></thead><tbody>';
+        for (j = 0; j < pol.rows.length; j++) {
+          var r9n = pol.rows[j];
+          html += '<tr><td class="pd-dev">' + esc(r9n.name) + '</td><td class="pd-seg">' + esc(fmtNum(r9n.need)) + '원 이상</td>';
+          for (k = 0; k < pol.types.length; k++) html += polInputHtml(pol, r9n, r9n.seg || pol.seg, pol.types[k]);
+          html += '</tr>';
+        }
       } else {
         html += '<thead><tr><th style="min-width:132px">기종</th><th>구간</th>';
         for (k = 0; k < pol.types.length; k++) html += '<th>' + esc(POL_TYPE_LABEL[pol.types[k]] || pol.types[k]) + '</th>';
@@ -11171,7 +11287,7 @@
   }
 
   var POINT_BONUS_ROWS = [
-    ['school', '스쿨덤·Y덤 가점 (11/19~)', '37K↑ · 010/MNP/기변 전부'],
+    ['school', '스쿨덤·Y덤 가점', '37K↑ · 010/MNP/기변 전부'],
     ['flag010', '플래그십 가점 (11/5~)', '110K↑ · 010 (18P/PM·폴더블8·S26)'],
     ['flagMove', '플래그십 가점 (11/5~)', '110K↑ · 기변 (18P/PM·폴더블8·S26)'],
     ['airMnp', 'iPhone Air 가점', '90K↑ · MNP'],
@@ -11182,6 +11298,9 @@
     ['kid010', '시나모롤 키즈폰', '37K↑ · 010'],
     ['kidMnp', '시나모롤 키즈폰', '37K↑ · MNP'],
     ['kidMove', '시나모롤 키즈폰', '37K↑ · 기변'],
+    ['sanrio010', '산리오캐릭터즈 키즈폰', '37K↑ · 010'],
+    ['sanrioMnp', '산리오캐릭터즈 키즈폰', '37K↑ · MNP'],
+    ['sanrioMove', '산리오캐릭터즈 키즈폰', '37K↑ · 기변'],
     ['budget010', '레드미·모토 가점', '37K↑ · 010'],
     ['budgetMove', '레드미·모토 가점', '37K↑ · 기변']
   ];
@@ -11210,7 +11329,7 @@
     html += '</tbody></table></div>';
 
     html += '<div class="pol-sec-head"><span class="pol-sec-title">무선 가점 포인트</span>' +
-      '<span class="pol-sec-note">11/19~ 최신본 · 조건이 맞으면 기본 포인트에 더해집니다</span></div>';
+      '<span class="pol-sec-note">11/27~ 최신본 · 조건이 맞으면 기본 포인트에 더해집니다</span></div>';
     html += '<div class="pol-table-wrap"><table class="pol-table"><thead><tr><th style="min-width:150px">가점</th><th>기준</th><th>포인트</th></tr></thead><tbody>';
     for (i = 0; i < POINT_BONUS_ROWS.length; i++) {
       var b = POINT_BONUS_ROWS[i];
