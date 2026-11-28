@@ -1701,7 +1701,9 @@ kt-store-manager/
       숨김 목록은 이 기기 `localStorage` `kt_chilgeum_hidden_devices_v1` 에만 남고, 목록 아래 `지워서 가린 기기 N대 … 모두 다시 보기` 로 되돌린다. 승인 대기 줄에도 같은 버튼.
       · 사장님이 확인해 주신 오래된 3대(`dmwzwbt26uzuzl3` 김태양 리눅스 PC · `dmwpu564vzwq7mk` 이건엽 11-23 · `dmwpuep3eh2p3hk` 김설화 11-22)는 **처음 한 번 기본으로 숨김**(`HIDDEN_DEV_DEFAULT`, 저장값이 없을 때만 적용).
       · 기기 수·승인 대기 수 표시도 숨긴 기기를 빼고 센다. 사장님 기기(이 기기)에는 지우기 버튼을 두지 않는다.
-    - `sw.js` `CACHE_VERSION = 'v94'` · meta `app-version v94` · **`Code.gs`·시트 20컬럼 무수정**(Apps Script 재배포 불필요).
+    - `sw.js` `CACHE_VERSION = 'v94'` · meta `app-version v94` · 라이브 `index.html` md5 `63fdfb72` · **`Code.gs`·시트 20컬럼 무수정**(Apps Script 재배포 불필요).
+    - 라이브 `work/v94/v94_live_check.py`(**26/26**: md5 `63fdfb72` 일치 · SW·meta v94 · 등록 창 뒤로가기 닫힘 · 겹친 창 하나씩 · ×로 닫은 뒤에도 안 꼬임 · 연도·월 닫기 버튼·뒤로가기 · 더보기 메뉴 · 기기 관리 기본 숨김 3대·지우기·저장 — Apps Script 가짜 응답으로 **시트 쓰기 0**).
+    - APK 는 `https://kbs2106-oss.github.io/kt-store-manager/` 를 그대로 띄우므로 새 APK 없이 안드로이드 뒤로가기가 동작한다(`onBackPressed → webView.goBack() → popstate`).
     - 테스트 `qa-kt/v94_back_close_test.py`(**79/79**: A 등록 창 뒤로가기 닫힘·저장 안 됨·history 표시 복귀 / B 등록+요금제 겹침 — 1칸만 쌓고 위에서부터 하나씩 / C 열고/×닫기 5회 반복해도 칸 수 안 늘어남 / D 기기 관리+추방 확인 겹침 / E 연도·월 팝업 닫기 버튼·390 겹침 0 / F 더보기·G 유형 패널·H 알람함·확인서 뒤로가기 / I ESC / J 수정 창 뒤로가기 = 저장 안 됨 / K 창 없을 때는 앱을 벗어남 / L 기기 지우기 — 기본 숨김 3대·지우기·모두 다시 보기·새로고침 유지·서버 block 요청 0 / V 버전·20컬럼).
       회귀 — `v93`(43/43) · `v84_alarm`(41/41) · `v89`(79/79) · `v85`(102/102) · `v83`(38/38) · `v90`(58/58) · `v88`(47/47) · `v87`(35/35) · `v92_slip`(16/16) · `v92_app_speed`(18/18) · `v91`(49/49) · `policy_calc`(76/76) · `v26`(77/77 — B9 에 `닫기` 추가) · `v49`(48/49 — CACHE_VERSION 기대값) · `v68`(28/32 — B2~B4·버전 기대값은 예전 기준선과 동일).
       `v65`·`v32`·`v73` 은 v93 빌드(`work/v94/base93`)에서도 **똑같이 실패**(v79 성별 필수·대용량 데이터 없음 등 예전 기준선) — 이번 변경과 무관.
