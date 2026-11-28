@@ -1,6 +1,13 @@
 /*************************************************************
  * 충주 KT대리점 칠금점 · 개통장부 공용 저장소
- * Google Apps Script 웹앱 (doGet / doPost)  — Code.gs v10.0
+ * Google Apps Script 웹앱 (doGet / doPost)  — Code.gs v10.1
+ *
+ *  · v10.1 (앱 v92): 속도 개선 — 요청당 시트 읽기를 한 번씩으로 모으고(기기 줄 3→1 · 헤더 2→1),
+ *     기기 줄 쓰기는 최근 접속 60초 안이면 건너뛰며(스크립트 락 제거), 달 색인(list_months)은
+ *     CacheService 에 짧게 담아 둔다(저장·삭제 때 버전을 올려 즉시 무효화).
+ *     · 새 action=month_sync : 달 색인 + 그 달 행을 **한 응답**으로 → 앱 첫 화면 2왕복 → 1왕복
+ *     · findRow_(TextFinder) · writeRow_(서식 한 번에) · scanRows_(2회 읽기)
+ *     · 응답 형식(action·필드)·시트 20컬럼·차단·승인 로직은 v10.0 과 똑같다.
  *
  *  · v10.0 (앱 v8.34): 밴드앱 댓글·답글 사진 공유 — 숨김 탭 '_밴드사진' + band_ph
  *
@@ -84,6 +91,25 @@ var COLS = ['id', '개통일', '고객명', '연락처', '생년월일', '개통
 var MONTH_RUN_MAX = 60;   // 달별 행이 흩어져 있을 때 낱개 읽기 상한 (넘으면 통째로 읽는다)
 var MONTH_MAX_REQ = 12;   // 한 번에 달 최대 12개
 
+/* ===== v10.1 (앱 v92) 속도 — 시트 호출 수 줄이기 =====
+   · 왜: 3.9KB짜리 list_months 가 4~6초, ping 이 1.3초 걸렸는데 원인은 '내려받는 양'이 아니라
+         요청 1건마다 시트를 15번쯤 건드리는 것이었다(기기 줄 3번 읽기 + 매번 1줄 쓰기+락).
+   · 실행 1회 안에서 기기 줄·차단 목록·헤더를 **한 번만** 읽는다(아래 캐시는 그 요청 안에서만 산다).
+   · 기기 줄(_접속기기) 쓰기는 최근 접속이 60초 안이면 건너뛴다 → 요청마다 잡던 스크립트 락이 사라진다.
+   · list_months(달 색인)는 CacheService 에 IDX_CACHE_TTL 초 담아 두고,
+     저장(upsert)·삭제(delete) 때 버전 번호를 올려 모든 기기의 캐시를 즉시 무효화한다.
+   · 새 action=month_sync : 달 색인 + 지정 달의 행을 한 응답으로 준다(앱 첫 화면 2왕복 → 1왕복). */
+var TOUCH_SKIP_MS   = 60000;              // 기기 줄 쓰기를 건너뛰는 기준 (최근 접속 60초 이내)
+var IDX_VER_KEY     = 'kts_idx_ver_v101';  // 달 색인 캐시 버전 키
+var IDX_CACHE_PREFIX = 'kts_idx_v101_';    // 달 색인 캐시 키 머리 (버전이 바뀌면 새 키)
+var IDX_CACHE_TTL   = 45;                 // 달 색인 캐시 유지(초)
+
+var HDR_IDX_CACHE  = {};     // 실행 1회 — { 시트이름: headerMap_ 결과 }
+var DEV_ROW_CACHE  = {};     // 실행 1회 — { deviceId: 기기 줄 | null }
+var BLOCK_ROW_CACHE = null;  // 실행 1회 — { device:[…], staff:[…] }
+var DEV_SHEET_CACHE = null;  // 실행 1회 — 헤더까지 맞춘 '_접속기기' 탭
+var STAFF_TAB_CACHE = {};    // 실행 1회 — 이미 있는 담당자 보기 탭
+
 /* 금액(숫자)으로 저장하는 열 */
 var MONEY_COLS = ['중고폰금액', '무선리베이트', '유선리베이트'];
 
@@ -132,6 +158,10 @@ function doGet(e) {
           // v9.0 — 그 달(month=YYYY-MM 또는 months=2026-11,2026-10)의 행만
           touchDevice_(dev);
           out = listMonthOut_(p);
+        } else if (action === 'month_sync') {
+          // v10.1 — 달 색인 + 그 달의 행을 한 응답으로 (앱 첫 화면 1왕복)
+          touchDevice_(dev);
+          out = monthSyncOut_(p);
         } else if (action === 'ping') {
           touchDevice_(dev);
           var sh = getDataSheet_();
@@ -212,6 +242,9 @@ function doPost(e) {
         } else if (action === 'list_month') {
           touchDevice_(dev);
           out = listMonthOut_(req);
+        } else if (action === 'month_sync') {
+          touchDevice_(dev);
+          out = monthSyncOut_(req);
         } else if (action === 'band_push') {
           // v8.9 밴드앱 실시간 공유 — 바뀐 칸만 받아 항목·칸 단위로 합친다
           out = bandPush_(req);
@@ -267,12 +300,22 @@ function nowIso_() {
      0.2~0.5초짜리 호출이 요청당 서너 번씩 붙어 응답이 2~3초 느려졌다. */
 var SS_CACHE = null;
 var TZ_CACHE = '';
+var TZ_CACHE_KEY = 'kts_tz_v101';
 
 function tz_() {
   if (TZ_CACHE) return TZ_CACHE;
+  /* v10.1 — 시간대는 거의 안 바뀌므로 스크립트 캐시에 하루 담아 둔다(요청당 API 호출 1회 절약) */
+  var c = idxCache_();
+  if (c) {
+    try { var hit = c.get(TZ_CACHE_KEY); if (hit) { TZ_CACHE = String(hit); return TZ_CACHE; } } catch (err) {}
+  }
   try {
     var tz = getSpreadsheet_().getSpreadsheetTimeZone();
-    if (tz) { TZ_CACHE = tz; return tz; }
+    if (tz) {
+      TZ_CACHE = tz;
+      if (c) { try { c.put(TZ_CACHE_KEY, tz, 21600); } catch (err2) {} }
+      return tz;
+    }
   } catch (err) {}
   TZ_CACHE = Session.getScriptTimeZone() || 'Asia/Seoul';
   return TZ_CACHE;
@@ -367,6 +410,11 @@ function headerMap_(sh) {
 }
 
 function ensureHeader_(sh) {
+  /* v10.1 — 같은 실행 안에서 헤더를 두 번 읽지 않는다 (전에는 migrateSheet_ + headerMap_ 가 각각 읽었다) */
+  var key = '';
+  try { key = String(sh.getName() || ''); } catch (err) { key = ''; }
+  if (!key) key = SHEET_NAME;
+  if (HDR_IDX_CACHE.hasOwnProperty(key)) return HDR_IDX_CACHE[key];
   // 예전 형식(단일 리베이트) 시트면 새 형식으로 옮긴다
   try { migrateSheet_(sh); } catch (err) { /* 옮기기 실패해도 읽기·쓰기는 계속 */ }
   var idx = headerMap_(sh);
@@ -374,6 +422,7 @@ function ensureHeader_(sh) {
     writeHeader_(sh, 1, COLS.length);
     idx = headerMap_(sh);
   }
+  HDR_IDX_CACHE[key] = idx;
   return idx;
 }
 
@@ -534,8 +583,35 @@ function sigOfRows_(rows) {
 }
 
 /**
- * 개통일 · id · 수정일시 세 열만 읽어 줄마다 {row, month, id, mod, empty} 를 만든다.
+ * 열 몇 개를 **붙어 있는 것끼리 한 번에** 읽는다 (v10.1).
+ *   10,000행 시트에서 getValues 횟수가 그대로 응답 시간이 된다 — 3번 부르면 3초.
+ *   cols: 0부터 시작하는 열 번호 배열 · n: 행 수  →  { 열번호: [값, …] }
+ */
+function readColumns_(sh, cols, n) {
+  var uniq = [], i;
+  for (i = 0; i < cols.length; i++) if (uniq.indexOf(cols[i]) < 0) uniq.push(cols[i]);
+  uniq.sort(function (a, b) { return a - b; });
+  var out = {};
+  for (i = 0; i < uniq.length; i++) out[uniq[i]] = [];
+  i = 0;
+  while (i < uniq.length) {
+    var start = uniq[i], end = start, j = i;
+    while (j + 1 < uniq.length && uniq[j + 1] === end + 1) { j++; end = uniq[j]; }
+    var vals = sh.getRange(2, start + 1, n, end - start + 1).getValues();
+    var r, c;
+    for (r = 0; r < n; r++) {
+      for (c = start; c <= end; c++) out[c][r] = vals[r] ? vals[r][c - start] : '';
+    }
+    i = j + 1;
+  }
+  return out;
+}
+
+/**
+ * 개통일 · id · 수정일시 세 열을 읽어 줄마다 {row, month, id, mod, empty} 를 만든다.
  *  · 10,000행에서도 0.2~0.4초 — 20열을 다 읽지 않는다.
+ *  · v10.1 — 세 열을 붙어 있는 것끼리 한 번에 읽는다(id·개통일 = A:B 한 번, 수정일시 = T 한 번).
+ *            전에는 열마다 따로 읽어 3회였는데, 1만 행 getValues 1회가 약 1초라 그것만 3초였다.
  *  · id 가 빈 줄은 readAll_ 과 같이 'row{행번호}' 로 본다(앱이 받는 값과 같아야 체크섬이 맞는다).
  *  · id · 수정일시 · 개통일이 모두 빈 줄은 장부 빈 줄이라 어느 체크섬에도 넣지 않는다.
  */
@@ -545,13 +621,13 @@ function scanRows_(sh, idx) {
   if (last < 2) return out;
   var tz = tz_();
   var n = last - 1;
-  var dates = sh.getRange(2, idx.map['개통일'] + 1, n, 1).getValues();
-  var ids = sh.getRange(2, idx.map['id'] + 1, n, 1).getValues();
-  var mods = sh.getRange(2, idx.map['수정일시'] + 1, n, 1).getValues();
+  var cDate = idx.map['개통일'], cId = idx.map['id'], cMod = idx.map['수정일시'];
+  var col = readColumns_(sh, [cDate, cId, cMod], n);
+  var dates = col[cDate], ids = col[cId], mods = col[cMod];
   for (var r = 0; r < n; r++) {
-    var dateTxt = dateToText_(dates[r][0], tz).trim();
-    var rawId = String(ids[r][0] == null ? '' : ids[r][0]).trim();
-    var mod = dateToText_(mods[r][0], tz).trim();
+    var dateTxt = dateToText_(dates[r], tz).trim();
+    var rawId = String(ids[r] == null ? '' : ids[r]).trim();
+    var mod = dateToText_(mods[r], tz).trim();
     var rowNum = r + 2;
     out.push({
       row: rowNum,
@@ -566,6 +642,28 @@ function scanRows_(sh, idx) {
 
 /** 달별 행 모으기 — list_months 응답 본문 (달 목록·건수·체크섬·마지막 수정시각) */
 function listMonthsOut_() {
+  /* v10.1 — 달 색인은 몇 초 안에 변하지 않는다. CacheService 에 담아 두고
+     저장·삭제가 버전 번호(IDX_VER_KEY)를 올리면 모든 기기의 캐시가 한 번에 버려진다.
+     · 45초 안에 들어오는 다른 기기 폴링은 같은 캐시를 나눠 쓴다 (시트 다시 안 읽는다). */
+  var c = idxCache_();
+  var key = IDX_CACHE_PREFIX + idxVer_();
+  if (c) {
+    try {
+      var hit = c.get(key);
+      if (hit) {
+        var o = JSON.parse(hit);
+        if (o && o.ok === true && o.months) { o.cached = true; return o; }
+      }
+    } catch (err) { /* 캐시가 깨졌으면 새로 만든다 */ }
+  }
+  var out = buildMonthsOut_();
+  if (c) {
+    try { c.put(key, JSON.stringify(out).slice(0, 90000), IDX_CACHE_TTL); } catch (err) {}
+  }
+  return out;
+}
+
+function buildMonthsOut_() {
   var sh = getDataSheet_();
   var idx = ensureHeader_(sh);
   var rows = scanRows_(sh, idx);
@@ -678,13 +776,74 @@ function listMonthOut_(p) {
            serverTime: nowIso_() };
 }
 
-/** id 가 있는 행 번호(1부터). 없으면 0 */
+/** v10.1 — 달 색인 캐시 (CacheService). 없거나 막힌 환경이면 그냥 새로 만든다 */
+function idxCache_() {
+  try { return CacheService.getScriptCache(); } catch (err) { return null; }
+}
+
+/** 지금 달 색인 캐시 버전 (저장·삭제가 올린다) */
+function idxVer_() {
+  var c = idxCache_();
+  if (!c) return '0';
+  try { return String(c.get(IDX_VER_KEY) || '0'); } catch (err) { return '0'; }
+}
+
+/** 달 색인이 바뀌었다 — 버전을 올려 모든 기기의 색인 캐시를 한 번에 버린다 */
+function idxBump_() {
+  var c = idxCache_();
+  if (!c) return;
+  try { c.put(IDX_VER_KEY, String(Date.now()), 21600); } catch (err) {}
+}
+
+/**
+ * v10.1 — 달 색인 + 지정한 달의 행을 **한 응답**으로 (action=month_sync)
+ *   · 앱을 열 때 list_month(3초) → list_months(5초) 순차 2왕복이라 7~8초가 걸렸다.
+ *     이제 한 번에 받아(달 색인은 위 캐시) 2~4초에 끝난다.
+ *   · 응답은 list_month 와 같은 모양에 index{months, meta} 만 더했다 (앱 하위 호환).
+ *   · 방금 읽은 달의 건수·체크섬은 **이 응답의 행 기준**으로 덮어써 색인 캐시가 낡아도 두 값이 엇갈리지 않는다.
+ */
+function monthSyncOut_(p) {
+  var want = parseMonths_(p.months || p.month);
+  if (!want.length) throw new Error('기간(month=YYYY-MM · months=YYYY-MM,YYYY-MM)을 지정해 주세요.');
+  var body = listMonthOut_(p);
+  var index = listMonthsOut_();
+  var byM = {}, i;
+  for (i = 0; i < index.months.length; i++) byM[index.months[i].month] = index.months[i];
+  for (i = 0; i < want.length; i++) {
+    var mm = want[i];
+    var ent = byM[mm];
+    if (!ent) { ent = { month: mm, count: 0, checksum: '', max: '' }; index.months.push(ent); byM[mm] = ent; }
+    ent.count = Number(body.counts[mm] || 0);
+    ent.checksum = String(body.checksums[mm] || sigOfRows_([]));
+  }
+  index.months.sort(function (a, b) { return a.month < b.month ? -1 : (a.month > b.month ? 1 : 0); });
+  body.action = 'month_sync';
+  body.index = { months: index.months, meta: index.meta };
+  return body;
+}
+
+/** id 가 있는 행 번호(1부터). 없으면 0
+    v10.1 — 10,000셀을 읽어 훑는 대신 시트 검색(TextFinder)을 쓴다 (약 1초 → 0.1초대).
+    찾은 칸의 값을 한 번 더 확인하고, 실패하거나 예외가 나면 예전 방식으로 돌아간다. */
 function findRow_(sh, idx, id) {
   var last = sh.getLastRow();
   if (last < 2) return 0;
   var col = idx.map['id'] + 1;
-  var values = sh.getRange(2, col, last - 1, 1).getValues();
   var key = String(id || '').trim();
+  if (!key) return 0;
+  try {
+    var finder = sh.getRange(2, col, last - 1, 1)
+      .createTextFinder(key)
+      .matchEntireCell(true)
+      .matchCase(true)
+      .useRegularExpression(false);
+    var hit = finder.findNext();
+    if (hit) {
+      var got = String(hit.getValue() == null ? '' : hit.getValue()).trim();
+      if (got === key) return hit.getRow();
+    }
+  } catch (err) { /* TextFinder 를 못 쓰는 환경이면 아래로 */ }
+  var values = sh.getRange(2, col, last - 1, 1).getValues();
   for (var i = 0; i < values.length; i++) {
     if (String(values[i][0] || '').trim() === key) return i + 2;
   }
@@ -700,8 +859,19 @@ function writeRow_(sh, idx, rowIdx, rec) {
     var v = rec[name] == null ? '' : rec[name];
     values[idx.map[name]] = (MONEY_COLS.indexOf(name) >= 0) ? num_(v) : String(v);
   }
-  for (var t = 0; t < TEXT_COLS.length; t++) {
-    sh.getRange(rowIdx, idx.map[TEXT_COLS[t]] + 1).setNumberFormat('@');
+  /* v10.1 — 텍스트로 고정할 7칸을 **한 번에** 서식 지정(전에는 setNumberFormat 7회).
+     RangeList 를 못 쓰는 환경이면 예전처럼 칸마다 지정한다. */
+  var done = false;
+  try {
+    var a1 = [];
+    for (var t = 0; t < TEXT_COLS.length; t++) a1.push(colLetter_(idx.map[TEXT_COLS[t]] + 1) + rowIdx);
+    sh.getRangeList(a1).setNumberFormat('@');
+    done = true;
+  } catch (err) { done = false; }
+  if (!done) {
+    for (var t2 = 0; t2 < TEXT_COLS.length; t2++) {
+      sh.getRange(rowIdx, idx.map[TEXT_COLS[t2]] + 1).setNumberFormat('@');
+    }
   }
   sh.getRange(rowIdx, 1, 1, idx.width).setValues([values]);
 }
@@ -792,10 +962,12 @@ function ensureDeviceHead_(sh) {
   return true;
 }
 
-/** 기기 탭 (헤더를 8칸으로 보장) */
+/** 기기 탭 (헤더를 8칸으로 보장) — v10.1: 실행 1회에 한 번만 읽고 확인한다 */
 function deviceSheet_() {
+  if (DEV_SHEET_CACHE) return DEV_SHEET_CACHE;
   var sh = getDeviceSheet_();
   try { ensureDeviceHead_(sh); } catch (err) { /* 헤더 정리 실패해도 읽기는 계속 */ }
+  DEV_SHEET_CACHE = sh;
   return sh;
 }
 
@@ -818,19 +990,21 @@ function isOwnerDevice_(row) {
   return OWNER_NAMES.indexOf(String(row.name || '').trim()) >= 0;
 }
 
-/** 기기 한 대의 지금 상태 (없으면 null) */
+/** 기기 한 대의 지금 상태 (없으면 null) — v10.1: 실행 1회에 한 번만 읽는다
+    (전에는 checkBlocked_ · checkApproval_ · touchDevice_ 가 같은 표를 3번 읽었다) */
 function deviceRowOf_(deviceId) {
   var id = String(deviceId || '').trim();
   if (!id) return null;
+  if (DEV_ROW_CACHE.hasOwnProperty(id)) return DEV_ROW_CACHE[id];
   var sh = null;
   try { sh = deviceSheet_(); } catch (err) { return null; }
   var last = sh.getLastRow();
-  if (last < 2) return null;
+  if (last < 2) { DEV_ROW_CACHE[id] = null; return null; }
   var tz = tz_();
   var v = sh.getRange(2, 1, last - 1, DEVICE_HEAD.length).getValues();
   for (var i = 0; i < v.length; i++) {
     if (String(v[i][0] == null ? '' : v[i][0]).trim() === id) {
-      return {
+      var row = {
         row: i + 2,
         deviceId: id,
         label: String(v[i][1] || '').trim(),
@@ -841,8 +1015,11 @@ function deviceRowOf_(deviceId) {
         status: normStatus_(v[i][6]),
         owner: isOwnerMark_(v[i][7]) ? OWNER_MARK : ''
       };
+      DEV_ROW_CACHE[id] = row;
+      return row;
     }
   }
+  DEV_ROW_CACHE[id] = null;
   return null;
 }
 
@@ -852,6 +1029,7 @@ function writeDeviceRow_(sh, rowIdx, d) {
     d.deviceId, d.label || '', d.name || '', d.lastSeen || '', d.firstSeen || d.lastSeen || '', d.ua || '',
     d.status || ST_APPROVED, d.owner || ''
   ]]);
+  DEV_ROW_CACHE = {};   // v10.1 — 기기 줄을 직접 썼으면 이번 실행의 캐시는 버린다
 }
 
 /** 처음 보는 기기를 적는다 (있으면 그대로 둔다) */
@@ -962,28 +1140,45 @@ function rejectDevice_(req, dev) {
   return out;
 }
 
-/** 기기 한 대의 최근 접속만 갱신한다 (없으면 '대기'로 적는다 · 실패해도 본 요청은 계속) */
+/** 한 시간 문자열과 지금이 TOUCH_SKIP_MS 안인가 (최근 접속 쓰기를 건너뛸지) */
+function touchFresh_(lastSeen, nowText) {
+  var a = Date.parse(String(lastSeen || ''));
+  var b = Date.parse(String(nowText || ''));
+  if (!isFinite(a) || !isFinite(b)) return false;
+  var d = Math.abs(b - a);
+  return d >= 0 && d < TOUCH_SKIP_MS;
+}
+
+/** 기기 한 대의 최근 접속만 갱신한다 (없으면 '대기'로 적는다 · 실패해도 본 요청은 계속)
+    v10.1 — 최근 접속이 60초 안이면 **아무것도 쓰지 않는다**.
+    매 요청마다 한 줄을 쓰며 스크립트 락을 잡던 것이 저장·조회를 서로 기다리게 만들었다. */
 function touchDevice_(dev) {
   if (!dev || !dev.deviceId) return;
+  var row = deviceRowOf_(dev.deviceId);
+  var now = nowIso_();
+  if (row && touchFresh_(row.lastSeen, now)) return;
   var lock = LockService.getScriptLock();
   var got = false;
   try { got = lock.tryLock(15000); } catch (err) { got = false; }
   if (!got) return;
   try {
-    var row = deviceRowOf_(dev.deviceId);
     var sh = deviceSheet_();
-    var now = nowIso_();
     if (row) {
       // 기기명·담당자명·최근접속만 — 상태·owner 는 건드리지 않는다
       sh.getRange(row.row, 1, 1, DEVICE_BASE_COLS).setNumberFormat('@').setValues([[
         row.deviceId, dev.label || row.label, dev.name || row.name, now, row.firstSeen || now, dev.ua || row.ua
       ]]);
+      row.lastSeen = now;
+      row.label = dev.label || row.label;
+      row.name = dev.name || row.name;
+      DEV_ROW_CACHE[row.deviceId] = row;
     } else {
       var r = Math.max(sh.getLastRow() + 1, 2);
       writeDeviceRow_(sh, r, {
         deviceId: dev.deviceId, label: dev.label, name: dev.name, ua: dev.ua,
         lastSeen: now, firstSeen: now, status: ST_PENDING, owner: ''
       });
+      DEV_ROW_CACHE[dev.deviceId] = null;   // 다음 호출에서 새로 읽는다 (상태는 그대로 대기)
     }
   } catch (err) {
     /* 기기 기록 실패는 본 요청에 영향 없음 */
@@ -1049,35 +1244,28 @@ function normBlockType_(t) {
   return 'device';
 }
 
-/** 차단 목록 { device:[…], staff:[…] } — 차단 탭이 없으면 빈 목록 */
+/** 차단 목록 { device:[…], staff:[…] } — 차단 탭이 없으면 빈 목록
+    v10.1 — 실행 1회에 한 번만 읽는다(차단 검사·차단 변경 응답이 같은 값을 쓴다) */
 function readBlocks_() {
+  if (BLOCK_ROW_CACHE) return BLOCK_ROW_CACHE;
   var res = { device: [], staff: [] };
   var sh = null;
-  try { sh = getSpreadsheet_().getSheetByName(BLOCK_SHEET); } catch (err) { return res; }
-  if (!sh) return res;
+  try { sh = getSpreadsheet_().getSheetByName(BLOCK_SHEET); } catch (err) { BLOCK_ROW_CACHE = res; return res; }
+  if (!sh) { BLOCK_ROW_CACHE = res; return res; }
   var rows = readBlockRows_(sh);
   for (var i = 0; i < rows.length; i++) {
     if (normBlockType_(rows[i].kind) === 'staff') res.staff.push(rows[i]);
     else res.device.push(rows[i]);
   }
+  BLOCK_ROW_CACHE = res;
   return res;
 }
 
-/** 이 기기에서 접속한 마지막 담당자명 (직원 이름 차단에 함께 쓴다) */
+/** 이 기기에서 접속한 마지막 담당자명 (직원 이름 차단에 함께 쓴다) — v10.1: 기기 줄 캐시를 쓴다 */
 function deviceName_(deviceId) {
   if (!deviceId) return '';
-  var sh = null;
-  try { sh = getSpreadsheet_().getSheetByName(DEVICE_SHEET); } catch (err) { return ''; }
-  if (!sh) return '';
-  var last = sh.getLastRow();
-  if (last < 2) return '';
-  var v = sh.getRange(2, 1, last - 1, 3).getValues();
-  for (var i = 0; i < v.length; i++) {
-    if (String(v[i][0] == null ? '' : v[i][0]).trim() === deviceId) {
-      return String(v[i][2] || '').trim();
-    }
-  }
-  return '';
+  var row = deviceRowOf_(deviceId);
+  return row ? String(row.name || '') : '';
 }
 
 /** 이 요청이 차단된 기기/직원인가? → {type, value, label} 또는 null */
@@ -1158,6 +1346,7 @@ function blockTarget_(req, dev) {
     }
     sh.appendRow([type === 'staff' ? '직원' : '기기', value, label,
                   nowIso_(), String((dev && dev.name) || req.by || '')]);
+    BLOCK_ROW_CACHE = null;   // v10.1 — 차단 목록 캐시 무효화
     if (type !== 'staff') setDeviceRow_(value, ST_BLOCKED);
     return { ok: true, action: 'block', type: type, value: value, label: label,
              blocks: readBlocks_(), devices: readDevices_(), serverTime: nowIso_() };
@@ -1179,6 +1368,7 @@ function removeBlock_(type, value) {
       removed++;
     }
   }
+  BLOCK_ROW_CACHE = null;   // v10.1 — 차단 목록이 바뀌었으니 이번 실행의 캐시를 버린다
   return removed;
 }
 
@@ -1227,6 +1417,7 @@ function upsert_(rec) {
     var mode = rowIdx > 0 ? 'updated' : 'appended';
     if (rowIdx <= 0) rowIdx = Math.max(sh.getLastRow() + 1, 2);
     writeRow_(sh, idx, rowIdx, clean);
+    idxBump_();   // v10.1 — 달 색인 캐시(다른 기기 폴링)를 즉시 무효화한다
 
     if (CREATE_STAFF_TABS && clean.담당자) {
       try { ensureStaffTab_(clean.담당자); } catch (err) { /* 탭 생성 실패는 저장에 영향 없음 */ }
@@ -1248,6 +1439,7 @@ function remove_(id) {
     var idx = ensureHeader_(sh);
     var row = findRow_(sh, idx, key);
     if (row > 0) sh.deleteRow(row);
+    idxBump_();   // v10.1 — 달 색인 캐시(다른 기기 폴링)를 즉시 무효화한다
     return { ok: true, action: 'delete', id: key, removed: row > 0, serverTime: nowIso_() };
   } finally {
     lock.releaseLock();
@@ -1270,9 +1462,11 @@ function staffTabName_(name) {
 function ensureStaffTab_(name) {
   var tabName = staffTabName_(name);
   if (!tabName) return null;
+  /* v10.1 — 같은 실행 안에서 이미 확인한 탭은 다시 묻지 않는다 */
+  if (STAFF_TAB_CACHE.hasOwnProperty(tabName)) return STAFF_TAB_CACHE[tabName];
   var ss = getSpreadsheet_();
   var exist = ss.getSheetByName(tabName);
-  if (exist) return exist;
+  if (exist) { STAFF_TAB_CACHE[tabName] = exist; return exist; }
   if (ss.getSheets().length >= 180) return null;
 
   var data = getDataSheet_();
@@ -1291,6 +1485,7 @@ function ensureStaffTab_(name) {
     '자동 보기 탭입니다. 직접 고치지 말고 "' + SHEET_NAME + '" 탭에서 등록·수정하세요. ' +
     '앱에서 담당자를 "' + name + '"(으)로 저장한 기록이 자동으로 모입니다.'
   );
+  STAFF_TAB_CACHE[tabName] = sh;
   return sh;
 }
 
