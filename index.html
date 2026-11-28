@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v89">
+<meta name="app-version" content="v90">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -10494,7 +10494,7 @@
           sRow('갤럭시 S25 FE', M.s25fe, '90K', [150, 150, 50])
         ] },
       { id: 'MRA03', name: 'MRA-03 소매 활력 정책', period: '11/27~',
-        shape: 'segRow', types: POL_TYPES, note: '단말할인·요금할인 공통 · 모델별 요금제 구간 · 180일 이내 기변 미지급 · S25 FE 90K는 정책표 "+30" 표기라 30으로 계산 · MBA-09 지급 회선은 미지급 · 적색 표기 모델(폴드7·플립7·S25/S25+·S25 엣지·S25 FE·A36·Jump4·모토 G56)은 12/1 개통분부터 미지급',
+        shape: 'segRow', types: POL_TYPES, note: '단말할인·요금할인 공통 · 모델별 요금제 구간(그 구간 이상 적용 · 69K 요금제는 61K·37K 행) · 180일 이내 기변 미지급 · S25 FE 90K는 정책표 "+30" 표기라 30으로 계산 · MBA-09 지급 회선은 미지급 · 적색 표기 모델(폴드7·플립7·S25/S25+·S25 엣지·S25 FE·A36·Jump4·모토 G56)은 12/1 개통분부터 미지급',
         rows: [
           sRow('아이폰 듀오', M.duo, '110K', [0, 50, 20]),
           sRow('아이폰 18 프로·프로 맥스', M.ip18, '110K', [150, 80, 50]),
@@ -10910,11 +10910,50 @@
     return found;
   }
 
+  /* v90 — '구간별 행' 표(MRA-03)에서 요금제에 맞는 **행 한 개** 고르기
+     · 각 행 r.seg 는 그 행이 쓰이는 **최소 요금제 구간**이다 ('37K' 행 = 37K 이상 전부).
+       전에는 segFor 가 고른 한 구간과 r.seg 가 **같은** 행만 봐서, 69K(61K 구간) 요금제면 37K 행 모델
+       (모토로라 엣지70·A18·A17·키즈폰 …)이, 90K·110K 요금제면 61K·90K 행 모델(A37·Jump4·S25 FE …)이
+       통째로 0원이 됐다.
+     · 같은 기종이 여러 구간에 있으면 **plan 이하 중 가장 높은 구간** 행을 쓴다(같은 구간이면 표 위쪽 행).
+     · 행 하나짜리 가짜 표로 찾으므로 기종·용량 매칭 규칙(polFindRow)을 그대로 쓰고, 결과는 행마다 한 번만 계산된다. */
+  function polSegRowFor(pol, modelText, conds, plan) {
+    if (!pol) return null;
+    var best = null, bestV = -1, i, row, sv;
+    for (i = 0; i < pol.rows.length; i++) {
+      row = pol.rows[i];
+      sv = segValue(row.seg || pol.seg);
+      if (!sv || plan < sv || sv <= bestV) continue;
+      if (polFindRow(polSoloRow(pol, row), modelText, conds) !== row) continue;
+      best = row;
+      bestV = sv;
+    }
+    return best;
+  }
+
+  // 행 하나만 담은 가짜 표 — 행에 붙여 두고 다시 만들지 않는다(기종 매칭 결과도 이 표에 캐시된다)
+  function polSoloRow(pol, row) {
+    var s = row.__solo;
+    if (!s) s = row.__solo = { id: pol.id, rows: [row], types: pol.types, shape: pol.shape };
+    return s;
+  }
+
   /* v88 — 기종 ↔ 정책표 매칭을 그대로 확인할 수 있는 작은 창(점검용). 앱 화면은 쓰지 않는다 */
   window.__ktPolicy = {
     row: function (polId, modelText, conds) {
       var r = polFindRow(polById(polId), modelText, conds || []);
       return r ? r.name : '';
+    },
+    /* v90 — 구간별 행 표에서 요금제에 맞아 실제로 적용되는 행 (이름|구간) */
+    segRow: function (polId, modelText, conds, plan) {
+      var r = polSegRowFor(polById(polId), modelText, conds || [], Number(plan) || 0);
+      return r ? r.name + '|' + r.seg : '';
+    },
+    /* v90 — (점검용) 행 목록을 직접 주고 구간 선택 규칙만 확인한다 (같은 기종이 두 구간에 있을 때) */
+    pick: function (rows, modelText, conds, plan) {
+      var r = polSegRowFor({ id: 'TEST', rows: rows || [], types: POL_TYPES, shape: 'segRow' },
+        modelText, conds || [], Number(plan) || 0);
+      return r ? r.name + '|' + r.seg : '';
     },
     norm: polNormKeys,
     exact: modelExact,
@@ -11302,18 +11341,15 @@
         if (r21 && plan >= segValue(p21.seg)) push(p21, r21, p21.seg, typeKey, 'MRA-02-01 돈버는 요금할인', p21.seg + ' 이상 · ' + typeKey + ' · ' + r21.name);
       }
       // MRA-03 소매 활력 (모델 + 구간)
+      /* v90 — 행의 r.seg 는 '이 구간 이상'이 최소 기준이라, 요금제에 맞는 행 한 개를 골라야 한다.
+         (구간이 딱 같은 행만 보던 v89 까지는 69K·90K·110K 요금제에서 아래 구간 행 모델이 0원이었다) */
       var p3 = polById('MRA03');
-      var s3 = segFor(plan, ['110K', '90K', '61K', '37K']);
       if (mba9paid) {
         res.notes.push('MBA-09 지급 회선이라 MRA-03(소매 활력)·MWA-05-01(모뎀 시장대응)은 지급되지 않습니다.');
-      } else if (s3) {
-        for (var i3 = 0; i3 < p3.rows.length; i3++) {
-          var r3 = p3.rows[i3];
-          if (r3.seg !== s3) continue;
-          if (polFindRow({ id: p3.id, rows: [r3], types: p3.types, shape: p3.shape }, rec.기종, conds) !== r3) continue;
-          push(p3, r3, s3, typeKey, 'MRA-03 소매 활력', s3 + ' 이상 · ' + typeKey + ' · ' + r3.name);
-          break;
-        }
+      } else {
+        var r3 = polSegRowFor(p3, rec.기종, conds, plan);
+        /* polCell 이 그 행의 칸을 찾도록 요금제 구간(s3)이 아니라 **행의 구간(r3.seg)** 을 넘긴다 */
+        if (r3) push(p3, r3, r3.seg, typeKey, 'MRA-03 소매 활력', r3.seg + ' 이상 · ' + typeKey + ' · ' + r3.name);
       }
       // MRA-04 장기 사용 고객 기변 (요금할인 + 기변 + 장기기변)
       if (disc === '요금할인' && wtype === '기기변경' && conds.indexOf('장기기변') >= 0) {
