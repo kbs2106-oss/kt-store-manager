@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0284c7">
 <meta name="color-scheme" content="light">
-<meta name="app-version" content="v87">
+<meta name="app-version" content="v88">
 <meta name="description" content="충주 KT대리점 칠금점 개통 관리 장부 — 일일 개통 등록, 리베이트 집계, 엑셀 내보내기">
 <title>충주 KT대리점 칠금점 · 개통 관리 장부</title>
 
@@ -4149,6 +4149,7 @@
     { n: '갤럭시 S26', c: ['S942'], a: ['S26'] },
     { n: '갤럭시 S26+', c: ['S947'], a: ['S26+', 'S26 플러스', 'S26플러스'] },
     { n: '갤럭시 S26 울트라', c: ['S948'], a: ['S26 울트라', 'S26U'] },
+    { n: '갤럭시 S26 FE', c: ['S741'], a: ['S26 FE', 'S26FE'] },   // v88 — 검색용(정책표 매칭 아님)
     { n: '갤럭시 S25', c: ['S931'], a: ['S25'] },
     { n: '갤럭시 S25+', c: ['S936'], a: ['S25+', 'S25 플러스', 'S25플러스'] },
     { n: '갤럭시 S25 울트라', c: ['S938'], a: ['S25 울트라', 'S25U'] },
@@ -4490,12 +4491,17 @@
     return out;
   }
 
-  // 목록에 있는 기종명인가 (띄어쓰기·+ 차이 무시)
+  // 목록에 있는 기종명인가 (띄어쓰기·+ 차이·괄호·용량 표기 무시)
   function isModelName(v) {
-    var want = modelKey(v);
-    if (!want) return false;
-    var cat = modelCatalog();
-    for (var i = 0; i < cat.length; i++) if (modelKey(cat[i]) === want) return true;
+    var keys = polNormKeys(v).keys, cat = modelCatalog(), i, j, want, ck;
+    for (i = 0; i < keys.length; i++) {
+      want = modelKey(keys[i]);
+      if (!want) continue;
+      for (j = 0; j < cat.length; j++) {
+        ck = modelKey(cat[j]);
+        if (ck === want || polAliasScore(want, ck) > 0) return true;
+      }
+    }
     return false;
   }
 
@@ -9919,8 +9925,11 @@
      · 이미 다른 기기·유선 상품이 있으면 ' + '로 이어 붙인다 (예: 갤럭시 S26 + 인터넷 에센스)
      · 직접 입력도 그대로 가능 (datalist 로 타이핑 제안)
      · v28 — 22종을 [갤럭시] · [아이폰] · [기타] 세 브랜드 버튼으로 접어 둔다 */
+  /* v88 — '+' 는 기종 이름의 일부다('갤럭시 S26+'·'아이폰 17 프로 맥스').
+     다른 상품이 이어 붙은 경우만 ' + ' 처럼 **앞에 띄어쓰기가 있는 +** 로 가른다.
+     (예전에는 '갤럭시 S26+' 가 '갤럭시 S26' 으로 잘려 MRA-02 금액이 S26 것으로 붙었다) */
   function modelParts(value) {
-    return String(value || '').split(/\s*\+\s*/).map(function (s) { return s.trim(); }).filter(Boolean);
+    return String(value || '').split(/\s\+\s*/).map(function (s) { return s.trim(); }).filter(Boolean);
   }
 
   // v28 — 기종 브랜드 3그룹 · 지금 펼쳐 둔 브랜드('' = 접힘)
@@ -10293,7 +10302,7 @@
     s26: ['갤럭시s26', 's26'],
     s26p: ['갤럭시s26+', '갤럭시s26플러스', 's26+', 's26플러스'],
     s26u: ['갤럭시s26울트라', 's26울트라', 's26ultra'],
-    s26fe: ['갤럭시s26fe', 's26fe'],
+    s26fe: ['갤럭시s26fe', 's26fe', 'sms741nk'],   // v88 — SM-S741NK(S26 FE)를 S26 으로 보지 않는다
     ip17: ['아이폰17', '아이폰17프로', '아이폰17프로맥스'],
     air: ['아이폰에어', '아이폰air', '아이폰17에어', 'aipa'],
     fold7: ['갤럭시z폴드7', 'z폴드7', '폴드7'],
@@ -10771,46 +10780,125 @@
   function polRowMk(row) {
     if (row.__mk) return row.__mk;
     var out = [], i;
-    for (i = 0; i < (row.match || []).length; i++) out.push(mkey(row.match[i]));
+    for (i = 0; i < (row.match || []).length; i++) out.push(mkey(row.match[i]).replace(/-/g, ''));
     row.__mk = out;
     return out;
   }
 
-  // 기종 입력칸 값에서 정책표 행 찾기 (정확 일치 우선 → 긴 이름 포함)
+  /* v88 — 기종 이름에 붙는 괄호 다루기 (정책표 매칭 전용)
+     · 장부·정책표에는 `갤럭시 S26 FE(256G)` · `갤럭시 S26(Plus,Ultra)` · `갤럭시 S26(256G)` 처럼 괄호가 붙는다
+     · 괄호 안이 용량(256G·512G·1T)·설명(NEW·신모델·5G·LTE)뿐이면 이름에서 빼고 용량만 기억한다
+     · 괄호 안이 모델 이름(FE·Plus·Ultra·e …)이면 **이름에 이어 붙인다** —
+       그래서 `갤럭시 S26(FE)` 를 `갤럭시 S26` 으로 보지 않는다 */
+  var POL_CAP_RE = /^(?:128|256|512|1024)(?:gb|g)?$|^[12]t(?:b)?$/;
+  var POL_TOK = {
+    'plus': '플러스', '플러스': '플러스', 'ultra': '울트라', '울트라': '울트라',
+    'pro': '프로', '프로': '프로', 'max': '맥스', '맥스': '맥스',
+    'air': '에어', '에어': '에어', 'fe': 'fe', 'e': 'e'
+  };
+  var POL_DESC = { 'new': 1, '신모델': 1, '5g': 1, 'lte': 1, '단말': 1, '공시': 1 };
+
+  // 기종 한 토막 → 정책표와 비교할 이름들(keys) + 괄호·이름에 적힌 용량(cap)
+  function polNormKeys(part) {
+    var s = String(part == null ? '' : part).toLowerCase().replace(/\s+/g, '');
+    var plain = '', inner = [], i = 0, open, close;
+    while (i < s.length) {
+      open = s.indexOf('(', i);
+      close = open < 0 ? -1 : s.indexOf(')', open + 1);
+      if (open < 0 || close < 0) { plain += s.slice(i); break; }
+      plain += s.slice(i, open);
+      inner.push(s.slice(open + 1, close));
+      i = close + 1;
+    }
+    plain = plain.replace(/[()]/g, '').replace(/-/g, '');
+    var cap = '', variants = [], k, j, toks, t;
+    for (k = 0; k < inner.length; k++) {
+      toks = inner[k].split(/[,/·&]+/);
+      for (j = 0; j < toks.length; j++) {
+        t = toks[j].replace(/-/g, '');
+        if (!t) continue;
+        if (POL_CAP_RE.test(t)) { if (!cap) cap = t.toUpperCase().replace(/GB$/, 'G'); continue; }
+        if (POL_DESC[t]) continue;
+        // 모델코드(SM-A185NK-KP · XT2529-2K)는 이름을 대신하지 않는다 — 숫자가 든 괄호는 코드로 본다
+        if (/[0-9]/.test(t)) continue;
+        t = POL_TOK[t] || t;
+        if (variants.indexOf(t) < 0) variants.push(t);
+      }
+    }
+    // 괄호 밖에 용량이 붙은 경우('갤럭시 S26 512G')도 용량으로 본다
+    var tail = plain.match(/((?:128|256|512|1024)(?:gb|g)|[12]t)$/);
+    if (tail && !cap) cap = tail[1].toUpperCase().replace(/GB$/, 'G');
+    var keys = [];
+    if (variants.length) for (k = 0; k < variants.length; k++) keys.push(plain + variants[k]);
+    else keys.push(plain);
+    return { keys: keys, cap: cap };
+  }
+
+  /* 별칭과 이름이 같은가 — **정확 일치**, 또는 별칭 뒤에 용량·5G·LTE·NEW 만 붙은 경우만 인정한다.
+     ('갤럭시s26fe' 가 '갤럭시s26' 에, '아이폰17e' 가 '아이폰17' 에, '갤럭시s25fe' 가 '갤럭시s25' 에 붙지 않게)
+     · '샤오미 레드미 14C' 처럼 브랜드 이름이 앞에 붙은 것은 같은 기종으로 본다.
+     · 점수가 클수록 좋은 매칭 — 정확 일치(1000+)가 항상 용량이 붙은 매칭보다 먼저다. */
+  var POL_SUFFIX_OK = /^(?:(?:128|256|512|1024)(?:gb|g)?|[12]t(?:b)?|5g|lte|new|신모델|tac)$/;
+  var POL_BRAND_PREFIX = /^(?:샤오미|삼성|애플|구글|엘지|lg|kt|skt|lgu)/;
+  function polAliasScore(key, alias) {
+    if (!key || !alias) return 0;
+    if (key === alias) return 1000 + alias.length;
+    var at = key.indexOf(alias);
+    if (at < 0) return 0;
+    var tail = key.slice(at + alias.length);
+    if (at === 0) return tail && POL_SUFFIX_OK.test(tail) ? alias.length : 0;
+    return (!tail || POL_SUFFIX_OK.test(tail)) && POL_BRAND_PREFIX.test(key) ? alias.length : 0;
+  }
+
+  // 기종 입력칸 값에서 정책표 행 찾기 (정확 일치 우선 → 용량만 붙은 이름)
   function polFindRow(pol, modelText, conds) {
     if (!pol) return null;
-    var wantCap = (conds || []).indexOf('512G') >= 0 ? '512G' : '256G';
-    var memoKey = wantCap + '\u0001' + mkey(modelText);
+    var flag512 = (conds || []).indexOf('512G') >= 0;
+    var memoKey = (flag512 ? '512G' : '256G') + '\u0001' +
+      String(modelText == null ? '' : modelText).toLowerCase().replace(/\s+/g, '');
     var memo = pol.__frow || (pol.__frow = {});
     if (memo.hasOwnProperty(memoKey)) return memo[memoKey];
-    var models = modelParts(modelText), norm = [], i, j, b;
+    var models = modelParts(modelText), keys = [], cap = '', i, j, r;
     for (i = 0; i < models.length; i++) {
-      var n = mkey(models[i]);
-      if (n) norm.push(n);
+      r = polNormKeys(models[i]);
+      if (r.cap && !cap) cap = r.cap;
+      for (j = 0; j < r.keys.length; j++) if (r.keys[j] && keys.indexOf(r.keys[j]) < 0) keys.push(r.keys[j]);
     }
-    var found = null;
-    if (norm.length) {
-      var exact = null, best = null, bestLen = 0;
-      for (i = 0; i < pol.rows.length; i++) {
-        var row = pol.rows[i];
-        if (row.cap && row.cap !== wantCap) continue;
-        var aliases = polRowMk(row);
-        for (j = 0; j < aliases.length; j++) {
-          b = aliases[j];
-          if (!b) continue;
-          for (var k = 0; k < norm.length; k++) {
-            if (norm[k] === b && !exact) exact = row;
-            else if (b.length >= 4 && norm[k].indexOf(b) >= 0 && b.length > bestLen) { best = row; bestLen = b.length; }
-          }
+    var wantCap = cap === '512G' ? '512G' : (cap === '256G' ? '256G' : (flag512 ? '512G' : '256G'));
+    var found = null, best = 0;
+    for (i = 0; i < pol.rows.length; i++) {
+      var row = pol.rows[i];
+      if (row.cap && row.cap !== wantCap) continue;
+      var aliases = polRowMk(row);
+      for (j = 0; j < aliases.length; j++) {
+        for (var k = 0; k < keys.length; k++) {
+          var sc = polAliasScore(keys[k], aliases[j]);
+          if (sc > best) { best = sc; found = row; }
         }
       }
-      found = exact || best;
     }
     /* 글자별 결과는 몇 백 개뿐 — 무한히 쌓이지 않게 4,000개까지만 담는다 */
-    var keys = Object.keys(memo);
-    if (keys.length < 4000) memo[memoKey] = found;
+    var mkeys = Object.keys(memo);
+    if (mkeys.length < 4000) memo[memoKey] = found;
     return found;
   }
+
+  /* v88 — 기종 ↔ 정책표 매칭을 그대로 확인할 수 있는 작은 창(점검용). 앱 화면은 쓰지 않는다 */
+  window.__ktPolicy = {
+    row: function (polId, modelText, conds) {
+      var r = polFindRow(polById(polId), modelText, conds || []);
+      return r ? r.name : '';
+    },
+    norm: polNormKeys,
+    exact: modelExact,
+    devices: function () { return modelCatalog(); },
+    policies: function () {
+      return POLICY_DEFAULT.rebate.map(function (p) {
+        return { id: p.id, rows: (p.rows || []).map(function (r) { return { name: r.name, match: (r.match || []).slice(), cap: r.cap || '' }; }) };
+      });
+    },
+    calc: function (rec) { return calcPolicy(rec); }
+  };
 
   // 생년월일(6·8자리) → 개통일(없으면 오늘) 기준 만 나이
   function ageAt(birth, iso) {
@@ -12169,16 +12257,22 @@
   }
 
   function modelExact(text) {
-    var parts = modelParts(text), i, j, want, hit;
+    var parts = modelParts(text), i, j, k, keys, want, hit;
     var cat = modelCatalog();   // v80 — 칩 22종 + 장부에 있던 지난 모델(갤럭시 S25 · 점프3 …)
     for (i = 0; i < parts.length; i++) {
-      want = modelKey(parts[i]);
-      if (!want) continue;
-      hit = false;
-      for (j = 0; j < cat.length; j++) {
-        if (modelKey(cat[j]) === want) { hit = true; break; }
+      /* v88 — 괄호가 붙어 와도 같은 기종으로 본다: '갤럭시 S26 FE(256G)' → '갤럭시 S26 FE',
+         '갤럭시 S26(Plus,Ultra)' → 갤럭시 S26+ · S26 울트라 */
+      keys = polNormKeys(parts[i]).keys;
+      for (k = 0; k < keys.length; k++) {
+        want = modelKey(keys[k]);
+        if (!want) continue;
+        hit = false;
+        for (j = 0; j < cat.length; j++) {
+          var ck = modelKey(cat[j]);
+          if (ck === want || polAliasScore(want, ck) > 0) { hit = true; break; }
+        }
+        if (hit) return true;
       }
-      if (hit) return true;
     }
     return false;
   }
