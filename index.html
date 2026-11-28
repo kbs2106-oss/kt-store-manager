@@ -15368,15 +15368,17 @@
   }
 
   /* v89 — 직원 모드 표의 `추지·페이백` 칸 — 순마진·리베이트 없이
-     고객에게 지급할 돈(추지 + 카드결제 + 입금)만 보여 준다 */
+     고객에게 지급할 돈(추지 + 카드결제 + 입금)만 보여 준다
+     · 표가 넓어지지 않게 항목 이름은 한 글자로 줄이고(추·카·입) 전체는 툴팁에 적는다 */
   function payCellHtml(r) {
     var n = netMargin(r);
     if (!n.payback) return '<span class="muted">—</span>';
-    var parts = [];
-    if (n.extra) parts.push('추지 ' + fmtNum(n.extra));
-    if (n.card) parts.push('카드 ' + fmtNum(n.card));
-    if (n.bank) parts.push('입금 ' + fmtNum(n.bank));
-    return '<span class="net-cell"><span class="net-v">' + fmtNum(n.payback) + '</span>' +
+    var parts = [], full = [];
+    if (n.extra) { parts.push('추 ' + fmtNum(n.extra)); full.push('추지 ' + fmtNum(n.extra)); }
+    if (n.card) { parts.push('카 ' + fmtNum(n.card)); full.push('카드결제 ' + fmtNum(n.card)); }
+    if (n.bank) { parts.push('입 ' + fmtNum(n.bank)); full.push('입금 ' + fmtNum(n.bank)); }
+    return '<span class="net-cell" title="' + esc(full.join(' · ')) + '"><span class="net-v">' +
+      fmtNum(n.payback) + '</span>' +
       '<span class="net-sub">' + parts.join(' · ') + '</span></span>';
   }
 
